@@ -1,0 +1,21 @@
+{
+    "depth_of_cover_m": 1.5,
+    "diameter_mm": 660.4,
+    "dp_bar": 75,
+    "hdd_max_curvature_deg": 12,
+    "hot_bend_angles_deg": [
+        15,
+        30,
+        45,
+        60,
+        90
+    ],
+    "house_min_distance_mm": 13000,
+    "material": "Carbon Steel",
+    "mop_bar": 70,
+    "pipeline_type": "Gas",
+    "poles_min_distance_mm": 6000,
+    "powerlines_min_distance_mm": 6000,
+    "row_file": null,
+    "thickness_mm": 11.1
+}

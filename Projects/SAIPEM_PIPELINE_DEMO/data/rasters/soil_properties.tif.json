@@ -1,0 +1,21 @@
+{
+  "tool": "manual_copy",
+  "timestamp": "2025-10-12T14:45:00Z",
+  "source": {
+    "provider": "Unknown (from DEMO-SAIPEM)",
+    "dataset": "Soil Properties - 4 Band",
+    "license": "Unknown",
+    "note": "Copied from previous DEMO-SAIPEM project"
+  },
+  "query": {
+    "bbox": "13.454779,42.857057,13.938769,43.438886",
+    "method": "Copied from /opt/agrs/docs/DEMO-SAIPEM/Output/soil_4band.tif"
+  },
+  "bands": {
+    "band_1": "Soil property (unknown)",
+    "band_2": "Soil property (unknown)",
+    "band_3": "Soil property (unknown)",
+    "band_4": "Soil property (unknown)",
+    "note": "Band descriptions need verification"
+  }
+}

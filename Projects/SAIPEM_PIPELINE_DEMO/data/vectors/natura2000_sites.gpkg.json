@@ -1,0 +1,12 @@
+{
+  "tool": "manual_clip",
+  "timestamp": "2025-10-12T08:15:00Z",
+  "source": {
+    "provider": "European Environment Agency",
+    "dataset": "Natura 2000 end 2023",
+    "license": "CC BY 4.0"
+  },
+  "query": {
+    "bbox": "13.454779,42.857057,13.938769,43.438886"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "query_id": "SAIPEM_QUERY_001",
+  "project_id": "SAIPEM_PIPELINE_DEMO",
+  "timestamp": "2025-10-11T23:58:31Z",
+  "query_type": "AOI Intelligence",
+  "parameters": {
+    "bbox": "13.454779,42.857057,13.938769,43.438886",
+    "place": "Central Italy, Lazio and Abruzzo regions",
+    "topic": "terrain,climate,geography,geology,infrastructure",
+    "location": null,
+    "query": null,
+    "model": "sonar",
+    "max_tokens": 4000,
+    "temperature": 0.2,
+    "recency": "month"
+  },
+  "response": {
+    "output_file": "docs/perplexity_research/aoi_intelligence.md",
+    "tokens_used": {
+      "prompt": 109,
+      "completion": 1481,
+      "total": 1590
+    },
+    "cost_usd": 0.000318,
+    "citations_count": null,
+    "status": "SUCCESS"
+  },
+  "execution": {
+    "start_time": "2025-10-11T23:58:31Z",
+    "end_time": "2025-10-11T23:58:45Z",
+    "duration_seconds": 14
+  },
+  "metadata": {
+    "user": "radwan-el-gharbi",
+    "purpose": "Phase 2 mandatory AOI intelligence research",
+    "notes": "Initial research for SAIPEM pipeline project - Central Italy terrain and infrastructure analysis"
+  }
+}

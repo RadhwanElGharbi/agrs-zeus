@@ -1,0 +1,34 @@
+{
+  "accuracy": "99.45% (peer-reviewed)",
+  "band_description": "Water occurrence (0-100%): percentage of time water was present",
+  "product": "occurrence",
+  "resolution_meters": 30,
+  "source": {
+    "attribution": "Global Surface Water Explorer by European Commission Joint Research Centre (CC-BY-4.0)",
+    "dataset": "JRC/GSW1_4/GlobalSurfaceWater",
+    "license": "CC-BY-4.0",
+    "name": "JRC Global Surface Water",
+    "provider": "European Commission Joint Research Centre",
+    "url": "https://global-surface-water.appspot.com/"
+  },
+  "spatial": {
+    "bbox": [
+      13.454779,
+      42.857057,
+      13.938769,
+      43.438886
+    ],
+    "crs": "EPSG:4326"
+  },
+  "temporal": {
+    "coverage": "1984-2021",
+    "note": "37 years of Landsat observations"
+  },
+  "timestamp": "2025-10-23T20:48:13Z",
+  "tool": "global_surface_water_fetch",
+  "values": {
+    "0": "No water detected",
+    "1-100": "Percentage of observations with water",
+    "255": "No data"
+  }
+}

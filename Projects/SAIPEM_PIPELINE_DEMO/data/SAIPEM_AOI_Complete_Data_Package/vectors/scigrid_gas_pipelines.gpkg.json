@@ -1,0 +1,30 @@
+{
+  "attributes": [
+    "name",
+    "id",
+    "country_code",
+    "diameter_mm",
+    "length_km",
+    "max_cap_M_m3_per_d",
+    "max_pressure_bar",
+    "start_year",
+    "end_year",
+    "is_H_gas",
+    "is_bothDirection"
+  ],
+  "attribution": "SciGRID_gas project, DOI: 10.5281/zenodo.4767098",
+  "coverage": "European gas transmission network",
+  "crs": "EPSG:4326 (WGS84)",
+  "data_source": "SciGRID_gas IGGIELGN via Zenodo",
+  "dataset_version": "IGGIELGN (2021)",
+  "doi": "10.5281/zenodo.4767098",
+  "features": "6,323 pipeline segments (~206,000 km)",
+  "format": "GeoPackage (converted from GeoJSON)",
+  "license": "CC-BY-4.0 (Open, attribution required)",
+  "provider": "Helmholtz Centre / German Aerospace Center (DLR)",
+  "query_bbox": "13.454779,42.857057,13.938769,43.438886",
+  "repository": "Zenodo",
+  "timestamp_utc": "2025-10-12T12:09:50Z",
+  "tool": "scigrid_gas_pipelines_fetch",
+  "url": "https://zenodo.org/records/4767098"
+}

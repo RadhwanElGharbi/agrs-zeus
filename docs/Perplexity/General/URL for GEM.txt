@@ -1,0 +1,111 @@
+Based on the information gathered, here is the comprehensive download information for the GEM Global Seismic Hazard Map:
+
+## Direct Download URL
+
+**Primary Source - Zenodo:**
+```
+https://zenodo.org/records/8409647/files/GEM-GSHM_PGA-475y-rock_v2023.zip
+```
+
+This is the direct download URL for the Global PGA GeoTIFF raster with 475-year return period (10% probability of exceedance in 50 years).[1]
+
+## File Specifications
+
+**Format:** GeoTIFF raster (compressed in ZIP archive)[1]
+**File Size:** 34.6 MB (compressed)[1]
+**Resolution:** Approximately 6 km point spacing, interpolated using inverse distance weighting[1]
+**Coverage:** Global mosaic (some areas like Greenland are not covered)[2][1]
+**Ground Conditions:** Reference rock (Vs30 = 760-800 m/s)[2][1]
+**Version:** 2023.1 (released June 2023)[2]
+
+## Authentication & Access
+
+**Registration:** No registration required for the base PGA layer[2]
+**Authentication:** None needed - direct download via curl/wget is supported[2]
+**Command Line Download:**
+```bash
+wget https://zenodo.org/records/8409647/files/GEM-GSHM_PGA-475y-rock_v2023.zip
+```
+or
+```bash
+curl -O https://zenodo.org/records/8409647/files/GEM-GSHM_PGA-475y-rock_v2023.zip
+```
+
+## License Information
+
+**License:** CC BY-NC-SA 4.0 (Creative Commons Attribution-NonCommercial-ShareAlike 4.0)[1][2]
+
+**Key Requirements:**[2]
+- Attribution required
+- Non-commercial use only for this open version
+- Share-alike (derivatives must use same license)
+- For commercial applications, a separate licensing fee and agreement is required
+
+**Citation:**[2]
+K. Johnson, M. Villani, K. Bayliss, C. Brooks, S. Chandrasekhar, T. Chartier, Y. Chen, J. Garcia-Pelaez, R. Gee, R. Styron, A. Rood, M. Simionato, M. Pagani (2023). Global Earthquake Model (GEM) Seismic Hazard Map (version 2023.1 - June 2023), DOI: https://doi.org/10.5281/zenodo.8409647
+
+## Cloud Platform Availability
+
+### Google Earth Engine
+**Status:** Not available in the public GEE catalog[3][4]
+The GEE Data Catalog does not currently include the GEM Global Seismic Hazard Map. Only USGS earthquake datasets are available as private assets in specialized platforms like ClimateEngine.[5]
+
+### AWS Open Data
+**Status:** Not found in the AWS Open Data Registry[6][7]
+The GEM dataset is not currently available through AWS Open Data. The registry focuses primarily on other geophysical datasets but does not include the GEM hazard maps.[7]
+
+### Microsoft Planetary Computer
+**Status:** Not available[8][9]
+The Microsoft Planetary Computer catalog does not include seismic hazard datasets from GEM.
+
+## Alternative Access Points
+
+**Interactive Viewer:** https://maps.openquake.org/map/gshm-2023-1/[10]
+**Documentation:** https://hazard.openquake.org/gem/[11]
+**Full Dataset (20 layers):** Available by license request through GEM's website for additional spectral periods and soil conditions[2]
+
+[1](https://zenodo.org/records/8409647)
+[2](https://www.globalquakemodel.org/product/global-seismic-hazard-map)
+[3](https://developers.google.com/earth-engine/datasets)
+[4](https://developers.google.com/earth-engine/datasets/catalog)
+[5](https://support.climateengine.org/article/106-earthquake)
+[6](https://registry.opendata.aws)
+[7](https://registry.opendata.aws/tag/geophysics/)
+[8](https://planetarycomputer.microsoft.com/catalog)
+[9](https://planetarycomputer.microsoft.com)
+[10](https://maps.openquake.org/map/gshm-2023-1/)
+[11](https://hazard.openquake.org/gem/)
+[12](https://www.preventionweb.net/files/65696_hazardmapcompressed.pdf)
+[13](https://cloud-storage.globalquakemodel.org/public/wix-new-website/pdf-collections-wix/publications/FINAL1_7June2021_global%20hazard%20map%20brochure.pdf)
+[14](https://www.usgs.gov/the-national-map-data-delivery/gis-data-download)
+[15](https://nhess.copernicus.org/articles/21/1495/2021/)
+[16](https://github.com/gem)
+[17](https://www.sciencedirect.com/science/article/pii/S1470160X21009237)
+[18](https://uwiseismic.com/downloads/seismic-hazard-map/)
+[19](https://www.globalquakemodel.org/product/global-exposure-model)
+[20](https://gee-community-catalog.org/projects/global_earthquakes/)
+[21](https://www.paratus-project.eu/2025/02/11/seismic-hazard-for-the-dutch-caribbean/)
+[22](https://www.arcgis.com/home/item.html?id=7ecf851ddd494183b7eb065dc9743e35)
+[23](https://pmc.ncbi.nlm.nih.gov/articles/PMC9132687/)
+[24](https://data.humdata.org/organization/gem-foundation)
+[25](https://aws.amazon.com/earth/)
+[26](https://www.preventionweb.net/understanding-disaster-risk/disaster-losses-and-statistics/global-risk-data-sets)
+[27](https://registry.opendata.aws/tag/geospatial/)
+[28](https://www.globalquakemodel.org/products)
+[29](https://thesis.unipd.it/retrieve/512997b0-7543-4ebb-b71f-69ad8e98ee54/Final%20Thesis%20-%20Somayeh%20Asadi%20Shekafti.pdf)
+[30](https://www.globalquakemodel.org/product/global-seismic-risk-map)
+[31](https://www.cip-icu.ca/news/cip-contributes-to-new-global-earthquake-hazard-and-risk-map/)
+[32](https://journals.sagepub.com/doi/abs/10.1177/8755293020931866)
+[33](https://www.nature.com/articles/s41597-019-0234-z)
+[34](https://zenodo.org/records/8431569)
+[35](https://maps.openquake.org/map/global-seismic-hazard-map/)
+[36](https://www.youtube.com/watch?v=bWTxc8IUmW4)
+[37](https://github.com/gem/global_exposure_model)
+[38](https://groups.google.com/g/openquake-users/c/v9bDw6UsM_E/m/tuXTLMEaAwAJ)
+[39](https://cloud-storage.globalquakemodel.org/public/wix-new-website/pdf-collections-wix/publications/User%20guide_Windows%20tool%20for%20field%20data%20collection%20and%20management.pdf)
+[40](https://www.globalquakemodel.org/gempublications/global-exposure-database-for-multi-hazard-risk-analysis-multi-hazard-exposure-taxonomy)
+[41](https://aws.amazon.com/blogs/publicsector/interactive-access-and-visualization-of-geospatial-data-from-the-aws-open-data-program/)
+[42](https://www.globalquakemodel.org)
+[43](https://cloud-storage.globalquakemodel.org/public/wix-new-website/pdf-collections-wix/publications/User%20guide_Tool%20for%20spatial%20inventory%20data%20development.pdf)
+[44](https://aws.amazon.com/blogs/publicsector/39-new-or-updated-datasets-available-on-the-registry-of-open-data-on-aws/)
+[45](https://cloud-storage.globalquakemodel.org/public/wix-new-website/pdf-collections-wix/publications/Products%20FAQs.pdf)

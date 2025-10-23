@@ -1,0 +1,665 @@
+# UK GIS Datasets for Oil & Gas Pipeline Routing
+
+## 1. ELEVATION/TERRAIN (DEM)
+
+### National LiDAR Programme (England)
+- **Source/Provider**: Environment Agency
+- **Resolution/Scale**: 1m and 2m spatial resolution
+- **Temporal Coverage**: 1998-2019 (ongoing updates), ~99% coverage of England
+- **Update Frequency**: Ongoing surveys, composite updated periodically
+- **Access Type**: Open/Free
+- **API Availability**: No dedicated API, download via data.gov.uk
+- **Official URL**: https://www.data.gov.uk/dataset/f0db0249-f17b-4036-9e65-309148c97ce4/national-lidar-programme
+- **Quality Assessment**: Excellent - highest resolution national DEM available for England, centimeter-range vertical accuracy from LiDAR, comprehensive coverage[1][2][3]
+
+### OS Terrain 5
+- **Source/Provider**: Ordnance Survey
+- **Resolution/Scale**: 5m grid spacing
+- **Temporal Coverage**: Current (regularly updated)
+- **Update Frequency**: Regular updates
+- **Access Type**: Commercial/Licensed (part of OS premium products)
+- **API Availability**: Yes, via OS Data Hub APIs
+- **Official URL**: https://www.ordnancesurvey.co.uk/products/os-terrain-5
+- **Quality Assessment**: Very high quality, national coverage of Great Britain, derived from multiple sources including LiDAR and photogrammetry[4]
+
+### OS Terrain 50
+- **Source/Provider**: Ordnance Survey
+- **Resolution/Scale**: 50m grid spacing
+- **Temporal Coverage**: Current
+- **Update Frequency**: Periodic updates
+- **Access Type**: Open/Free (part of OS OpenData)
+- **API Availability**: Yes, via OS Data Hub
+- **Official URL**: https://osdatahub.os.uk/downloads/open
+- **Quality Assessment**: Good for national-scale analysis, less suitable for detailed routing, complete Great Britain coverage[5][6]
+
+### Copernicus DEM GLO-30
+- **Source/Provider**: European Space Agency (Copernicus Programme)
+- **Resolution/Scale**: 30m (GLO-30) and 90m (GLO-90)
+- **Temporal Coverage**: Based on data acquired 2011-2015
+- **Update Frequency**: Static (2019 and 2020 releases)
+- **Access Type**: Open/Free
+- **API Availability**: Yes, via Sentinel Hub and AWS
+- **Official URL**: https://dataspace.copernicus.eu/ and https://registry.opendata.aws/copernicus-dem/
+- **Quality Assessment**: Good global coverage including UK, suitable for regional analysis but lower resolution than national LiDAR products[7][8][9]
+
+## 2. LAND COVER / LAND USE
+
+### UKCEH Land Cover Maps (LCM2021)
+- **Source/Provider**: UK Centre for Ecology & Hydrology (UKCEH)
+- **Resolution/Scale**: 25m raster, 0.5ha minimum mappable unit for vector
+- **Temporal Coverage**: Annual maps from 1990, 2007, 2015, 2017-2021
+- **Update Frequency**: Annual since 2017
+- **Access Type**: Licensed/Commercial (various pricing tiers)
+- **API Availability**: Yes, WMS services available
+- **Official URL**: https://www.ceh.ac.uk/data/ukceh-land-cover-maps
+- **Quality Assessment**: Excellent - most authoritative national land cover, based on UK BAP Broad Habitats, high accuracy validated dataset[10][11][12]
+
+### ESA WorldCover 2020/2021
+- **Source/Provider**: European Space Agency
+- **Resolution/Scale**: 10m resolution
+- **Temporal Coverage**: 2020 and 2021 baseline products
+- **Update Frequency**: Annual updates planned
+- **Access Type**: Open/Free
+- **API Availability**: Yes, via Copernicus Data Space
+- **Official URL**: https://worldcover2020.esa.int
+- **Quality Assessment**: Very good - 75% overall accuracy, 11 land cover classes, global coverage with excellent UK detail[13][14]
+
+### ESRI 2020 Global LULC from Sentinel-2
+- **Source/Provider**: ESRI (using Sentinel-2 data)
+- **Resolution/Scale**: 10m resolution
+- **Temporal Coverage**: 2020
+- **Update Frequency**: Periodic updates
+- **Access Type**: Open/Free
+- **API Availability**: Yes, via ArcGIS Living Atlas
+- **Official URL**: https://livingatlas.arcgis.com/landcoverexplorer/
+- **Quality Assessment**: Very good - 10 classes, deep learning-based classification, complements WorldCover[15][16]
+
+## 3. HYDROLOGY / WATER
+
+### Environment Agency Hydrological Open Data
+- **Source/Provider**: Environment Agency (England)
+- **Resolution/Scale**: Station-based (7,000+ stations)
+- **Temporal Coverage**: Historical and real-time data
+- **Update Frequency**: Real-time for current data
+- **Access Type**: Open/Free
+- **API Availability**: Yes, via Water Data Explorer
+- **Official URL**: https://www.data.gov.uk/dataset/98a4d46e-23e4-4430-883c-9e5f14645e8f/hydrological-open-data
+- **Quality Assessment**: Excellent - comprehensive river flow, river level, groundwater and rainfall data for England[17][18]
+
+### WFD Surface Water Bodies
+- **Source/Provider**: Environment Agency
+- **Resolution/Scale**: Polygon-based, water body level
+- **Temporal Coverage**: Current (updated for WFD reporting cycles)
+- **Update Frequency**: Periodic (aligned with WFD cycles)
+- **Access Type**: Open/Free
+- **API Availability**: No dedicated API
+- **Official URL**: https://www.data.gov.uk (various WFD datasets)
+- **Quality Assessment**: Good - includes rivers, lakes, waterbody catchments with water quality classifications[19][20]
+
+### Global Surface Water Explorer
+- **Source/Provider**: European Commission Joint Research Centre
+- **Resolution/Scale**: 30m resolution
+- **Temporal Coverage**: 1984-present
+- **Update Frequency**: Annual updates
+- **Access Type**: Open/Free
+- **API Availability**: Yes, via Google Earth Engine
+- **Official URL**: https://global-surface-water.appspot.com
+- **Quality Assessment**: Very good for long-term water presence analysis, complements national datasets[web:general knowledge]
+
+## 4. INFRASTRUCTURE - ROADS
+
+### OS Open Roads
+- **Source/Provider**: Ordnance Survey
+- **Resolution/Scale**: Vector, high-level road network
+- **Temporal Coverage**: Current
+- **Update Frequency**: Regular updates (approximately monthly)
+- **Access Type**: Open/Free
+- **API Availability**: Yes, via OS Data Hub APIs
+- **Official URL**: https://osdatahub.os.uk/downloads/open/OpenRoads
+- **Quality Assessment**: Very good - comprehensive coverage of Great Britain from motorways to country lanes, single-line representation[21][22]
+
+### OS NGD Transport Network Collection
+- **Source/Provider**: Ordnance Survey
+- **Resolution/Scale**: Vector, topologically structured
+- **Temporal Coverage**: Current
+- **Update Frequency**: Monthly updates
+- **Access Type**: Licensed (free for public sector via PSGA)
+- **API Availability**: Yes, OS NGD API - Features and Tiles
+- **Official URL**: https://docs.os.uk/osngd/data-structure/transport/transport-network
+- **Quality Assessment**: Excellent - rich attribution, persistent identifiers, includes road width, surface type, cycle/bus lanes, comprehensive for detailed planning[23]
+
+### Department for Transport Major Road Network
+- **Source/Provider**: Department for Transport
+- **Resolution/Scale**: Vector (based on OS Open Roads)
+- **Temporal Coverage**: 2018 baseline
+- **Update Frequency**: Periodic updates
+- **Access Type**: Open/Free (UK Open Government Licence)
+- **API Availability**: No
+- **Official URL**: https://www.data.gov.uk/dataset/95f58bfa-13d6-4657-9d6f-020589498cfd/major-road-network
+- **Quality Assessment**: Good for strategic road network planning[24][25]
+
+### OpenStreetMap UK
+- **Source/Provider**: OpenStreetMap community
+- **Resolution/Scale**: Vector, variable detail
+- **Temporal Coverage**: Current (continuously updated)
+- **Update Frequency**: Real-time community updates
+- **Access Type**: Open/Free (ODbL license)
+- **API Availability**: Yes, Overpass API
+- **Official URL**: https://www.openstreetmap.org
+- **Quality Assessment**: Very good for UK - high completeness and accuracy in populated areas, variable in remote regions, excellent for supplementary data[web:general knowledge]
+
+## 5. INFRASTRUCTURE - RAILWAYS
+
+### OS NGD Transport Network - Railway Components
+- **Source/Provider**: Ordnance Survey
+- **Resolution/Scale**: Vector, Railway Link, Railway Node features
+- **Temporal Coverage**: Current
+- **Update Frequency**: Monthly
+- **Access Type**: Licensed (free for public sector)
+- **API Availability**: Yes, OS NGD API
+- **Official URL**: https://docs.os.uk/osngd/data-structure/transport/transport-network
+- **Quality Assessment**: Excellent - topologically structured rail network, comprehensive GB coverage[23]
+
+### Network Rail Geospatial Data (Rail Data Marketplace)
+- **Source/Provider**: Network Rail
+- **Resolution/Scale**: Vector, track-level detail (Infrastructure Network Model)
+- **Temporal Coverage**: Current
+- **Update Frequency**: Periodic updates
+- **Access Type**: Restricted/Requires request (Open Government Licence for approved uses)
+- **API Availability**: Limited, various operational data feeds
+- **Official URL**: https://www.networkrail.co.uk/who-we-are/transparency-and-ethics/transparency/open-data-feeds/
+- **Quality Assessment**: Excellent - most detailed railway network data available, includes ELR (Engineer's Line Reference) data, track-level precision[26][27][28]
+
+### OpenStreetMap Railways UK
+- **Source/Provider**: OpenStreetMap community
+- **Resolution/Scale**: Vector
+- **Temporal Coverage**: Current
+- **Update Frequency**: Community-driven real-time updates
+- **Access Type**: Open/Free
+- **API Availability**: Yes, Overpass API
+- **Official URL**: https://www.openstreetmap.org
+- **Quality Assessment**: Good - reasonable coverage of main lines, may lack operational details compared to official sources[29][30]
+
+## 6. INFRASTRUCTURE - UTILITIES (Power, Telecom)
+
+### National Grid (NESO) GIS Boundaries for Grid Supply Points
+- **Source/Provider**: National Energy System Operator (formerly National Grid ESO)
+- **Resolution/Scale**: Polygon boundaries for Grid Supply Points
+- **Temporal Coverage**: Current (multiple versions maintained)
+- **Update Frequency**: Regular updates as network changes
+- **Access Type**: Open/Free (acknowledgment required)
+- **API Availability**: Yes, via NESO Data Portal
+- **Official URL**: https://www.neso.energy/data-portal/gis-boundaries-gb-grid-supply-points
+- **Quality Assessment**: Very good - official transmission network boundaries, useful for regional power infrastructure mapping[31][32]
+
+### National Grid Transmission Network Shapefiles
+- **Source/Provider**: National Grid
+- **Resolution/Scale**: Vector (approximate location)
+- **Temporal Coverage**: Current (updated September 2025)
+- **Update Frequency**: Periodic updates
+- **Access Type**: Restricted - for emergency and land use planning only, not commercial use
+- **API Availability**: No
+- **Official URL**: https://www.nationalgrid.com/electricity-transmission/network-and-infrastructure/network-route-maps
+- **Quality Assessment**: Good for indicative planning - electricity transmission only, requires contacting DNOs for distribution data, best-effort accuracy[33][34]
+
+### OpenInfraMap / OpenStreetMap Utilities
+- **Source/Provider**: OpenStreetMap community
+- **Resolution/Scale**: Vector, variable detail
+- **Temporal Coverage**: Current
+- **Update Frequency**: Community-driven updates
+- **Access Type**: Open/Free
+- **API Availability**: Yes, Overpass API
+- **Official URL**: https://openinframap.org
+- **Quality Assessment**: Fair to good - incomplete coverage, particularly for underground utilities, best used as supplementary data source[web:general knowledge]
+
+## 7. INFRASTRUCTURE - PIPELINES
+
+### Oil and Gas Authority (NSTA) Onshore GIS Data
+- **Source/Provider**: North Sea Transition Authority (formerly OGA)
+- **Resolution/Scale**: Vector (British National Grid)
+- **Temporal Coverage**: Current
+- **Update Frequency**: Weekly updates
+- **Access Type**: Open/Free for onshore data
+- **API Availability**: Yes, WFS (Web Feature Service)
+- **Official URL**: https://www.gov.uk/guidance/oil-and-gas-onshore-maps-and-gis-shapefiles
+- **Quality Assessment**: Good - official licensing and field data for onshore UK, includes Shapefile and KML formats[35]
+
+### NSTA Interactive Energy Map (UKCS)
+- **Source/Provider**: North Sea Transition Authority
+- **Resolution/Scale**: Interactive spatial mapping
+- **Temporal Coverage**: Current
+- **Update Frequency**: Regular updates
+- **Access Type**: Open/Free
+- **API Availability**: Limited
+- **Official URL**: https://www.nstauthority.co.uk/the-move-to-net-zero/interactive-energy-map-for-the-ukcs/
+- **Quality Assessment**: Very good for offshore infrastructure - includes pipelines, platforms, fields, and emerging technologies like carbon storage and offshore wind[36]
+
+### BEIS/Ofgem Pipeline Data
+- **Source/Provider**: Department for Business, Energy and Industrial Strategy / Ofgem
+- **Resolution/Scale**: Various (primarily offshore major pipelines)
+- **Temporal Coverage**: Current
+- **Update Frequency**: Periodic updates
+- **Access Type**: Varies - some open data, some restricted
+- **API Availability**: Limited via Ofgem data portal
+- **Official URL**: https://www.ofgem.gov.uk/news-and-insight/data/data-portal
+- **Quality Assessment**: Good for regulated pipeline network, primarily major transmission pipelines[37][38][39]
+
+### OpenStreetMap Pipelines UK
+- **Source/Provider**: OpenStreetMap community
+- **Resolution/Scale**: Vector
+- **Temporal Coverage**: Current
+- **Update Frequency**: Community updates
+- **Access Type**: Open/Free
+- **API Availability**: Yes, Overpass API
+- **Official URL**: https://www.openstreetmap.org
+- **Quality Assessment**: Poor to fair - typically incomplete for pipelines due to security and data availability restrictions, use with caution[web:general knowledge]
+
+## 8. PROTECTED AREAS / ENVIRONMENTAL
+
+### Natural England Protected Areas
+- **Source/Provider**: Natural England (Defra)
+- **Resolution/Scale**: Polygon vector data
+- **Temporal Coverage**: Current
+- **Update Frequency**: Regular updates as designations change
+- **Access Type**: Open/Free
+- **API Availability**: Yes, via ArcGIS REST services
+- **Official URL**: https://naturalengland-defra.opendata.arcgis.com
+- **Quality Assessment**: Excellent - authoritative source for England's protected areas including SSSIs, SPAs, SACs, NNRs[40][41][42]
+
+### JNCC UK Protected Area Datasets
+- **Source/Provider**: Joint Nature Conservation Committee
+- **Resolution/Scale**: Vector (various)
+- **Temporal Coverage**: Current
+- **Update Frequency**: Regular updates
+- **Access Type**: Open/Free
+- **API Availability**: Limited
+- **Official URL**: https://jncc.gov.uk/our-work/uk-protected-area-datasets-for-download/
+- **Quality Assessment**: Excellent - comprehensive UK-wide coverage, includes all internationally designated sites (SPAs, SACs, Ramsar)[43]
+
+### World Database on Protected Areas (WDPA) - UK Coverage
+- **Source/Provider**: UNEP-WCMC / IUCN
+- **Resolution/Scale**: Polygon and point data
+- **Temporal Coverage**: Current (monthly updates globally)
+- **Update Frequency**: Monthly
+- **Access Type**: Open/Free
+- **API Availability**: Yes, via Protected Planet
+- **Official URL**: https://www.protectedplanet.net/en/thematic-areas/wdpa
+- **Quality Assessment**: Very good - global standard but UK national sources (Natural England, JNCC) are more detailed and up-to-date[44]
+
+## 9. GEOLOGY / SOIL
+
+### BGS Geology 50K
+- **Source/Provider**: British Geological Survey
+- **Resolution/Scale**: 1:50,000
+- **Temporal Coverage**: Current (covers most of Great Britain)
+- **Update Frequency**: Ongoing mapping program
+- **Access Type**: Free for 1:625K, Licensed for 1:50K detail
+- **API Availability**: Yes, WMS/WFS services
+- **Official URL**: https://www.bgs.ac.uk/geological-data/datasets/
+- **Quality Assessment**: Excellent - authoritative UK geology, most detailed freely available geological maps at national scale[45]
+
+### BGS GeoSure (Hazards Suite)
+- **Source/Provider**: British Geological Survey
+- **Resolution/Scale**: 1:50,000 (5km hex grid free version)
+- **Temporal Coverage**: Current
+- **Update Frequency**: Periodic updates
+- **Access Type**: Licensed (free hex grid version available)
+- **API Availability**: Limited
+- **Official URL**: https://www.bgs.ac.uk/geological-data/datasets/
+- **Quality Assessment**: Excellent - includes landslides, ground stability, shrink-swell, soluble rocks, critical for pipeline routing risk assessment[45]
+
+### Cranfield NSRI Soilscapes
+- **Source/Provider**: National Soil Resources Institute, Cranfield University
+- **Resolution/Scale**: 1:250,000 simplified, detailed mapping at 1:25,000 to 1:250,000
+- **Temporal Coverage**: Current
+- **Update Frequency**: Periodic updates
+- **Access Type**: Free WMS service, licensed for data downloads
+- **API Availability**: Yes, WMS available
+- **Official URL**: https://www.ukso.org and http://www.landis.org.uk
+- **Quality Assessment**: Excellent - most authoritative UK soil dataset, covers England and Wales, essential for engineering assessment[46][47][48][49]
+
+### FAO Harmonized World Soil Database (HWSD)
+- **Source/Provider**: FAO/IIASA
+- **Resolution/Scale**: 1km resolution
+- **Temporal Coverage**: Current (based on legacy surveys)
+- **Update Frequency**: Static (v1.2)
+- **Access Type**: Open/Free
+- **API Availability**: No
+- **Official URL**: https://www.fao.org/soils-portal/
+- **Quality Assessment**: Fair for UK - global product, less detailed than national sources, use Cranfield data preferentially[web:general knowledge]
+
+## 10. CLIMATE / WEATHER
+
+### Met Office DataPoint API
+- **Source/Provider**: UK Met Office
+- **Resolution/Scale**: Site-specific and gridded forecasts
+- **Temporal Coverage**: Historical, current observations, forecasts
+- **Update Frequency**: Real-time for observations/forecasts
+- **Access Type**: Free registration required for API key
+- **API Availability**: Yes, comprehensive REST API
+- **Official URL**: https://www.metoffice.gov.uk/services/data/datapoint
+- **Quality Assessment**: Excellent - authoritative UK weather data, location-specific forecasts, observations from UK station network[50][51][52]
+
+### Met Office Weather DataHub
+- **Source/Provider**: UK Met Office
+- **Resolution/Scale**: UK 2km deterministic model, Global 10km model
+- **Temporal Coverage**: Current and forecast data
+- **Update Frequency**: Model runs multiple times daily
+- **Access Type**: Subscription-based (various tiers)
+- **API Availability**: Yes, comprehensive API for GRIB2 data, GeoJSON site-specific data
+- **Official URL**: https://www.metoffice.gov.uk/services/data/met-office-weather-datahub
+- **Quality Assessment**: Excellent - most detailed UK weather modeling, includes atmospheric models, probabilistic forecasts, map images[53]
+
+### ERA5 Reanalysis
+- **Source/Provider**: ECMWF/Copernicus Climate Change Service
+- **Resolution/Scale**: ~30km horizontal, hourly temporal
+- **Temporal Coverage**: 1940-present
+- **Update Frequency**: Monthly updates (2-3 month lag)
+- **Access Type**: Open/Free
+- **API Availability**: Yes, via Copernicus Climate Data Store API
+- **Official URL**: https://cds.climate.copernicus.eu
+- **Quality Assessment**: Excellent for long-term climate analysis, historical weather patterns, complements Met Office data[web:general knowledge]
+
+### WorldClim
+- **Source/Provider**: WorldClim project
+- **Resolution/Scale**: 30 arc-seconds (~1km) to 10 arc-minutes
+- **Temporal Coverage**: Historical climate averages (1970-2000 baseline)
+- **Update Frequency**: Periodic major releases
+- **Access Type**: Open/Free
+- **API Availability**: No, download only
+- **Official URL**: https://www.worldclim.org
+- **Quality Assessment**: Good for climate baseline data, less suitable for operational planning than Met Office products[web:general knowledge]
+
+## 11. ADMINISTRATIVE BOUNDARIES
+
+### ONS Open Geography Portal
+- **Source/Provider**: Office for National Statistics
+- **Resolution/Scale**: Vector, full resolution and generalized versions
+- **Temporal Coverage**: Current (updated annually or as boundaries change)
+- **Update Frequency**: Annual updates, more frequent for electoral changes
+- **Access Type**: Open/Free (Open Government Licence)
+- **API Availability**: Yes, ArcGIS REST services and WFS
+- **Official URL**: https://geoportal.statistics.gov.uk
+- **Quality Assessment**: Excellent - definitive source for UK administrative boundaries, includes all hierarchical levels from output areas to countries[54]
+
+### GADM UK
+- **Source/Provider**: GADM (Global Administrative Areas)
+- **Resolution/Scale**: Vector, multiple administrative levels
+- **Temporal Coverage**: Current (version updates periodic)
+- **Update Frequency**: Periodic version releases
+- **Access Type**: Open/Free (academic and non-commercial use)
+- **API Availability**: No, download only
+- **Official URL**: https://gadm.org
+- **Quality Assessment**: Good for international projects requiring consistent global framework, but ONS data is more accurate and current for UK[web:general knowledge]
+
+## 12. POPULATION / DEMOGRAPHICS
+
+### ONS Census Data
+- **Source/Provider**: Office for National Statistics
+- **Resolution/Scale**: Output area to local authority level
+- **Temporal Coverage**: Decennial census (2021 most recent), mid-year estimates annual
+- **Update Frequency**: Census every 10 years, mid-year estimates annually
+- **Access Type**: Open/Free
+- **API Availability**: Yes, Nomis API and various statistical APIs
+- **Official URL**: https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationestimates
+- **Quality Assessment**: Excellent - most authoritative UK population data, detailed demographic breakdowns, essential for route planning near settlements[55][56][57]
+
+### WorldPop UK
+- **Source/Provider**: WorldPop, University of Southampton
+- **Resolution/Scale**: 100m gridded population
+- **Temporal Coverage**: Annual estimates, historical time series
+- **Update Frequency**: Annual
+- **Access Type**: Open/Free
+- **API Availability**: Limited
+- **Official URL**: https://www.worldpop.org
+- **Quality Assessment**: Very good - high resolution gridded population useful for spatial analysis, complements census data with continuous surface[58]
+
+### LandScan Global
+- **Source/Provider**: Oak Ridge National Laboratory (ORNL)
+- **Resolution/Scale**: ~1km resolution
+- **Temporal Coverage**: Annual global datasets
+- **Update Frequency**: Annual
+- **Access Type**: Restricted/Requires registration
+- **API Availability**: No
+- **Official URL**: https://landscan.ornl.gov
+- **Quality Assessment**: Good - ambient population model (24-hour average), lower resolution than WorldPop for UK, use as supplementary source[web:general knowledge]
+
+## 13. SATELLITE IMAGERY (COMMERCIAL)
+
+### Sentinel-2 (Free Baseline)
+- **Source/Provider**: European Space Agency (Copernicus Programme)
+- **Resolution/Scale**: 10m multispectral (visible/NIR), 20m SWIR, 60m atmospheric
+- **Temporal Coverage**: 2015-present
+- **Update Frequency**: 5-day revisit globally (2-3 days effective with both satellites)
+- **Access Type**: Open/Free
+- **API Availability**: Yes, via Copernicus Data Space Ecosystem API
+- **Official URL**: https://dataspace.copernicus.eu
+- **Quality Assessment**: Excellent - free high-resolution multispectral imagery, ideal for vegetation/land cover analysis, cloud cover can limit UK availability[59][60]
+
+### Maxar (formerly DigitalGlobe)
+- **Source/Provider**: Maxar Technologies
+- **Resolution/Scale**: 30cm to 50cm (WorldView-2/3/4, GeoEye-1)
+- **Temporal Coverage**: Extensive archive, on-demand tasking
+- **Update Frequency**: On-demand tasking, archive varies
+- **Access Type**: Commercial/Purchase
+- **API Availability**: Yes, Maxar SecureWatch API
+- **Official URL**: https://www.maxar.com
+- **Quality Assessment**: Excellent - highest resolution commercial imagery, sub-meter accuracy, ideal for detailed corridor surveys[web:general knowledge]
+
+### Airbus Defence and Space (Pleiades, SPOT)
+- **Source/Provider**: Airbus Defence and Space
+- **Resolution/Scale**: 50cm (Pleiades Neo/1B), 1.5m (SPOT 6/7)
+- **Temporal Coverage**: Extensive archive, tasking available
+- **Update Frequency**: On-demand
+- **Access Type**: Commercial/Purchase
+- **API Availability**: Yes, OneAtlas API
+- **Official URL**: https://www.intelligence-airbusds.com
+- **Quality Assessment**: Excellent - very high resolution, good for detailed planning, competitive with Maxar[web:general knowledge]
+
+### Planet Labs
+- **Source/Provider**: Planet Labs
+- **Resolution/Scale**: 3m (PlanetScope), 50cm (SkySat)
+- **Temporal Coverage**: Daily global coverage (PlanetScope)
+- **Update Frequency**: Daily
+- **Access Type**: Commercial/Subscription
+- **API Availability**: Yes, Planet API
+- **Official URL**: https://www.planet.com
+- **Quality Assessment**: Very good - daily coverage unique for temporal analysis, moderate resolution suitable for monitoring and change detection[web:general knowledge]
+
+## 14. SPECIAL DATASETS FOR UNITED KINGDOM
+
+### Historic England Archaeological Data
+- **Source/Provider**: Historic England
+- **Resolution/Scale**: Vector (point, line, polygon)
+- **Temporal Coverage**: Current (continuously updated heritage records)
+- **Update Frequency**: Continuous updates to National Heritage List
+- **Access Type**: Open/Free for GIS shapefiles
+- **API Availability**: Yes, ArcGIS REST services
+- **Official URL**: https://historicengland.org.uk/listing/the-list/data-downloads/ and https://opendata-historicengland.hub.arcgis.com
+- **Quality Assessment**: Excellent - comprehensive heritage datasets including scheduled monuments, listed buildings, registered parks/gardens, critical for pipeline routing to avoid archaeological constraints[61][62][63][64][65]
+
+### BGS National Landslide Database
+- **Source/Provider**: British Geological Survey
+- **Resolution/Scale**: Point and polygon features
+- **Temporal Coverage**: Historical and current records
+- **Update Frequency**: Ongoing updates
+- **Access Type**: Free/Licensed (different access levels)
+- **API Availability**: Limited
+- **Official URL**: https://www.bgs.ac.uk/geological-data/datasets/
+- **Quality Assessment**: Excellent - comprehensive landslide inventory for Great Britain, essential for geohazard assessment along routes[45]
+
+### BGS GeoClimate UKCP18 (Climate Change Projections)
+- **Source/Provider**: British Geological Survey / Met Office
+- **Resolution/Scale**: Quasi-1:50,000 (Premium), 2km gridded (Open)
+- **Temporal Coverage**: Future climate projections to 2100
+- **Update Frequency**: Periodic updates aligned with UKCP releases
+- **Access Type**: Open (2km) / Licensed (50K)
+- **API Availability**: No
+- **Official URL**: https://www.bgs.ac.uk/geological-data/datasets/
+- **Quality Assessment**: Very good - integrates UKCP18 climate projections with geological context, useful for long-term infrastructure resilience planning[45]
+
+### BGS Radon Potential Data
+- **Source/Provider**: British Geological Survey / Public Health England
+- **Resolution/Scale**: 1:50,000 (1km hex grid free version)
+- **Temporal Coverage**: Current
+- **Update Frequency**: Periodic updates
+- **Access Type**: Licensed (free indicative atlas available)
+- **API Availability**: No
+- **Official URL**: https://www.bgs.ac.uk/geological-data/datasets/
+- **Quality Assessment**: Very good - important for worker safety considerations in enclosed pipeline construction areas[45]
+
+### Ministry of Defence Danger Areas / Military Zones
+- **Source/Provider**: Ministry of Defence
+- **Resolution/Scale**: Vector polygons
+- **Temporal Coverage**: Current
+- **Update Frequency**: As military estates change
+- **Access Type**: Restricted - contact MOD for specific projects
+- **API Availability**: No
+- **Official URL**: Contact MOD directly for project-specific data
+- **Quality Assessment**: Official source required for areas near military installations, essential for routing constraints[web:general knowledge]
+
+### Coal Authority Mining Data
+- **Source/Provider**: The Coal Authority
+- **Resolution/Scale**: 1:50,000 and site-specific
+- **Temporal Coverage**: Historical and current mining records
+- **Update Frequency**: Ongoing updates
+- **Access Type**: Commercial searches required for detailed data
+- **API Availability**: No
+- **Official URL**: https://www.gov.uk/get-mining-reports
+- **Quality Assessment**: Essential for areas with historical coal mining, critical for ground stability assessment in affected regions[45]
+
+### UK Seismic Hazard
+- **Source/Provider**: British Geological Survey
+- **Resolution/Scale**: National coverage, varies by dataset
+- **Temporal Coverage**: Historical seismic records and hazard models
+- **Update Frequency**: Periodic updates
+- **Access Type**: Free/Licensed depending on dataset
+- **API Availability**: Limited
+- **Official URL**: https://www.bgs.ac.uk (earthquake seismology section)
+- **Quality Assessment**: Good - UK has low seismic hazard but data available for comprehensive risk assessment[web:general knowledge]
+
+---
+
+## Key Recommendations for UK Pipeline Routing:
+
+**Priority National Datasets:**
+1. Environment Agency 1m LiDAR for England - highest quality terrain data[2][1]
+2. OS Terrain 5 and OS NGD Transport Network for detailed infrastructure[4][23]
+3. UKCEH Land Cover Maps for current land use[12][10]
+4. BGS Geology 50K and GeoSure for geological constraints[45]
+5. Natural England and JNCC protected areas for environmental constraints[41][40][43]
+6. Historic England datasets for archaeological constraints[62][63]
+
+**API Access Strengths:**
+- OS Data Hub provides comprehensive API access to premium UK mapping[5][23]
+- Met Office DataPoint and Weather DataHub for weather/climate API[51][52][53]
+- NESO Data Portal for energy infrastructure[32][31]
+- Copernicus Data Space for free satellite imagery and DEM[8][59]
+
+**Coverage Notes:**
+- Scotland: Some datasets cover only England/Wales - verify Scottish coverage separately
+- Northern Ireland: Often requires separate datasets from Northern Ireland agencies
+- Offshore: NSTA provides excellent offshore oil/gas infrastructure data[35][36]
+
+**Data Quality:** UK has exceptionally high-quality national mapping infrastructure through Ordnance Survey, Environment Agency, BGS, and UKCEH - prioritize these national sources over global datasets where available.[1][10][5][45]
+
+[1](https://www.data.gov.uk/dataset/f0db0249-f17b-4036-9e65-309148c97ce4/national-lidar-programme)
+[2](https://www.data.gov.uk/dataset/01b3ee39-da3f-47b6-83da-dc98e73a461f/lidar-composite-digital-terrain-model-dtm-1m)
+[3](https://help.emd.dk/mediawiki/index.php/UK-England_Elevation_Model_(LIDAR))
+[4](https://www.ordnancesurvey.co.uk/products/os-terrain-5)
+[5](https://osdatahub.os.uk/downloads/open)
+[6](https://www.ukso.org/static-maps/ordnance-survey-terrain-50.html)
+[7](https://gee-community-catalog.org/projects/glo30/)
+[8](https://collections.sentinel-hub.com/copernicus-dem/)
+[9](https://registry.opendata.aws/copernicus-dem/)
+[10](https://www.ceh.ac.uk/data/ukceh-land-cover-maps)
+[11](https://catalogue.ceh.ac.uk/id/c0078881-7d5a-4641-91e2-c271426bc8a1)
+[12](https://essd.copernicus.org/articles/15/4631/2023/)
+[13](https://worldcover2020.esa.int)
+[14](https://esa-worldcover.org/en)
+[15](https://gee-community-catalog.org/projects/esrilc2020/)
+[16](https://livingatlas.arcgis.com/landcoverexplorer/)
+[17](https://www.data.gov.uk/dataset/98a4d46e-23e7-4430-883c-9e5f14645e8f/hydrological-open-data)
+[18](https://engageenvironmentagency.uk.engagementhq.com/data-publications-water)
+[19](https://knowledge.groundsure.com/enviro-geo-insight-gis-schema-hydrology)
+[20](https://www.data.gov.uk/dataset/f3c13382-8558-4731-8eb0-b5f931a86f82/ea-hydrological-boundaries)
+[21](https://osdatahub.os.uk/downloads/open/OpenRoads)
+[22](https://www.data.gov.uk/dataset/65bf62c8-eae0-4475-9c16-a2e81afcbdb0/os-open-roads1)
+[23](https://docs.os.uk/osngd/data-structure/transport/transport-network)
+[24](https://ckan.publishing.service.gov.uk/dataset/major-road-network/resource/175d99b3-c9ea-40ef-9168-6875398330da?inner_span=True)
+[25](https://www.data.gov.uk/dataset/95f58bfa-13d6-4657-9d6f-020589498cfd/major-road-network)
+[26](https://www.networkrail.co.uk/who-we-are/transparency-and-ethics/transparency/open-data-feeds/)
+[27](https://github.com/openraildata/network-rail-gis)
+[28](https://railmap.azurewebsites.net/Downloads)
+[29](https://data.humdata.org/dataset/hotosm_gbr_railways)
+[30](https://www.railmaponline.com/UKIEMap.php)
+[31](https://www.neso.energy/data-portal/gis-boundaries-gb-grid-supply-points)
+[32](https://www.neso.energy/data-portal)
+[33](https://www.nationalgrid.com/electricity-transmission/network-and-infrastructure/network-route-maps)
+[34](https://es.catapult.org.uk/wp-content/uploads/2022/04/GIS-Data-Report.pdf)
+[35](https://www.gov.uk/guidance/oil-and-gas-onshore-maps-and-gis-shapefiles)
+[36](https://www.nstauthority.co.uk/the-move-to-net-zero/interactive-energy-map-for-the-ukcs/)
+[37](https://www.ofgem.gov.uk/sites/default/files/docs/2019/12/ukcs_energy_integration-_interim_findings.pdf)
+[38](https://www.ofgem.gov.uk/news-and-insight/data/data-portal)
+[39](https://www.data.gov.uk/dataset/a5f15c50-e6df-4a33-b19e-60b2726eb194/beis-commercial-pipeline/datafile/fd274d06-d464-48ab-8f52-dd217c8fe103/preview)
+[40](https://naturalengland-defra.opendata.arcgis.com)
+[41](https://naturalengland-defra.opendata.arcgis.com/datasets/Defra::sites-of-special-scientific-interest-england/about)
+[42](https://naturalengland-defra.opendata.arcgis.com/datasets/special-protection-areas-england)
+[43](https://jncc.gov.uk/our-work/uk-protected-area-datasets-for-download/)
+[44](https://www.protectedplanet.net/en/thematic-areas/wdpa)
+[45](https://www.bgs.ac.uk/geological-data/datasets/)
+[46](https://www.arcgis.com/home/item.html?id=daed7da277324ed7a946e8a8dbe256bc)
+[47](https://mapapps2.bgs.ac.uk/ukso/home.html)
+[48](https://www.ukso.org/static-maps/published-soil-maps-great-britain.html)
+[49](https://www.ukso.org/static-maps/soils-of-england-and-wales.html)
+[50](https://publicapi.dev/met-office-data-point-api)
+[51](https://www.metoffice.gov.uk/services/data/datapoint/api-reference)
+[52](https://www.metoffice.gov.uk/services/data/datapoint)
+[53](https://www.metoffice.gov.uk/services/data/met-office-weather-datahub)
+[54](https://geoportal.statistics.gov.uk)
+[55](https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationestimates)
+[56](https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationestimates/datasets/populationestimatesforukenglandandwalesscotlandandnorthernireland)
+[57](https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationestimates/datasets/estimatesofthepopulationforenglandandwales)
+[58](https://www.worldpop.org)
+[59](https://dataspace.copernicus.eu/gallery)
+[60](https://dataspace.copernicus.eu/explore-data/data-collections/copernicus-contributing-missions/ccm-collections-description)
+[61](https://resource.esriuk.com/esri-resources/historic-england/)
+[62](https://historicengland.org.uk/listing/the-list/data-downloads/)
+[63](https://opendata-historicengland.hub.arcgis.com)
+[64](https://historicengland.org.uk/research/results/aerial-archaeology-mapping-explorer/)
+[65](https://www.data.gov.uk/dataset/640d5dab-4295-4b85-bc26-a8369abb73f6/scheduled-monuments-gis-data)
+[66](https://digimap.edina.ac.uk/lidar)
+[67](https://www.data.gov.uk)
+[68](https://www.reddit.com/r/gis/comments/yuh3dq/where_can_i_get_good_lidar_data_of_the_uk/)
+[69](https://ckan.publishing.service.gov.uk/dataset/?tags=hydrology)
+[70](https://www.data.gov.uk/dataset/f335ab3a-f670-467f-bedd-80bdd8f1ace6/green-and-blue-infrastructure-england)
+[71](https://www.bgs.ac.uk/datasets/hydrogeology-625k/)
+[72](https://www.gov.uk/government/statistical-data-sets)
+[73](https://www.ukso.org/static-maps/land-cover-map.html)
+[74](https://digimap.edina.ac.uk/environment)
+[75](https://www.arcgis.com/home/item.html?id=d57931c43ec6446993b5a60ed60256e9)
+[76](https://community.esri.com/t5/gis-life-discussions/shapefile-of-road-area-uk/td-p/1400905)
+[77](https://www.theoep.org.uk/sites/default/files/reports-files/Recent%20Land%20Cover%20Change.pdf)
+[78](https://essd.copernicus.org/preprints/essd-2023-78/essd-2023-78.pdf)
+[79](https://www.campop.geog.cam.ac.uk/research/occupations/datasets/catalogues/transport/)
+[80](https://connecteddata.nationalgrid.co.uk/dataset/)
+[81](https://www.elexon.co.uk/documents/data/operational-data/gb-transmission-system-boundary-zone-map/)
+[82](https://www.data.gov.uk/dataset/5fa93846-ebda-44b7-b478-4fe0ee3c8595/rail4)
+[83](https://jncc.gov.uk/our-work/ukbi-protected-areas/)
+[84](https://groups.google.com/g/openraildata-talk/c/_2FPq3rcFU8)
+[85](https://www.gov.uk/guidance/protected-areas-sites-of-special-scientific-interest)
+[86](https://open-meteo.com/en/docs/ukmo-api)
+[87](https://www.arcgis.com/home/search.html?q=tags%3A%22Network+Rail%3B%22)
+[88](https://www.arcgis.com/home/item.html?id=0c11f2da0755432bbf8384635f07069f&sublayer=0)
+[89](https://en.wikipedia.org/wiki/Demographics_of_the_United_Kingdom)
+[90](https://assets.publishing.service.gov.uk/media/68875a74be2291b14d11afa1/Gas_methodology_note.pdf)
+[91](https://storymaps.arcgis.com/stories/8a99b5b70e2842f7a856d11c49974f78)
+[92](https://www.data.gov.uk/dataset/2ad9baee-698d-4713-9848-0281e11c76a3/carbon-storage-sites-wgs843)
+[93](https://www.ofgem.gov.uk/sites/default/files/docs/2021/04/riio-gt1_regulatory_instructions_and_guidance_version_v8.2_0.pdf)
+[94](https://www.wossac.com)
+[95](https://data.catchmentbasedapproach.org/maps/ab736aab3f9b4ea49807977f917df90b/about)
+[96](https://www.cranfield.ac.uk/case-studies/national-soil-map)
+[97](https://www.data.gov.uk/dataset/ea1442bf-ba77-42cc-80e7-2ea339ccb28a/natmap-national-soil-map1)
+[98](https://dataspace.copernicus.eu/explore-data/data-collections/copernicus-contributing-missions/collections-description/COP-DEM)
+[99](https://www.isric.org/soil-geographic-databases-world)
+[100](https://portal.opentopography.org/raster?opentopoID=OTSDEM.032021.4326.3)

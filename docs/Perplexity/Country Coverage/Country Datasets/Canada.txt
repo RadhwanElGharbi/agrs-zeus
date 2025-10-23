@@ -1,0 +1,753 @@
+# Comprehensive GIS Datasets for Oil & Gas Pipeline Routing in Canada
+
+## 1. ELEVATION/TERRAIN (DEM)
+
+### National Geological Survey DEMs
+
+**Canadian Digital Elevation Model (CDEM)**
+- **Source:** Natural Resources Canada (NRCan)
+- **Resolution:** 0.75 arc-seconds (~23 meters), varying by latitude
+- **Temporal Coverage:** 1945-2011
+- **Update Frequency:** Legacy product, superseded by HRDEM
+- **Access:** Open/Free (Open Government Licence - Canada)
+- **API:** Yes, Google Earth Engine API available
+- **URL:** https://open.canada.ca & https://developers.google.com/earth-engine/datasets/catalog/NRCan_CDEM
+- **Quality:** Moderate resolution; elevations represent either ground or reflective surface; suitable for regional planning but less accurate than newer products[1][2]
+
+**High Resolution Digital Elevation Model (HRDEM)**
+- **Source:** Natural Resources Canada
+- **Resolution:** 1-2 meters
+- **Temporal Coverage:** 2006-present (ongoing)
+- **Update Frequency:** Ongoing coverage expansion under National Elevation Data Strategy
+- **Access:** Open/Free
+- **API:** Available through Data Cube
+- **URL:** https://natural-resources.canada.ca/science-data/data-analysis/geospatial-data-tools-services/elevation-data
+- **Quality:** Excellent; derived from LiDAR and high-resolution satellite imagery; includes Digital Surface Model (DSM) and Digital Terrain Model (DTM); accuracy of 1-2m for satellite-derived, centimeters for LiDAR[3][1]
+
+**Medium Resolution Digital Elevation Model (MRDEM)**
+- **Source:** Natural Resources Canada
+- **Resolution:** 30 meters
+- **Temporal Coverage:** Integrates Copernicus (2011-2015) with LiDAR (2006-2023)
+- **Update Frequency:** Updated as new LiDAR becomes available
+- **Access:** Open/Free
+- **API:** Available through Data Cube
+- **URL:** https://natural-resources.canada.ca/maps-tools-publications/satellite-elevation-air-photos/national-elevation-data-strategy
+- **Quality:** Very good; complete Canada coverage; referenced to CGVD2013; includes DSM and DTM[3]
+
+### LiDAR Point Clouds
+
+**Airborne LiDAR Point Clouds**
+- **Source:** Natural Resources Canada
+- **Resolution:** Sub-meter (centimeter accuracy)
+- **Temporal Coverage:** Various acquisition projects 2006-present
+- **Update Frequency:** Ongoing acquisitions
+- **Access:** Open/Free (Cloud Optimized Point Cloud format)
+- **API:** Direct file access via URLs
+- **URL:** Coverage map at https://natural-resources.canada.ca/science-data/data-analysis/geospatial-data-tools-services/elevation-data
+- **Quality:** Excellent; highest accuracy available; COPC format compatible with QGIS 3.26+; captures ground and vegetation[3]
+
+### Best Global DEM for Canada
+
+**Copernicus DEM**
+- **Source:** European Space Agency (integrated in MRDEM)
+- **Resolution:** 30 meters (integrated version)
+- **Temporal Coverage:** 2011-2015
+- **Update Frequency:** Static
+- **Access:** Open/Free
+- **API:** Yes, via Copernicus services
+- **URL:** Integrated in NRCan MRDEM products
+- **Quality:** Good global baseline; less accurate than national products[3]
+
+## 2. LAND COVER / LAND USE
+
+### National Land Use Maps
+
+**Land Cover Register (LCR)**
+- **Source:** Statistics Canada (Census of Environment program)
+- **Resolution:** 30 meters
+- **Temporal Coverage:** Circa 2020
+- **Update Frequency:** Occasional basis (not annual)
+- **Access:** Open/Free
+- **API:** Not specified
+- **URL:** https://www150.statcan.gc.ca/n1/pub/16-510-x/16-510-x2025003-eng.htm
+- **Quality:** Very good; 11-class classification system; integrates multiple datasets (AAFC SDLU, CCMEO LCC, CFS LCV2); designed for ecosystem accounting and spatial analysis[4]
+
+**AAFC Annual Crop Inventory**
+- **Source:** Agriculture and Agri-Food Canada (AAFC)
+- **Resolution:** 30 meters
+- **Temporal Coverage:** Annual updates (2013-present)
+- **Update Frequency:** Annual
+- **Access:** Open/Free
+- **API:** Yes, available through Google Earth Engine
+- **URL:** https://open.canada.ca (search "AAFC Annual Crop Inventory")
+- **Quality:** Excellent for agricultural areas; covers south of 60°N latitude; detailed crop classification[5][4]
+
+### Best Global Datasets
+
+**ESA WorldCover**
+- **Source:** European Space Agency
+- **Resolution:** 10 meters
+- **Temporal Coverage:** 2020-2021
+- **Update Frequency:** Annual
+- **Access:** Open/Free
+- **API:** Yes
+- **URL:** https://esa-worldcover.org
+- **Quality:** Excellent; 11 land cover classes; high resolution suitable for detailed planning[6]
+
+**Sentinel-2 Land Cover**
+- **Source:** ESA Copernicus program
+- **Resolution:** 10-20 meters
+- **Temporal Coverage:** 2015-present
+- **Update Frequency:** Continuous/5-day revisit
+- **Access:** Open/Free
+- **API:** Yes, multiple APIs including Google Earth Engine
+- **URL:** https://scihub.copernicus.eu
+- **Quality:** Excellent temporal resolution; suitable for change detection[7]
+
+## 3. HYDROLOGY / WATER
+
+### National Hydrography Networks
+
+**National Hydro Network (NHN)**
+- **Source:** Natural Resources Canada (GeoBase program)
+- **Resolution:** 1:50,000 (some at 1:10,000-1:20,000)
+- **Temporal Coverage:** Current, continuously updated
+- **Update Frequency:** At least annually
+- **Access:** Open/Free (Open Government Licence)
+- **API:** Available through WMS/WFS services
+- **URL:** https://open.canada.ca/data/en/dataset/a4b190fe-e090-4e6d-881e-b87956c07977
+- **Quality:** Excellent; seamless vector dataset; includes lakes, reservoirs, rivers, streams, canals, drainage networks; attributes for flow analysis; uses Linear Referencing System; topologically structured[8][9][10]
+
+**NHN Features Include:**
+- Lakes and reservoirs
+- Watercourses (rivers and streams)
+- Canals
+- Islands
+- Obstacles (waterfalls, rapids, rocks)
+- Constructions (dams, wharves, dikes)
+- Linear drainage network
+- Toponymic information (geographical names)[9]
+
+### Best Global Datasets
+
+**Global Surface Water Explorer**
+- **Source:** European Commission Joint Research Centre
+- **Resolution:** 30 meters
+- **Temporal Coverage:** 1984-present
+- **Update Frequency:** Periodic updates
+- **Access:** Open/Free
+- **API:** Yes, Google Earth Engine
+- **URL:** https://global-surface-water.appspot.com
+- **Quality:** Good for temporal water dynamics; complements NHN for historical analysis[9]
+
+## 4. INFRASTRUCTURE - ROADS
+
+### National Road Network
+
+**National Road Network (NRN)**
+- **Source:** Statistics Canada (formerly GeoBase)
+- **Resolution:** 1:10,000
+- **Temporal Coverage:** Current (March 2010 baseline, continuously updated)
+- **Update Frequency:** At least annually
+- **Access:** Open/Free (Open Government Licence)
+- **API:** WMS available
+- **URL:** https://open.canada.ca/data/en/dataset/3d282116-e556-400c-9306-ca1a3cada77f
+- **Quality:** Excellent; over 1 million km of road data; includes road segments, street names, types, directions, address ranges; provincial/territorial datasets; maintained through intergovernmental partnerships[11][12]
+
+**Road Network File (RNF)**
+- **Source:** Statistics Canada
+- **Resolution:** Census-compatible road network
+- **Temporal Coverage:** Updated with each census (2021 latest)
+- **Update Frequency:** Census cycles (typically every 5 years)
+- **Access:** Open/Free
+- **API:** Limited
+- **URL:** https://www12.statcan.gc.ca/census-recensement/2021/geo/sip-pis/rnf-frr/index-eng.cfm
+- **Quality:** Good; designed for statistical purposes; relative positional accuracy prioritized; not suitable for engineering/surveying applications[13][14]
+
+### Commercial Providers
+
+**HERE Technologies & TomTom**
+- **Coverage:** Excellent for Canada
+- **Resolution:** High detail, navigation-grade
+- **Access:** Commercial/Purchase
+- **API:** Yes, comprehensive APIs
+- **Quality:** Very high; includes real-time traffic, routing attributes, one-way streets[12]
+
+### OpenStreetMap
+
+**OSM Canada Coverage**
+- **Source:** OpenStreetMap Community
+- **Resolution:** Variable, generally good in urban areas
+- **Access:** Open/Free (ODbL License)
+- **API:** Yes, Overpass API
+- **URL:** https://www.openstreetmap.org
+- **Quality:** Good to excellent in major cities; variable in remote areas; strong volunteer community; continuously updated[12]
+
+## 5. INFRASTRUCTURE - RAILWAYS
+
+### National Railway Network
+
+**National Railway Network (NRWN)**
+- **Source:** Natural Resources Canada (GeoBase Series)
+- **Resolution:** High-quality geometric and attributive data
+- **Temporal Coverage:** Current
+- **Update Frequency:** Periodic updates
+- **Access:** Open/Free (Open Government Licence)
+- **API:** WMS/WFS available
+- **URL:** https://open.canada.ca (search "National Railway Network NRWN")
+- **Quality:** Very good; geometric and attributive description of Canadian rail network; includes freight and passenger rail[15][16]
+
+**Provincial Railway Networks**
+- **Ontario Railway Network (ORWN)**
+- **Source:** Ontario Ministry of Natural Resources
+- **Resolution:** Enhanced spatial and attribute data
+- **Access:** Open via Ontario GeoHub
+- **URL:** https://geohub.lio.gov.on.ca
+- **Quality:** Excellent for Ontario; seven data classes[17]
+
+### Commercial/Industry Sources
+
+**Railway Association of Canada Rail Atlas**
+- **Source:** Railway Association of Canada
+- **Resolution:** Comprehensive network map
+- **Temporal Coverage:** December 2023
+- **Access:** Commercial/Purchase
+- **URL:** https://www.railcan.ca/resources/rail-atlas/
+- **Quality:** Excellent; shows all railway lines by track owner; includes ~300 rail facilities and 4,500 stations; covers Canada, US, and Mexico principal lines[18]
+
+### OpenStreetMap Railways
+
+**Coverage:** Good in major corridors; variable in remote areas
+**Access:** Open/Free
+**Quality:** Generally good but requires validation against official sources[16]
+
+## 6. INFRASTRUCTURE - UTILITIES
+
+### National Electricity Networks
+
+**No centralized national electricity transmission GIS dataset publicly available**
+- Provincial utilities maintain their own datasets (varies by province)
+- **Access:** Typically restricted or requires formal request
+- **Quality:** Provincial data quality is generally high but fragmented[19]
+
+### OpenInfraMap / OpenStreetMap Utilities
+
+**Source:** OpenStreetMap Community
+**Coverage:** Partial; better in southern Canada
+**Access:** Open/Free
+**API:** Yes, Overpass API
+**URL:** https://openinframap.org
+**Quality:** Fair to good; incomplete coverage; useful for reference but requires field verification[12]
+
+## 7. INFRASTRUCTURE - PIPELINES
+
+### Federal Pipeline Data
+
+**Canada Energy Regulator (CER) Pipeline Data**
+- **Source:** Canada Energy Regulator (formerly National Energy Board)
+- **Resolution:** High accuracy for federally regulated pipelines
+- **Temporal Coverage:** Current, historical incident data from 2008
+- **Update Frequency:** Continuously updated
+- **Access:** Open/Free (interactive map); detailed data may require request
+- **API:** ArcGIS REST API available
+- **URL:** https://www.cer-rec.gc.ca/en/safety-environment/industry-performance/interactive-pipeline/
+- **Quality:** Excellent for federally regulated pipelines (26 major systems); includes pipeline profiles, incident data, locations; does NOT include provincially regulated pipelines[20][21][22]
+
+**Pipeline Profiles**
+- 26 major pipeline systems with detailed data
+- Interactive maps with story points
+- Includes throughput, capacity, safety, environmental data
+- Updated regularly[21]
+
+### Provincial Pipeline Registries
+
+**Provincial/territorial pipeline data varies significantly**
+- British Columbia Energy Regulator maintains detailed spatial data
+- Alberta Energy Regulator has comprehensive pipeline databases
+- **Access:** Typically requires formal request or subscription
+- **Quality:** Generally excellent within jurisdictions[23]
+
+### OpenStreetMap Pipelines
+
+**Coverage:** Very incomplete
+**Quality:** Poor; not reliable for planning purposes; use only as supplementary reference[20]
+
+## 8. PROTECTED AREAS / ENVIRONMENTAL
+
+### National Protected Areas Database
+
+**Canadian Protected and Conserved Areas Database (CPCAD)**
+- **Source:** Environment and Climate Change Canada (ECCC)
+- **Resolution:** Vector polygons at original survey scales
+- **Temporal Coverage:** Current, historical boundaries
+- **Update Frequency:** Regular updates (contributors added in 2023-2024)
+- **Access:** Open/Free (Open Government Licence)
+- **API:** WMS/WFS available
+- **URL:** https://www.canada.ca/en/environment-climate-change/services/national-wildlife-areas/protected-conserved-areas-database.html
+- **Quality:** Excellent; most comprehensive database; includes federal, provincial, territorial, Indigenous, NGO, and private protected areas; marine and terrestrial; includes protected areas (PA) and other effective area-based conservation measures (OECM); endorsed by Pathway to Canada Target 1[24][25]
+
+**Features:**
+- National parks
+- National wildlife areas (54 sites)
+- National marine conservation areas
+- Migratory bird sanctuaries
+- Provincial/territorial protected areas
+- Indigenous protected areas
+- Conservation lands
+- Area type designations (IUCN categories)[26][24]
+
+### World Database on Protected Areas (WDPA)
+
+**Source:** UNEP-WCMC
+**Coverage:** Global, includes Canada
+**Access:** Open/Free
+**API:** Yes
+**URL:** https://www.protectedplanet.net
+**Quality:** Good for international context; CPCAD is more complete for Canada specifically[24]
+
+## 9. GEOLOGY / SOIL
+
+### National Geological Survey
+
+**Canada Geological Map Compilation (CGMC)**
+- **Source:** Geological Survey of Canada (Natural Resources Canada)
+- **Resolution:** 1:30,000 to 1:2,000,000 (varies by source)
+- **Temporal Coverage:** Current compilation of historical surveys
+- **Update Frequency:** Periodic compilation updates
+- **Access:** Open/Free
+- **API:** WMS/WFS available
+- **URL:** https://natural-resources.canada.ca/maps-tools-publications/maps/earth-sciences-maps
+- **Quality:** Excellent; standardized compilation of 32 provincial/territorial geodatabases; includes lithology, mineralogy, metamorphic, lithostratigraphic data; hierarchical classification with 35 generalized lithology classes; linked to Lexicon of Canadian Geological Names (Weblex)[27][28]
+
+**Surficial Geology Maps**
+- **Source:** Geological Survey of Canada
+- **Resolution:** Various scales
+- **Coverage:** Comprehensive but variable by region
+- **Access:** Open/Free
+- **Quality:** Very good; standardized data model version 2.3.0; essential for understanding permafrost, landslides, and unstable terrain[29]
+
+### Soil Maps
+
+**National Soil Database (NSDB)**
+- **Source:** Agriculture and Agri-Food Canada (AAFC)
+- **Resolution:** Multiple scales (1:20,000 to 1:250,000)
+- **Temporal Coverage:** Historical surveys through present
+- **Update Frequency:** Periodic updates
+- **Access:** Open/Free
+- **API:** WMS available
+- **URL:** https://sis.agr.gc.ca/cansis/nsdb/index.html
+- **Quality:** Very good; comprehensive soil, landscape, and climate data; includes Detailed Soil Surveys (DSS) for agricultural areas and Canada Land Inventory (CLI)[30]
+
+**Soil Landscape Grids of Canada**
+- **Source:** Canadian Soil Information Service (AAFC)
+- **Resolution:** 100 meters
+- **Temporal Coverage:** Current (trained on 10,000+ pedon locations)
+- **Update Frequency:** Updated as new data available
+- **Access:** Open/Free (under evaluation)
+- **API:** Likely available
+- **URL:** https://sis.agr.gc.ca/cansis/nsdb/psm/index.html
+- **Quality:** Excellent; machine learning-derived; seven key soil properties at five depth increments; includes depth to bedrock; uses random forest model with 70 covariates; complete Canada coverage[31]
+
+### Global Soil Datasets
+
+**FAO HWSD / SoilGrids**
+- **Source:** ISRIC - World Soil Information
+- **Resolution:** 250 meters (SoilGrids250m 2.0)
+- **Access:** Open/Free
+- **API:** Yes, WCS and REST
+- **URL:** https://soilgrids.org
+- **Quality:** Good global baseline; Canadian national products are superior[32][33]
+
+## 10. CLIMATE / WEATHER
+
+### National Meteorological Service
+
+**Environment and Climate Change Canada (ECCC) Climate Data**
+- **Source:** Meteorological Service of Canada
+- **Resolution:** Station-based and gridded products (various)
+- **Temporal Coverage:** Historical (1840s-present), current, forecasts
+- **Update Frequency:** Real-time for current weather; historical updated regularly
+- **Access:** Open/Free
+- **API:** Yes, MSC GeoMet (WMS, WFS, OGC API)
+- **URL:** https://climate.weather.gc.ca & https://api.weather.gc.ca
+- **Quality:** Excellent; comprehensive historical and real-time data; temperature, precipitation, wind, humidity, degree days; station network across Canada; MSC Datamart for raw data access[34][35][36][37]
+
+**MSC GeoMet Platform:**
+- GeoMet-Weather (real-time meteorological data)
+- GeoMet-Climate (historical climate data)
+- GeoMet-OGC-API (emerging OGC standards)
+- Anonymous and free access
+- Supports WMS, WCS, WFS protocols[37]
+
+**Climate Data Extraction Tool**
+- **URL:** https://climate-change.canada.ca/climate-data/
+- Interactive tool for downloading specific datasets
+- Includes climate normals, monthly summaries, daily data
+- Future climate projections available[38]
+
+### Global Climate Datasets
+
+**ERA5 Reanalysis**
+- **Source:** ECMWF/Copernicus
+- **Resolution:** ~31 km (0.25 degrees)
+- **Temporal Coverage:** 1940-present
+- **Access:** Open/Free
+- **API:** Yes, CDS API
+- **Quality:** Excellent; hourly data; best global reanalysis product[37]
+
+**WorldClim**
+- **Source:** WorldClim.org
+- **Resolution:** ~1 km at highest resolution
+- **Temporal Coverage:** Historical averages
+- **Access:** Open/Free
+- **Quality:** Good for climatological averages; useful for baseline climate characterization[36]
+
+## 11. ADMINISTRATIVE BOUNDARIES
+
+### Official National Boundaries
+
+**Statistics Canada Census Boundary Files**
+- **Source:** Statistics Canada
+- **Resolution:** Multiple levels (national to dissemination area)
+- **Temporal Coverage:** Census 2021 (updated every 5 years)
+- **Update Frequency:** Census cycles; adjusted to CanVec as of 2020
+- **Access:** Open/Free (Open Government Licence)
+- **API:** WMS/WFS available
+- **URL:** https://www12.statcan.gc.ca/census-recensement/2021/geo/sip-pis/boundary-limites/index2021-eng.cfm
+- **Quality:** Excellent; authoritative; includes provinces/territories, census divisions, census subdivisions, dissemination areas, federal electoral districts, health regions, economic regions; cartographic and digital versions available[39][40]
+
+**Boundary Types:**
+- Cartographic (major land mass only)
+- Digital (full extent including coastal waters)
+- Administrative areas (provinces, territories, federal districts)
+- Statistical areas (population centres, economic regions, dissemination areas)
+- Land and water area calculations included[39]
+
+**CanVec Administrative Features**
+- **Source:** Natural Resources Canada
+- **Resolution:** High accuracy
+- **Coverage:** Geopolitical regions, populated places
+- **Access:** Open/Free
+- **Quality:** Excellent; basis for Statistics Canada boundaries since 2020[41][40]
+
+### Global Administrative Boundaries
+
+**GADM (Database of Global Administrative Areas)**
+- **Source:** GADM.org
+- **Resolution:** Multiple administrative levels
+- **Access:** Open/Free for non-commercial
+- **API:** Direct download
+- **URL:** https://gadm.org
+- **Quality:** Good; Statistics Canada products are more authoritative for Canada[41]
+
+## 12. POPULATION / DEMOGRAPHICS
+
+### National Census Data
+
+**Statistics Canada Census of Population**
+- **Source:** Statistics Canada
+- **Resolution:** Multiple geographic levels (dissemination areas to provinces)
+- **Temporal Coverage:** Census 2021 (quinquennial)
+- **Update Frequency:** Every 5 years
+- **Access:** Open/Free
+- **API:** Web Data Service available
+- **URL:** https://www12.statcan.gc.ca/census-recensement/index-eng.cfm
+- **Quality:** Excellent; authoritative; includes age, income, education, families, housing, immigration, Indigenous peoples, labour force; spatially linked to boundary files[42][43]
+
+**Census Data Categories:**
+- Population density
+- Age/sex structure
+- Household composition
+- Urban/rural classification
+- Population centres
+- Indigenous identity
+- Income and employment[42]
+
+### Global Population Datasets
+
+**WorldPop**
+- **Source:** WorldPop Research Group
+- **Resolution:** 100 meters (1 km products also available)
+- **Temporal Coverage:** Annual estimates, historical and projected
+- **Access:** Open/Free
+- **API:** Yes, REST API (woprVision)
+- **URL:** https://www.worldpop.org
+- **Quality:** Very good; high-resolution gridded population; age/sex structures; demographic indicators; useful for areas between census years[44]
+
+**LandScan Global**
+- **Source:** Oak Ridge National Laboratory (ORNL)
+- **Resolution:** ~1 km
+- **Temporal Coverage:** Annual updates
+- **Access:** Restricted/Requires Request (free for research/government)
+- **API:** Available through Google Earth Engine for licensed users
+- **Quality:** Excellent; ambient population model (day/night adjusted); widely used for analysis[45][46]
+
+## 13. SATELLITE IMAGERY (COMMERCIAL & FREE)
+
+### High-Resolution Commercial Imagery
+
+**Maxar Technologies (WorldView, GeoEye)**
+- **Resolution:** 30-50 cm (WorldView-3)
+- **Temporal Coverage:** Archive from ~2000s, ongoing tasking
+- **Access:** Commercial/Purchase
+- **API:** Yes, SecureWatch API
+- **URL:** https://www.maxar.com
+- **Quality:** Excellent; highest resolution commercial imagery; multi-spectral; stereo capability; extensive archive[47]
+
+**Airbus Defence and Space (Pléiades Neo, SPOT)**
+- **Resolution:** 30 cm (Pléiades Neo), 50 cm (Pléiades), 1.5 m (SPOT)
+- **Temporal Coverage:** Extensive archive, daily revisit capability
+- **Access:** Commercial/Purchase
+- **API:** Yes, OneAtlas API
+- **URL:** https://www.airbus.com/en/products-services/space/earth-observation
+- **Quality:** Excellent; rapid tasking; all-weather radar constellation; very high reactivity; Vision-1 for time-sensitive applications[48]
+
+**Planet Labs**
+- **Resolution:** 3-5 meters (PlanetScope), 50 cm (SkySat)
+- **Temporal Coverage:** Daily global coverage (PlanetScope)
+- **Access:** Commercial/Subscription
+- **API:** Yes, comprehensive API
+- **URL:** https://www.planet.com
+- **Quality:** Excellent temporal frequency; ideal for monitoring and change detection[49][47]
+
+### Free Baseline Imagery
+
+**Sentinel-2**
+- **Source:** European Space Agency (Copernicus)
+- **Resolution:** 10 meters (visible), 20 m (red edge/SWIR)
+- **Temporal Coverage:** 2015-present
+- **Update Frequency:** 5-day revisit (both satellites)
+- **Access:** Open/Free
+- **API:** Yes, multiple (Copernicus Open Access Hub, Google Earth Engine)
+- **URL:** https://scihub.copernicus.eu
+- **Quality:** Excellent; 13 spectral bands; ideal for vegetation analysis, land cover mapping, change detection[50]
+
+**Landsat 8/9**
+- **Source:** USGS/NASA
+- **Resolution:** 15 meters (panchromatic), 30 m (multispectral)
+- **Temporal Coverage:** 1972-present (Landsat program)
+- **Update Frequency:** 16-day revisit per satellite, 8-day combined
+- **Access:** Open/Free
+- **API:** Yes, USGS API, Google Earth Engine
+- **URL:** https://earthexplorer.usgs.gov
+- **Quality:** Excellent for long-term analysis; thermal bands; extensive archive[50]
+
+## 14. SPECIAL DATASETS FOR CANADA
+
+### Indigenous Lands
+
+**Indigenous Services Canada GIS Data**
+- **Source:** Indigenous Services Canada (ISC)
+- **Resolution:** Vector boundaries at survey accuracy
+- **Temporal Coverage:** Current
+- **Update Frequency:** Regular updates
+- **Access:** Open/Free for most data
+- **API:** WMS/WFS for selected datasets
+- **URL:** https://geo.sac-isc.gc.ca/Collection_de_cartes-Map_room/index_en.html
+- **Quality:** Excellent; authoritative source for First Nation, Inuit, and Métis communities; includes Indian Reserves, Land Claim Settlement Lands, Treaty territories[19]
+
+**Available Datasets:**
+- First Nation community locations and profiles
+- Indian Reserves and Aboriginal Lands (via Indian Lands Registry)
+- Historic treaties (1701-1930)
+- Modern treaties (1973-present)
+- Specific claim settlements
+- Inuit Nunangat (51 Inuit communities)
+- Aboriginal and Treaty Rights Information System (ATRIS)
+- BC Treaty negotiations[51][19]
+
+**Canada Lands Survey System (CLSS) Map Browser**
+- **Source:** Natural Resources Canada
+- **URL:** https://clss.nrcan-rncan.gc.ca
+- **Quality:** High; cadastral data for reserves and federal lands[51]
+
+### Permafrost Data
+
+**Permafrost Information Network (PIN)**
+- **Source:** Natural Resources Canada / Geological Survey of Canada
+- **Coverage:** Northern Canada focus
+- **Temporal Coverage:** Current and historical
+- **Access:** Open/Free
+- **URL:** https://geo.ca/communities/permafrost/
+- **Quality:** Very good; includes geotechnical borehole databases, surficial geology, permafrost extent, thaw slump mapping[52][53]
+
+**Canadian Permafrost Association Data Resources**
+- **URL:** https://canadianpermafrostassociation.ca
+- **Quality:** Good; aggregates various permafrost datasets[54]
+
+**Specific Permafrost Hazards:**
+- Thaw slump mapping (Northwest Territories, Beaufort Delta)
+- Ground ice distribution
+- Active layer monitoring
+- Permafrost temperature data
+- Critical for pipeline routing in northern regions[53][55]
+
+### Seismic Hazard Maps
+
+**Earthquakes Canada Seismic Hazard Data**
+- **Source:** Natural Resources Canada / Geological Survey of Canada
+- **Resolution:** National and regional scale maps
+- **Temporal Coverage:** Current hazard assessment
+- **Access:** Open/Free
+- **API:** WMS available
+- **URL:** https://www.seismescanada.rncan.gc.ca/hazard-alea/simphaz-en.php
+- **Quality:** Excellent; shows relative seismic hazard across Canada; provides probabilistic seismic hazard values; essential for engineering design[56]
+
+### Landslide Hazard Maps
+
+**GSC Landslide Hazard Mapping**
+- **Source:** Geological Survey of Canada
+- **Coverage:** Regional studies (Mackenzie Valley, BC, others)
+- **Temporal Coverage:** Various project timeframes
+- **Access:** Open/Free via GSC publications
+- **Quality:** Excellent where available; classifies landslide susceptibility based on surficial materials, slope, permafrost conditions; critical for northern pipeline routing[55][57]
+
+**Key Factors Mapped:**
+- Slope stability in permafrost terrain
+- Colluvial and glaciolacustrine deposits
+- Bank erosion and retrogressive thaw slumps
+- Ground ice content
+- Historical landslide inventory[55]
+
+### Archaeological Sites
+
+**Canadian Heritage Information Network**
+- **Access:** Restricted/Requires consultation with provincial/territorial authorities
+- **Quality:** Varies by jurisdiction; critical for regulatory compliance
+- **Note:** Archaeological site data is typically protected; requires formal requests and consultation processes[19]
+
+### Military Zones / Restricted Areas
+
+**Department of National Defence**
+- **Access:** Restricted/Requires formal request
+- **Quality:** High accuracy for operational areas
+- **Note:** Contact DND for specific restricted airspace and military training areas[19]
+
+***
+
+## SUMMARY QUALITY RANKINGS BY CATEGORY
+
+**Highest Priority/Quality Canadian Sources:**
+1. **Elevation:** HRDEM (1-2m LiDAR/satellite) > MRDEM (30m) > CDEM (23m legacy)
+2. **Land Cover:** Land Cover Register (30m) + AAFC Crop Inventory (30m annual)
+3. **Hydrology:** National Hydro Network (1:50,000 seamless)
+4. **Roads:** National Road Network (1:10,000)
+5. **Railways:** National Railway Network (NRWN)
+6. **Protected Areas:** CPCAD (most comprehensive)
+7. **Geology:** Canada Geological Map Compilation
+8. **Soil:** Soil Landscape Grids 100m + NSDB
+9. **Climate:** ECCC MSC GeoMet with full API access
+10. **Boundaries:** Statistics Canada Census Boundaries
+11. **Pipelines:** CER Pipeline Data (federal only)
+12. **Indigenous Lands:** ISC Map Room + ATRIS
+13. **Permafrost:** PIN + GSC surficial geology
+14. **Seismic:** Earthquakes Canada hazard maps
+
+**Key Advantages for Canadian Pipeline Routing:**
+- Most foundational datasets are open/free with permissive licensing
+- Strong API availability (WMS/WFS) for integration
+- National standardization through GeoBase and Statistics Canada
+- Regular update cycles for dynamic datasets
+- High resolution in critical infrastructure corridors
+- Comprehensive northern/permafrost data for Arctic routing[1][8][30][24][37][20][12]
+
+[1](https://natural-resources.canada.ca/science-data/data-analysis/geospatial-data-tools-services/elevation-data)
+[2](https://developers.google.com/earth-engine/datasets/catalog/NRCan_CDEM)
+[3](https://natural-resources.canada.ca/maps-tools-publications/satellite-elevation-air-photos/national-elevation-data-strategy)
+[4](https://www150.statcan.gc.ca/n1/pub/16-510-x/16-510-x2025003-eng.htm)
+[5](https://developers.google.com/earth-engine/datasets/tags/landcover)
+[6](https://www.esa-landcover-cci.org)
+[7](https://climate.esa.int/fr/projets/land-cover/)
+[8](https://canadiangis.com/national-hydro-network-nhn-canadian-open-data.php)
+[9](https://databasin.org/datasets/dda81e7c146049259097c1e7aade60ba/)
+[10](https://natural-resources.canada.ca/science-data/data-analysis/geospatial-data-tools-services/hydrographic-networks)
+[11](https://www.statcan.gc.ca/en/consultation/2019/nrn)
+[12](https://canadiangis.com/national-road-network-nrn-canadian-open-data.php)
+[13](https://www12.statcan.gc.ca/census-recensement/2021/geo/sip-pis/rnf-frr/index-eng.cfm)
+[14](http://geo1.scholarsportal.info/proxy.html?http%3A__maps.scholarsportal.info%2Ffiles%2FPDFS%2Fpublic%2FDLI%2FRNF%2F92-500-g2010001-eng.pdf)
+[15](https://app.geo.ca/en-ca/map-browser/record/ac26807e-a1e8-49fa-87bf-451175a859b8)
+[16](https://www.arcgis.com/home/item.html?id=5a24e03f3a2b41b6842d2a9759628c87)
+[17](https://geohub.lio.gov.on.ca/maps/b08674e0c4ce45e78e1225092a4f2afd)
+[18](https://www.railcan.ca/resources/rail-atlas/)
+[19](https://geo.sac-isc.gc.ca/Collection_de_cartes-Map_room/index_en.html)
+[20](https://www.cer-rec.gc.ca/en/safety-environment/industry-performance/interactive-pipeline/)
+[21](https://www.cer-rec.gc.ca/en/data-analysis/facilities-we-regulate/pipeline-profiles/)
+[22](https://www.arcgis.com/apps/webappviewer/index.html?id=2d11fd4e6a7a4f4ba7fe6bdf51ae52de)
+[23](https://www.bc-er.ca/files/application-manuals/Oil-and-Gas-Activity-Application-Manual/OGAAM-Chapter-7.pdf)
+[24](https://www.canada.ca/en/environment-climate-change/services/national-wildlife-areas/protected-conserved-areas-database.html)
+[25](https://cpcil.ca/wp-content/uploads/2021/02/Final-Version-CPCIL-CPCAD-Blog-Post.pdf)
+[26](https://www.canada.ca/en/services/environment/conservation/protected-areas.html)
+[27](https://app.geo.ca/en-ca/map-browser/record/d4f80bd3-17e3-a7e8-4bfe-d22a430678d5)
+[28](https://publications.gc.ca/collections/collection_2024/rncan-nrcan/m183-2/M183-2-9169-eng.pdf)
+[29](https://publications.gc.ca/site/eng/9.842190/publication.html)
+[30](https://sis.agr.gc.ca/cansis/nsdb/index.html)
+[31](https://sis.agr.gc.ca/cansis/nsdb/psm/index.html)
+[32](https://soilgrids.org)
+[33](https://isric.org/explore/soilgrids)
+[34](https://api.weather.gc.ca)
+[35](https://www.canada.ca/en/environment-climate-change/services/weather-general-tools-resources/weather-tools-specialized-data/free-service.html)
+[36](https://climate.weather.gc.ca)
+[37](https://eccc-msc.github.io/open-data/msc-geomet/readme_en/)
+[38](https://climate-change.canada.ca/climate-data/)
+[39](https://www12.statcan.gc.ca/census-recensement/2021/geo/sip-pis/boundary-limites/index2021-eng.cfm?year=21)
+[40](https://publications.gc.ca/collections/collection_2021/statcan/92-160-g2021001-eng.pdf)
+[41](https://researchguides.library.yorku.ca/c.php?g=679467&p=4793511)
+[42](https://www12.statcan.gc.ca/census-recensement/index-eng.cfm)
+[43](https://doc.arcgis.com/en/esri-demographics/latest/esri-demographics/canada.htm)
+[44](https://www.worldpop.org)
+[45](https://gee-community-catalog.org/tutorials/examples/landscan_extracts/)
+[46](https://uwaterloo.ca/lib/news/landscan-global-population)
+[47](https://flypix.ai/blog/maxar-alternatives/)
+[48](https://www.airbus.com/en/products-services/space/earth-observation/satellite-imagery)
+[49](https://xrtechgroup.com/top-satellite-imagery-providers/)
+[50](https://eos.com/blog/free-satellite-imagery-sources/)
+[51](https://clss.nrcan-rncan.gc.ca/mb-nc/en/index.html?pln=74956+CLSR+BC)
+[52](https://natural-resources.canada.ca/minerals-mining/geological-survey-canada)
+[53](https://geo.ca/communities/permafrost/permafrost-by-territory/)
+[54](https://canadianpermafrostassociation.ca/Data-Resources.htm)
+[55](https://publications.gc.ca/collections/collection_2008/nrcan/M44-2008-10E.pdf)
+[56](https://www.seismescanada.rncan.gc.ca/hazard-alea/simphaz-en.php)
+[57](https://osdp-psdo.canada.ca/dp/en/search/metadata/NRCAN-GEOSCAN-1-223605)
+[58](https://natural-resources.canada.ca/maps-tools-publications/satellite-elevation-air-photos/digital-elevation-models)
+[59](https://libguides.okanagan.bc.ca/c.php?g=712364&p=5078177)
+[60](https://app.geo.ca/en-ca/map-browser/record/7f245e4d-76c2-4caa-951a-45d1d2051333)
+[61](https://atlas.gc.ca/land-cover/Atlas_LandCover_EN.html)
+[62](https://natural-resources.canada.ca/science-data/science-research/geomatics/download-directory-documentation)
+[63](https://www.arcgis.com/home/item.html?id=e16c471d7dbc48c0ad11a93178c4ba6f)
+[64](https://www.esa-landcover-cci.org/?q=webfm_send%2F125)
+[65](https://app.geo.ca/en-ca/map-browser/record/a4b190fe-e090-4e6d-881e-b87956c07977)
+[66](https://publications.gc.ca/collections/collection_2025/statcan/16-510-x2025001-eng.pdf)
+[67](https://leddy.uwindsor.ca/national-hydro-network-nhn)
+[68](https://osdp-psdo.canada.ca/dp/en/search/metadata/NRCAN-FGP-1-3d282116-e556-400c-9306-ca1a3cada77f)
+[69](https://www.arcgis.com/home/item.html?id=a0dffe024dfe4ff184423851f156868c)
+[70](https://www150.statcan.gc.ca/n1/en/catalogue/92-500-X)
+[71](https://en.wikipedia.org/wiki/Protected_areas_of_Canada)
+[72](https://publications.gc.ca/collections/Collection/Statcan/92-500-GIE/92-500-GIE2006001.pdf)
+[73](https://cpaws.org/our-work/parks-protected-areas/)
+[74](https://geo.ca/initiatives/geobase/)
+[75](https://tc.canada.ca/en/corporate-services/transparency/corporate-management-reporting/transportation-canada-annual-reports/canada-s-rail-network)
+[76](https://tdih-cdit.tc.canada.ca/en/rail-transportation/rail-network-and-crossings)
+[77](https://natural-resources.canada.ca/maps-tools-publications/maps/earth-sciences-maps)
+[78](https://www.arcgis.com/apps/OnePane/basicviewer/index.html?appid=eb08480483154cc0984c6e30f1b0ae49)
+[79](https://www.geologyontario.mndm.gov.on.ca/ogsearth.html)
+[80](https://geochem.nrcan.gc.ca/cdogs/content/tables/_list_pub_gsc_en.htm)
+[81](http://www.ontario.ca/page/soil-data)
+[82](https://www12.statcan.gc.ca/census-recensement/2021/geo/sip-pis/boundary-limites/index-eng.cfm)
+[83](https://uottawa.libguides.com/c.php?g=265333&p=4953107)
+[84](https://www.arcgis.com/home/item.html?id=c225cc78d5b142d58eacefae91cc535b)
+[85](https://www12.statcan.gc.ca/census-recensement/2021/geo/sip-pis/index-eng.cfm)
+[86](https://leddy.uwindsor.ca/environment-climate-change-canadas-climate-data)
+[87](https://www.arcgis.com/home/item.html?id=da8ec4b8a11a4b6c816278626fd76ec8)
+[88](https://api.weather.gc.ca/openapi)
+[89](https://eccc-msc.github.io/open-data/msc-data/readme_en/)
+[90](https://geohub.lio.gov.on.ca/datasets/lio::first-nation-reserve/about)
+[91](https://climate.weather.gc.ca/historical_data/search_historic_data_e.html)
+[92](https://geo.sac-isc.gc.ca/cippn-fnpim/index-eng.html)
+[93](https://pypi.org/project/env-canada/)
+[94](https://www.arcgis.com/home/item.html?id=944e725c851a4cb986d48df6d4dabc6d)
+[95](https://gazette.gc.ca/rp-pr/p1/2024/2024-12-14/html/reg4-eng.html)
+[96](https://laws-lois.justice.gc.ca/eng/regulations/sor-99-294/index.html)
+[97](https://natural-resources.canada.ca/science-data/science-research/earth-sciences-tools-applications)
+[98](https://skywatch.com/free-sources-of-satellite-data/)
+[99](https://experience.arcgis.com/experience/ca8f5043a4b4409c9726cbc749ddd60d/page/Data)
+[100](https://www.cansel.ca/brands/airbus/catalog/solutions-products/Earth-Observation/Satellite-Imagery?page=1)

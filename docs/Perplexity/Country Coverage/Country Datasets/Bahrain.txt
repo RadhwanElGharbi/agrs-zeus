@@ -1,0 +1,827 @@
+# GIS Datasets for Oil & Gas Pipeline Routing in Bahrain
+
+## 1. ELEVATION/TERRAIN (DEM)
+
+### National High-Resolution DEMs
+
+**DEM-2.5 (Derived from National Topographic Maps)**
+- **Source/Provider**: Survey and Land Registration Bureau (SLRB)
+- **Resolution/Scale**: 2.5m resolution, derived from 1:5,000 topographic contour maps
+- **Temporal Coverage**: Based on national mapping program (ongoing updates)
+- **Update Frequency**: Updated through as-built surveys and UAV captures
+- **Access Type**: Restricted - requires formal request from SLRB
+- **API Availability**: No public API
+- **Official URL**: https://www.slrb.gov.bh/en/
+- **Quality Assessment**: Excellent accuracy (±0.55m RMSE), best available for Bahrain; derived from high-quality national topographic mapping at 1:1,000 base scale with 137 surface feature types[1][2]
+
+**DEM-5 (Derived from National Topographic Maps)**
+- **Source/Provider**: Survey and Land Registration Bureau (SLRB)
+- **Resolution/Scale**: 5m resolution, derived from 1:25,000 topographic contour maps
+- **Temporal Coverage**: Historical national mapping
+- **Update Frequency**: Periodic updates
+- **Access Type**: Restricted - requires formal request from SLRB
+- **API Availability**: No public API
+- **Official URL**: https://www.slrb.gov.bh/en/
+- **Quality Assessment**: Very good accuracy (±1.0m RMSE); suitable for regional analysis[2]
+
+### Regional/Global High-Resolution DEMs
+
+**Copernicus DEM (GLO-30)**
+- **Source/Provider**: European Space Agency / Copernicus Programme
+- **Resolution/Scale**: 30m resolution
+- **Temporal Coverage**: 2010-2015 (based on TanDEM-X/WorldDEM)
+- **Update Frequency**: Static product (no regular updates planned)
+- **Access Type**: Open/Free
+- **API Availability**: Yes - via Copernicus Data Space Ecosystem API
+- **Official URL**: https://dataspace.copernicus.eu/explore-data/data-collections/copernicus-contributing-missions/collections-description/COP-DEM
+- **Quality Assessment**: Superior accuracy to SRTM and ASTER; RMSE typically 5-6m; best global DEM for Bahrain; Digital Surface Model including buildings/vegetation[3][4]
+
+**Copernicus DEM (GLO-90)**
+- **Source/Provider**: European Space Agency / Copernicus Programme
+- **Resolution/Scale**: 90m resolution
+- **Temporal Coverage**: 2010-2015
+- **Update Frequency**: Static product
+- **Access Type**: Open/Free
+- **API Availability**: Yes - via Copernicus Data Space Ecosystem API
+- **Official URL**: https://dataspace.copernicus.eu/explore-data/data-collections/copernicus-contributing-missions/collections-description/COP-DEM
+- **Quality Assessment**: Good for regional analysis; lower resolution alternative to GLO-30[4]
+
+**SRTM Version 4.1**
+- **Source/Provider**: NASA/USGS
+- **Resolution/Scale**: 30m resolution (1 arc-second)
+- **Temporal Coverage**: February 2000 (single acquisition)
+- **Update Frequency**: Static (historical dataset)
+- **Access Type**: Open/Free
+- **API Availability**: Yes - USGS Earth Explorer API
+- **Official URL**: https://earthexplorer.usgs.gov/
+- **Quality Assessment**: Moderate accuracy (±6-10m RMSE for Bahrain); widely used legacy dataset but superseded by Copernicus DEM; void-filled version available[2][3]
+
+**ASTER GDEM Version 3**
+- **Source/Provider**: NASA/METI (Japan)
+- **Resolution/Scale**: 30m resolution (1 arc-second)
+- **Temporal Coverage**: 2000-2013 composite
+- **Update Frequency**: Static (Version 3 released 2019)
+- **Access Type**: Open/Free
+- **API Availability**: Yes - NASA Earthdata API
+- **Official URL**: https://earthdata.nasa.gov/
+- **Quality Assessment**: Lower accuracy than SRTM and Copernicus DEM; significant artifacts and noise; not recommended for precision pipeline routing[3][2]
+
+## 2. LAND COVER / LAND USE
+
+### National Land Use Maps
+
+**Bahrain Spatial Data Infrastructure (BSDI) Land Use Layers**
+- **Source/Provider**: Central Informatics Organisation (CIO) - GIS Directorate
+- **Resolution/Scale**: Vector data derived from 1:1,000 national mapping
+- **Temporal Coverage**: Current (regularly updated)
+- **Update Frequency**: Continuous updates through as-built surveys
+- **Access Type**: Restricted - available to government agencies and authorized organizations (30+ organizations currently use BSDI)
+- **API Availability**: No public API (internal government portal only)
+- **Official URL**: www.bsdi.gov.bh (government intranet)
+- **Quality Assessment**: Highest quality national land use data; includes detailed urban development, agricultural areas (palm groves), and infrastructure classifications[5][6][7]
+
+### Global Land Cover Products
+
+**ESA WorldCover 2021**
+- **Source/Provider**: European Space Agency (ESA WorldCover Consortium)
+- **Resolution/Scale**: 10m resolution
+- **Temporal Coverage**: 2021 (2020 version also available)
+- **Update Frequency**: Annual updates planned
+- **Access Type**: Open/Free (CC-BY-4.0 license)
+- **API Availability**: Yes - WMS/WMTS services, Google Earth Engine API
+- **Official URL**: https://esa-worldcover.org / https://worldcover2021.esa.int/download
+- **Quality Assessment**: Excellent quality with 11 land cover classes; highest resolution global land cover product; derived from Sentinel-1 radar and Sentinel-2 optical data; highly accurate for Bahrain's desert and urban environments[8][9][10][11]
+
+**Esri Sentinel-2 Land Use/Land Cover (10m Global)**
+- **Source/Provider**: Esri / Impact Observatory
+- **Resolution/Scale**: 10m resolution
+- **Temporal Coverage**: Annual time series (2017-present)
+- **Update Frequency**: Annual
+- **Access Type**: Free for non-commercial use
+- **API Availability**: Yes - ArcGIS Living Atlas API
+- **Official URL**: https://livingatlas.arcgis.com/landcoverexplorer/
+- **Quality Assessment**: Good temporal continuity; useful for change detection; 9-class system; complementary to ESA WorldCover[12][13]
+
+**Google Dynamic World (Sentinel-2 Based)**
+- **Source/Provider**: Google / World Resources Institute
+- **Resolution/Scale**: 10m resolution
+- **Temporal Coverage**: 2015-present (near-real-time)
+- **Update Frequency**: Every 2-5 days (Sentinel-2 revisit)
+- **Access Type**: Open/Free
+- **API Availability**: Yes - Google Earth Engine API only
+- **Official URL**: https://www.dynamicworld.app/
+- **Quality Assessment**: Near-real-time land cover with probability scores for each class; excellent for monitoring rapid development; requires Google Earth Engine access[11]
+
+## 3. HYDROLOGY / WATER
+
+### National Water Resources Data
+
+**Ministry of Oil - Water Resources Management Unit Data**
+- **Source/Provider**: Water Resources Management (WRM) Unit, Ministry of Oil
+- **Resolution/Scale**: National scale groundwater and desalination infrastructure
+- **Temporal Coverage**: Current operational data
+- **Update Frequency**: Continuous monitoring
+- **Access Type**: Restricted - government/research institutions only
+- **API Availability**: No public API
+- **Official URL**: Contact through Ministry of Oil
+- **Quality Assessment**: Comprehensive data on Dammam aquifer, desalination plants, and treated wastewater systems; critical for pipeline routing due to water infrastructure conflicts[14][15]
+
+**Bahrain Note on Surface Water**
+- **Source/Provider**: National environmental agencies
+- **Key Information**: Bahrain has NO rivers, perennial streams, lakes, or dams; total annual surface runoff only 4 million m³; drainage is endoreic (internal basins); wadis are ephemeral
+- **Quality Assessment**: Any "hydrography" data for Bahrain is limited to wadis (dry valleys), coastal features, and man-made water infrastructure (pipelines, treatment plants)[15][16]
+
+**BSDI Water Infrastructure Layers**
+- **Source/Provider**: Central Informatics Organisation - BSDI Portal
+- **Resolution/Scale**: Vector data (precise infrastructure locations)
+- **Temporal Coverage**: Current
+- **Update Frequency**: Continuous
+- **Access Type**: Restricted to authorized organizations
+- **API Availability**: No public API
+- **Official URL**: www.bsdi.gov.bh
+- **Quality Assessment**: Detailed water transmission and distribution networks; sewerage and drainage infrastructure; essential for pipeline routing conflict avoidance[6][7]
+
+### Global Hydrology Datasets
+
+**Global Surface Water Explorer (JRC)**
+- **Source/Provider**: European Commission Joint Research Centre
+- **Resolution/Scale**: 30m resolution
+- **Temporal Coverage**: 1984-2021
+- **Update Frequency**: Annual updates
+- **Access Type**: Open/Free
+- **API Availability**: Yes - Google Earth Engine
+- **Official URL**: https://global-surface-water.appspot.com/
+- **Quality Assessment**: Limited relevance for Bahrain given absence of natural surface water bodies; useful for coastal areas, sabkhas (salt flats), and Tubli Bay wetlands[16]
+
+**HydroSHEDS (Hydrological data and maps based on SHuttle Elevation Derivatives at multiple Scales)**
+- **Source/Provider**: WWF / USGS
+- **Resolution/Scale**: 15 arc-second (~500m)
+- **Temporal Coverage**: Based on SRTM 2000
+- **Update Frequency**: Static
+- **Access Type**: Open/Free
+- **API Availability**: No dedicated API
+- **Official URL**: https://www.hydrosheds.org/
+- **Quality Assessment**: Very limited utility for Bahrain due to lack of drainage networks; main use is for wadi delineation and terrain analysis[17]
+
+## 4. INFRASTRUCTURE - ROADS
+
+### National Road Network
+
+**BSDI Road Network (Street Centerlines)**
+- **Source/Provider**: Central Informatics Organisation / Survey and Land Registration Bureau
+- **Resolution/Scale**: Vector data at 1:1,000 mapping accuracy
+- **Temporal Coverage**: Current (continuously updated)
+- **Update Frequency**: Real-time updates from as-built surveys, Ministry of Transportation, and traffic management systems
+- **Access Type**: Restricted - available to government agencies and authorized private organizations
+- **API Availability**: No public API (internal BSDI portal access only)
+- **Official URL**: www.bsdi.gov.bh / https://www.bahrain.bh/wps/portal/en/BNP/ExploreBahrain/GeographicInformationSystems
+- **Quality Assessment**: Highest quality and most current road data for Bahrain; includes street names, addresses, classification (motorways, primary, secondary roads), turn restrictions, lanes, surface types, one-way streets; maintained through integration with Ministry of Transportation and Traffic systems[7][5][6][1]
+
+**Ministry of Transportation and Telecommunications (MTT) Road Data**
+- **Source/Provider**: General Directorate of Traffic / MTT
+- **Resolution/Scale**: Operational road network data
+- **Temporal Coverage**: Current
+- **Update Frequency**: Continuous (integrated with traffic management systems)
+- **Access Type**: Restricted - government use; some data available through eServices
+- **API Availability**: Limited API through MyGov application for traffic services
+- **Official URL**: https://www.mtt.gov.bh/
+- **Quality Assessment**: Official source for road classifications, traffic regulations, and construction updates; integrates with BSDI[18]
+
+**Bahrain Open Data Portal - Road Network Length**
+- **Source/Provider**: Information & eGovernment Authority
+- **Resolution/Scale**: Statistical data (surfaced roads: 4,543 km; unsurfaced: 730 km as of 2022)
+- **Temporal Coverage**: 2021-2022
+- **Update Frequency**: Annual
+- **Access Type**: Open/Free
+- **API Availability**: Yes - CKAN-based API
+- **Official URL**: https://www.data.gov.bh/
+- **Quality Assessment**: Statistical overview data; not suitable for spatial routing but useful for context[19]
+
+### OpenStreetMap (OSM)
+
+**OpenStreetMap Bahrain Roads**
+- **Source/Provider**: OpenStreetMap Foundation / Community contributors / Kaart ground survey (2017)
+- **Resolution/Scale**: Variable (street-level detail)
+- **Temporal Coverage**: Current (continuously updated since 2007, major ground survey 2017)
+- **Update Frequency**: Continuous crowdsourced updates
+- **Access Type**: Open/Free (ODbL license)
+- **API Availability**: Yes - Overpass API, OSM API
+- **Official URL**: https://www.openstreetmap.org/
+- **Quality Assessment**: Approximately 94% completeness (9,800 km mapped); high quality in Manama and major cities from 2017 Kaart ground survey with Mapillary imagery; includes street names, classifications, turn restrictions, lanes, surface types; substantial construction development since 2017 may not be captured; northwest rural areas have some missing roads; excellent free alternative but less current than BSDI[20][21]
+
+### Commercial Providers
+
+**HERE Technologies Road Data**
+- **Source/Provider**: HERE Technologies
+- **Resolution/Scale**: Sub-meter accuracy for road geometry
+- **Temporal Coverage**: Current (quarterly updates for Middle East)
+- **Update Frequency**: Quarterly
+- **Access Type**: Commercial license required
+- **API Availability**: Yes - HERE Maps API, Routing API, Traffic API
+- **Official URL**: https://www.here.com/
+- **Quality Assessment**: Very high quality; includes advanced routing attributes (speed limits, restricted access, height/weight restrictions); real-time traffic integration; commercial-grade for pipeline routing applications[21]
+
+**TomTom Road Network**
+- **Source/Provider**: TomTom
+- **Resolution/Scale**: Sub-meter accuracy
+- **Temporal Coverage**: Current (quarterly updates)
+- **Update Frequency**: Quarterly
+- **Access Type**: Commercial license required
+- **API Availability**: Yes - TomTom Maps API
+- **Official URL**: https://www.tomtom.com/
+- **Quality Assessment**: High quality commercial dataset; comparable to HERE; includes traffic patterns and restrictions[21]
+
+## 5. INFRASTRUCTURE - RAILWAYS
+
+**Note on Bahrain Railways**: Bahrain does NOT have a significant railway network or operational passenger/freight rail system. The country relies entirely on road transportation. Any railway data would be minimal or historical only.[22][21]
+
+**OpenStreetMap Railways**
+- **Source/Provider**: OpenStreetMap Foundation
+- **Resolution/Scale**: N/A (minimal/no railways)
+- **Temporal Coverage**: Current
+- **Update Frequency**: Continuous
+- **Access Type**: Open/Free
+- **API Availability**: Yes - Overpass API
+- **Official URL**: https://www.openstreetmap.org/
+- **Quality Assessment**: Not applicable - Bahrain has no significant railway infrastructure[21]
+
+## 6. INFRASTRUCTURE - UTILITIES (Power, Telecom)
+
+### National Utilities Data
+
+**BSDI Electricity & Water Transmission and Distribution**
+- **Source/Provider**: Central Informatics Organisation / Electricity & Water Authority (EWA)
+- **Resolution/Scale**: Vector data with precise infrastructure locations
+- **Temporal Coverage**: Current
+- **Update Frequency**: Continuous updates from EWA and as-built surveys
+- **Access Type**: Restricted - available to government and authorized utilities organizations
+- **API Availability**: No public API
+- **Official URL**: www.bsdi.gov.bh
+- **Quality Assessment**: Comprehensive coverage of electricity transmission lines, distribution networks, substations, and water infrastructure; critical for pipeline routing to avoid conflicts; maintained by utility operators[6][7][1]
+
+**BSDI Telecommunications Infrastructure**
+- **Source/Provider**: Central Informatics Organisation / Telecommunications operators
+- **Resolution/Scale**: Vector data
+- **Temporal Coverage**: Current
+- **Update Frequency**: Continuous
+- **Access Type**: Restricted
+- **API Availability**: No public API
+- **Official URL**: www.bsdi.gov.bh
+- **Quality Assessment**: Includes fiber optic networks, cell towers, and telecommunications conduits[7][6]
+
+**OpenInfraMap / OpenStreetMap Utilities**
+- **Source/Provider**: OpenStreetMap community
+- **Resolution/Scale**: Variable
+- **Temporal Coverage**: Current
+- **Update Frequency**: Crowdsourced updates
+- **Access Type**: Open/Free
+- **API Availability**: Yes - Overpass API
+- **Official URL**: https://openinframap.org/
+- **Quality Assessment**: Incomplete coverage for Bahrain; some major transmission lines and substations mapped; NOT reliable for pipeline routing without verification; supplementary data source only[7]
+
+## 7. INFRASTRUCTURE - PIPELINES
+
+### National Oil & Gas Pipeline Data
+
+**BSDI Gas & Oil Pipelines Layer**
+- **Source/Provider**: Central Informatics Organisation / Bahrain Petroleum Company (BAPCO) / nogaholding
+- **Resolution/Scale**: Vector data with precise pipeline locations
+- **Temporal Coverage**: Current
+- **Update Frequency**: Continuous updates from operators and as-built surveys
+- **Access Type**: Restricted - highly sensitive infrastructure data; available only to authorized government agencies and oil/gas operators
+- **API Availability**: No public API
+- **Official URL**: www.bsdi.gov.bh (requires authorization)
+- **Quality Assessment**: Most comprehensive and accurate pipeline data for Bahrain; includes oil, gas, and refined product pipelines; essential for routing to avoid existing infrastructure; includes BAPCO operational pipelines and international connections[1][6][7]
+
+**BAPCO (Bahrain Petroleum Company) Pipeline Infrastructure Data**
+- **Source/Provider**: BAPCO Energies / nogaholding
+- **Resolution/Scale**: Engineering-grade precision (as-built drawings)
+- **Temporal Coverage**: Current operational pipelines
+- **Update Frequency**: Updated with new construction and modifications
+- **Access Type**: Highly restricted - only available through formal agreements with BAPCO/nogaholding
+- **API Availability**: No public API
+- **Official URL**: https://www.bapcoenergies.com/ (contact for data access)
+- **Quality Assessment**: Authoritative source for oil and gas pipeline locations; includes AB4 crude oil pipeline (118 km, 30-inch, 400,000 bpd capacity connecting Sitra Refinery to Saudi Aramco's Abqaiq plant); critical for conflict avoidance in new pipeline routing[23][24][25]
+
+**AB4 Pipeline (Bahrain-Saudi Arabia)**
+- **Source/Provider**: BAPCO / Saudi Aramco
+- **Specifications**: 118 km length, 30-inch diameter, 400,000 bpd capacity; 73 km onshore (Saudi Arabia), 45 km offshore (Gulf crossing)
+- **Temporal Coverage**: Operational since November 2018
+- **Access Type**: Restricted
+- **Quality Assessment**: Major international crude oil pipeline; replaced older 230,000 bpd link; must be considered in routing analysis for setback requirements[24][23]
+
+**OpenStreetMap Pipelines**
+- **Source/Provider**: OpenStreetMap community
+- **Resolution/Scale**: Variable (incomplete)
+- **Temporal Coverage**: Partial coverage
+- **Update Frequency**: Sporadic crowdsourced updates
+- **Access Type**: Open/Free
+- **API Availability**: Yes - Overpass API
+- **Official URL**: https://www.openstreetmap.org/
+- **Quality Assessment**: INCOMPLETE and UNRELIABLE for Bahrain; pipeline infrastructure is security-sensitive and not comprehensively mapped in OSM; NOT suitable for pipeline routing decisions; use only for general context with verification required[7]
+
+## 8. PROTECTED AREAS / ENVIRONMENTAL
+
+### National Protected Areas
+
+**Ministry of Municipalities Affairs & Agriculture - Protected Areas Registry**
+- **Source/Provider**: Supreme Council for Environment / Ministry of Municipalities Affairs & Agriculture
+- **Resolution/Scale**: Vector polygon data
+- **Temporal Coverage**: Current (established 1995-1997)
+- **Update Frequency**: Periodic updates as designations change
+- **Access Type**: Restricted - request from environmental authorities; some data in BSDI
+- **API Availability**: No public API
+- **Official URL**: https://www.bahrain.bh/ (environmental sections)
+- **Quality Assessment**: Authoritative national source; 6 designated protected areas (1 terrestrial, 5 marine); includes boundaries and management zones[26][27][28]
+
+**Al Areen Wildlife Park and Reserve**
+- **Details**: 5.4 km² terrestrial protected area; established 1975; desert environment conservation
+- **Status**: Law-designated protected area; restricted access except for researchers
+- **Relevance**: Critical constraint for pipeline routing in western-central Bahrain[27][26]
+
+**Tubli Bay Protected Area**
+- **Details**: Marine protected area; Ramsar wetland (designated 1997); mangrove habitat
+- **Status**: Law No. 53 of 2006
+- **Relevance**: Northeastern Bahrain; coastal pipeline routing constraint[26]
+
+**Hawar Islands Protected Area**
+- **Details**: 5,200+ ha archipelago; Ramsar site No. 920; seabird breeding habitat (Socotra Cormorant); dugong and sea turtle habitat
+- **Status**: Gazetted 1997; state-owned; military restricted access
+- **Relevance**: Southern offshore area; submarine pipeline routing constraint[28]
+
+### Global Protected Areas Database
+
+**World Database on Protected Areas (WDPA)**
+- **Source/Provider**: UN Environment Programme World Conservation Monitoring Centre (UNEP-WCMC) / IUCN
+- **Resolution/Scale**: Vector polygons
+- **Temporal Coverage**: Current (monthly updates)
+- **Update Frequency**: Monthly
+- **Access Type**: Open/Free
+- **API Availability**: Yes - Protected Planet API
+- **Official URL**: https://www.protectedplanet.net/country/BHR
+- **Quality Assessment**: Good global coverage; 7 protected areas mapped for Bahrain; includes Najwat Bul Thamah, Hayr Bul Thamah, Al-Areen, Tubli Bay, Hawar Islands, and others; generally accurate but verify boundaries with national sources for pipeline routing; includes IUCN categories and designations (Ramsar, national parks)[29][30][28]
+
+## 9. GEOLOGY / SOIL
+
+### National Geological and Soil Maps
+
+**Bahrain Surface Materials Resources Survey (1975-76)**
+- **Source/Provider**: UK Military Survey / Geological Survey (historical cooperation)
+- **Resolution/Scale**: 1:10,000 scale geology and soil maps
+- **Temporal Coverage**: 1975-1976 field surveys
+- **Update Frequency**: Static historical dataset
+- **Access Type**: Accessible through Digital Maps Archive of Bahrain / SLRB
+- **API Availability**: No
+- **Official URL**: https://mapbh.org/en/ (Digital Maps Archive)
+- **Quality Assessment**: Comprehensive historical geological and soil survey; includes detailed soil classification (Solonchaks, Regosols, Yermosols, Fluvisols per FAO system); surface geology including limestone formations, sabkhas (salt flats), aeolian sands, and alluvial deposits; still relevant for fundamental geology but lacks recent development areas; critical for understanding foundation conditions and corrosivity for pipeline design[31][32][33]
+
+**Survey and Land Registration Bureau (SLRB) Geological Data**
+- **Source/Provider**: SLRB / Ministry of Municipalities Affairs & Agriculture
+- **Resolution/Scale**: Integrated with 1:1,000 national mapping
+- **Temporal Coverage**: Current (updated from historical surveys)
+- **Update Frequency**: Updated through ongoing surveys
+- **Access Type**: Restricted - request from SLRB
+- **API Availability**: No
+- **Official URL**: https://www.slrb.gov.bh/
+- **Quality Assessment**: Modern integration of geological data with 3D-enabled spatial data model; includes surface and subsurface utility data[34][1]
+
+### Global Geological Datasets
+
+**USGS Bedrock Geology of the Arabian Peninsula**
+- **Source/Provider**: United States Geological Survey
+- **Resolution/Scale**: Regional scale (1:2,000,000)
+- **Temporal Coverage**: Compiled from various surveys (updated 2024)
+- **Update Frequency**: Periodic revisions
+- **Access Type**: Open/Free
+- **API Availability**: USGS API available
+- **Official URL**: https://data.usgs.gov/datacatalog/data/USGS:60ad3d94d34e4043c850f291
+- **Quality Assessment**: Regional context; shows Bahrain's limestone formations and geological provinces; broad-scale only; useful for regional understanding but insufficient detail for pipeline routing[35][36]
+
+**OneGeology Portal**
+- **Source/Provider**: OneGeology Consortium (international geological surveys)
+- **Resolution/Scale**: Variable (national survey contributions)
+- **Temporal Coverage**: Current
+- **Update Frequency**: As national surveys contribute
+- **Access Type**: Open/Free
+- **API Availability**: Yes - WMS services
+- **Official URL**: http://www.onegeology.org/
+- **Quality Assessment**: Access to international geological data; limited specific Bahrain data but provides regional context[36]
+
+**FAO Harmonized World Soil Database (HWSD)**
+- **Source/Provider**: FAO / IIASA
+- **Resolution/Scale**: 30 arc-second (~1km)
+- **Temporal Coverage**: Composite (based on various national surveys)
+- **Update Frequency**: Version 1.2 (2012) - static
+- **Access Type**: Open/Free
+- **API Availability**: No dedicated API
+- **Official URL**: https://www.fao.org/soils-portal/
+- **Quality Assessment**: Coarse resolution; suitable for regional context only; national 1:10,000 soil maps far superior for pipeline routing in Bahrain[31]
+
+## 10. CLIMATE / WEATHER
+
+### National Meteorological Data
+
+**Bahrain Meteorological Directorate (Civil Aviation Affairs)**
+- **Source/Provider**: Meteorological Directorate, Civil Aviation Affairs
+- **Resolution/Scale**: Point stations and national forecasts
+- **Temporal Coverage**: Historical records (1950s-present) and real-time data
+- **Update Frequency**: Real-time observations, daily forecasts
+- **Access Type**: Some data publicly available; detailed data requires request
+- **API Availability**: Limited web services
+- **Official URL**: Contact through Civil Aviation Affairs
+- **Quality Assessment**: Official national source; includes temperature, rainfall (average ~70mm/year), humidity, wind, sandstorms; essential for pipeline design parameters (extreme temperatures, corrosion rates); arid climate data critical[37][15]
+
+### Global Climate Datasets
+
+**ERA5 Reanalysis (ECMWF)**
+- **Source/Provider**: European Centre for Medium-Range Weather Forecasts (ECMWF) / Copernicus Climate Change Service
+- **Resolution/Scale**: 31 km grid (0.25° x 0.25°), 137 vertical levels
+- **Temporal Coverage**: January 1940-present (1991-2020 current climatology)
+- **Update Frequency**: Continuous (hourly data with ~5-day lag)
+- **Access Type**: Open/Free
+- **API Availability**: Yes - CDS API (Climate Data Store)
+- **Official URL**: https://cds.climate.copernicus.eu/ | https://climateknowledgeportal.worldbank.org/country/bahrain/era5-historical
+- **Quality Assessment**: Excellent quality reanalysis; hourly atmospheric, land, and ocean variables; best available global climate dataset; includes temperature, precipitation, wind speed/direction, solar radiation, humidity; critical for pipeline thermal design and environmental assessment; 95% confidence with validation points[38][39][40][41]
+
+**WorldClim Version 2.1**
+- **Source/Provider**: WorldClim / University of California
+- **Resolution/Scale**: 30 arc-second to 2.5 arc-minute (~1km to ~5km)
+- **Temporal Coverage**: 1970-2000 baseline; future scenarios available
+- **Update Frequency**: Static baseline (periodic version updates)
+- **Access Type**: Open/Free
+- **API Availability**: No - direct download only
+- **Official URL**: https://www.worldclim.org/
+- **Quality Assessment**: Good for climatology baseline; monthly temperature and precipitation averages; bioclimatic variables useful for environmental assessment; coarser temporal resolution than ERA5[38]
+
+**Copernicus Climate Change Service (C3S) Data**
+- **Source/Provider**: ECMWF / Copernicus
+- **Resolution/Scale**: Variable (multiple products)
+- **Temporal Coverage**: Historical and forecasts
+- **Update Frequency**: Continuous
+- **Access Type**: Open/Free
+- **API Availability**: Yes - CDS API
+- **Official URL**: https://climate.copernicus.eu/
+- **Quality Assessment**: Comprehensive climate data portal; includes ERA5, seasonal forecasts, climate projections; excellent resource for environmental impact assessment[39]
+
+## 11. ADMINISTRATIVE BOUNDARIES
+
+### National Administrative Boundaries
+
+**BSDI Administrative Boundaries**
+- **Source/Provider**: Central Informatics Organisation / Survey and Land Registration Bureau
+- **Resolution/Scale**: Vector polygons at national mapping accuracy
+- **Temporal Coverage**: Current (governorate boundaries updated as needed)
+- **Update Frequency**: Updated with administrative changes
+- **Access Type**: Restricted - through BSDI Portal for authorized users
+- **API Availability**: No public API
+- **Official URL**: www.bsdi.gov.bh
+- **Quality Assessment**: Official national boundaries; includes 4 governorates (Northern, Southern, Muharraq, Capital); highest authority for administrative boundaries; essential for regulatory compliance[5][6][7]
+
+**Information & eGovernment Authority - National Statistics**
+- **Source/Provider**: Information & eGovernment Authority
+- **Resolution/Scale**: Statistical boundaries
+- **Temporal Coverage**: Current
+- **Update Frequency**: With census and administrative updates
+- **Access Type**: Publicly available statistics
+- **API Availability**: Limited
+- **Official URL**: https://www.data.gov.bh/
+- **Quality Assessment**: Official source for administrative statistics; boundaries align with BSDI[19]
+
+### Global Administrative Boundaries
+
+**GADM (Database of Global Administrative Areas)**
+- **Source/Provider**: University of California, Berkeley
+- **Resolution/Scale**: Vector polygons (multiple administrative levels)
+- **Temporal Coverage**: Version 4.1 (2022)
+- **Update Frequency**: Periodic version releases
+- **Access Type**: Open/Free (academic use; commercial license required for commercial use)
+- **API Availability**: No - direct download only
+- **Official URL**: https://gadm.org/
+- **Quality Assessment**: Good global coverage; includes Bahrain governorate and sub-governorate boundaries; adequate for general use but verify against national sources for regulatory purposes; includes ADM0 (country), ADM1 (governorates), ADM2 (municipalities)[42]
+
+**Humanitarian Data Exchange (HDX) - COD Boundaries**
+- **Source/Provider**: OCHA / UN / FAO GUAL DATA 2008
+- **Resolution/Scale**: Vector polygons (Level 0 only for Bahrain)
+- **Temporal Coverage**: December 2008 (last major update)
+- **Update Frequency**: Annual review (last updated November 2020)
+- **Access Type**: Open/Free
+- **API Availability**: Yes - HDX API
+- **Official URL**: https://data.humdata.org/dataset/cod-ab-bhr
+- **Quality Assessment**: Outdated boundaries (2008 source); suitable for humanitarian context but NOT recommended for pipeline routing; use national BSDI or recent GADM instead[42]
+
+## 12. POPULATION / DEMOGRAPHICS
+
+### National Census Data
+
+**Information & eGovernment Authority - Population Statistics**
+- **Source/Provider**: Information & eGovernment Authority
+- **Resolution/Scale**: Governorate and municipality level
+- **Temporal Coverage**: Census data (most recent 2020 census: 1.5 million population)
+- **Update Frequency**: Census every 10 years; annual estimates
+- **Access Type**: Open/Free (summary statistics)
+- **API Availability**: Limited data API
+- **Official URL**: https://www.data.gov.bh/
+- **Quality Assessment**: Official population counts; 1.6 million population (2024); highly urbanized (89%); essential for understanding population exposure in pipeline routing; governorate-level detail available[43][44]
+
+### Global Population Datasets
+
+**WorldPop Population Counts**
+- **Source/Provider**: WorldPop / University of Southampton / UN Population Division adjusted
+- **Resolution/Scale**: 3 arc-second (~100m at equator)
+- **Temporal Coverage**: 2000-2030 (historical and projections)
+- **Update Frequency**: Annual releases
+- **Access Type**: Open/Free (CC-BY 4.0)
+- **API Availability**: Via Google Earth Engine and direct download
+- **Official URL**: https://hub.worldpop.org/ | https://www.worldpop.org/
+- **Quality Assessment**: High-resolution population distribution; country totals adjusted to match UN estimates; excellent for pipeline routing to minimize population exposure; includes age-sex demographics; 100m resolution suitable for detailed analysis; widely used for infrastructure planning[45][46][47][48]
+
+**LandScan Global Population**
+- **Source/Provider**: Oak Ridge National Laboratory (ORNL) / US Department of Energy
+- **Resolution/Scale**: 30 arc-second (~1km at equator)
+- **Temporal Coverage**: Annual products (2000-present)
+- **Update Frequency**: Annual
+- **Access Type**: Free for US government and qualified users; commercial license available
+- **API Availability**: No public API
+- **Official URL**: https://landscan.ornl.gov/
+- **Quality Assessment**: Ambient population distribution (24-hour average); accounts for daytime/nighttime population movement; slightly coarser than WorldPop but sophisticated methodology; good for risk assessment; licensing restrictions may apply[49][50][51]
+
+**Gridded Population of the World (GPW) v4**
+- **Source/Provider**: NASA SEDAC / Columbia University
+- **Resolution/Scale**: 30 arc-second (~1km)
+- **Temporal Coverage**: 2000, 2005, 2010, 2015, 2020
+- **Update Frequency**: Every 5 years
+- **Access Type**: Open/Free
+- **API Availability**: NASA SEDAC API
+- **Official URL**: https://sedac.ciesin.columbia.edu/data/collection/gpw-v4
+- **Quality Assessment**: Census-based population distribution; lower resolution than WorldPop; suitable for regional context[51]
+
+## 13. SATELLITE IMAGERY
+
+### Free/Open Imagery
+
+**Sentinel-2 (Copernicus Programme)**
+- **Source/Provider**: European Space Agency (ESA) / Copernicus Programme
+- **Resolution/Scale**: 10m (visible/NIR bands), 20m (red edge/SWIR), 60m (atmospheric bands)
+- **Temporal Coverage**: 2015-present
+- **Update Frequency**: 5-day revisit (2 satellites: Sentinel-2A and 2B)
+- **Access Type**: Open/Free
+- **API Availability**: Yes - Copernicus Open Access Hub API, Google Earth Engine, AWS S3
+- **Official URL**: https://dataspace.copernicus.eu/ | https://scihub.copernicus.eu/
+- **Quality Assessment**: Excellent free baseline imagery; 13 spectral bands; suitable for land cover mapping, vegetation analysis, change detection, and initial routing studies; multispectral capabilities useful for identifying land features; 10m resolution adequate for corridor-level planning; atmospheric correction available[52][53]
+
+### Commercial High-Resolution Imagery
+
+**Maxar (WorldView, GeoEye)**
+- **Source/Provider**: Maxar Technologies
+- **Resolution/Scale**: 30-50 cm (WorldView-3/4), 50 cm (WorldView-2), 46 cm (GeoEye-1)
+- **Temporal Coverage**: Archive from 2008-present; tasking for new imagery
+- **Update Frequency**: On-demand tasking; archive refresh varies
+- **Access Type**: Commercial license required
+- **API Availability**: Yes - Maxar SecureWatch API, ARD API
+- **Official URL**: https://www.maxar.com/products/imagery
+- **Quality Assessment**: Highest resolution commercial imagery available; excellent for detailed pipeline routing, engineering surveys, as-built verification, and obstruction identification; multispectral and panchromatic; sub-meter accuracy with orthorectification; preferred for final route optimization and permitting; costly but industry standard[54]
+
+**Airbus Defence and Space (Pléiades, SPOT)**
+- **Source/Provider**: Airbus Defence and Space
+- **Resolution/Scale**: 50 cm (Pléiades Neo, Pléiades), 1.5m (SPOT 6/7)
+- **Temporal Coverage**: Archive from 2011-present; tasking available
+- **Update Frequency**: On-demand tasking
+- **Access Type**: Commercial license required
+- **API Availability**: Yes - OneAtlas API
+- **Official URL**: https://www.intelligence-airbusds.com/ | https://space-solutions.airbus.com/
+- **Quality Assessment**: Very high quality; competitive with Maxar; Pléiades Neo constellation (4 satellites) provides 50cm resolution; excellent for detailed engineering; good alternative to Maxar with strong coverage in Middle East[55][54]
+
+**Planet Labs (SkySat, PlanetScope)**
+- **Source/Provider**: Planet Labs
+- **Resolution/Scale**: 50 cm (SkySat), 3m (PlanetScope)
+- **Temporal Coverage**: 2016-present (daily global coverage with PlanetScope)
+- **Update Frequency**: Daily revisit (PlanetScope constellation of 200+ satellites); SkySat tasking
+- **Access Type**: Commercial subscription required
+- **API Availability**: Yes - Planet API
+- **Official URL**: https://www.planet.com/
+- **Quality Assessment**: Unique value proposition of daily monitoring at 3m resolution; SkySat provides 50cm when needed; excellent for construction monitoring, change detection, and security; more affordable than Maxar/Airbus for frequent monitoring; daily coverage useful for tracking development along corridor[54]
+
+## 14. SPECIAL DATASETS FOR BAHRAIN
+
+### Archaeological and Cultural Heritage Sites
+
+**UNESCO World Heritage Sites - Bahrain**
+- **Source/Provider**: UNESCO World Heritage Centre / Bahrain Authority for Culture and Antiquities
+- **Key Sites**: 
+  - Qal'at al-Bahrain (Ancient Harbour and Capital of Dilmun) - inscribed 2005
+  - Pearling, Testimony of an Island Economy (Muharraq heritage buildings) - inscribed 2012
+  - Dilmun Burial Mounds (12,000+ burial mounds) - inscribed 2019
+- **Resolution/Scale**: Site boundaries with buffer zones
+- **Temporal Coverage**: Current (protected sites)
+- **Update Frequency**: Updated with new inscriptions and boundary modifications
+- **Access Type**: Publicly documented; detailed boundaries require SLRB/heritage authority
+- **API Availability**: UNESCO World Heritage API (limited spatial data)
+- **Official URL**: https://whc.unesco.org/ | Bahrain Authority for Culture and Antiquities
+- **Quality Assessment**: Critical constraint for pipeline routing; legally protected with buffer zones; Qal'at al-Bahrain has sea channel buffer; burial mounds scattered across northern Bahrain (types: A, B, C, D, E indicating chronology and social hierarchy); Saar Archaeological Site (2050-1750 BC settlement); archaeological significance requires major routing diversions; requires archaeological impact assessment for projects[56][57][58]
+
+**Bahrain Authority for Culture and Antiquities - Archaeological Sites Register**
+- **Source/Provider**: Bahrain Authority for Culture and Antiquities (BACA)
+- **Coverage**: Comprehensive registry beyond World Heritage sites
+- **Access Type**: Restricted - requires consultation with BACA for project planning
+- **Quality Assessment**: Essential for pipeline routing; thousands of archaeological sites including burial mounds, tells, settlement sites; rescue archaeology protocols required; consultation mandatory for infrastructure projects[58]
+
+### Seismic and Geological Hazards
+
+**Arabian Plate Seismicity - Regional Context**
+- **Source/Provider**: USGS / Regional seismic networks
+- **Assessment**: Bahrain has LOW seismic hazard; Arabian Plate interior is tectonically stable; nearest active seismicity is Zagros Mountains (Iran) ~500+ km away
+- **Access Type**: Global seismic hazard maps freely available
+- **Official URL**: https://earthquake.usgs.gov/
+- **Quality Assessment**: Seismic design considerations minimal for Bahrain; regional seismic data adequate; no national seismic network or specific hazard maps needed for Bahrain[59]
+
+**Sabkha (Salt Flat) Mapping**
+- **Source/Provider**: BSDI / SLRB / 1975-76 Geological Survey
+- **Description**: Extensive sabkhas (coastal and inland salt flats) in Bahrain; critical for pipeline engineering due to highly corrosive conditions, bearing capacity issues, and seasonal water table fluctuations
+- **Coverage**: Mapped in 1:10,000 soil and geology surveys
+- **Access Type**: Through BSDI or SLRB
+- **Quality Assessment**: Essential for pipeline routing and corrosion protection design; sabkhas require specialized construction techniques; southwestern sabkha particularly extensive; gypsum-rich soils cause severe corrosion risk[32][31]
+
+### Coastal and Marine Data
+
+**Reclamation Projects and Artificial Islands**
+- **Source/Provider**: SLRB / Ministry of Municipalities Affairs & Agriculture
+- **Key Features**: Extensive land reclamation (Bahrain has grown significantly through reclamation); Durrat Al Bahrain (artificial archipelago); Northern coast strategic development
+- **Temporal Coverage**: Ongoing (rapid development)
+- **Update Frequency**: SLRB updates through as-built surveys and UAV mapping
+- **Access Type**: Through BSDI and SLRB
+- **Quality Assessment**: Critical for pipeline routing in coastal areas; reclaimed land has different geotechnical properties; frequent updates needed due to ongoing construction; Sentinel-2 imagery shows recent reclamation well; infrastructure placement on reclaimed land requires special design[53][57][52]
+
+**Marine Charts and Bathymetry**
+- **Source/Provider**: SLRB (hydrographic survey services) / Regional maritime authorities
+- **Coverage**: Coastal waters and shallow Gulf areas
+- **Access Type**: Maritime charts publicly available; detailed bathymetry may be restricted
+- **Quality Assessment**: Important for submarine pipeline routes; Gulf waters generally shallow around Bahrain; AB4 pipeline route provides precedent for offshore construction[24][1]
+
+### Military and Restricted Zones
+
+**Military Installations and Restricted Airspace**
+- **Source/Provider**: Bahrain Defence Force / Civil Aviation Affairs
+- **Coverage**: Airbase visible in satellite imagery (northeastern Muharraq); restricted zones around Hawar Islands; maritime military zones
+- **Access Type**: Restricted - formal permissions required
+- **Quality Assessment**: Major constraint for pipeline routing; consultation with security authorities mandatory; some areas absolutely prohibited; visible in commercial satellite imagery but official boundaries require government consultation[52]
+
+### Subsurface Utility Infrastructure (3D Mapping)
+
+**SLRB 3D-Enabled Geospatial Data Model**
+- **Source/Provider**: Survey and Land Registration Bureau (developed with Ordnance Survey UK)
+- **Description**: First 3D-enabled geospatial data model for Bahrain; includes above and below-ground infrastructure
+- **Resolution/Scale**: Object-based data model compliant with OGC and ISO standards
+- **Temporal Coverage**: Current (ongoing National 3D Mapping programme)
+- **Update Frequency**: Continuous updates
+- **Access Type**: Restricted - SLRB and authorized users
+- **API Availability**: Internal government use
+- **Official URL**: https://www.slrb.gov.bh/
+- **Quality Assessment**: Cutting-edge 3D data model specifically designed for utility infrastructure management; essential for pipeline routing to avoid conflicts with existing subsurface infrastructure; part of "digital twin" strategy for smart nation development; includes utility depth information critical for trenchless crossing design[60][34][1]
+
+### Special Environmental Datasets
+
+**Tubli Bay Ramsar Wetland Monitoring**
+- **Source/Provider**: Supreme Council for Environment
+- **Description**: Last remaining natural mangrove aggregation in Bahrain; critical bird habitat
+- **Access Type**: Environmental authority consultation required
+- **Quality Assessment**: Sensitive environmental area; pipeline routing near Tubli Bay requires comprehensive environmental impact assessment; seasonal water levels and ecology documented[26]
+
+**Groundwater Salinity and Contamination Mapping**
+- **Source/Provider**: Water Resources Management Unit / Ministry of Oil
+- **Description**: Detailed mapping of Dammam aquifer salinization; four types identified: brackish water upflow, seawater intrusion (eastern region), sabkha water intrusion (southwestern), irrigation return flow
+- **Access Type**: Research/government access
+- **Quality Assessment**: Important for understanding soil corrosivity and contamination risks; groundwater over-extraction has caused widespread salinization; areas of influence mapped; relevant for cathodic protection design and leak detection planning[16]
+
+***
+
+## Summary Assessment
+
+**Highest Priority National Datasets** (contact SLRB, CIO-BSDI, and relevant ministries):
+1. BSDI Portal comprehensive infrastructure layers (300+ layers)
+2. SLRB 2.5m DEM and 3D geospatial data model
+3. BAPCO pipeline infrastructure data
+4. Archaeological sites registry (BACA)
+5. Protected areas boundaries
+6. 1975-76 geological and soil maps (still relevant)
+
+**Best Global Datasets for Bahrain**:
+1. Copernicus DEM 30m (elevation)
+2. ESA WorldCover 2021 10m (land cover)
+3. ERA5 reanalysis (climate)
+4. WorldPop 100m (population)
+5. Sentinel-2 10m (imagery baseline)
+6. WDPA (protected areas)
+
+**Critical Gaps/Limitations**:
+- Public access to national datasets severely restricted (security-sensitive infrastructure)
+- OpenStreetMap incomplete for utilities and pipelines
+- Rapid development means frequent updates essential
+- Archaeological sites pervasive but not all publicly mapped
+- Commercial imagery necessary for engineering-grade routing
+
+**Recommended Data Access Strategy**:
+1. Establish formal agreements with SLRB, CIO, and BAPCO for national infrastructure data access
+2. Use global open datasets (Copernicus DEM, ESA WorldCover, ERA5, WorldPop) for initial corridor analysis
+3. Acquire commercial high-resolution imagery (Maxar/Airbus) for detailed routing
+4. Consult with Bahrain Authority for Culture and Antiquities for archaeological clearance
+5. Verify all routing with BSDI Portal data through authorized access
+
+[1](https://www.fig.net/resources/proceedings/fig_proceedings/fig2020/papers/ts02e/TS02E_davies_warnest_et_al_10743.pdf)
+[2](https://www.walshmedicalmedia.com/open-access/absolute-surface-elevations-accuracies-assessment-of-different-demsusing-ground-truth-data-over-kingdom-of-bahrain-2469-4134-1000166.pdf)
+[3](https://d-nb.info/1278558632/34)
+[4](https://dataspace.copernicus.eu/explore-data/data-collections/copernicus-contributing-missions/collections-description/COP-DEM)
+[5](https://www.bahrain.bh/wps/portal/en/BNP/ExploreBahrain/GeographicInformationSystems)
+[6](https://www.gim-international.com/content/article/bahrain-spatial-data-infrastructure?output=pdf)
+[7](https://ggim.un.org/country-reports/documents/Bahrain-2012-country-report.pdf)
+[8](https://esa-worldcover.org/en)
+[9](https://worldcover2021.esa.int/download)
+[10](https://esa-worldcover.org/en/data-access)
+[11](https://developers.google.com/earth-engine/datasets/catalog/ESA_WorldCover_v200)
+[12](https://www.arcgis.com/home/item.html?id=cfcb7609de5f478eb7666240902d4d3d)
+[13](https://livingatlas.arcgis.com/landcoverexplorer/)
+[14](https://www.sei.org/projects/water-climate-knowledge-platform-bahrain/)
+[15](https://www.agro.bh/water/water-resources/)
+[16](https://wateractionhub.org/geos/country/18/d/bahrain/)
+[17](https://unesdoc.unesco.org/ark:/48223/pf0000127229)
+[18](https://bahrain.bh/wps/portal/en/BNP/HomeNationalPortal/ContentDetailsPage/!ut/p/z1/rVRNc5swEP0r5JAjaEEgxBHXiZ0P164_0piLR4Cw1YAgthI3_fUVnrQZ49i4M9UFiX2rlfa9JxShRxRJ9iqWTIlSslyv5xFZ2Dce9OkXgFHXdeDbQzAmnYENgx5G3_cB9nQGGnATjofXXRtcG0Xn5MOREcJ5-X8B_a-jLpBhn_qO38HDEd7PbxzvDj6tH0Jn7HQwQG_SqN_c3mmr75zOx-gBRSiqEpGiecBi7gNOTZvHnumSzDMpjgMTaMwIz2yfMlajE6kqtULzWFYLLi_hrXxZG7nIuCGkEbPVmgn9V62Z3FTlWu2oNJhMjaJ85QWX6mSwhdG7Zkew5wJxru4H3b6HJ-SQkQPAXn4wDYgOO6HrTHoYhtDMPwT8myIOAdFpwd22UaY9IX48P0ehpqKUiv9U6PEPFywuX5ShVtx4EnKZlsUlvDMijJwvxSbfdXxzCWuupzw1VFmJRK95-pLsYvoCUZvqojZZnwbUtmxrw2eAD2MMD84QzGbXQGjv2nUJHfuej-aaCP_YDuG9gyb1HizZXXq-rTZWrcicq42VC_lUB-svq6raHUlZWCIurG1lsbQQ0lrxXE-rytryXAe5JWRWvhc91jpPG_ZV8C2ayXJd6Pdt8mE_J0sS4tPMTHw7NV19IzOgRLsxBe7iAAPFCepDs0JDXzf4eIWzDH7bpu9T8vvPT8GES1QVs3oUFL8JIcwoJuOrcf_XlMd0O81Wy2IxUDS8uPgNzEKqhA!!/)
+[19](https://www.data.gov.bh/explore/dataset/18-length-of-road-network-per-meter-run/)
+[20](https://data.humdata.org/dataset/hotosm_bhr_roads)
+[21](https://wiki.openstreetmap.org/wiki/Bahrain)
+[22](https://data.humdata.org/dataset/bahrain-transportation-network)
+[23](https://www.gem.wiki/Bahrain_Saudi_Arabia_Oil_Pipeline)
+[24](https://www.bapcoenergies.com/our-projects/new-ab4-pipeline)
+[25](https://en.wikipedia.org/wiki/Bahrain_Petroleum_Company)
+[26](https://bnature.info/protected-areas/)
+[27](https://www.bahrain.bh/wps/portal/en/BNP/HomeNationalPortal/ContentDetailsPage/!ut/p/z1/nVRNU9swFPwruuTo0fOX7BwDKYS2NG1IgPjCSLZMVGzJSLJp-uurZKAUBxKoDp6RvKt5u2-fcIavcSZpJ26pFUrSyu2XGbnxz2KYpMcA38dRAD8uhzNydO7D-WmIr14C_PkCHOBsNJuejH2IfJy9hw9vrBG8j_8XMPn2fQxkOkmTIDkKgfT4vd_z4ADfAV7wh_MhARIEoyi4OA1hCvgSZzgzdvPNpW3sCi-ZbG64HABlqrXIrji6E_K2UPUAuOyEVrLm0iIqCySpbTUfgOYVtbxAVjUiNwPYntMKaW647rjZXN_kosDLPAHC8iHxeA6BFyVB6jES-F5CAlpEYQJlUPRF7Vb9MVN3Adn-nn3e63oIm1iJn_f32ci5pqTlvyy-frJtrVqNKlFyJCRidKWpcKe3quP62TijcuH8MW3TKG13DfwHblpmRCG4QaXS7s5CdKJoaWUQLUueb1hsjXLlTj1_iBp3Pa9Fvl_EdBzuFfFK7_M14xoZnrda2PVuyVRT5sqzru7H6UNbyhPDCalrYft17Tbng3X9dyavNqk8MPyHkpLtEwMQ9QGvzHdvQheLEyDp6UkUkXSWxAleujAnb0-4S3sn-ANeSKVr9-JdPM9aUPI0CFjssTgJvYiwxGM8HHppGDNaRiUkMeDJobi7N-TjcS9pLar1th_bPrg8mJVozG5bKmUMUiWi6JFT89qlpi-7F5OzPbLf9cRccImbeuHWHftdfvkaV1195WWMzD7N0od5uXL7Y5aO_gAaDlxq/?uri=nm%3Aoid%3AZ6_1I50H8C001TU00QVIAROFD1041)
+[28](https://bh.chm-cbd.net/implementation/bahrain-nbsap/bahrain-nbsap-2015/protected-area-strategy-kingdom-bahrain-dr.-ameer-abdulla-2015/download/en/1/A%20Protected%20Area%20Strategy%20for%20the%20Kingdom%20of%20Bahrain_Final_v11_Abdulla_20151125%20(Received%20201215).pdf)
+[29](https://www.protectedplanet.net/country/BHR)
+[30](https://www.protectedplanet.net/en/search-areas?filters%5Bdb_type%5D%5B%5D=wdpa&filters%5Blocation%5D%5Boptions%5D%5B%5D=Bahrain&filters%5Blocation%5D%5Btype%5D=country)
+[31](https://edepot.wur.nl/480450)
+[32](https://mapbh.org/en/map-info?group=Geological+Survey+%281975-76%29&map-id=1975+-+Soils)
+[33](https://www.jstor.org/stable/633073)
+[34](https://www.ordnancesurvey.co.uk/customers/case-studies/3d-bahrain)
+[35](https://data.usgs.gov/datacatalog/data/USGS:60ad3d94d34e4043c850f291)
+[36](https://dataone.org/datasets/c20fc073-92bf-4d48-90e5-67458cb14f48)
+[37](https://prddsgofilestorage.blob.core.windows.net/api/documents/Bahrain_-_Climate_Fact_Sheet/BAHRAIN_Climate_Fact_Sheet_EN.pdf)
+[38](https://climateknowledgeportal.worldbank.org/country/bahrain/era5-historical)
+[39](https://www.ecmwf.int/en/forecasts/dataset/ecmwf-reanalysis-v5)
+[40](https://cds.climate.copernicus.eu/datasets/reanalysis-era5-single-levels)
+[41](https://climateknowledgeportal.worldbank.org/country/bahrain/trends-variability-historical)
+[42](https://data.humdata.org/dataset/cod-ab-bhr)
+[43](https://www.worldometers.info/world-population/bahrain-population/)
+[44](https://worldpopulationreview.com/countries/bahrain)
+[45](https://hub.worldpop.org/geodata/summary?id=35215)
+[46](https://data.worldpop.org/GIS/Population/Global_2000_2020/2011/BHR/bhr_ppp_2011_metadata.html)
+[47](https://data.humdata.org/dataset/worldpop-population-counts-2015-2030-bhr)
+[48](https://www.worldpop.org)
+[49](https://www.nature.com/articles/s41597-025-04817-z)
+[50](https://www.asprs.org/wp-content/uploads/pers/2000journal/july/2000_jul_849-857.pdf)
+[51](https://www.sciencedirect.com/science/article/am/pii/S0169204622001426)
+[52](https://www.mundialis.de/en/satellite-image-of-the-month-october-durrat-al-bahrain-kingdom-of-bahrain/)
+[53](https://mapbh.org/en/map-info?group=Bahrain&map-id=2020+-+Satellite+Imagery)
+[54](https://space-solutions.airbus.com/resources/satellite-image-gallery/)
+[55](https://www.airbus.com/en/products-services/space/earth-observation/satellite-imagery)
+[56](https://unesdoc.unesco.org/ark:/48223/pf0000264627)
+[57](https://whc.unesco.org/document/168878)
+[58](https://www.jcic-heritage.jp/wp-content/uploads/2022/12/2012Report_Bahrain_eg.pdf)
+[59](https://pubs.usgs.gov/pp/0560e/report.pdf)
+[60](https://www.gim-international.com/content/news/3d-enabled-spatial-data-model-for-bahrain?output=pdf)
+[61](https://www.bahrain.bh/wps/portal/en/BNP/HomeNationalPortal/ContentDetailsPage/!ut/p/z1/vZPLcpswFIZfhSyyZHRAWMASx_UlbuLEDk7MJiOQDEpAIqA6l6ev3JnO1Lgx6aZaaEaa_-hcvl8oQQ8okXQncqqFkrQ0501CHp3ZAKbBBcDNyHPhdh0uyfDKgasJRveHAucuBiOYRcvFeOSA56DkK_HwyYqgL36NEpS0er9nUte6QJtU1o9cngN_q0vVcCulRUOFuci5yhtaFyKzhNyqpvrVpdW-t5pX7Tk0vKSaM0urWmRtn96qG_XEM93uc9eZYGgTOgCYUN-m1OG2KZXaachcG7OAMJaCnxHendj0-mYEZDENfNcf4sUaH3Yc3oUEiOtGnruaYFhAN_5YkPwTsWNBchrI5WGC4_qNZ8TTy0sSGSRKav6m0cNvJjRVP7SlC249C5kzVRlMFW9yc7A0zwqpSpUL_hcYqubSoJT7ONNDcroKtyvoGHMOPYK9c_sm0XkhjOMxkGAy9jwSLP2BjzZm1P5nRXrgovud4K8olntvlWj1h5MYxhT7js1Shm3P4YGdepjaDqE4SNnWBZ-gKXQzdGDO8IkMX_HqZZ-ZTrH-b_9vxSWqqzh-Tj-28_n3Qbmrvy2nH8Nre3KRBu_4NTo7-wmAEY_r/)
+[62](https://www.un-ggim-as.org/Presentation%20by%20Bahrain%20on%20Geospatial%20Data.pdf)
+[63](https://geospatialworld.net/article/kingdom-of-bahrain-mainstreaming-g-technology/)
+[64](https://data.nextgis.com/en/region/BH/dem/)
+[65](https://ggim.un.org/meetings/2013-2nd_HLF_Qatar/documents/4-UN-GGIM-Doha-2013.pdf)
+[66](https://www.slrb.gov.bh/en/)
+[67](https://data.humdata.org/dataset/gulf-countries-elevation-model)
+[68](https://icaci.org/files/documents/ICC_proceedings/ICC2009/html/nonref/3_19.pdf)
+[69](https://aetosky.substack.com/p/bahrain-signs-landmark-agreement-with-aetosky)
+[70](https://opentopography.org/id/OTLAS.022012.26913.1&minX=-106.216836&minY=32.834136&maxX=-106.203450&maxY=32.845069)
+[71](https://www.instagram.com/p/DNxeCpNxKLl/)
+[72](https://www.intermap.com/nextmap)
+[73](https://landinfo.com/country/bahrain-topographic-map-data-satellite-imagery/)
+[74](https://data.nextgis.com/en/region/BH/landcover/)
+[75](https://worldcover2020.esa.int/download)
+[76](https://ceos.org/gst/worldcover.html)
+[77](https://www.sciencedirect.com/science/article/pii/S2405844023077514)
+[78](https://www.sciencedirect.com/science/article/pii/S1944398624203398)
+[79](https://whc.unesco.org/document/105357)
+[80](https://www.cbd.int/doc/world/bh/bh-nr-01-en.pdf)
+[81](https://iucn.org/our-work/protected-areas-and-land-use)
+[82](https://mapbh.org/ar/map-info?group=Geological+Survey+%281975-76%29&map-id=1975+-+Soils)
+[83](https://www.gem.wiki/Dhahran-Bapco_Refinery_Oil_Pipeline)
+[84](https://middleeastspacemonitor.substack.com/p/middle-east-space-roundup-2-to-8-d62?action=share)
+[85](https://theenergyyear.com/energy-company/bapco/)
+[86](https://openknowledge.worldbank.org/server/api/core/bitstreams/45260e28-d54b-5e80-8773-e81c7549798a/content)
+[87](https://data.humdata.org/dataset/kontur-boundaries-bahrain)
+[88](https://www.mbi-geodata.com/en/mbi-supplier-manufacturer-worldwide-geodata/asia/bahrain-maps/)
+[89](https://www.geopostcodes.com/country/bahrain/shapefile/)
+[90](https://arxiv.org/html/2302.08425v6)
+[91](https://essd.copernicus.org/preprints/essd-2024-277/essd-2024-277-ATC2.pdf)
+[92](https://www.iccrom.org/courses/capacity-building-world-heritage-risk-management-arab-region)
+[93](https://www.whitr-ap.org/themes/69/userfiles/download/2012/3/5/dlppwspzbk5sx1h.pdf)
+[94](https://www.sciencedirect.com/science/article/abs/pii/S0341816223002515)
+[95](https://www.iccrom.org/sites/default/files/publications/2018-11/protectiveshelters_web_rev.pdf)
+[96](https://earth.esa.int/eogateway/documents/20142/37627/Technical%20Note%20on%20Quality%20Assessment%20for%20Copernicus%20DEM.pdf)
+[97](https://www.gfdrr.org/sites/default/files/publication/drmhubtokyoResilientCHTSummary.pdf)
+[98](https://community.simtropolis.com/forums/topic/761646-dem-comparisons-srtm-aster-alos-copernicus-dem-map-renderings/)
+[99](https://www.newsofbahrain.com/epaper/03-12-2016/single/page-02.pdf)

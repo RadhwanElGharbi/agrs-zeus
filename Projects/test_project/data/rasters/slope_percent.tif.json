@@ -1,0 +1,9 @@
+{
+  "algorithm": "Horn",
+  "compute_edges": false,
+  "input_dem": "/opt/agrs/Projects/test_project/data/rasters/tinitaly_10m_dem.tif",
+  "output_slope": "/opt/agrs/Projects/test_project/data/rasters/slope_percent.tif",
+  "timestamp_utc": "2025-10-23T20:48:32Z",
+  "tool": "raster_slope",
+  "units": "percentage"
+}

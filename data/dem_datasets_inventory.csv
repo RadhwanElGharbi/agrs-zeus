@@ -1,0 +1,97 @@
+country,country_code,dataset_name,provider,resolution_m,coverage,data_format,implementation_status,fetch_tool,url,license,notes
+# TIER 1 OIL & GAS COUNTRIES (by production & reserves)
+USA,US,3DEP 1m LiDAR,USGS,1,USA (partial),GeoTIFF,implemented,dem_fetch,https://www.usgs.gov/3d-elevation-program,Public Domain,Urban and priority areas
+USA,US,3DEP 10m DEM,USGS,10,USA (national),GeoTIFF,implemented,dem_fetch,https://www.usgs.gov/3d-elevation-program,Public Domain,National coverage
+USA,US,NED 30m,USGS,30,USA (national),GeoTIFF,implemented,dem_fetch (srtm),https://www.usgs.gov/national-elevation,Public Domain,Legacy - use 3DEP
+Saudi Arabia,SA,SRTM 30m,NASA/USGS,30,Global coverage,GeoTIFF,implemented,dem_fetch (srtm),https://lpdaac.usgs.gov/,Public Domain,Best available for KSA
+Saudi Arabia,SA,ALOS World 3D,JAXA,30,Global coverage,GeoTIFF,not_implemented,future,https://www.eorc.jaxa.jp/ALOS/en/dataset/aw3d30/aw3d30_e.htm,Free,Alternative to SRTM
+Russia,RU,ALOS World 3D,JAXA,30,Global coverage,GeoTIFF,not_implemented,future,https://www.eorc.jaxa.jp/ALOS/en/dataset/aw3d30/aw3d30_e.htm,Free,Best global option
+Russia,RU,SRTM 30m,NASA/USGS,30,Below 60N only,GeoTIFF,implemented,dem_fetch (srtm),https://lpdaac.usgs.gov/,Public Domain,Limited N coverage
+Russia,RU,ASTER GDEM,NASA/METI,30,Global coverage,GeoTIFF,not_implemented,future,https://asterweb.jpl.nasa.gov/,Public Domain,Alternative
+Canada,CA,CDEM,NRCan,20,Canada (national),GeoTIFF,not_implemented,future,https://open.canada.ca/data/en/dataset/7f245e4d-76c2-4caa-951a-45d1d2051333,Open,High Res DEM
+Canada,CA,HRDEM,NRCan,1-2,Canada (partial),GeoTIFF,not_implemented,future,https://open.canada.ca/data/en/dataset/957782bf-847c-4644-a757-e383c0057995,Open,LiDAR where available
+Canada,CA,SRTM 30m,NASA/USGS,30,Below 60N only,GeoTIFF,implemented,dem_fetch (srtm),https://lpdaac.usgs.gov/,Public Domain,Southern Canada only
+Iraq,IQ,SRTM 30m,NASA/USGS,30,Global coverage,GeoTIFF,implemented,dem_fetch (srtm),https://lpdaac.usgs.gov/,Public Domain,Best available
+Iraq,IQ,ASTER GDEM,NASA/METI,30,Global coverage,GeoTIFF,not_implemented,future,https://asterweb.jpl.nasa.gov/,Public Domain,Alternative
+China,CN,SRTM 30m,NASA/USGS,30,Global coverage,GeoTIFF,implemented,dem_fetch (srtm),https://lpdaac.usgs.gov/,Public Domain,Restricted access to national DEM
+China,CN,ASTER GDEM,NASA/METI,30,Global coverage,GeoTIFF,not_implemented,future,https://asterweb.jpl.nasa.gov/,Public Domain,Alternative
+UAE,AE,SRTM 30m,NASA/USGS,30,Global coverage,GeoTIFF,implemented,dem_fetch (srtm),https://lpdaac.usgs.gov/,Public Domain,Best available for UAE
+UAE,AE,ALOS World 3D,JAXA,30,Global coverage,GeoTIFF,not_implemented,future,https://www.eorc.jaxa.jp/ALOS/en/dataset/aw3d30/aw3d30_e.htm,Free,High quality
+Iran,IR,SRTM 30m,NASA/USGS,30,Global coverage,GeoTIFF,implemented,dem_fetch (srtm),https://lpdaac.usgs.gov/,Public Domain,Best available
+Iran,IR,ASTER GDEM,NASA/METI,30,Global coverage,GeoTIFF,not_implemented,future,https://asterweb.jpl.nasa.gov/,Public Domain,Alternative
+Brazil,BR,SRTM 30m,NASA/USGS,30,Global coverage,GeoTIFF,implemented,dem_fetch (srtm),https://lpdaac.usgs.gov/,Public Domain,Good coverage
+Brazil,BR,ALOS World 3D,JAXA,30,Global coverage,GeoTIFF,not_implemented,future,https://www.eorc.jaxa.jp/ALOS/en/dataset/aw3d30/aw3d30_e.htm,Free,Alternative
+Kuwait,KW,SRTM 30m,NASA/USGS,30,Global coverage,GeoTIFF,implemented,dem_fetch (srtm),https://lpdaac.usgs.gov/,Public Domain,Best available
+Kuwait,KW,ASTER GDEM,NASA/METI,30,Global coverage,GeoTIFF,not_implemented,future,https://asterweb.jpl.nasa.gov/,Public Domain,Alternative
+Venezuela,VE,SRTM 30m,NASA/USGS,30,Global coverage,GeoTIFF,implemented,dem_fetch (srtm),https://lpdaac.usgs.gov/,Public Domain,Good coverage
+Venezuela,VE,ALOS World 3D,JAXA,30,Global coverage,GeoTIFF,not_implemented,future,https://www.eorc.jaxa.jp/ALOS/en/dataset/aw3d30/aw3d30_e.htm,Free,Alternative
+Norway,NO,DTM 10m,Kartverket,10,Norway,GeoTIFF,not_implemented,future,https://hoydedata.no/,CC BY 4.0,National coverage
+Norway,NO,DTM 1m,Kartverket,1,Norway (partial),GeoTIFF,not_implemented,future,https://hoydedata.no/,CC BY 4.0,Urban LiDAR
+Norway,NO,SRTM 30m,NASA/USGS,30,Below 60N only,GeoTIFF,implemented,dem_fetch (srtm),https://lpdaac.usgs.gov/,Public Domain,Southern Norway
+Mexico,MX,SRTM 30m,NASA/USGS,30,Global coverage,GeoTIFF,implemented,dem_fetch (srtm),https://lpdaac.usgs.gov/,Public Domain,Good coverage
+Mexico,MX,INEGI DEM,INEGI,15,Mexico,GeoTIFF,not_implemented,future,https://www.inegi.org.mx/,Open,National coverage
+Nigeria,NG,SRTM 30m,NASA/USGS,30,Global coverage,GeoTIFF,implemented,dem_fetch (srtm),https://lpdaac.usgs.gov/,Public Domain,Best available
+Nigeria,NG,ASTER GDEM,NASA/METI,30,Global coverage,GeoTIFF,not_implemented,future,https://asterweb.jpl.nasa.gov/,Public Domain,Alternative
+Algeria,DZ,SRTM 30m,NASA/USGS,30,Global coverage,GeoTIFF,implemented,dem_fetch (srtm),https://lpdaac.usgs.gov/,Public Domain,Best available
+Algeria,DZ,ASTER GDEM,NASA/METI,30,Global coverage,GeoTIFF,not_implemented,future,https://asterweb.jpl.nasa.gov/,Public Domain,Alternative
+Qatar,QA,SRTM 30m,NASA/USGS,30,Global coverage,GeoTIFF,implemented,dem_fetch (srtm),https://lpdaac.usgs.gov/,Public Domain,Best available
+Qatar,QA,ALOS World 3D,JAXA,30,Global coverage,GeoTIFF,not_implemented,future,https://www.eorc.jaxa.jp/ALOS/en/dataset/aw3d30/aw3d30_e.htm,Free,High quality
+Angola,AO,SRTM 30m,NASA/USGS,30,Global coverage,GeoTIFF,implemented,dem_fetch (srtm),https://lpdaac.usgs.gov/,Public Domain,Best available
+Angola,AO,ASTER GDEM,NASA/METI,30,Global coverage,GeoTIFF,not_implemented,future,https://asterweb.jpl.nasa.gov/,Public Domain,Alternative
+Libya,LY,SRTM 30m,NASA/USGS,30,Global coverage,GeoTIFF,implemented,dem_fetch (srtm),https://lpdaac.usgs.gov/,Public Domain,Best available
+Libya,LY,ASTER GDEM,NASA/METI,30,Global coverage,GeoTIFF,not_implemented,future,https://asterweb.jpl.nasa.gov/,Public Domain,Alternative
+Kazakhstan,KZ,SRTM 30m,NASA/USGS,30,Below 60N,GeoTIFF,implemented,dem_fetch (srtm),https://lpdaac.usgs.gov/,Public Domain,Most of country
+Kazakhstan,KZ,ASTER GDEM,NASA/METI,30,Global coverage,GeoTIFF,not_implemented,future,https://asterweb.jpl.nasa.gov/,Public Domain,Full coverage
+Oman,OM,SRTM 30m,NASA/USGS,30,Global coverage,GeoTIFF,implemented,dem_fetch (srtm),https://lpdaac.usgs.gov/,Public Domain,Best available
+Oman,OM,ALOS World 3D,JAXA,30,Global coverage,GeoTIFF,not_implemented,future,https://www.eorc.jaxa.jp/ALOS/en/dataset/aw3d30/aw3d30_e.htm,Free,High quality
+Australia,AU,ELVIS 5m,Geoscience Australia,5,Australia (national),GeoTIFF,not_implemented,future,https://elevation.fsdf.org.au/,CC BY 4.0,National coverage
+Australia,AU,SRTM 1-arc,Geoscience Australia,30,Australia,GeoTIFF,implemented,dem_fetch (srtm),https://www.ga.gov.au/scientific-topics/national-location-information/digital-elevation-data,Public Domain,Global coverage
+Indonesia,ID,DEMNAS,BIG,8,Indonesia,GeoTIFF,not_implemented,future,https://tanahair.indonesia.go.id/,Open,National DEM
+Indonesia,ID,SRTM 30m,NASA/USGS,30,Global coverage,GeoTIFF,implemented,dem_fetch (srtm),https://lpdaac.usgs.gov/,Public Domain,Fallback
+Malaysia,MY,SRTM 30m,NASA/USGS,30,Global coverage,GeoTIFF,implemented,dem_fetch (srtm),https://lpdaac.usgs.gov/,Public Domain,Best available
+Malaysia,MY,ASTER GDEM,NASA/METI,30,Global coverage,GeoTIFF,not_implemented,future,https://asterweb.jpl.nasa.gov/,Public Domain,Alternative
+Azerbaijan,AZ,SRTM 30m,NASA/USGS,30,Global coverage,GeoTIFF,implemented,dem_fetch (srtm),https://lpdaac.usgs.gov/,Public Domain,Best available
+Azerbaijan,AZ,ASTER GDEM,NASA/METI,30,Global coverage,GeoTIFF,not_implemented,future,https://asterweb.jpl.nasa.gov/,Public Domain,Alternative
+Egypt,EG,SRTM 30m,NASA/USGS,30,Global coverage,GeoTIFF,implemented,dem_fetch (srtm),https://lpdaac.usgs.gov/,Public Domain,Best available
+Egypt,EG,ASTER GDEM,NASA/METI,30,Global coverage,GeoTIFF,not_implemented,future,https://asterweb.jpl.nasa.gov/,Public Domain,Alternative
+# EUROPEAN UNION COUNTRIES (pipeline transit routes)
+Italy,IT,TINITALY 10m,INGV,10,Italy (national),GeoTIFF,implemented,tinitaly_fetch,https://tinitaly.pi.ingv.it/,Free Research,Best for Italy
+Italy,IT,Copernicus DEM 10m,EU/Copernicus,10,Europe,GeoTIFF,not_implemented,copernicus_eea10_fetch,https://spacedata.copernicus.eu/,Free,EEA-10
+France,FR,RGE ALTI 1m,IGN,1,France (urban),GeoTIFF,not_implemented,future,https://geoservices.ign.fr/,Open License,Urban areas LiDAR
+France,FR,RGE ALTI 5m,IGN,5,France (national),GeoTIFF,not_implemented,future,https://geoservices.ign.fr/,Open License,National coverage
+Germany,DE,DGM 1m,BKG,1,Germany (partial),GeoTIFF,not_implemented,future,https://gdz.bkg.bund.de/,GeoNutzV,Regional availability
+Germany,DE,DGM 5m,BKG,5,Germany (national),GeoTIFF,not_implemented,future,https://gdz.bkg.bund.de/,GeoNutzV,National coverage
+Spain,ES,MDT05 5m,IGN,5,Spain (national),GeoTIFF,not_implemented,future,https://centrodedescargas.cnig.es/,CC BY 4.0,National coverage
+Spain,ES,MDT02 2m,IGN,2,Spain (partial),GeoTIFF,not_implemented,future,https://centrodedescargas.cnig.es/,CC BY 4.0,Partial coverage
+UK,GB,LIDAR 1m,Ordnance Survey,1,UK (partial),GeoTIFF,not_implemented,future,https://environment.data.gov.uk/DefraDataDownload/,Open,England LiDAR
+UK,GB,OS Terrain 5,Ordnance Survey,5,UK (GB),GeoTIFF,not_implemented,future,https://www.ordnancesurvey.co.uk/,Open,Great Britain
+Netherlands,NL,AHN 0.5m,Rijkswaterstaat,0.5,Netherlands,GeoTIFF,not_implemented,future,https://www.ahn.nl/,CC0,National LiDAR
+Belgium,BE,DTM 1m,NGI,1,Belgium,GeoTIFF,not_implemented,future,https://www.ngi.be/,Open,National coverage
+Austria,AT,DGM 10m,BEV,10,Austria,GeoTIFF,not_implemented,future,https://www.data.gv.at/,CC BY 4.0,National coverage
+Switzerland,CH,swissALTI3D 0.5m,swisstopo,0.5,Switzerland,GeoTIFF,not_implemented,future,https://www.swisstopo.admin.ch/,Open,National LiDAR
+Sweden,SE,Laserdata 0.5-2m,Lantmäteriet,1,Sweden,GeoTIFF,not_implemented,future,https://www.lantmateriet.se/,CC0,National LiDAR
+Denmark,DK,DHM 0.4m,SDFE,0.4,Denmark,GeoTIFF,not_implemented,future,https://sdfe.dk/,Open,National LiDAR
+Finland,FI,NLS DEM 2m,NLS,2,Finland,GeoTIFF,not_implemented,future,https://www.maanmittauslaitos.fi/,CC BY 4.0,National coverage
+Poland,PL,CODGiK DEM 1m,GUGiK,1,Poland (partial),GeoTIFF,not_implemented,future,https://www.geoportal.gov.pl/,Open,LiDAR coverage
+Czech Republic,CZ,DMR 5G,CUZK,5,Czech Republic,GeoTIFF,not_implemented,future,https://geoportal.cuzk.cz/,Open,National coverage
+Portugal,PT,MDT 10m,DGT,10,Portugal,GeoTIFF,not_implemented,future,https://snig.dgterritorio.gov.pt/,Open,National coverage
+Greece,GR,DEM 5m,Hellenic Cadastre,5,Greece,GeoTIFF,not_implemented,future,https://www.ktimanet.gr/,Open,National coverage
+Ireland,IE,DTM 1m,OSI,1,Ireland,GeoTIFF,not_implemented,future,https://data.gov.ie/,CC BY 4.0,National coverage
+Romania,RO,DEM 25m,ANCPI,25,Romania,GeoTIFF,not_implemented,future,http://geoportal.ancpi.ro/,Open,National coverage
+Hungary,HU,DDM 5m,FÖMI,5,Hungary,GeoTIFF,not_implemented,future,https://www.fomi.hu/,Open,National coverage
+Bulgaria,BG,DEM 20m,CADASTRE,20,Bulgaria,GeoTIFF,not_implemented,future,https://www.cadastre.bg/,Open,National coverage
+Croatia,HR,DEM 25m,DGU,25,Croatia,GeoTIFF,not_implemented,future,https://geoportal.dgu.hr/,Open,National coverage
+Slovenia,SI,DMR 1m,GURS,1,Slovenia,GeoTIFF,not_implemented,future,https://www.e-prostor.gov.si/,Open,National LiDAR
+Slovakia,SK,DMR 5m,UGKK,5,Slovakia,GeoTIFF,not_implemented,future,https://www.geoportal.sk/,Open,National coverage
+Lithuania,LT,LIDAR 0.5m,NZT,0.5,Lithuania,GeoTIFF,not_implemented,future,https://www.geoportal.lt/,Open,National LiDAR
+Latvia,LV,DEM 2m,LGIA,2,Latvia,GeoTIFF,not_implemented,future,https://www.lgia.gov.lv/,Open,National coverage
+Estonia,EE,DEM 5m,Maa-amet,5,Estonia,GeoTIFF,not_implemented,future,https://geoportaal.maaamet.ee/,Open,National coverage
+Luxembourg,LU,LIDAR 1m,ACT,1,Luxembourg,GeoTIFF,not_implemented,future,https://data.public.lu/,CC0,National LiDAR
+Malta,MT,DEM 5m,MEPA,5,Malta,GeoTIFF,not_implemented,future,https://www.pa.org.mt/,Open,National coverage
+Cyprus,CY,DEM 5m,DOS,5,Cyprus,GeoTIFF,not_implemented,future,https://www.moa.gov.cy/,Open,National coverage
+# GLOBAL FALLBACKS (when no national dataset available)
+Global,GLOBAL,SRTM 30m,NASA/USGS,30,Global 60N-56S,GeoTIFF,implemented,dem_fetch (srtm),https://lpdaac.usgs.gov/,Public Domain,Standard fallback
+Global,GLOBAL,ASTER GDEM v3,NASA/METI,30,Global 83N-83S,GeoTIFF,not_implemented,future,https://asterweb.jpl.nasa.gov/,Public Domain,Alternative to SRTM
+Global,GLOBAL,ALOS World 3D,JAXA,30,Global,GeoTIFF,not_implemented,future,https://www.eorc.jaxa.jp/ALOS/en/dataset/aw3d30/aw3d30_e.htm,Free,High quality
+Global,GLOBAL,Copernicus DEM 30m,EU/Copernicus,30,Global,GeoTIFF,not_implemented,future,https://spacedata.copernicus.eu/,Free,GLO-30
+Global,GLOBAL,FABDEM,University of Bristol,30,Global,GeoTIFF,not_implemented,future,https://data.bris.ac.uk/data/dataset/s5hqmjcdj8yo2ibzi9b4ew3sn,CC BY 4.0,Forest corrected

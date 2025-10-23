@@ -1,0 +1,142 @@
+# PIRL Training Configuration Template
+# This file configures the training process for Physics-Informed Reinforcement Learning
+
+# ============================================================================
+# TRAINING PARAMETERS
+# ============================================================================
+
+# Algorithm to use: "PPO" or "SAC"
+algorithm: "PPO"
+
+# Total training timesteps
+total_timesteps: 1000000
+
+# Number of parallel environments
+num_envs: 8
+
+# Evaluation frequency (timesteps)
+eval_freq: 10000
+
+# Model saving frequency (timesteps)
+save_freq: 50000
+
+# ============================================================================
+# ALGORITHM-SPECIFIC PARAMETERS
+# ============================================================================
+
+algorithm_params:
+  # Learning rate
+  learning_rate: 0.0003
+  
+  # Batch size for training
+  batch_size: 256
+  
+  # Buffer size (for off-policy algorithms like SAC)
+  buffer_size: 100000
+  
+  # Learning starts (for off-policy algorithms)
+  learning_starts: 10000
+  
+  # Training frequency
+  train_freq: 4
+  
+  # Gradient steps per update
+  gradient_steps: 1
+  
+  # Target network update interval
+  target_update_interval: 1
+  
+  # Discount factor
+  gamma: 0.99
+  
+  # Soft update coefficient (for SAC)
+  tau: 0.005
+  
+  # Entropy coefficient (for exploration)
+  ent_coef: "auto"
+  
+  # Value function coefficient
+  vf_coef: 0.5
+  
+  # Maximum gradient norm
+  max_grad_norm: 0.5
+  
+  # Verbosity level (0-2)
+  verbose: 1
+
+# ============================================================================
+# ENVIRONMENT CONFIGURATIONS
+# ============================================================================
+
+# List of project configuration files to use for training
+# Each file should contain a complete PIRL project setup
+env_configs:
+  - "/opt/agrs/Projects/SAIPEM_PIPELINE_DEMO/config/pirl_config.yaml"
+  # Add more project configs for diverse training data
+  # - "/opt/agrs/Projects/PROJECT_2/config/pirl_config.yaml"
+  # - "/opt/agrs/Projects/PROJECT_3/config/pirl_config.yaml"
+
+# ============================================================================
+# OUTPUT CONFIGURATION
+# ============================================================================
+
+# Output directory for training artifacts
+output_dir: "./pirl_training_output"
+
+# Model name (will be saved as {model_name}.zip)
+model_name: "pirl_model"
+
+# ============================================================================
+# OPTIONAL PARAMETERS
+# ============================================================================
+
+# Stop training when reward threshold is reached (optional)
+# reward_threshold: 1000.0
+
+# Curriculum learning configuration (optional)
+# curriculum:
+#   enabled: true
+#   stages:
+#     - name: "easy_terrain"
+#       difficulty: 0.3
+#       timesteps: 200000
+#     - name: "medium_terrain"
+#       difficulty: 0.6
+#       timesteps: 400000
+#     - name: "hard_terrain"
+#       difficulty: 1.0
+#       timesteps: 400000
+
+# Hyperparameter optimization (optional)
+# hyperopt:
+#   enabled: false
+#   n_trials: 50
+#   params:
+#     learning_rate: [1e-5, 1e-2]
+#     batch_size: [64, 512]
+#     gamma: [0.9, 0.999]
+
+# ============================================================================
+# MONITORING AND LOGGING
+# ============================================================================
+
+# TensorBoard logging
+tensorboard_log: true
+
+# Wandb logging (optional)
+# wandb:
+#   enabled: false
+#   project: "pirl-pipeline-routing"
+#   entity: "your-wandb-entity"
+
+# ============================================================================
+# NOTES
+# ============================================================================
+
+# 1. Make sure all environment config files exist and are properly configured
+# 2. Adjust total_timesteps based on your computational resources
+# 3. For faster training, increase num_envs (up to your CPU cores)
+# 4. For better sample efficiency, use SAC; for stability, use PPO
+# 5. Monitor training progress with TensorBoard: tensorboard --logdir ./pirl_training_output/logs
+
+

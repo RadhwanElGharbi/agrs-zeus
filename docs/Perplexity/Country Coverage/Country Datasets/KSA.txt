@@ -1,0 +1,683 @@
+# Comprehensive GIS Datasets for Oil & Gas Pipeline Routing in Saudi Arabia
+
+Based on current available data sources, here is a detailed assessment of GIS datasets across all requested categories for pipeline routing in Saudi Arabia:
+
+---
+
+## 1. ELEVATION/TERRAIN (DEM)
+
+### National Geological Survey DEMs
+**Dataset:** Saudi Geological Survey Topographic Data  
+**Source/Provider:** Saudi Geological Survey (SGS)  
+**Resolution/Scale:** Variable, exploratory to reconnaissance scale (1:1,000,000 or larger)  
+**Temporal Coverage:** Current  
+**Update Frequency:** Periodic updates  
+**Access Type:** Restricted/requires request  
+**API Availability:** No public API documented  
+**Official URL:** https://ngd.sgs.gov.sa/en and https://ngp.sgs.gov.sa  
+**Quality Assessment:** SGS maintains the National Geological Database (NGD) with geological and topographic maps for the Kingdom. Limited public documentation on resolution and accuracy. Best suited for regional-scale planning rather than detailed engineering design.[1][2][3]
+
+### National LiDAR-derived DEMs
+**Dataset:** Limited availability  
+**Status:** No comprehensive national LiDAR coverage identified for Saudi Arabia. Some localized LiDAR may exist for major urban areas or infrastructure projects but not publicly documented.[4]
+
+### Regional High-Resolution DEMs
+**Dataset:** GASGI Geospatial Data  
+**Source/Provider:** General Authority for Survey and Geospatial Information (GASGI/GEOSA)  
+**Resolution/Scale:** Variable  
+**Temporal Coverage:** Current  
+**Update Frequency:** Ongoing  
+**Access Type:** Restricted, open data portal launched in 2023  
+**API Availability:** Not documented  
+**Official URL:** https://geosa.gov.sa/en and https://www.geoportal.sa  
+**Quality Assessment:** GASGI launched an open data portal in 2023 to improve geospatial infrastructure. Specific DEM products and their resolutions require formal inquiry. The authority follows international UN standards for geospatial data.[5][6][7][8]
+
+### Best Global DEM - Copernicus DEM GLO-30
+**Dataset:** Copernicus DEM GLO-30  
+**Source/Provider:** European Space Agency (ESA) / Copernicus Programme  
+**Resolution/Scale:** 30 meters (GLO-30) and 90 meters (GLO-90)  
+**Temporal Coverage:** 2010-2015 (TanDEM-X acquisition period)  
+**Update Frequency:** Static dataset with periodic releases  
+**Access Type:** Open/Free (GLO-30 and GLO-90 freely available globally)  
+**API Availability:** Yes - Copernicus Data Space Ecosystem API, Sentinel Hub API, Google Earth Engine API, AWS S3  
+**Official URL:** https://dataspace.copernicus.eu/explore-data/data-collections/copernicus-contributing-missions/collections-description/COP-DEM  
+**Quality Assessment:** Highest quality global DEM available. Digital Surface Model (DSM) representing Earth's surface including buildings and vegetation. Derived from TanDEM-X radar data with edited water bodies and coastlines. Vertical accuracy generally <10m. Excellent for Saudi Arabia with complete coverage. Recommended as primary DEM for pipeline routing.[9][10][11][12][13]
+
+### Alternative Global DEMs
+**Dataset:** SRTM 1-Arc Second (30m)  
+**Source/Provider:** NASA/USGS  
+**Resolution/Scale:** 30 meters (1-arc second)  
+**Temporal Coverage:** February 2000  
+**Update Frequency:** Static  
+**Access Type:** Open/Free  
+**API Availability:** Yes - USGS Earth Explorer, Google Earth Engine  
+**Official URL:** https://earthexplorer.usgs.gov  
+**Quality Assessment:** Good quality, absolute vertical accuracy <16m. Older than Copernicus DEM. Copernicus DEM is generally preferred for newer applications.[14][15]
+
+**Dataset:** ASTER GDEM  
+**Quality Assessment:** Lower quality than SRTM and Copernicus DEM; not recommended for Saudi Arabia when better alternatives exist.[15]
+
+***
+
+## 2. LAND COVER / LAND USE
+
+### National Land Use Maps
+**Dataset:** GASGI National Land Cover Data  
+**Source/Provider:** General Authority for Survey and Geospatial Information (GASGI)  
+**Resolution/Scale:** Variable  
+**Temporal Coverage:** Current  
+**Update Frequency:** Periodic  
+**Access Type:** Restricted/requires request  
+**API Availability:** Not documented  
+**Official URL:** https://geosa.gov.sa/en  
+**Quality Assessment:** Specific national land cover products require inquiry through GASGI open data portal launched in 2023. Quality and resolution not publicly documented.[6][5]
+
+### Best Global Dataset - ESA WorldCover
+**Dataset:** ESA WorldCover 2020/2021  
+**Source/Provider:** European Space Agency (ESA) WorldCover Consortium  
+**Resolution/Scale:** 10 meters  
+**Temporal Coverage:** 2020 and 2021 products available  
+**Update Frequency:** Annual (2020, 2021 released; future updates planned)  
+**Access Type:** Open/Free (CC-BY-4.0 license)  
+**API Availability:** Yes - Google Earth Engine, direct download  
+**Official URL:** https://esa-worldcover.org/en and https://worldcover2021.esa.int/download  
+**Quality Assessment:** Highest resolution global land cover product. 11 land cover classes based on Sentinel-1 and Sentinel-2 data. Excellent quality for Saudi Arabia with complete coverage. Delivered in 3×3 degree tiles. Recommended as primary land cover source.[16][17][18][19]
+
+### Sentinel-2 Land Use/Land Cover
+**Dataset:** Sentinel-2 10m LULC Time Series  
+**Source/Provider:** ESA/Esri  
+**Resolution/Scale:** 10 meters  
+**Temporal Coverage:** Annual time series available  
+**Update Frequency:** Annual  
+**Access Type:** Open/Free  
+**API Availability:** Yes - ArcGIS Living Atlas, Google Earth Engine  
+**Official URL:** https://www.arcgis.com/home/item.html?id=cfcb7609de5f478eb7666240902d4d3d  
+**Quality Assessment:** High-quality global LULC derived from Sentinel-2. Good for temporal analysis and change detection.[20][21]
+
+### Google Dynamic World
+**Dataset:** Dynamic World Near-real-time Land Cover  
+**Source/Provider:** Google/World Resources Institute  
+**Resolution/Scale:** 10 meters  
+**Temporal Coverage:** 2015-present (near real-time)  
+**Update Frequency:** Near real-time (every 2-5 days)  
+**Access Type:** Open/Free  
+**API Availability:** Yes - Google Earth Engine  
+**Quality Assessment:** AI-generated near-real-time land cover with probability layers. Useful for monitoring recent changes but may have lower accuracy than ESA WorldCover for static mapping.
+
+***
+
+## 3. HYDROLOGY / WATER
+
+### National Water Resources Database
+**Dataset:** Ministry of Environment, Water and Agriculture (MEWA) Water Resources Data  
+**Source/Provider:** Ministry of Environment, Water and Agriculture (formerly Ministry of Water and Environment)  
+**Resolution/Scale:** Variable  
+**Temporal Coverage:** Current  
+**Update Frequency:** Ongoing monitoring  
+**Access Type:** Restricted/requires request  
+**API Availability:** No public API documented  
+**Official URL:** https://www.mewa.gov.sa/en  
+**Quality Assessment:** MEWA manages conventional and renewable water resources including groundwater, desalination, and surface water. Comprehensive wadi hydrology studies exist, particularly for major wadis (Wadi Baysh, Wadi Habawnah). Data access requires formal request to the General Directorate of Water Resources. Quality is good for major water features but public accessibility is limited.[22][23][24][25]
+
+### National Hydrography Networks
+**Dataset:** Saudi Wadi Systems Database  
+**Source/Provider:** Various government agencies and research institutions  
+**Resolution/Scale:** Regional to local scale  
+**Temporal Coverage:** Variable by study area  
+**Update Frequency:** Project-based  
+**Access Type:** Restricted/academic access  
+**Quality Assessment:** Saudi Arabia has ephemeral drainage systems (wadis) rather than permanent rivers. Detailed wadi mapping exists for key catchments. No comprehensive national hydrography network publicly available. Research publications provide wadi characterization but not GIS-ready datasets.[26][22]
+
+### Best Global Dataset - Global Surface Water Explorer
+**Dataset:** JRC Global Surface Water Explorer  
+**Source/Provider:** European Commission Joint Research Centre  
+**Resolution/Scale:** 30 meters  
+**Temporal Coverage:** 1984-present  
+**Update Frequency:** Periodic updates  
+**Access Type:** Open/Free  
+**API Availability:** Yes - Google Earth Engine  
+**Quality Assessment:** Excellent for permanent and seasonal water bodies. Particularly useful for Saudi Arabia's ephemeral water systems. Shows water occurrence, seasonality, and changes over time. Highly recommended for pipeline routing to identify flood-prone areas.
+
+### HydroSHEDS
+**Dataset:** HydroSHEDS (Hydrological data and maps based on SHuttle Elevation Derivatives at multiple Scales)  
+**Source/Provider:** USGS/Conservation International  
+**Resolution/Scale:** Multiple resolutions (15 arc-seconds to 30 arc-seconds)  
+**Temporal Coverage:** Based on SRTM 2000  
+**Update Frequency:** Static with periodic regional updates  
+**Access Type:** Open/Free  
+**API Availability:** Direct download  
+**Quality Assessment:** Good quality drainage networks and watershed boundaries derived from DEM. Useful for understanding drainage patterns in arid Saudi Arabia, though may not capture all ephemeral wadis.
+
+***
+
+## 4. INFRASTRUCTURE - ROADS
+
+### National Road Network Dataset
+**Dataset:** Ministry of Transport and Logistic Services Road Network Data  
+**Source/Provider:** Ministry of Transport and Logistic Services  
+**Resolution/Scale:** National road network  
+**Temporal Coverage:** Current  
+**Update Frequency:** Ongoing  
+**Access Type:** Restricted/requires request  
+**API Availability:** Not publicly documented  
+**Official URL:** https://mot.gov.sa/en  
+**Quality Assessment:** Saudi Arabia has invested heavily in road infrastructure with quality rating of 5.7, ranking 4th among G20 countries. The Ministry manages comprehensive road network data but public access is limited. Data likely includes all major highways and primary roads. Quality is expected to be excellent for official government data.[27][28]
+
+### Commercial - HERE Technologies
+**Dataset:** HERE Map Data  
+**Source/Provider:** HERE Technologies (via THTC - Transport Hi-Tech Consultants for Saudi Arabia)  
+**Resolution/Scale:** Street-level detail  
+**Temporal Coverage:** Current  
+**Update Frequency:** Continuous updates  
+**Access Type:** Commercial/Purchase (requires licensing)  
+**API Availability:** Yes - HERE Routing API, HERE Traffic API  
+**Official URL:** https://www.here.com  
+**Quality Assessment:** High-quality commercial road network data with extensive coverage in Saudi Arabia. HERE data is actively used by Saudi municipalities including Riyadh and Dammam for traffic management. Includes navigation-grade attributes (road class, speed limits, restrictions). Proven track record in Middle East. Requires commercial license but provides API access and high accuracy.[29][30][31]
+
+### Commercial - TomTom
+**Dataset:** TomTom Map Data  
+**Source/Provider:** TomTom (via THTC for Saudi Arabia)  
+**Resolution/Scale:** Street-level detail  
+**Temporal Coverage:** Current  
+**Update Frequency:** Continuous updates (fresh data)  
+**Access Type:** Commercial/Purchase  
+**API Availability:** Yes - TomTom APIs  
+**Quality Assessment:** High-quality commercial data actively used in Saudi Arabia for ITS projects. TomTom provides traffic data to Riyadh Metro project and Eastern Province Municipality. Comprehensive coverage of major urban areas and highways. Includes traffic flow data and route monitoring capabilities.[32][33][29]
+
+### OpenStreetMap (OSM)
+**Dataset:** OpenStreetMap Saudi Arabia  
+**Source/Provider:** OpenStreetMap contributors  
+**Resolution/Scale:** Variable quality by region  
+**Temporal Coverage:** Current (continuously updated)  
+**Update Frequency:** Real-time community updates  
+**Access Type:** Open/Free (ODbL license)  
+**API Availability:** Yes - Overpass API, various OSM APIs  
+**Official URL:** https://www.openstreetmap.org  
+**Quality Assessment:** MODERATE to GOOD coverage for Saudi Arabia. Major highways and urban roads in Riyadh, Jeddah, and Dammam are well-mapped. Rural and remote areas have variable coverage. OSM data available through humanitarian data exchange. Quality improving but not as comprehensive or validated as commercial providers. Good for preliminary analysis but recommend validation against commercial or official sources for critical pipeline routing.[34][35][36]
+
+---
+
+## 5. INFRASTRUCTURE - RAILWAYS
+
+### National Railway Network
+**Dataset:** Saudi Railway Authority Network Data  
+**Source/Provider:** Saudi Railway Authority  
+**Resolution/Scale:** National rail network  
+**Temporal Coverage:** Current  
+**Update Frequency:** As infrastructure develops  
+**Access Type:** Restricted/requires request  
+**API Availability:** Not documented  
+**Quality Assessment:** Saudi Arabia has limited but expanding railway infrastructure including Riyadh Metro (under construction/operational) and Haramain High-Speed Railway. Official data requires formal request. Railway network is relatively small compared to road network.
+
+### OpenStreetMap Railways
+**Dataset:** OpenStreetMap Railway Features  
+**Source/Provider:** OpenStreetMap contributors  
+**Resolution/Scale:** Variable  
+**Temporal Coverage:** Current  
+**Update Frequency:** Community-driven  
+**Access Type:** Open/Free  
+**API Availability:** Yes - Overpass API  
+**Quality Assessment:** MODERATE coverage. Major rail lines are mapped but completeness varies. Should be validated against official sources for pipeline routing. Useful for preliminary screening of railway crossings.[35]
+
+---
+
+## 6. INFRASTRUCTURE - UTILITIES (Power, Telecom)
+
+### National Electricity Transmission Network
+**Dataset:** Saudi Electricity Company Transmission Data  
+**Source/Provider:** Saudi Electricity Company  
+**Resolution/Scale:** National grid  
+**Temporal Coverage:** Current  
+**Update Frequency:** As infrastructure expands  
+**Access Type:** Restricted/requires request  
+**API Availability:** Not documented  
+**Quality Assessment:** Saudi Arabia has extensive electricity infrastructure. Official transmission line data is restricted and requires formal request from utilities. Quality is expected to be high for engineering-grade data but public access is very limited.
+
+### OpenInfraMap / OpenStreetMap Utilities
+**Dataset:** OpenStreetMap Power Infrastructure  
+**Source/Provider:** OpenStreetMap contributors / OpenInfraMap  
+**Resolution/Scale:** Variable  
+**Temporal Coverage:** Current  
+**Update Frequency:** Community-driven  
+**Access Type:** Open/Free  
+**API Availability:** Yes - Overpass API  
+**Official URL:** https://openinframap.org  
+**Quality Assessment:** LIMITED to POOR coverage for Saudi Arabia. Major transmission lines may be mapped in some areas but coverage is incomplete and unvalidated. Not recommended as primary source for critical infrastructure planning. Use only for preliminary screening and validate with official sources.
+
+***
+
+## 7. INFRASTRUCTURE - PIPELINES
+
+### Saudi Aramco Pipeline GIS Data
+**Dataset:** Saudi Aramco Hydrocarbon Transmission Pipeline Network  
+**Source/Provider:** Saudi Arabian Oil Company (Saudi Aramco) - Pipelines Data Management Unit (PDMU)  
+**Resolution/Scale:** As-built engineering detail (centimeter-level accuracy)  
+**Temporal Coverage:** Current (maintained as-built records)  
+**Update Frequency:** Continuous (real-time updates for modifications)  
+**Access Type:** Highly Restricted - Internal only (proprietary/confidential)  
+**API Availability:** Internal corporate GIS/ERP integration only  
+**Quality Assessment:** EXCELLENT quality. Saudi Aramco operates >15,000 km of hydrocarbon transmission pipelines across Saudi Arabia. Maintained by dedicated Pipelines Data Management Unit using comprehensive GIS application integrated with enterprise resource planning systems. Includes detailed as-built records of all pipelines, assets, modifications. Highest quality pipeline data available but completely restricted to Saudi Aramco internal use. External parties conducting pipeline routing must coordinate directly with Saudi Aramco and relevant government authorities. NOT publicly accessible.[37][38][39]
+
+### Government Pipeline Registry
+**Dataset:** Ministry of Energy Pipeline Registry  
+**Source/Provider:** Ministry of Energy, Kingdom of Saudi Arabia  
+**Resolution/Scale:** National pipeline infrastructure  
+**Temporal Coverage:** Current  
+**Update Frequency:** Regulatory updates  
+**Access Type:** Restricted/requires formal request  
+**API Availability:** Not documented  
+**Quality Assessment:** Government maintains regulatory oversight of pipeline infrastructure. Access requires formal coordination with Ministry of Energy for authorized projects. Quality expected to be good for regulatory purposes but less detailed than Saudi Aramco internal data.
+
+### OpenStreetMap Pipelines
+**Dataset:** OSM Pipeline Features  
+**Source/Provider:** OpenStreetMap contributors  
+**Resolution/Scale:** Variable  
+**Temporal Coverage:** Current  
+**Update Frequency:** Community-driven  
+**Access Type:** Open/Free  
+**API Availability:** Yes - Overpass API  
+**Quality Assessment:** VERY LIMITED and INCOMPLETE. Pipeline infrastructure is rarely mapped in OSM, especially in Saudi Arabia due to security sensitivity. NOT recommended for pipeline routing analysis. Cannot be relied upon for identifying existing pipelines or planning new routes.
+
+***
+
+## 8. PROTECTED AREAS / ENVIRONMENTAL
+
+### National Protected Areas
+**Dataset:** Saudi Wildlife Authority Protected Areas Database  
+**Source/Provider:** Saudi Wildlife Authority (formerly National Commission for Wildlife Conservation and Development - NCWCD)  
+**Resolution/Scale:** Individual protected area boundaries  
+**Temporal Coverage:** Current (established 1986-present)  
+**Update Frequency:** As new areas designated  
+**Access Type:** Restricted/requires request  
+**API Availability:** Not documented  
+**Quality Assessment:** Saudi Arabia has substantial protected areas network covering ~4% of the Kingdom. NCWCD/Saudi Wildlife Authority manages protected areas including controlled hunting reserves, wildlife reserves, marine sanctuaries. Notable areas include: Farasan Islands, Mahazat as-Sayd, Harrat al-Harrah, Ibex Reserve, Asir National Park, and others. Five categories of protected areas with clustering approach. Official boundary data requires request from Saudi Wildlife Authority. Quality is good for officially designated areas.[40][41][42][43][44][45]
+
+### National Parks and Reserves
+**Dataset:** 17+ Protected Areas including Special Reserves  
+**Examples:** At-Taysiyah, Jabal Shada Nature Reserve, Raydah Natural Reserve, 'Uruq Bani Ma'arid, Saja Umm Ar-Rimth, Wadi Turabah, Al-Tubayq, Jubail Marine Wildlife Sanctuary  
+**Access Type:** Restricted/requires coordination with environmental authorities  
+**Quality Assessment:** Well-defined boundaries for major protected areas. Data access through Saudi Wildlife Authority or relevant regional authorities.[42]
+
+### World Database on Protected Areas (WDPA)
+**Dataset:** WDPA Saudi Arabia Coverage  
+**Source/Provider:** UN Environment Programme World Conservation Monitoring Centre (UNEP-WCMC)  
+**Resolution/Scale:** Variable by protected area  
+**Temporal Coverage:** Current (regularly updated)  
+**Update Frequency:** Monthly updates  
+**Access Type:** Open/Free  
+**API Availability:** Yes - Protected Planet API, direct download  
+**Official URL:** https://www.protectedplanet.net/country/SAU  
+**Quality Assessment:** GOOD coverage of officially recognized protected areas in Saudi Arabia. Most complete publicly accessible database of protected areas. Includes both terrestrial and marine protected areas. Some boundaries may be approximate or outdated compared to national sources. Recommended as starting point for identifying protected areas, but should be verified with Saudi Wildlife Authority for critical pipeline routing decisions.[46][47]
+
+***
+
+## 9. GEOLOGY / SOIL
+
+### National Geological Survey Maps
+**Dataset:** Saudi Geological Survey Geological Maps and Databases  
+**Source/Provider:** Saudi Geological Survey (SGS)  
+**Resolution/Scale:** 1:250,000 to 1:1,000,000 regional maps; larger scale detailed maps for specific areas  
+**Temporal Coverage:** Historical to current  
+**Update Frequency:** Periodic updates  
+**Access Type:** Restricted/requires request (some maps may be purchasable)  
+**API Availability:** No public API  
+**Official URL:** https://sgs.gov.sa/en and https://ngd.sgs.gov.sa/en  
+**Quality Assessment:** SGS is the authoritative source for geological information in Saudi Arabia. Maintains National Geological Database with geological maps, mineral resources, geochemistry data, borehole data. Comprehensive coverage of Arabian Shield geology. Technical reports and geological maps available but require formal access. Quality is excellent for geological characterization but public digital access is limited. Essential source for understanding bedrock geology, structural features, and seismic risks.[2][48][3][1]
+
+### Soil Maps
+**Dataset:** National soil survey data  
+**Source/Provider:** Ministry of Environment, Water and Agriculture  
+**Resolution/Scale:** Reconnaissance to detailed scales  
+**Access Type:** Restricted/requires request  
+**Quality Assessment:** Agricultural soil surveys exist but detailed national soil database accessibility is limited. Soil information may be embedded in land capability assessments.
+
+### FAO/UNESCO Soil Map of the World
+**Dataset:** FAO-UNESCO Soil Map 1:5,000,000  
+**Source/Provider:** Food and Agriculture Organization / UNESCO  
+**Resolution/Scale:** 1:5,000,000 (very coarse)  
+**Temporal Coverage:** 1961-1981 compilation period  
+**Update Frequency:** Static (historical product)  
+**Access Type:** Open/Free  
+**API Availability:** No  
+**Official URL:** https://www.fao.org/soils-portal/data-hub/soil-maps-and-databases/faounesco-soil-map-of-the-world/en/  
+**Quality Assessment:** COARSE resolution, suitable only for broad regional overview. Western Saudi Arabia coverage based on 1963 geological survey and Arabian-American Oil Company data. Too coarse for pipeline routing but provides general soil type classification. Not recommended for detailed engineering.[49][48][50]
+
+### Harmonized World Soil Database (HWSD)
+**Dataset:** FAO HWSD  
+**Source/Provider:** FAO/IIASA  
+**Resolution/Scale:** 30 arc-seconds (~1 km)  
+**Temporal Coverage:** Compilation of various sources  
+**Access Type:** Open/Free  
+**Quality Assessment:** Better than 1:5M FAO map but still coarse for pipeline routing. Provides soil physical and chemical properties. Suitable for preliminary screening only.
+
+### OneGeology
+**Dataset:** OneGeology Portal - Saudi Arabia Contribution  
+**Source/Provider:** OneGeology consortium / Saudi Geological Survey  
+**Resolution/Scale:** Variable  
+**Access Type:** Open/Free (web services)  
+**API Availability:** Yes - WMS/WFS services  
+**Quality Assessment:** OneGeology provides access to geological map data through web services. Saudi contribution varies in resolution and currency. Useful for preliminary geological reconnaissance.
+
+***
+
+## 10. CLIMATE / WEATHER
+
+### National Meteorological Service
+**Dataset:** National Center for Meteorology (NCM) Climate and Weather Data  
+**Source/Provider:** National Center for Meteorology, Kingdom of Saudi Arabia  
+**Resolution/Scale:** Station-based observations across Kingdom  
+**Temporal Coverage:** Historical records to present (1929+ for some stations)  
+**Update Frequency:** Real-time observations, daily statistics, annual climate summaries  
+**Access Type:** Restricted/requires request (some public summaries available)  
+**API Availability:** Not documented for public access  
+**Official URL:** https://ncm.gov.sa/en and https://beta.ncm.gov.sa/en  
+**Quality Assessment:** NCM is the authoritative source for weather and climate data in Saudi Arabia. Operates >9,000 weather stations across the Kingdom providing temperature, humidity, precipitation, wind data. Produces annual climate summaries and long-term climatological analyses. Detailed historical and real-time data requires formal request. Public access limited to general summaries. Quality is excellent for ground-truth observations but data access protocols are restrictive.[51][52][53][54]
+
+### ERA5 Reanalysis
+**Dataset:** ERA5 Reanalysis Data  
+**Source/Provider:** European Centre for Medium-Range Weather Forecasts (ECMWF)  
+**Resolution/Scale:** 0.25° × 0.25° (~25-30 km)  
+**Temporal Coverage:** 1950-present (3-month lag for final data)  
+**Update Frequency:** Continuous updates  
+**Access Type:** Open/Free  
+**API Availability:** Yes - Copernicus Climate Data Store API  
+**Official URL:** https://climateknowledgeportal.worldbank.org/country/saudi-arabia/era5-historical  
+**Quality Assessment:** EXCELLENT global reanalysis product. Hourly data for temperature, precipitation, humidity, wind, pressure, and many other variables. Well-validated for Saudi Arabia with good performance across the country, particularly for temperature and humidity in Tabuk and Jeddah. Recommended as primary climate data source for areas without station coverage. ERA5-Land provides enhanced 9km resolution. Widely used in Saudi research.[55][52][56]
+
+### WorldClim
+**Dataset:** WorldClim Global Climate Data  
+**Source/Provider:** WorldClim project  
+**Resolution/Scale:** Multiple resolutions (30 arc-seconds ~1km to 2.5 arc-minutes)  
+**Temporal Coverage:** Historical averages (1970-2000 baseline) and future projections  
+**Update Frequency:** Periodic major releases  
+**Access Type:** Open/Free  
+**API Availability:** Direct download  
+**Quality Assessment:** HIGH quality gridded climate surfaces for temperature and precipitation. Based on weather station interpolation. Useful for understanding long-term climate patterns. Lower temporal resolution than ERA5 (monthly averages) but good spatial detail for topographic effects.
+
+***
+
+## 11. ADMINISTRATIVE BOUNDARIES
+
+### Official National Boundaries
+**Dataset:** General Authority for Statistics (GASTAT) Administrative Boundaries  
+**Source/Provider:** General Authority for Statistics, Kingdom of Saudi Arabia  
+**Resolution/Scale:** Multiple administrative levels (Regions, Governorates)  
+**Temporal Coverage:** Current  
+**Update Frequency:** As administrative changes occur  
+**Access Type:** Open via national open data portal  
+**API Availability:** Data download through portal  
+**Official URL:** https://www.stats.gov.sa/en and https://datasaudi.sa/en  
+**Quality Assessment:** GASTAT is the official statistical authority for Saudi Arabia. Maintains authoritative administrative boundary datasets. Saudi Arabia has 13 administrative regions subdivided into governorates. DataSaudi portal provides access to statistical data and boundaries. This is the most authoritative source for official boundaries. Quality is excellent.[57][58][59][60]
+
+### GADM (Database of Global Administrative Areas)
+**Dataset:** GADM Saudi Arabia Boundaries  
+**Source/Provider:** GADM Project  
+**Resolution/Scale:** Multiple levels (Country, Level 1, Level 2)  
+**Temporal Coverage:** Variable compilation dates  
+**Update Frequency:** Periodic updates  
+**Access Type:** Open/Free (academic use)  
+**API Availability:** Direct download (shapefile, GeoJSON, etc.)  
+**Official URL:** https://gadm.org  
+**Quality Assessment:** GOOD quality global administrative boundaries. Widely used in research and GIS applications. Saudi Arabia coverage includes national and subnational boundaries. Source data compilation date may be older than official GASTAT data. Recommended for international comparisons or when official data unavailable, but GASTAT data should be preferred for Saudi-specific applications.[61]
+
+### Humanitarian Data Exchange (HDX) COD-AB
+**Dataset:** Common Operational Dataset - Administrative Boundaries  
+**Source/Provider:** OCHA via Humanitarian Data Exchange  
+**Resolution/Scale:** Admin levels 0-1  
+**Temporal Coverage:** Based on GADM 2021 data  
+**Access Type:** Open/Free  
+**API Availability:** HDX API  
+**Official URL:** https://data.humdata.org/dataset/cod-ab-sau  
+**Quality Assessment:** Derived from GADM data. Useful for humanitarian and development applications. Not as current as official GASTAT boundaries.[61]
+
+***
+
+## 12. POPULATION / DEMOGRAPHICS
+
+### National Census Data
+**Dataset:** GASTAT Population Census and Estimates  
+**Source/Provider:** General Authority for Statistics (GASTAT)  
+**Resolution/Scale:** Regional and governorate level; some municipality-level data  
+**Temporal Coverage:** Census 2022; annual population estimates  
+**Update Frequency:** Census every 10 years; annual estimates  
+**Access Type:** Open via DataSaudi portal  
+**API Availability:** Data download through portal  
+**Official URL:** https://www.stats.gov.sa/en and https://datasaudi.sa/en  
+**Quality Assessment:** EXCELLENT - official government census data. 2024 population estimates show 35.3 million total population (55.6% Saudi, 44.4% non-Saudi). Detailed breakdowns by age, gender, nationality, and administrative region. Includes urban/rural distribution, population density maps. Most authoritative demographic data source. Essential for understanding population distribution along pipeline routes. Limitations: aggregated to administrative units, not gridded.[58][59][62][63][64][57]
+
+### WorldPop
+**Dataset:** WorldPop Saudi Arabia Population Distribution  
+**Source/Provider:** WorldPop / University of Southampton  
+**Resolution/Scale:** 100 meters  
+**Temporal Coverage:** Annual products (2000-2020)  
+**Update Frequency:** Annual releases  
+**Access Type:** Open/Free  
+**API Availability:** Direct download  
+**Official URL:** https://hub.worldpop.org  
+**Quality Assessment:** HIGH quality gridded population data. 100m resolution provides detailed spatial distribution beyond administrative units. Based on 2010 and 2020 census data combined with geospatial covariates. Excellent for identifying populated areas along pipeline corridors. Distinguishes Saudi and non-Saudi populations. Recommended as primary gridded population source. Particularly useful for pipeline routing to minimize population exposure.[65][66][67][68]
+
+### LandScan
+**Dataset:** LandScan Global Population Database  
+**Source/Provider:** Oak Ridge National Laboratory (ORNL)  
+**Resolution/Scale:** 1 km (30 arc-seconds)  
+**Temporal Coverage:** Annual products  
+**Update Frequency:** Annual  
+**Access Type:** Restricted (requires registration and approval for some versions)  
+**Quality Assessment:** GOOD quality ambient population distribution (24-hour average). Slightly coarser resolution than WorldPop. Useful for understanding day-night population distribution differences. Access may require registration.
+
+***
+
+## 13. SATELLITE IMAGERY
+
+### Commercial High-Resolution Imagery - Maxar
+**Dataset:** Maxar WorldView Legion, WorldView-3, WorldView-2, GeoEye-1  
+**Source/Provider:** Maxar Technologies (via Space Imaging Middle East - SIME)  
+**Resolution/Scale:** 30 cm to 50 cm multispectral; 15 cm panchromatic (Legion)  
+**Temporal Coverage:** Extensive archive + tasking capability (up to 15 revisits/day for some areas)  
+**Update Frequency:** On-demand tasking available  
+**Access Type:** Commercial/Purchase  
+**API Availability:** Yes - via UP42 platform and direct Maxar APIs  
+**Official URL:** https://www.maxar.com (delivered via SIME for Saudi Arabia)  
+**Quality Assessment:** EXCELLENT - highest resolution commercial imagery available. Maxar has active partnerships in Saudi Arabia through Space Imaging Middle East serving government and commercial clients. Five-year partnership established 2022. WorldView Legion provides industry-leading 30cm resolution with high revisit frequency. Essential for detailed pipeline route surveys, identifying obstacles, monitoring construction. Used for disaster response, border security, agricultural applications in KSA. Requires commercial license but provides best available detail.[69][70][71][72]
+
+### Commercial High-Resolution Imagery - Airbus
+**Dataset:** Airbus Pléiades Neo, Pléiades 1A/1B, SPOT 6/7  
+**Source/Provider:** Airbus Defence and Space (via authorized Saudi distributors)  
+**Resolution/Scale:** 30 cm (Pléiades Neo), 50 cm (Pléiades), 1.5m (SPOT)  
+**Temporal Coverage:** Archive + tasking  
+**Update Frequency:** On-demand  
+**Access Type:** Commercial/Purchase  
+**API Availability:** Yes - OneAtlas API  
+**Quality Assessment:** EXCELLENT quality. Airbus operates major satellite imagery services in KSA market. Pléiades Neo provides 30cm resolution competitive with Maxar. Good alternative or complementary source. Active in Saudi market.[70][71]
+
+### Commercial High-Resolution Imagery - Planet
+**Dataset:** Planet SkySat (high-res) and PlanetScope (daily)  
+**Source/Provider:** Planet Labs  
+**Resolution/Scale:** SkySat 50cm; PlanetScope 3-5m  
+**Temporal Coverage:** Daily global coverage (PlanetScope); tasking (SkySat)  
+**Update Frequency:** Daily (PlanetScope)  
+**Access Type:** Commercial/Purchase  
+**API Availability:** Yes - Planet API  
+**Quality Assessment:** GOOD quality. PlanetScope provides unique daily monitoring capability at medium resolution. SkySat provides high-resolution tasking. Planet signed agreement with Quant Data & Analytics for Saudi market (2023). Useful for monitoring and change detection.[70]
+
+### Free Baseline Imagery - Sentinel-2
+**Dataset:** Sentinel-2 Multispectral Imagery  
+**Source/Provider:** European Space Agency / Copernicus Programme  
+**Resolution/Scale:** 10m (visible/NIR bands), 20m (red edge/SWIR), 60m (coastal/cirrus)  
+**Temporal Coverage:** 2015-present  
+**Update Frequency:** 5-day revisit (2 satellites)  
+**Access Type:** Open/Free  
+**API Availability:** Yes - Copernicus Data Space, Google Earth Engine, AWS  
+**Quality Assessment:** EXCELLENT free medium-resolution imagery. Sentinel-2A and 2B provide frequent coverage of Saudi Arabia. 10m resolution sufficient for broad corridor analysis and change detection. 13 spectral bands useful for vegetation, water, and land cover analysis. Recommended as baseline imagery for preliminary route planning before investing in commercial high-resolution data. Cannot replace commercial imagery for detailed design but invaluable for monitoring and broad area analysis.[16][20]
+
+***
+
+## 14. SPECIAL DATASETS FOR SAUDI ARABIA
+
+### Seismic Hazard Zones
+**Dataset:** Saudi Seismic Hazard Maps  
+**Source/Provider:** Saudi Geological Survey / Saudi Building Code National Committee  
+**Resolution/Scale:** Regional seismic hazard zonation  
+**Temporal Coverage:** Current (SBC-301-2007 and updates)  
+**Access Type:** Restricted (building code incorporated hazard maps)  
+**Quality Assessment:** IMPORTANT for pipeline routing. Saudi Arabia has MEDIUM earthquake hazard, particularly in western regions. Key seismic zones include: (1) Red Sea coastal areas and Gulf of Aqaba - active seismotectonics from Red Sea rifting; (2) Harrat volcanic fields (Harrat Rahat near Medina) - volcanic and seismic activity; (3) Zagros Thrust influence on eastern regions. Probabilistic seismic hazard analyses (PSHA) exist for specific regions including western Arabian Peninsula, NEOM megaproject area, Jeddah, Jizan. Critical for pipeline design in seismically active areas. Data available through SGS and published research.[73][74][75][76][77][78]
+
+### Archaeological and Heritage Sites
+**Dataset:** UNESCO World Heritage Sites and National Heritage Sites  
+**Source/Provider:** Saudi Commission for Tourism and National Heritage (SCTH) / Ministry of Culture  
+**Resolution/Scale:** Individual site boundaries  
+**Temporal Coverage:** Current (8 UNESCO sites + numerous national sites)  
+**Access Type:** Restricted/requires coordination  
+**Quality Assessment:** Saudi Arabia has 8 UNESCO World Heritage Sites including Hegra (Madain Saleh), At-Turaif District, Historic Jeddah, Rock Art in Hail Region, Al-Ahsa Oasis, Himā Cultural Area, 'Uruq Bani Ma'arid, and Ḥimā Cultural Area. Numerous additional archaeological sites throughout the Kingdom. Pipeline routing must avoid culturally significant areas. Site boundary data requires coordination with heritage authorities. Critical for route planning to ensure compliance with heritage protection.[79]
+
+### Military Zones and Restricted Areas
+**Dataset:** Military installations and restricted areas  
+**Source/Provider:** Various security and defense authorities  
+**Access Type:** Highly Restricted/Classified  
+**Quality Assessment:** Saudi Arabia has extensive military zones, particularly along borders and around strategic installations. Pipeline routing must account for restricted airspace, military installations, and security zones. Information is classified and not publicly available. Route planning requires coordination with military and security authorities through proper governmental channels. Critical constraint for pipeline routing.
+
+### Landslide Susceptibility / Geological Hazards
+**Dataset:** Geological hazard assessments  
+**Source/Provider:** Saudi Geological Survey  
+**Access Type:** Restricted/project-specific  
+**Quality Assessment:** Landslide risk relatively low in most of Saudi Arabia due to arid climate, but exists in mountainous southwestern regions (Asir Mountains). Flash flood hazards in wadis are more significant concern. Geological hazard data available through SGS for specific project areas. Should be incorporated into pipeline routing in mountainous terrain.
+
+### Sabkha (Salt Flat) Distribution
+**Dataset:** Geological maps showing sabkha distribution  
+**Source/Provider:** Saudi Geological Survey  
+**Quality Assessment:** Sabkhas (salt flats/salt marshes) are significant geological features in Saudi Arabia, particularly in eastern coastal areas and interior basins. Present geotechnical challenges for pipeline construction due to soft, corrosive soils and high water tables. Distribution mapped on geological maps. Critical consideration for pipeline routing in eastern provinces and coastal areas.
+
+### Desertification and Sand Dune Fields
+**Dataset:** Aeolian features and sand seas  
+**Source/Provider:** Various geological and environmental sources  
+**Quality Assessment:** Major sand seas include Rub' al Khali (Empty Quarter - world's largest continuous sand desert), An-Nafud, and Ad-Dahna. Mobile sand dunes present operational challenges for pipeline monitoring and maintenance. Routing considerations include dune crossing logistics and burial protection. Features identifiable from satellite imagery and geological maps.
+
+***
+
+## Summary Recommendations for Pipeline Routing GIS in Saudi Arabia
+
+**Priority Data Sources:**
+1. **Elevation:** Copernicus DEM GLO-30 (free, 30m, API access)
+2. **Land Cover:** ESA WorldCover (free, 10m, excellent quality)
+3. **Imagery:** Sentinel-2 (free baseline) + Maxar/Airbus commercial for detailed surveys
+4. **Population:** WorldPop 100m (free) + GASTAT census
+5. **Boundaries:** GASTAT official data
+6. **Climate:** ERA5 reanalysis (free, comprehensive)
+7. **Roads:** HERE/TomTom commercial or OpenStreetMap (validate)
+8. **Protected Areas:** WDPA + verify with Saudi Wildlife Authority
+9. **Hydrology:** Global Surface Water Explorer + MEWA coordination
+
+**Critical National Coordination Required:**
+- Saudi Aramco (existing pipelines - mandatory coordination)
+- Ministry of Energy (pipeline permits and existing infrastructure)
+- Saudi Geological Survey (geology, seismic hazards)
+- MEWA (water resources, environmental permits)
+- Saudi Wildlife Authority (protected areas)
+- Heritage authorities (archaeological sites)
+- Military/security authorities (restricted zones)
+
+**Key Challenges:**
+- Many national datasets require formal requests (not open access)
+- Pipeline and utility infrastructure data highly restricted
+- Best spatial data may require commercial licensing
+- Route approval requires multi-agency coordination
+
+This comprehensive assessment provides the foundation for assembling a complete GIS database for oil & gas pipeline routing in Saudi Arabia, balancing freely available global datasets with restricted national sources requiring formal access.[38][19][11][1][5][6][40][55][57][65][9][69][16]
+
+[1](https://ngd.sgs.gov.sa/en)
+[2](https://ngp.sgs.gov.sa)
+[3](https://sgs.gov.sa/en)
+[4](https://www.reddit.com/r/gis/comments/1dcxzgu/obtaining_elevation_data_for_a_site_in_saudi/)
+[5](https://www.arabnews.com/node/2425321/business-economy)
+[6](https://geosa.gov.sa/en/Pages/default.aspx)
+[7](https://www.geosa.gov.sa/content/National_Geospatial_Data_Policies_and_Standards_For_The_Kingdom_of_Saudi_Arabia.html)
+[8](https://www.geoportal.sa/Geoportal/pdf/SAUDI_ARABIAN_NATIONAL_GEOSPATIAL_ECOSYSTEM.pdf)
+[9](https://dataspace.copernicus.eu/explore-data/data-collections/copernicus-contributing-missions/collections-description/COP-DEM)
+[10](https://dataspace.copernicus.eu/analyse/apis)
+[11](https://developers.google.com/earth-engine/datasets/catalog/COPERNICUS_DEM_GLO30)
+[12](https://registry.opendata.aws/copernicus-dem/)
+[13](https://planetarycomputer.microsoft.com/dataset/cop-dem-glo-30)
+[14](https://earthexplorer.usgs.gov)
+[15](https://gisgeography.com/free-global-dem-data-sources/)
+[16](https://esa-worldcover.org/en)
+[17](https://worldcover2021.esa.int/download)
+[18](https://esa-worldcover.org/en/data-access)
+[19](https://developers.google.com/earth-engine/datasets/catalog/ESA_WorldCover_v100)
+[20](https://www.arcgis.com/home/item.html?id=cfcb7609de5f478eb7666240902d4d3d)
+[21](https://data.nextgis.com/en/region/SA-CITY-001/landcover)
+[22](https://research-repository.st-andrews.ac.uk/handle/10023/15212)
+[23](https://openjicareport.jica.go.jp/pdf/12005757_01.pdf)
+[24](https://en.wikipedia.org/wiki/Water_supply_and_sanitation_in_Saudi_Arabia)
+[25](https://www.mewa.gov.sa/en/Ministry/Agencies/TheWaterAgency/Departments/Pages/The%20General%20Department%20of%20Water%20Resources%20and%20Rationalization.aspx)
+[26](https://unesdoc.unesco.org/ark:/48223/pf0000127229)
+[27](https://mot.gov.sa/en/road-transport-sector)
+[28](https://spa.gov.sa/en/N2355124)
+[29](https://www.tomtom.com/newsroom/partner-stories/traffic-management-middle-east/)
+[30](https://www.here.com/docs/bundle/traffic-api-developer-guide-v7/page/topics/coverage-information/traffic.html)
+[31](https://www.here.com/docs/bundle/routing-api-developer-guide-v8/page/coverage/navigable-countries.html)
+[32](https://www.tomtom.com/traffic-index/saudi-arabia-country-traffic/)
+[33](https://www.tomtom.com/products/traffic-stats/)
+[34](https://data.humdata.org/dataset/saudi-arabia-road-surface-data)
+[35](https://data.humdata.org/dataset/hotosm_sau_roads)
+[36](https://data.nextgis.com/en/region/SA/msrd/)
+[37](https://faculty.kfupm.edu.sa/crp/bramadan/crp514/Termpapers/Term121/5%20-%20Term%20121%20-%20Report%20-%20Eyad%20Hawari.pdf)
+[38](https://www.esri.com/about/newsroom/arcuser/smart-pipeline)
+[39](https://www.esri.com/about/newsroom/app/uploads/2022/08/smartpipeline.pdf)
+[40](https://www.fao.org/4/v2900e/v2900e08.htm)
+[41](https://parksjournal.com/wp-content/uploads/2017/07/parks_10_1.pdf)
+[42](https://en.wikipedia.org/wiki/List_of_protected_areas_of_Saudi_Arabia)
+[43](https://www.sciencedirect.com/science/article/pii/S1319562X22001061)
+[44](https://www.cbd.int/doc/world/sa/sa-nbsap-01-en.pdf)
+[45](https://www.cbd.int/doc/world/sa/sa-nr-01-en.pdf)
+[46](https://www.protectedplanet.net/country/SAU)
+[47](https://www.protectedplanet.net/en/thematic-areas/wdpa)
+[48](https://www.fao.org/4/as352e/as352e.pdf)
+[49](https://www.isric.org/sites/default/files/isric_report_2013_04.pdf)
+[50](https://www.fao.org/soils-portal/data-hub/soil-maps-and-databases/faounesco-soil-map-of-the-world/en/)
+[51](https://ncm.gov.sa/Ar/Meteorology/Departments/NCM/arcstudies/40_RainwaterHarvesting_ATMOSRES.pdf)
+[52](https://pmc.ncbi.nlm.nih.gov/articles/PMC8742046/)
+[53](https://beta.ncm.gov.sa/en/the-climate/climate-of-kingdom/summary-of-the-climate-situation-in-the-kingdom-of-saudi-arabia-for-the-year-2023-ad)
+[54](https://www.nature.com/articles/s41598-024-60976-w)
+[55](https://climateknowledgeportal.worldbank.org/country/saudi-arabia/era5-historical)
+[56](https://www.sciencedirect.com/science/article/abs/pii/S0169809524000061)
+[57](https://www.stats.gov.sa/en/)
+[58](https://datasaudi.sa/en/data-explorer)
+[59](https://datasaudi.sa/en)
+[60](https://www.linkedin.com/company/general-authority-for-statistics-gastat)
+[61](https://data.humdata.org/dataset/cod-ab-sau)
+[62](https://en.wikipedia.org/wiki/Demographics_of_Saudi_Arabia)
+[63](https://www.stats.gov.sa/documents/20117/2435273/Population+Estimates+Statistics+2024+EN.pdf/9b71e303-5fd9-19cb-9913-850a9d521639)
+[64](https://www.kaggle.com/datasets/majedalhulayel/saudi-census-2022-population/data)
+[65](https://hub.worldpop.org/geodata/summary?id=50064)
+[66](https://data.worldpop.org/GIS/Population/Individual_countries/SAU/Saudi_Arabia_100m_Population/SAU_metadata.html)
+[67](https://hub.worldpop.org/geodata/summary?id=6424)
+[68](https://data.humdata.org/dataset/worldpop-population-density-for-saudi-arabia)
+[69](https://up42.com/blog/up42-partners-with-maxar)
+[70](https://www.mordorintelligence.com/industry-reports/ksa-satellite-imagery-services-market)
+[71](https://www.researchandmarkets.com/report/saudi-arabia-satellite-imaging-market)
+[72](https://www.maxar.com/press-releases/maxar-awarded-205-million-in-strategic-contracts-to-advance-sovereign-capabilities-across-the-middle-east-and-africa-region)
+[73](https://pubs.usgs.gov/pp/1862/q/pp1862q.pdf)
+[74](https://jksus.org/earthquake-recurrence-characteristics-for-potential-seismic-zones-in-the-southern-red-sea-region-and-their-hazard-implications-on-jizan-city/)
+[75](https://thinkhazard.org/report/215-saudi-arabia/EQ)
+[76](https://www.witpress.com/Secure/elibrary/papers/ERES13/ERES13018FU1.pdf)
+[77](https://jksus.org/seismicity-of-the-neom-megaproject-area-northwestern-saudi-arabia/)
+[78](https://faculty.kaust.edu.sa/en/publications/improving-the-level-of-seismic-hazard-parameters-in-saudi-arabia-)
+[79](https://en.wikipedia.org/wiki/List_of_World_Heritage_Sites_in_Saudi_Arabia)
+[80](https://opentopography.org/id/OTLAS.022012.26913.1&minX=-106.216836&minY=32.834136&maxX=-106.203450&maxY=32.845069)
+[81](https://data.usgs.gov/datacatalog/data/USGS:77ae0551-c61e-4979-aedd-d797abdcde0e)
+[82](https://www.alriyadh.gov.sa/en/content/government-open-data)
+[83](https://opendata.rcrc.gov.sa/explore/)
+[84](https://ijcjournal.org/InternationalJournalOfComputer/article/download/137/136/155)
+[85](https://data.nextgis.com/en/region/SA/dem/)
+[86](https://esriindonesia.co.id/industries/gis-in-oil-and-gas)
+[87](https://portal.opentopography.org/datasets?minX=-72.9052734375&minY=-34.644506677932334&maxX=-28.8720703125&maxY=4.770783772016472)
+[88](https://www.xmap.ai/data-catalogs/mobility-data-saudi-arabia)
+[89](https://climate.esa.int/en/projects/land-cover/)
+[90](https://www.sciencedirect.com/science/article/pii/S2666188824000881)
+[91](https://climateknowledgeportal.worldbank.org/country/saudi-arabia/climate-data-historical)
+[92](https://www.sciencedirect.com/science/article/pii/S156984322200142X)
+[93](https://www.census.gov/popclock/world/sa)
+[94](https://portal.opentopography.org/raster?opentopoID=OTSDEM.032021.4326.3)
+[95](https://docs.sentinel-hub.com/api/latest/data/dem/)
+[96](https://collections.eurodatacube.com/copernicus-dem/)
+[97](https://www.geowgs84.com/post/the-line-in-saudi-arabia-progress-via-satellite-imagery-as-of-2025)

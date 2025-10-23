@@ -1,0 +1,122 @@
+{
+  "report_date": "2025-10-17",
+  "total_datasets": 788,
+  "total_categories": 11,
+  "categories": [
+    {
+      "name": "Administrative",
+      "total_datasets": 75,
+      "implemented": 19,
+      "guidance": 56,
+      "not_implemented": 0,
+      "implementation_percentage": 25.3333,
+      "countries_covered": 32,
+      "unique_tools": 1
+    },
+    {
+      "name": "Cadastre",
+      "total_datasets": 83,
+      "implemented": 1,
+      "guidance": 82,
+      "not_implemented": 0,
+      "implementation_percentage": 1.20482,
+      "countries_covered": 44,
+      "unique_tools": 1
+    },
+    {
+      "name": "Climate",
+      "total_datasets": 79,
+      "implemented": 0,
+      "guidance": 79,
+      "not_implemented": 0,
+      "implementation_percentage": 0,
+      "countries_covered": 32,
+      "unique_tools": 0
+    },
+    {
+      "name": "DEM",
+      "total_datasets": 93,
+      "implemented": 29,
+      "guidance": 0,
+      "not_implemented": 64,
+      "implementation_percentage": 31.1828,
+      "countries_covered": 54,
+      "unique_tools": 1
+    },
+    {
+      "name": "Geohazards",
+      "total_datasets": 73,
+      "implemented": 19,
+      "guidance": 54,
+      "not_implemented": 0,
+      "implementation_percentage": 26.0274,
+      "countries_covered": 32,
+      "unique_tools": 3
+    },
+    {
+      "name": "Hydrology",
+      "total_datasets": 60,
+      "implemented": 26,
+      "guidance": 34,
+      "not_implemented": 0,
+      "implementation_percentage": 43.3333,
+      "countries_covered": 32,
+      "unique_tools": 6
+    },
+    {
+      "name": "Imagery",
+      "total_datasets": 72,
+      "implemented": 33,
+      "guidance": 39,
+      "not_implemented": 0,
+      "implementation_percentage": 45.8333,
+      "countries_covered": 32,
+      "unique_tools": 1
+    },
+    {
+      "name": "Infrastructure",
+      "total_datasets": 74,
+      "implemented": 29,
+      "guidance": 45,
+      "not_implemented": 0,
+      "implementation_percentage": 39.1892,
+      "countries_covered": 32,
+      "unique_tools": 4
+    },
+    {
+      "name": "Land Cover",
+      "total_datasets": 55,
+      "implemented": 35,
+      "guidance": 20,
+      "not_implemented": 0,
+      "implementation_percentage": 63.6364,
+      "countries_covered": 32,
+      "unique_tools": 7
+    },
+    {
+      "name": "Protected Areas",
+      "total_datasets": 55,
+      "implemented": 22,
+      "guidance": 33,
+      "not_implemented": 0,
+      "implementation_percentage": 40,
+      "countries_covered": 32,
+      "unique_tools": 2
+    },
+    {
+      "name": "Socioeconomic",
+      "total_datasets": 69,
+      "implemented": 22,
+      "guidance": 47,
+      "not_implemented": 0,
+      "implementation_percentage": 31.8841,
+      "countries_covered": 32,
+      "unique_tools": 1
+    }
+  ],
+  "pipeline_routing_readiness": {
+    "required_categories": 9,
+    "fully_ready": 0,
+    "readiness_percentage": 0
+  }
+}

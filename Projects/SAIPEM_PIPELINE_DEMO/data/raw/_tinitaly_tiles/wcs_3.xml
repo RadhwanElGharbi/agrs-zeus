@@ -1,0 +1,18 @@
+<GDAL_WMS>
+  <Service name="WCS">
+    <Version>1.0.0</Version>
+    <ServerUrl>https://tinitaly.pi.ingv.it/service?</ServerUrl>
+    <CoverageName>tinitaly__01</CoverageName>
+    <SRS>EPSG:4326</SRS>
+  </Service>
+  <DataWindow>
+    <SRS>EPSG:4326</SRS>
+    <UpperLeftX>13.454779</UpperLeftX>
+    <UpperLeftY>43.14797150000000000000</UpperLeftY>
+    <LowerRightX>13.69677400000000000000</LowerRightX>
+    <LowerRightY>42.857057</LowerRightY>
+    <SizeX>3000</SizeX>
+    <SizeY>3000</SizeY>
+  </DataWindow>
+  <BandsCount>1</BandsCount>
+</GDAL_WMS>

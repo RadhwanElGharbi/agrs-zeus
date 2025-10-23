@@ -1,0 +1,635 @@
+# Comprehensive GIS Datasets for Oil & Gas Pipeline Routing in United Arab Emirates
+
+## 1. Elevation / Terrain (DEM)
+
+**Abu Dhabi Spatial Data Infrastructure (AD-SDI) DEM**
+- **Source:** Abu Dhabi Systems and Information Centre
+- **Resolution:** High resolution (specific resolution requires registration access)
+- **Temporal Coverage:** Current
+- **Update Frequency:** Irregular updates
+- **Access:** Restricted (requires registration and approval)
+- **API:** Yes (ArcGIS REST API through portal)
+- **URL:** https://arcgis.sdi.abudhabi.ae/portal/home/
+- **Quality:** High-quality authoritative emirate-level data for Abu Dhabi; likely the best available for that emirate with official government backing[1][2][3]
+
+**GeoDubai DEM**
+- **Source:** Dubai Municipality GIS Center
+- **Resolution:** High resolution (specific details available upon registration)
+- **Temporal Coverage:** Current, updated regularly
+- **Update Frequency:** Continuous updates to base map
+- **Access:** Restricted (requires approval through GeoDubai portal)
+- **API:** Yes (REST API available)
+- **URL:** https://geodubai.dm.gov.ae/
+- **Quality:** High-quality official data for Dubai emirate; integrated with Digital Twin initiative including 3D building models[4][5]
+
+**Copernicus DEM (GLO-30)**
+- **Source:** European Space Agency / Copernicus Programme
+- **Resolution:** 30m (GLO-30) and 90m (GLO-90) versions available
+- **Temporal Coverage:** 2011-2020+
+- **Update Frequency:** Periodic (stable product)
+- **Access:** Open/Free (GLO-90 and GLO-30)
+- **API:** Yes (OData API, S3 bucket access)
+- **URL:** https://dataspace.copernicus.eu/explore-data/data-collections/copernicus-contributing-missions/collections-description/COP-DEM
+- **Quality:** Best global DEM for UAE; 30m resolution provides good accuracy for regional pipeline routing; minimal voids; globally consistent[6][7]
+
+**Gulf Countries DEM (SRTM-based)**
+- **Source:** NASA/USGS via Humanitarian Data Exchange
+- **Resolution:** 250m
+- **Temporal Coverage:** 2000
+- **Update Frequency:** Static
+- **Access:** Open/Free
+- **API:** No
+- **URL:** https://data.humdata.org/dataset/gulf-countries-elevation-model
+- **Quality:** Coarse resolution limits utility for detailed pipeline routing; useful for regional overview only[8]
+
+**No national LiDAR-derived DEM datasets** were identified as publicly available, though Abu Dhabi and Dubai maintain high-resolution elevation data through their SDI programs that may include LiDAR.[1][4]
+
+## 2. Land Cover / Land Use
+
+**ESA WorldCover 2021**
+- **Source:** European Space Agency
+- **Resolution:** 10m
+- **Temporal Coverage:** 2021 (2020 also available)
+- **Update Frequency:** Annual
+- **Access:** Open/Free
+- **API:** Yes (available through Google Earth Engine and direct download)
+- **URL:** https://worldcover2020.esa.int
+- **Quality:** Excellent 10m resolution Sentinel-2 based product; 11 land cover classes; high accuracy for UAE's diverse landscapes including desert, urban, and coastal areas[9][10]
+
+**Google Dynamic World (Sentinel-2)**
+- **Source:** Google/WRI
+- **Resolution:** 10m
+- **Temporal Coverage:** 2015-present (near real-time)
+- **Update Frequency:** Continuous (every 2-5 days with Sentinel-2)
+- **Access:** Open/Free
+- **API:** Yes (Google Earth Engine)
+- **URL:** Available through Google Earth Engine
+- **Quality:** Near real-time land cover; useful for monitoring rapid development in UAE; 9 land cover classes
+
+**UAE National Land Use Data**
+- **Source:** Ministry of Energy and Infrastructure (MOEI) / Emirates authorities
+- **Resolution:** Variable by emirate
+- **Temporal Coverage:** Current
+- **Update Frequency:** Irregular
+- **Access:** Restricted (requires formal request through MOEI or emirate SDI portals)
+- **API:** Limited (portal-based access)
+- **URL:** https://opendata.moei.gov.ae (portal recently launched with 200+ datasets)
+- **Quality:** Most authoritative for UAE; includes detailed urban planning and land classification data; access restricted[11][12]
+
+## 3. Hydrology / Water
+
+**UAE Hydrogeological Map**
+- **Source:** Ministry of Energy and Infrastructure & Environment Agency Abu Dhabi
+- **Resolution:** National scale
+- **Temporal Coverage:** 2023 (latest release)
+- **Update Frequency:** Major updates every few years
+- **Access:** Restricted (requires formal request)
+- **API:** No
+- **URL:** https://www.moei.gov.ae/ (contact ministry)
+- **Quality:** Authoritative national hydrogeological mapping including groundwater, wadis, and water resources; critical for pipeline routing[13]
+
+**National Water Resources Database**
+- **Source:** Ministry of Climate Change and Environment / UAE University research
+- **Resolution:** Variable
+- **Temporal Coverage:** Historical to current
+- **Update Frequency:** Ongoing research updates
+- **Access:** Restricted/Academic
+- **API:** No
+- **URL:** Contact MOCCAE or UAE University
+- **Quality:** Research-grade data on water resources; limited public access[14][15]
+
+**HydroSHEDS (Global)**
+- **Source:** USGS / Conservation International
+- **Resolution:** 15 arc-seconds (~450m at equator)
+- **Temporal Coverage:** Based on SRTM 2000 data
+- **Update Frequency:** Static
+- **Access:** Open/Free
+- **API:** No (direct download)
+- **URL:** https://www.hydrosheds.org/
+- **Quality:** Moderate quality for UAE wadis and drainage patterns; limited detail for ephemeral streams[16][17]
+
+**Global Surface Water Explorer**
+- **Source:** European Commission JRC
+- **Resolution:** 30m
+- **Temporal Coverage:** 1984-present
+- **Update Frequency:** Annual updates
+- **Access:** Open/Free
+- **API:** Yes (Google Earth Engine)
+- **URL:** https://global-surface-water.appspot.com/
+- **Quality:** Good for tracking permanent/seasonal water bodies; limited application for desert wadis
+
+## 4. Infrastructure - Roads
+
+**UAE National Road Network**
+- **Source:** Ministry of Energy and Infrastructure
+- **Resolution:** National standard
+- **Temporal Coverage:** Current
+- **Update Frequency:** Continuous
+- **Access:** Restricted (requires formal data request)
+- **API:** Possible through MOEI Open Data Portal
+- **URL:** https://opendata.moei.gov.ae
+- **Quality:** Most authoritative and complete road network data; includes federal and local roads[12][18][11]
+
+**HERE Maps (Commercial)**
+- **Source:** HERE Technologies
+- **Resolution:** Sub-meter accuracy in urban areas
+- **Temporal Coverage:** Current
+- **Update Frequency:** Continuous (quarterly major releases)
+- **Access:** Commercial/Purchase (licensing required)
+- **API:** Yes (HERE REST APIs - Maps, Routing, Traffic)
+- **URL:** https://www.here.com/
+- **Quality:** Very high quality commercial dataset; excellent coverage of UAE road network including attributes, restrictions, and real-time traffic; used by UAE government agencies[19][20]
+
+**TomTom MultiNet (Commercial)**
+- **Source:** TomTom
+- **Resolution:** Sub-meter in urban areas
+- **Temporal Coverage:** Current
+- **Update Frequency:** Quarterly updates
+- **Access:** Commercial/Purchase
+- **API:** Yes (TomTom Maps API, Traffic API)
+- **URL:** https://www.tomtom.com/
+- **Quality:** Comprehensive coverage across UAE (84 countries total network); real-time traffic data from 600+ million devices; widely used in UAE for traffic management and ITS systems[21][20][22][23]
+
+**OpenStreetMap UAE Roads**
+- **Source:** OpenStreetMap Community
+- **Resolution:** Variable (sub-meter where traced)
+- **Temporal Coverage:** Current (continuously updated)
+- **Update Frequency:** Real-time (crowdsourced)
+- **Access:** Open/Free (ODbL license)
+- **API:** Yes (Overpass API, OSM API)
+- **URL:** https://www.openstreetmap.org/ or https://data.humdata.org/dataset/hotosm_are_roads
+- **Quality:** Approximately 74% complete compared to AI estimates (~126,900 km mapped); good coverage of major roads and urban areas; excellent for Abu Dhabi and Dubai; some rural areas incomplete; free alternative but requires validation[24][25][26]
+
+## 5. Infrastructure - Railways
+
+**UAE Railway Network (Etihad Rail)**
+- **Source:** Ministry of Energy and Infrastructure / Etihad Rail
+- **Resolution:** Engineering grade
+- **Temporal Coverage:** Current (network under expansion)
+- **Update Frequency:** Updated as construction progresses
+- **Access:** Restricted (requires formal request)
+- **API:** No
+- **URL:** Contact MOEI or Etihad Rail directly
+- **Quality:** Official railway data; UAE railway network is limited but expanding; authoritative source for existing and planned rail infrastructure
+
+**OpenStreetMap UAE Railways**
+- **Source:** OpenStreetMap Community
+- **Resolution:** Variable
+- **Temporal Coverage:** Current
+- **Update Frequency:** Community-driven
+- **Access:** Open/Free
+- **API:** Yes (Overpass API)
+- **URL:** https://www.openstreetmap.org/
+- **Quality:** Moderate completeness; major rail lines mapped but may lack detailed attributes; free alternative requiring validation[25]
+
+## 6. Infrastructure - Utilities (Power, Telecom)
+
+**UAE Electricity Transmission Network**
+- **Source:** Federal Electricity and Water Authority (FEWA) / Emirates utilities
+- **Resolution:** Engineering grade
+- **Temporal Coverage:** Current
+- **Update Frequency:** As infrastructure changes
+- **Access:** Restricted (requires formal utility coordination)
+- **API:** No
+- **URL:** Contact FEWA or Abu Dhabi/Dubai utilities
+- **Quality:** Critical infrastructure data; highly restricted access; essential for pipeline routing to avoid conflicts; must be obtained through official channels[27]
+
+**OpenInfraMap / OpenStreetMap Utilities**
+- **Source:** OpenStreetMap Community
+- **Resolution:** Variable
+- **Temporal Coverage:** Current
+- **Update Frequency:** Community-driven
+- **Access:** Open/Free
+- **API:** Yes (Overpass API)
+- **URL:** https://openinframap.org/ (visualization) or OSM
+- **Quality:** Very incomplete for UAE utilities; not recommended as primary source; may identify some visible overhead lines but underground infrastructure largely unmapped
+
+## 7. Infrastructure - Pipelines
+
+**ADNOC Pipeline GIS Data**
+- **Source:** Abu Dhabi National Oil Company (ADNOC Gas Processing)
+- **Resolution:** Sub-meter survey accuracy (±15cm tolerance in recent surveys)
+- **Temporal Coverage:** Current
+- **Update Frequency:** Continuous updates from surveys and construction
+- **Access:** Highly Restricted (internal ADNOC use; external access requires formal agreements)
+- **API:** Internal GIS systems only
+- **URL:** Contact ADNOC directly for data sharing agreements
+- **Quality:** Highest quality pipeline data for Abu Dhabi region; over 3,260 km network; surveyed using GPS, GPR, and traditional methods; includes above-ground and underground pipelines with corridor features; 95% sub-meter horizontal accuracy, 97% sub-meter depth accuracy; authoritative but difficult to access[28][29][30]
+
+**UAE Government Pipeline Registry**
+- **Source:** Ministry of Energy and Infrastructure
+- **Resolution:** Variable
+- **Temporal Coverage:** Current
+- **Update Frequency:** Regulatory reporting basis
+- **Access:** Restricted (requires formal request and justification)
+- **API:** No
+- **URL:** https://www.moei.gov.ae/
+- **Quality:** Regulatory data on pipeline infrastructure; access highly controlled for security reasons[12]
+
+**OpenStreetMap UAE Pipelines**
+- **Source:** OpenStreetMap Community
+- **Resolution:** Variable
+- **Temporal Coverage:** Current
+- **Update Frequency:** Community-driven
+- **Access:** Open/Free
+- **API:** Yes (Overpass API)
+- **URL:** https://www.openstreetmap.org/
+- **Quality:** Very incomplete; not suitable for pipeline routing planning; only visible above-ground infrastructure likely mapped; security concerns limit mapping[25]
+
+## 8. Protected Areas / Environmental
+
+**UAE Protected Areas (National)**
+- **Source:** Ministry of Climate Change and Environment (MOCCAE) / Environment Agency Abu Dhabi
+- **Resolution:** High resolution (polygon boundaries)
+- **Temporal Coverage:** Current
+- **Update Frequency:** As designations change
+- **Access:** Restricted/Open (some data via MOCCAE Open Data)
+- **API:** Limited
+- **URL:** https://www.moccae.gov.ae/en/open-data/moccae-open-data or https://bayanat.ae/
+- **Quality:** Most authoritative for UAE protected areas; includes national parks, reserves, wildlife sanctuaries, and marine protected areas[14]
+
+**World Database on Protected Areas (WDPA)**
+- **Source:** UNEP-WCMC and IUCN
+- **Resolution:** Polygon boundaries
+- **Temporal Coverage:** Current (updated monthly)
+- **Update Frequency:** Monthly
+- **Access:** Open/Free (with some restrictions on commercial use)
+- **API:** Yes (available through Google Earth Engine and IBAT)
+- **URL:** https://www.protectedplanet.net/en/country/ARE
+- **Quality:** Global standard dataset; good coverage of UAE's protected areas; over 300,000 sites globally; regularly updated; suitable for constraint analysis[31][32][33][34]
+
+## 9. Geology / Soil
+
+**British Geological Survey UAE Geological Maps**
+- **Source:** British Geological Survey (commissioned by UAE Ministry of Energy)
+- **Resolution:** 1:250,000 scale
+- **Temporal Coverage:** Completed 1970s-1990s (historical)
+- **Update Frequency:** Static (historical product)
+- **Access:** Restricted/Purchase (contact BGS)
+- **API:** No
+- **URL:** https://webapps.bgs.ac.uk/data/Publications/series.html?code=RS
+- **Quality:** Comprehensive geological mapping of UAE at regional scale; authoritative bedrock geology; dated but still foundational reference[35][36]
+
+**USGS Arabian Peninsula Geology**
+- **Source:** U.S. Geological Survey
+- **Resolution:** Regional scale (1:2,000,000+)
+- **Temporal Coverage:** 2000
+- **Update Frequency:** Static
+- **Access:** Open/Free
+- **API:** No
+- **URL:** https://certmapper.cr.usgs.gov/data/apps/world-maps/ or https://catalog.data.gov/dataset/bedrock-geology-of-the-arabian-peninsula-and-selected-adjacent-areas-geo2bg
+- **Quality:** Regional overview geology; too coarse for detailed pipeline routing but useful for understanding regional geological provinces[37][38][39]
+
+**FAO Harmonized World Soil Database (HWSD)**
+- **Source:** Food and Agriculture Organization
+- **Resolution:** 1 km
+- **Temporal Coverage:** Based on various sources (1960s-2000s)
+- **Update Frequency:** Static
+- **Access:** Open/Free
+- **API:** No
+- **URL:** http://www.fao.org/soils-portal/
+- **Quality:** Moderate resolution global soil database; limited detail for UAE's varied desert soils; useful for general soil type identification
+
+**OneGeology**
+- **Source:** International geological surveys collaboration
+- **Resolution:** Variable by country (UAE limited contribution)
+- **Temporal Coverage:** Variable
+- **Update Frequency:** Depends on national survey contributions
+- **Access:** Open/Free (web services)
+- **API:** Yes (WMS/WFS services)
+- **URL:** http://www.onegeology.org/
+- **Quality:** Limited UAE-specific data; primarily links to existing geological survey products
+
+## 10. Climate / Weather
+
+**UAE National Center of Meteorology (NCM)**
+- **Source:** National Center of Meteorology UAE
+- **Resolution:** Station-based and gridded products
+- **Temporal Coverage:** Historical archive and current/forecast
+- **Update Frequency:** Real-time (10-minute updates), daily archives
+- **Access:** Restricted (requires API registration and approval)
+- **API:** Yes (NCM API v2.0 with authentication)
+- **URL:** https://api.ncm.gov.ae/documentation/
+- **Quality:** Highest quality national meteorological data; current weather, forecasts, historical climate; authoritative for UAE; API requires registration[40][41]
+
+**ERA5 Reanalysis**
+- **Source:** European Centre for Medium-Range Weather Forecasts (ECMWF) via Copernicus
+- **Resolution:** 0.25° (~25-30 km)
+- **Temporal Coverage:** 1940-present
+- **Update Frequency:** Monthly updates (2-3 month lag)
+- **Access:** Open/Free
+- **API:** Yes (CDS API)
+- **URL:** https://cds.climate.copernicus.eu/
+- **Quality:** Excellent global reanalysis product; comprehensive climate variables; hourly data; good for UAE climate baseline and historical analysis
+
+**WorldClim v2**
+- **Source:** WorldClim project (University of California)
+- **Resolution:** 30 arc-seconds (~1 km at equator)
+- **Temporal Coverage:** Historical averages (1970-2000) and future scenarios
+- **Update Frequency:** Static climatologies
+- **Access:** Open/Free
+- **API:** No (direct download)
+- **URL:** https://www.worldclim.org/
+- **Quality:** Good for long-term climate normals; temperature and precipitation averages; useful for pipeline design climate parameters
+
+## 11. Administrative Boundaries
+
+**UAE Federal Competitiveness and Statistics Centre (FCSC) - 1Map**
+- **Source:** Federal Competitiveness and Statistics Centre
+- **Resolution:** Multi-level (emirate, district, sub-district, urban areas)
+- **Temporal Coverage:** Current
+- **Update Frequency:** Regular updates
+- **Access:** Restricted (portal registration required)
+- **API:** Yes (ArcGIS-based web services)
+- **URL:** https://u.ae/en/about-the-uae/digital-uae/data/geospatial-data-platforms/1map or https://atlas.fgic.gov.ae/
+- **Quality:** Official national administrative boundaries; most authoritative source; includes detailed urban area definitions; national standard for government use[42][43][44][1]
+
+**Dubai Municipality Administrative Boundaries**
+- **Source:** Dubai Municipality
+- **Resolution:** Community, sector, and parcel level
+- **Temporal Coverage:** Current (updated monthly)
+- **Update Frequency:** Monthly (15th of each month)
+- **Access:** Restricted (requires approval)
+- **API:** Yes (Dubai Pulse API)
+- **URL:** https://www.dubaipulse.gov.ae/ or https://geodubai.dm.gov.ae/
+- **Quality:** Highly detailed official boundaries for Dubai; includes communities, sectors, and property parcels; excellent for detailed planning[5][45]
+
+**GADM (Global Administrative Areas)**
+- **Source:** GADM project
+- **Resolution:** Country to level 2 (emirate level for UAE)
+- **Temporal Coverage:** Current (version 4.1)
+- **Update Frequency:** Irregular (major versions every few years)
+- **Access:** Open/Free (for non-commercial use)
+- **API:** No (direct download)
+- **URL:** https://gadm.org/
+- **Quality:** Good global standard; UAE coverage includes emirate-level boundaries; less detailed than national sources but freely available; suitable for regional analysis
+
+## 12. Population / Demographics
+
+**UAE Census Data (FCSC)**
+- **Source:** Federal Competitiveness and Statistics Centre
+- **Resolution:** Variable (district to grid level)
+- **Temporal Coverage:** 2005, 2015, 2021+ censuses
+- **Update Frequency:** Census every 10 years, estimates annually
+- **Access:** Restricted (some data via 1Map platform)
+- **API:** Limited (through 1Map ArcGIS services)
+- **URL:** https://www.fcsc.gov.ae/ or https://atlas.fgic.gov.ae/
+- **Quality:** Official census data; most accurate population counts and demographics; limited spatial granularity in published data[43][42]
+
+**Dubai Statistics Center**
+- **Source:** Dubai Statistics Center
+- **Resolution:** District and community level
+- **Temporal Coverage:** Current
+- **Update Frequency:** Annual updates
+- **Access:** Open (some datasets)
+- **API:** Limited
+- **URL:** https://www.dsc.gov.ae/
+- **Quality:** Detailed demographic data for Dubai emirate; good spatial linkage to administrative boundaries[46]
+
+**WorldPop UAE**
+- **Source:** WorldPop / University of Southampton
+- **Resolution:** 100m (constrained) and 1 km (unconstrained)
+- **Temporal Coverage:** 2000-2020 (annual)
+- **Update Frequency:** Annual releases
+- **Access:** Open/Free
+- **API:** Yes (WorldPop API)
+- **URL:** https://hub.worldpop.org/
+- **Quality:** High-resolution gridded population estimates; 100m version is building-footprint constrained; Random Forests methodology; UN-adjusted totals; excellent for spatial population distribution analysis; preferred global dataset for UAE[47][48][49][50]
+
+**LandScan Global**
+- **Source:** Oak Ridge National Laboratory
+- **Resolution:** 1 km (approximately 30 arc-seconds)
+- **Temporal Coverage:** Annual (2000-present)
+- **Update Frequency:** Annual
+- **Access:** Free (registration required) for select countries; commercial for others
+- **API:** No
+- **URL:** https://landscan.ornl.gov/
+- **Quality:** Ambient population model (daytime distribution); good for infrastructure planning; moderate resolution
+
+## 13. Satellite Imagery (Commercial & Free)
+
+**Maxar High-Resolution Imagery**
+- **Source:** Maxar Technologies (WorldView constellation, Legion satellites)
+- **Resolution:** 30-50 cm (commercial), up to 15 cm (government programs)
+- **Temporal Coverage:** Archive from 2000s + tasking
+- **Update Frequency:** Tasking available (up to 15 revisits/day for some locations)
+- **Access:** Commercial/Purchase (licensing required)
+- **API:** Yes (through partners like UP42, or direct Maxar API)
+- **URL:** https://www.maxar.com/ or https://up42.com/marketplace/data/tasking/maxar-tasking
+- **Quality:** Industry-leading very high-resolution imagery; excellent for UAE; stereo capability; near real-time tasking; most widely used commercial imagery[51][52]
+
+**Airbus Defense and Space (Pléiades, SPOT)**
+- **Source:** Airbus Intelligence
+- **Resolution:** 50 cm (Pléiades Neo, Pléiades), 1.5m (SPOT 6/7)
+- **Temporal Coverage:** Archive + tasking
+- **Update Frequency:** Tasking available (daily revisit for Pléiades constellation)
+- **Access:** Commercial/Purchase
+- **API:** Yes (OneAtlas API, available through UP42)
+- **URL:** https://www.airbus.com/en/products-services/space/earth-observation/satellite-imagery or via UP42
+- **Quality:** High-quality European commercial imagery; good UAE coverage; stereo capability; competitive pricing[53][54]
+
+**Planet Labs**
+- **Source:** Planet Labs
+- **Resolution:** 3-5m (PlanetScope), 50 cm (SkySat)
+- **Temporal Coverage:** Daily global coverage (PlanetScope), archive + tasking (SkySat)
+- **Update Frequency:** Daily (PlanetScope), tasking available (SkySat)
+- **Access:** Commercial/Purchase (subscription-based)
+- **API:** Yes (Planet API)
+- **URL:** https://www.planet.com/
+- **Quality:** Unique high-frequency coverage; daily monitoring capability; good for change detection and monitoring; moderate resolution for detailed planning[55]
+
+**Sentinel-2 (Free)**
+- **Source:** European Space Agency / Copernicus Programme
+- **Resolution:** 10m (RGB, NIR), 20m (red edge, SWIR), 60m (atmospheric)
+- **Temporal Coverage:** 2015-present
+- **Update Frequency:** 5-day revisit (2 satellites)
+- **Access:** Open/Free
+- **API:** Yes (Copernicus Data Space API, Google Earth Engine, AWS)
+- **URL:** https://dataspace.copernicus.eu/ or https://scihub.copernicus.eu/
+- **Quality:** Best free multispectral imagery; 10m resolution suitable for regional pipeline corridor analysis; excellent for change detection and land cover mapping; reliable and consistent
+
+## 14. Special Datasets for UAE Pipeline Routing
+
+**Archaeological and Heritage Sites**
+- **Source:** Ministry of Culture and Youth / Department of Culture and Tourism Abu Dhabi
+- **Resolution:** Point and polygon locations
+- **Temporal Coverage:** Current
+- **Update Frequency:** As sites are registered
+- **Access:** Restricted (cultural heritage protection)
+- **API:** No
+- **URL:** Contact ministry or DCT Abu Dhabi
+- **Quality:** Critical for pipeline routing to avoid cultural heritage sites; access restricted to protect sensitive locations; formal consultation required for pipeline projects
+
+**Military Zones and Restricted Areas**
+- **Source:** UAE Armed Forces / Ministry of Defence
+- **Resolution:** Polygon boundaries
+- **Temporal Coverage:** Current
+- **Update Frequency:** As restrictions change
+- **Access:** Highly Restricted (security classification)
+- **API:** No
+- **URL:** Formal coordination with military authorities required
+- **Quality:** Essential data for pipeline routing; must be obtained through official security clearance channels; significant portions of UAE have military restrictions
+
+**Seismic Hazard Data**
+- **Source:** National Seismic Network (operated by USGS for UAE)
+- **Resolution:** Station network data and regional hazard maps
+- **Temporal Coverage:** Historical seismicity records
+- **Update Frequency:** Continuous monitoring, hazard maps updated periodically
+- **Access:** Limited (contact NCM or relevant authorities)
+- **API:** Limited
+- **URL:** Contact National Center of Meteorology or check USGS International Programs
+- **Quality:** UAE is located in relatively low seismic zone but data important for pipeline design standards; GSN station exists in UAE[56]
+
+**Sabkha (Salt Flat) Mapping**
+- **Source:** Various research institutions and geological surveys
+- **Resolution:** Variable (regional to detailed studies)
+- **Temporal Coverage:** Various research periods
+- **Update Frequency:** Research-dependent
+- **Access:** Academic/Restricted
+- **API:** No
+- **URL:** Contact UAE University, Geological Survey, or Environment Agency Abu Dhabi
+- **Quality:** Critical for pipeline routing; sabkhas present significant engineering challenges (corrosive, unstable ground); localized datasets available through research channels[57][58]
+
+**Sand Dune and Aeolian Features**
+- **Source:** Remote sensing analysis and field surveys
+- **Resolution:** Variable (derived from satellite imagery and DEM)
+- **Temporal Coverage:** Current
+- **Update Frequency:** Dynamic features requiring periodic monitoring
+- **Access:** Can be derived from satellite imagery
+- **API:** No specific API (derive from imagery)
+- **URL:** Derive from Sentinel-2, Planet, or commercial imagery
+- **Quality:** Important for pipeline routing in desert areas; dune migration can impact infrastructure; can be mapped from high-resolution DEMs and multispectral imagery[58]
+
+**UAE Groundwater Vulnerability Maps**
+- **Source:** Ministry of Energy and Infrastructure / Environment Agency Abu Dhabi
+- **Resolution:** Variable
+- **Temporal Coverage:** Based on hydrogeological map (2023)
+- **Update Frequency:** Major updates every few years
+- **Access:** Restricted (formal request required)
+- **API:** No
+- **URL:** Contact MOEI or EAD
+- **Quality:** Important for environmental impact assessment; groundwater protection zones critical for pipeline routing decisions[13]
+
+**Flash Flood Hazard / Wadi Flow Paths**
+- **Source:** Derived from DEM analysis / NCM studies
+- **Resolution:** Variable (DEM-dependent, typically 30m from Copernicus)
+- **Temporal Coverage:** Based on historical rainfall and DEM
+- **Update Frequency:** Can be updated as better DEMs become available
+- **Access:** Can be derived or requested from NCM/MOEI
+- **API:** No
+- **URL:** Derive from terrain analysis or contact meteorology/water authorities
+- **Quality:** Critical for pipeline crossing design; UAE experiences occasional intense rainfall and flash flooding in wadis; can be modeled from high-quality DEMs[40][13]
+
+**UAE Road and Aviation Development Plans**
+- **Source:** Ministry of Energy and Infrastructure / Civil Aviation Authority
+- **Resolution:** Project-specific
+- **Temporal Coverage:** Future planning horizons
+- **Update Frequency:** As plans are updated
+- **Access:** Restricted (project coordination required)
+- **API:** No
+- **URL:** https://www.moei.gov.ae/ or infrastructure development authorities
+- **Quality:** Essential for future-proofing pipeline routes; coordination with planned infrastructure development required[18][12]
+
+### Key Access Recommendations
+
+**For pipeline routing projects in the UAE, prioritize:**
+
+1. **Official national/emirate data** through formal requests to MOEI, Abu Dhabi SDI, and GeoDubai for authoritative datasets
+2. **ADNOC coordination** for existing pipeline infrastructure (mandatory for Abu Dhabi operations)
+3. **Commercial road data** (HERE or TomTom) for comprehensive infrastructure mapping with regular updates
+4. **Copernicus DEM (30m)** and **ESA WorldCover (10m)** as best free global datasets for terrain and land cover
+5. **WorldPop (100m)** for high-resolution population distribution
+6. **WDPA** for protected areas as starting point, verify with national environmental agencies
+7. **Maxar or Airbus imagery** for detailed corridor surveys and validation
+8. **Sentinel-2** for free baseline imagery and change detection monitoring
+
+Most critical national datasets require formal data sharing agreements and security clearances due to the sensitive nature of infrastructure and security concerns in the UAE.[28][12][1]
+
+[1](https://u.ae/en/about-the-uae/digital-uae/data/geospatial-data-platforms)
+[2](https://u.ae/en/about-the-uae/digital-uae/data/geospatial-data-platforms/spatial-data-infrastructure-program-in-abu-dhabi)
+[3](https://arcgis.sdi.abudhabi.ae/portal/home/gallery.html)
+[4](https://geodubai.dm.gov.ae/en/Pages/default.aspx)
+[5](https://www.dubaipulse.gov.ae/data/dm-location/dm_community-open)
+[6](https://dataspace.copernicus.eu/explore-data/data-collections/copernicus-contributing-missions/collections-description/COP-DEM)
+[7](https://dataspace.copernicus.eu/news/2024-5-22-copernicus-digital-elevation-model-dem-now-available-copernicus-data-space-ecosystem)
+[8](https://data.humdata.org/dataset/gulf-countries-elevation-model)
+[9](https://worldcover2020.esa.int)
+[10](https://cmr.earthdata.nasa.gov/search/concepts/C2655129178-FEDEO.html)
+[11](https://opendata.moei.gov.ae)
+[12](https://www.moei.gov.ae/en/media-center/news/18/10/2024/ministry-of-energy-and-infrastructure-launches-open-data-portal-at-gitex-global-2024)
+[13](https://www.moei.gov.ae/en/media-center/news/10/12/2023/ministry-of-energy-and-infrastructure-and-environment-agency-abu-dhabi-launch-hydrogeological-map)
+[14](https://www.moccae.gov.ae/en/open-data/moccae-open-data)
+[15](https://scholarworks.uaeu.ac.ae/all_theses/566/)
+[16](https://www.youtube.com/watch?v=edU3bdOZKvk)
+[17](https://courses.gisopencourseware.org/mod/book/view.php?id=1009&chapterid=2367)
+[18](https://u.ae/en/information-and-services/infrastructure/infrastructure-and-vision-2021)
+[19](https://www.here.com/docs/bundle/traffic-api-developer-guide-v7/page/topics/coverage-information/traffic.html)
+[20](https://www.tomtom.com/newsroom/partner-stories/traffic-management-middle-east/)
+[21](https://www.tomtom.com/traffic-index/dubai-traffic/)
+[22](https://www.counterpointresearch.com/insights/tomtom-leads-in-location-applications-services-rankings/)
+[23](https://abley.com/tomtom)
+[24](https://data.humdata.org/dataset/hotosm_are_roads)
+[25](https://wiki.openstreetmap.org/wiki/United_Arab_Emirates)
+[26](https://data.humdata.org/dataset/60949950-0dda-4651-96a7-8f33f2e6ff4b?force_layout=desktop)
+[27](https://atlas.fgic.gov.ae/uaeatlas/Energy/EnergyOverview?lang=en)
+[28](https://proceedings.esri.com/library/userconf/meauc18/papers/mea_34.pdf)
+[29](https://adnocgas.ae/en/our-operations/pipeline-network)
+[30](https://ndhelal.wixsite.com/intranet/geomatics)
+[31](https://www.ibat-alliance.org/datasets/world-database-on-protected-areas)
+[32](https://www.protectedplanet.net/en/thematic-areas/wdpa)
+[33](https://www.protectedplanet.net/en/country/ARE)
+[34](https://www.arcgis.com/home/item.html?id=ae78aeb913a343d69e950b53e29076f7)
+[35](https://webapps.bgs.ac.uk/data/Publications/series.html?code=RS)
+[36](https://iucat.iu.edu/iue/12528718)
+[37](https://certmapper.cr.usgs.gov/data/apps/world-maps/)
+[38](https://dataone.org/datasets/c20fc073-92bf-4d48-90e5-67458cb14f48)
+[39](https://catalog.data.gov/dataset/bedrock-geology-of-the-arabian-peninsula-and-selected-adjacent-areas-geo2bg)
+[40](https://api.ncm.gov.ae/documentation/)
+[41](https://www.maptiler.com/story/ncm-uae/)
+[42](https://www.esri.com/en-us/lg/industry/government/fcsa-1map-platform-case-study)
+[43](https://www.esri.com/about/newsroom/blog/united-arab-emirates-maps-growth)
+[44](https://u.ae/en/about-the-uae/digital-uae/data/geospatial-data-platforms/1map)
+[45](https://www.dubaipulse.gov.ae/data/dm-location/dm_sectors-open)
+[46](https://www.dsc.gov.ae/en-us/Pages/default.aspx)
+[47](https://hub.worldpop.org)
+[48](https://data.humdata.org/organization/worldpop)
+[49](https://hub.worldpop.org/geodata/summary?id=50080)
+[50](https://hub.worldpop.org/geodata/summary?id=56786)
+[51](https://up42.com/blog/up42-partners-with-maxar)
+[52](https://geoawesome.com/neo-space-group-finalizes-up42-acquisition-what-it-means-for-earth-observation-industry/)
+[53](https://www.airbus.com/en/products-services/space/earth-observation/satellite-imagery)
+[54](https://space-solutions.airbus.com/commercial-network/)
+[55](https://www.l3harris.com/newsroom/editorial/2025/04/demand-imagery-enhancing-monitoring-and-analysis-advanced-streaming)
+[56](https://www.usgs.gov/international-programs/middle-east)
+[57](https://thescipub.com/pdf/ajeassp.2009.476.480.pdf)
+[58](https://www.frontiersin.org/journals/earth-science/articles/10.3389/feart.2024.1510510/full)
+[59](https://bayanat.ae/en/geodata)
+[60](https://data.abudhabi)
+[61](https://www.youtube.com/watch?v=rXxvuSOKGFY)
+[62](https://sdi.gov.abudhabi/sdi/search.html?variable=maps)
+[63](https://www.fm-middleeast.com/events/dubai-municipality-utilises-geospatial-data-for-asset-management-identifying-waterlogging-areas)
+[64](https://freegisdata.rtwilson.com)
+[65](https://ggim.un.org/knowledgebase/Print50461.aspx)
+[66](https://www.moei.gov.ae/en/media-center/video-gallery/main-video-album)
+[67](https://arcgis.sdi.abudhabi.ae/portal/home/webmap/viewer.html)
+[68](https://www.pipeline-journal.net/news/kkr-buys-stake-abu-dhabi-gas-pipeline-assets-deepening-gulf-infrastructure-push)
+[69](https://www.adnoc.ae/en/adnoc-pipelines/about-us/downloads)
+[70](https://developers.google.com/earth-engine/datasets/catalog/WCMC_WDPA_current_points)
+[71](https://docs.lib.purdue.edu/cgi/viewcontent.cgi?article=1046&context=jto)
+[72](https://resources.unep-wcmc.org/products/1919c32890074ce5a589a1a99b48994b)
+[73](https://help.tomtom.com/hc/en-ca/articles/17544838853010-TomTom-Services-coverage)
+[74](https://www.tomtom.com/traffic-index/)
+[75](https://openweathermap.org/api/one-call-3)
+[76](https://beta.ncm.gov.sa/Developers%20Guide/EWS%20APIs%20Technical%20Guide%20V.1.91.pdf)
+[77](https://developer.tomtom.com/traffic-stats/documentation/product-information/market-coverage)
+[78](https://datasource.kapsarc.org/explore/dataset/climate-statistics-uae/)
+[79](https://en.wikipedia.org/wiki/Traffic_message_channel)
+[80](https://apps.apple.com/us/app/tomtom-maps-traffic/id1438106561)
+[81](https://olgabelitskaya.github.io/Data_Analyst_ND_Project3_Dubai-AbuDhabi_Extraction_MongoDB.html)
+[82](https://www.sciencedirect.com/science/article/pii/S0198971524000061)
+[83](https://data.humdata.org/dataset/worldpop-population-density-for-united-arab-emirates)
+[84](https://apollomapping.com/how-to/order-commercial-high-resolution-and-medium-resolution-satellite-imagery)
+[85](https://hub.worldpop.org/geodata/summary?id=49202)
+[86](https://geo.btaa.org/catalog/961da7a2-4f89-4074-931e-add8012111a0)
+[87](https://www.satellitetoday.com/imagery-and-sensing/2024/09/09/nasa-selects-8-companies-for-commercial-smallsat-services/)
+[88](https://hub.worldpop.org/geodata/summary?id=44225)

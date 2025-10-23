@@ -1,0 +1,38 @@
+{
+  "query_id": "SAIPEM_QUERY_006",
+  "project_id": "SAIPEM_PIPELINE_DEMO",
+  "timestamp": "2025-10-12T00:00:52Z",
+  "query_type": "Risk Assessment",
+  "parameters": {
+    "bbox": "13.454779,42.857057,13.938769,43.438886",
+    "place": null,
+    "topic": "seismic_risk,flood_risk,landslide_risk,natural_hazards,security_risks",
+    "location": null,
+    "query": null,
+    "model": "sonar",
+    "max_tokens": 4000,
+    "temperature": 0.2,
+    "recency": "month"
+  },
+  "response": {
+    "output_file": "docs/perplexity_research/risk_assessment.md",
+    "tokens_used": {
+      "prompt": 105,
+      "completion": 643,
+      "total": 748
+    },
+    "cost_usd": 0.000150,
+    "citations_count": null,
+    "status": "SUCCESS"
+  },
+  "execution": {
+    "start_time": "2025-10-12T00:00:52Z",
+    "end_time": "2025-10-12T00:01:03Z",
+    "duration_seconds": 11
+  },
+  "metadata": {
+    "user": "radwan-el-gharbi",
+    "purpose": "Phase 2 mandatory risk assessment research",
+    "notes": "Comprehensive risk analysis covering natural hazards (seismic, flood, landslide) and security considerations for pipeline routing"
+  }
+}

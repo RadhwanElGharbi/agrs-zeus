@@ -1,0 +1,788 @@
+# GIS Datasets for Oil & Gas Pipeline Routing in Oman
+
+## 1. ELEVATION/TERRAIN (DEM)
+
+### National Sources
+
+**National Survey and Geospatial Information Authority (NSGIA) Topographic DEMs**
+- **Source/Provider**: National Survey and Geospatial Information Authority (formerly NSA)
+- **Resolution/Scale**: 1:50,000 and 1:100,000 scale topographic maps with derived DEMs
+- **Temporal Coverage**: Current (established geodetic infrastructure ONGD17 in 2017)
+- **Update Frequency**: As needed for strategic projects
+- **Access Type**: Restricted/requires formal written request to NSGIA
+- **API Availability**: No public API
+- **Official URL**: https://www.nsaomangeoportal.gov.om/en/
+- **Quality Assessment**: NSGIA is the sole authority for geospatial data in Oman with complete national coverage; accuracy based on OmanCORSNet (47 CORS stations) achieving cm-level accuracy; includes OmanGeoid vertical datum for accurate orthometric heights[1][2][3]
+
+### Global DEM Sources
+
+**Copernicus GLO-30 DEM (Highest Priority Global)**
+- **Source/Provider**: European Space Agency / Copernicus Programme
+- **Resolution/Scale**: 30m (1 arc-second)
+- **Temporal Coverage**: 2010-2015 (TanDEM-X mission data)
+- **Update Frequency**: Static baseline product
+- **Access Type**: Open/Free
+- **API Availability**: Yes - via Copernicus Data Space Ecosystem API
+- **Official URL**: https://dataspace.copernicus.eu/explore-data/data-collections/copernicus-contributing-missions/collections-description/COP-DEM
+- **Quality Assessment**: Best available global DEM; Digital Surface Model (DSM) from radar data; superior to SRTM and ASTER GDEM for most applications; RMSE typically 2-6m vertical accuracy; void-filled using multiple sources including ASTER GDEM and SRTM[4][5][6][7]
+
+**SRTM v3.0 (30m)**
+- **Source/Provider**: NASA/USGS
+- **Resolution/Scale**: 30m (1 arc-second) for non-US areas
+- **Temporal Coverage**: February 2000 (single mission)
+- **Update Frequency**: Static (no updates)
+- **Access Type**: Open/Free
+- **API Availability**: Yes - via USGS Earth Explorer API and Google Earth Engine
+- **Official URL**: https://earthexplorer.usgs.gov/
+- **Quality Assessment**: Good baseline accuracy (~6-9m RMSE); radar-based; voids filled in v3.0; reliable for Oman's terrain but lower quality than Copernicus DEM[8][4]
+
+**ASTER GDEM v3**
+- **Source/Provider**: NASA/METI (Japan)
+- **Resolution/Scale**: 30m (1 arc-second)
+- **Temporal Coverage**: 2000-2013 (compiled from multiple acquisitions)
+- **Update Frequency**: Static (v3 released 2019)
+- **Access Type**: Open/Free
+- **API Availability**: Yes - via NASA Earthdata API
+- **Official URL**: https://asterweb.jpl.nasa.gov/gdem.asp
+- **Quality Assessment**: Lower quality than radar-based DEMs due to optical imaging artifacts; useful as supplementary source in mountainous areas; contains noise and anomalies; not recommended as primary source for pipeline routing[5][4]
+
+## 2. LAND COVER / LAND USE
+
+### National Sources
+
+**Ministry of Agriculture and Fisheries Land Use Maps**
+- **Source/Provider**: Ministry of Agriculture and Fisheries (MAF) / Supreme Committee for Town Planning
+- **Resolution/Scale**: 1:100,000 scale general coverage
+- **Temporal Coverage**: Completed 1990 (UNDP/FAO project)
+- **Update Frequency**: Unknown, likely outdated
+- **Access Type**: Restricted/requires formal request
+- **API Availability**: No
+- **Official URL**: Not publicly available
+- **Quality Assessment**: Dated baseline; complete national coverage but needs verification with recent imagery; compiled with UN support but now over 30 years old[3]
+
+### Global Sources (Recommended)
+
+**ESA WorldCover 2021 (Best Global Option)**
+- **Source/Provider**: European Space Agency (ESA)
+- **Resolution/Scale**: 10m resolution
+- **Temporal Coverage**: 2020 and 2021 annual products
+- **Update Frequency**: Annual (2020, 2021 released; future updates planned)
+- **Access Type**: Open/Free
+- **API Availability**: No dedicated API, but downloadable via web interface
+- **Official URL**: https://worldcover2021.esa.int/download
+- **Quality Assessment**: Highest resolution global land cover (10m); 76.7% overall accuracy for 2021 product; 11 land cover classes; based on Sentinel-1 and Sentinel-2 data; excellent for Oman's arid/semi-arid environments; freely accessible with area statistics tools[9][10][11][12]
+
+**Google Dynamic World**
+- **Source/Provider**: Google/World Resources Institute
+- **Resolution/Scale**: 10m resolution
+- **Temporal Coverage**: 2015-present (near real-time)
+- **Update Frequency**: Continuous (updated as Sentinel-2 imagery becomes available)
+- **Access Type**: Open/Free
+- **API Availability**: Yes - via Google Earth Engine
+- **Official URL**: https://www.dynamicworld.app/
+- **Quality Assessment**: Near real-time land cover with probability scores; 10m resolution matching Sentinel-2; 9 land cover classes; useful for monitoring land use changes during pipeline planning
+
+**Sentinel-2 Land Cover Classification**
+- **Source/Provider**: ESA Copernicus Programme
+- **Resolution/Scale**: 10-20m resolution (depending on band)
+- **Temporal Coverage**: 2015-present
+- **Update Frequency**: 5-day revisit time (2 satellite constellation)
+- **Access Type**: Open/Free
+- **API Availability**: Yes - Copernicus Data Space Ecosystem API, Google Earth Engine
+- **Official URL**: https://dataspace.copernicus.eu/
+- **Quality Assessment**: Raw multispectral imagery (13 bands) allowing custom classification; 10m resolution for visible/NIR bands; excellent for detailed land cover mapping in Oman; requires processing but provides most current data[13]
+
+## 3. HYDROLOGY / WATER
+
+### National Sources
+
+**Ministry of Water Resources - Hydrological and Hydrogeological Database**
+- **Source/Provider**: Ministry of Agricultural, Fisheries and Water Resources (formerly Ministry of Water Resources)
+- **Resolution/Scale**: Variable by dataset
+- **Temporal Coverage**: Historical to current
+- **Update Frequency**: Ongoing monitoring at gauging stations
+- **Access Type**: Restricted/requires formal request
+- **API Availability**: No public API
+- **Official URL**: https://gov.om/en/w/request-hydrogeological-and-hydrological-data
+- **Quality Assessment**: Includes wadi gauging stations, groundwater monitoring networks, and surface water data; established monitoring stations on northern side of Jebel mountains; meteorological stations at Saik, Nizwa, Rumais, and Rostak; data request service available but requires formal application[14][15][16]
+
+**Oman National Hydrographic Office (ONHO)**
+- **Source/Provider**: Royal Navy of Oman - Directorate of Oman National Hydrographic Office
+- **Resolution/Scale**: Multiple scales for coastal/marine areas
+- **Temporal Coverage**: Current, includes historical archives
+- **Update Frequency**: Regular updates via monthly notices to mariners
+- **Access Type**: Restricted/requires request for non-navigational data
+- **API Availability**: No
+- **Official URL**: Contact through Royal Navy of Oman
+- **Quality Assessment**: Maintains National Hydrographic Archive with various surveys dating back decades; primarily focused on marine/coastal waters; includes tidal data and coastal surveys[17][18]
+
+### Global Sources
+
+**Global Surface Water Explorer (Google/JRC)**
+- **Source/Provider**: European Commission Joint Research Centre / Google
+- **Resolution/Scale**: 30m resolution
+- **Temporal Coverage**: 1984-present
+- **Update Frequency**: Annual updates
+- **Access Type**: Open/Free
+- **API Availability**: Yes - Google Earth Engine
+- **Official URL**: https://global-surface-water.appspot.com/
+- **Quality Assessment**: Excellent for identifying permanent and seasonal water bodies, wadis with intermittent flow; particularly valuable for Oman's arid environment; Landsat-based time series shows water occurrence, seasonality, and change
+
+**HydroSHEDS / HydroRIVERS**
+- **Source/Provider**: World Wildlife Fund / McGill University
+- **Resolution/Scale**: Multiple resolutions (3", 15", 30")
+- **Temporal Coverage**: Based on SRTM 2000 data
+- **Update Frequency**: Static baseline
+- **Access Type**: Open/Free
+- **API Availability**: Direct download only
+- **Official URL**: https://www.hydrosheds.org/
+- **Quality Assessment**: Hydrologically conditioned DEM derivatives; includes stream networks, watersheds, flow directions; moderate quality for Oman's wadis but may miss ephemeral channels; useful for watershed delineation
+
+## 4. INFRASTRUCTURE - ROADS
+
+### National Sources
+
+**National Survey and Geospatial Information Authority Road Network**
+- **Source/Provider**: NSGIA (National Survey and Geospatial Information Authority)
+- **Resolution/Scale**: 1:50,000 and 1:100,000 topographic base with road layers
+- **Temporal Coverage**: Current
+- **Update Frequency**: Regular updates as part of national mapping program
+- **Access Type**: Restricted/requires formal request
+- **API Availability**: No
+- **Official URL**: https://www.nsaomangeoportal.gov.om/en/
+- **Quality Assessment**: Most authoritative national road network; complete coverage; includes road classifications; accuracy validated through national geodetic network; requires formal data request[2][1]
+
+### Commercial Providers
+
+**HERE Technologies**
+- **Source/Provider**: HERE Technologies
+- **Resolution/Scale**: Sub-meter accuracy for major roads
+- **Temporal Coverage**: Current (continuously updated)
+- **Update Frequency**: Quarterly to monthly updates
+- **Access Type**: Commercial/Purchase (licensing required)
+- **API Availability**: Yes - HERE Location Services API, HERE Routing API
+- **Official URL**: https://www.here.com/
+- **Quality Assessment**: High-quality commercial road network with detailed attributes (road class, speed limits, restrictions); excellent for routing optimization; includes Middle East coverage; premium quality but requires commercial license
+
+**TomTom Maps**
+- **Source/Provider**: TomTom
+- **Resolution/Scale**: Sub-meter accuracy
+- **Temporal Coverage**: Current (continuously updated)
+- **Update Frequency**: Monthly updates
+- **Access Type**: Commercial/Purchase
+- **API Availability**: Yes - TomTom Maps API
+- **Official URL**: https://www.tomtom.com/products/maps/
+- **Quality Assessment**: High-quality commercial maps with detailed road attributes; includes Oman coverage; known for precision and multiple features; actively contributes to OpenStreetMap; requires commercial license[19][20]
+
+### OpenStreetMap
+
+**OpenStreetMap Oman Roads**
+- **Source/Provider**: OpenStreetMap Foundation / HOT (Humanitarian OpenStreetMap Team)
+- **Resolution/Scale**: Variable (typically <10m for major roads)
+- **Temporal Coverage**: Current (continuously updated by community)
+- **Update Frequency**: Continuous (daily exports available)
+- **Access Type**: Open/Free (ODbL license)
+- **API Availability**: Yes - Overpass API, multiple export formats
+- **Official URL**: https://www.openstreetmap.org/ and https://data.humdata.org/dataset/hotosm_omn_roads
+- **Quality Assessment**: Approximately 104,200 km of roads mapped; estimated at ~19% of total road network based on AI estimates; moderate completeness; good coverage of major highways and urban areas but incomplete for rural/minor roads; free alternative but requires validation; available in SHP, GeoJSON, KML, GPKG formats[21][22]
+
+**Microsoft AI Roads**
+- **Source/Provider**: Microsoft / NextGIS
+- **Resolution/Scale**: Extracted from high-resolution satellite imagery
+- **Temporal Coverage**: Current snapshot
+- **Update Frequency**: Periodic updates
+- **Access Type**: Open/Free
+- **API Availability**: Direct download
+- **Official URL**: https://data.nextgis.com/en/region/OM/msrd/
+- **Quality Assessment**: AI-extracted road centerlines from satellite imagery; useful for identifying unmapped roads; requires validation but provides complementary coverage to OSM[23]
+
+## 5. INFRASTRUCTURE - RAILWAYS
+
+### National Sources
+
+**Hafeet Rail (Oman-UAE Railway Network)**
+- **Source/Provider**: Oman Rail Company / Etihad Rail
+- **Resolution/Scale**: Precise engineering-grade alignment data (not publicly available)
+- **Temporal Coverage**: Under construction (operational timeline TBD)
+- **Update Frequency**: N/A (under development)
+- **Access Type**: Restricted/proprietary
+- **API Availability**: No
+- **Official URL**: https://www.hafeetrail.com
+- **Quality Assessment**: 238km network from Sohar Port to UAE border connecting to UAE National Rail Network; first railway linking GCC states; passenger speeds 200 km/h, freight 120 km/h; alignment data not publicly available but represents Oman's primary railway infrastructure[24]
+
+### OpenStreetMap
+
+**OpenStreetMap Railways - Oman**
+- **Source/Provider**: OpenStreetMap Foundation / OpenRailwayMap project
+- **Resolution/Scale**: Variable
+- **Temporal Coverage**: Current (limited coverage due to minimal existing rail)
+- **Update Frequency**: Continuous community updates
+- **Access Type**: Open/Free (ODbL license)
+- **API Availability**: Yes - Overpass API
+- **Official URL**: https://www.openrailwaymap.org/ and https://data.humdata.org/dataset/hotosm_omn_railways
+- **Quality Assessment**: Very limited railway infrastructure in Oman currently; Hafeet Rail under construction; OpenRailwayMap provides specialized railway rendering; minimal existing data but will improve as Hafeet Rail becomes operational; available in standard GIS formats[25][26][27]
+
+## 6. INFRASTRUCTURE - UTILITIES (Power, Telecom)
+
+### National Sources
+
+**Electricity Transmission Network**
+- **Source/Provider**: Oman Electricity Transmission Company (OETC) / Ministry of Energy and Minerals
+- **Resolution/Scale**: Engineering-grade precision (not publicly available)
+- **Temporal Coverage**: Current operational network
+- **Update Frequency**: As infrastructure expands
+- **Access Type**: Restricted/requires formal request from utilities or government
+- **API Availability**: No
+- **Official URL**: Contact Ministry of Energy and Minerals (https://mem.gov.om)
+- **Quality Assessment**: Authoritative data for power transmission lines, substations; requires formal data sharing agreement; critical for pipeline routing to avoid conflicts; not publicly accessible[28][29]
+
+### OpenStreetMap/OpenInfraMap
+
+**OpenInfraMap / OpenStreetMap Utilities**
+- **Source/Provider**: OpenStreetMap community
+- **Resolution/Scale**: Variable, generally <10m where mapped
+- **Temporal Coverage**: Current (patchy coverage)
+- **Update Frequency**: Continuous community updates
+- **Access Type**: Open/Free
+- **API Availability**: Yes - Overpass API
+- **Official URL**: https://openinframap.org/
+- **Quality Assessment**: Incomplete coverage for Oman; major power lines may be partially mapped; useful as supplementary source but requires field verification; not reliable as primary source for critical infrastructure
+
+## 7. INFRASTRUCTURE - PIPELINES
+
+### National Sources
+
+**Ministry of Energy and Minerals Pipeline Registry**
+- **Source/Provider**: Ministry of Energy and Minerals (MEM)
+- **Resolution/Scale**: Engineering-grade precision
+- **Temporal Coverage**: Current operational pipelines
+- **Update Frequency**: As infrastructure develops
+- **Access Type**: Restricted/requires government authorization
+- **API Availability**: No
+- **Official URL**: https://mem.gov.om
+- **Quality Assessment**: Official registry of oil and gas pipelines; most authoritative source; includes operational pipelines like Oman Main Oil Line, Fahud-Sohar systems; requires formal request; critical for avoiding conflicts with existing infrastructure[29][28]
+
+**Petroleum Development Oman (PDO) Pipeline GIS Data**
+- **Source/Provider**: Petroleum Development Oman (PDO)
+- **Resolution/Scale**: Engineering-grade with precise coordinates
+- **Temporal Coverage**: Current PDO-operated infrastructure
+- **Update Frequency**: Continuous operational updates
+- **Access Type**: Highly restricted/proprietary
+- **API Availability**: No
+- **Official URL**: Contact PDO directly
+- **Quality Assessment**: PDO operates major pipeline systems including Oman Main Oil Line, crude oil systems connecting to Mina Al Fahal export terminal; highest quality data but extremely restricted access; typically requires partnership or contractual agreements[30][31]
+
+### Commercial Pipeline GIS Data
+
+**Digital Oil & Gas Map / China Gas Map Pipeline Datasets**
+- **Source/Provider**: Commercial digital map providers
+- **Resolution/Scale**: Coordinate-based with turning points
+- **Temporal Coverage**: Current (specific to purchased pipelines)
+- **Update Frequency**: Lifetime free updates offered
+- **Access Type**: Commercial/Purchase
+- **API Availability**: No
+- **Official URL**: https://digital-oil-gas-map.com/ and https://www.chinagasmap.com/
+- **Quality Assessment**: Detailed GIS datasets available for major Oman pipelines (Mina Al Fahal-Sohar, Fahud-Sohar Gas/NGL, Oman Main Oil Line); includes 700+ coordinate turning points, station locations; formats: KMZ, SHP, XLSX; commercial license required; useful for planning but verify against official sources[32][33][30]
+
+### Global Sources
+
+**Global Energy Monitor - Oil & Gas Infrastructure Tracker**
+- **Source/Provider**: Global Energy Monitor
+- **Resolution/Scale**: Variable, approximate routes
+- **Temporal Coverage**: Current and planned projects
+- **Update Frequency**: Regular updates
+- **Access Type**: Open/Free
+- **API Availability**: Direct download
+- **Official URL**: https://globalenergymonitor.org/
+- **Quality Assessment**: Global database including Oman pipelines; approximate routes suitable for initial planning; not engineering-grade; free but requires verification with authoritative sources[34][35]
+
+**OpenStreetMap Pipelines**
+- **Source/Provider**: OpenStreetMap community
+- **Resolution/Scale**: Variable where mapped
+- **Temporal Coverage**: Current (very incomplete)
+- **Update Frequency**: Community updates
+- **Access Type**: Open/Free
+- **API Availability**: Yes - Overpass API
+- **Official URL**: https://www.openstreetmap.org/
+- **Quality Assessment**: Very incomplete coverage for Oman pipelines; should not be relied upon as primary source; useful only for general awareness; requires comprehensive field verification
+
+## 8. PROTECTED AREAS / ENVIRONMENTAL
+
+### National Sources
+
+**Environment Authority (EA) Natural Reserves Database**
+- **Source/Provider**: Environment Authority, Sultanate of Oman
+- **Resolution/Scale**: Polygon boundaries for 20+ protected areas
+- **Temporal Coverage**: Current (20 nature reserves declared as of latest update)
+- **Update Frequency**: As new reserves are designated
+- **Access Type**: Some data available via open data portal, detailed boundaries may require request
+- **API Availability**: No dedicated API
+- **Official URL**: https://www.ea.gov.om/en/the-authority/authority-mandates/nature-conservation/natural-reserves/
+- **Quality Assessment**: Official national authority for protected areas; includes diverse reserve types (nature reserves, national parks, scenic reserves, wetland reserves); 20 reserves covering approximately 2.6% of terrestrial area (7,985 km²) and 0.1% marine (664 km²); authoritative source for regulatory compliance[36][37][38]
+
+### Global Sources
+
+**World Database on Protected Areas (WDPA)**
+- **Source/Provider**: UN Environment Programme World Conservation Monitoring Centre (UNEP-WCMC)
+- **Resolution/Scale**: Polygon and point data
+- **Temporal Coverage**: Current (July 2024 update included complete Oman update)
+- **Update Frequency**: Monthly releases
+- **Access Type**: Open/Free
+- **API Availability**: Yes - ProtectedPlanet API
+- **Official URL**: https://www.protectedplanet.net/country/OMN
+- **Quality Assessment**: Complete update for Oman in July 2024 with 55 total protected areas; includes national designations and international sites (Ramsar, etc.); 27 protected areas had tabular data updated; good global standard for protected areas; regularly updated with national data; excellent starting point but verify with national authority for legal boundaries[39][37][40]
+
+**Key Protected Areas in Oman** (for reference):
+- Al Saleel National Park
+- Jabal Samhan Nature Reserve
+- Al Jabal Al Akhdar Scenic Reserve
+- Arabian Oryx Sanctuary
+- Ad Dimaniyat Islands Reserve
+- Al Wusta Wetland Reserve
+- Turtle Reserve (Ras al Jinz)
+- Khor reserves along Dhofar Coast[36]
+
+## 9. GEOLOGY / SOIL
+
+### National Sources
+
+**Ministry of Energy and Minerals (MEM) - Geological Survey**
+- **Source/Provider**: Ministry of Energy and Minerals, Directorate of Minerals (formerly Ministry of Petroleum and Minerals)
+- **Resolution/Scale**: 1:250,000 and 1:100,000 geological maps
+- **Temporal Coverage**: Historical mapping from 1970s-1990s to present
+- **Update Frequency**: Periodic updates for new mapping areas
+- **Access Type**: Restricted/requires formal request
+- **API Availability**: No
+- **Official URL**: https://mem.gov.om/public/minerals
+- **Quality Assessment**: Comprehensive geological mapping of Oman including ophiolite sequences, sedimentary basins; historical collaboration with USGS in 1970s-1980s; includes detailed mineral deposit maps; systematic coverage at multiple scales; authoritative for geological hazards, rock types, structural geology; essential for geotechnical assessments but requires formal data access request[41][42][43][29]
+
+**Ministry of Agriculture and Fisheries - Soil Survey**
+- **Source/Provider**: Ministry of Agriculture and Fisheries
+- **Resolution/Scale**: 1:100,000 general soil map
+- **Temporal Coverage**: Completed 1990 (UNDP/FAO project)
+- **Update Frequency**: No recent updates known
+- **Access Type**: Restricted/requires request
+- **API Availability**: No
+- **Official URL**: Contact Ministry of Agriculture and Fisheries
+- **Quality Assessment**: Complete national coverage on topographic bases; UNDP/FAO sponsored project; detailed case study surveys for some agricultural areas; dated but provides baseline soil classification; should be supplemented with site-specific investigations[3]
+
+### Global Sources
+
+**FAO Harmonized World Soil Database (HWSD v2.0)**
+- **Source/Provider**: Food and Agriculture Organization (FAO)
+- **Resolution/Scale**: 1km resolution (updated) / 30 arc-second
+- **Temporal Coverage**: Compiled from multiple sources spanning several decades
+- **Update Frequency**: Periodic major updates
+- **Access Type**: Open/Free (registration required)
+- **API Availability**: No, direct download
+- **Official URL**: https://www.fao.org/soils-portal/data-hub/
+- **Quality Assessment**: Global coverage including Oman; provides soil units, properties, constraints; moderate resolution suitable for regional planning; requires local validation; FAO maintains regional partnerships including MENA Soil Partnership; useful baseline but insufficient for detailed geotechnical analysis[44][45]
+
+**OneGeology Portal**
+- **Source/Provider**: International geological survey collaboration
+- **Resolution/Scale**: Variable by contributing survey
+- **Temporal Coverage**: Variable
+- **Update Frequency**: As national surveys contribute
+- **Access Type**: Open/Free
+- **API Availability**: Yes - WMS/WFS services
+- **Official URL**: http://www.onegeology.org/
+- **Quality Assessment**: Portal for accessing global geological map data; coverage and detail for Oman depends on national contribution; provides framework for discovering geological datasets; useful for regional context
+
+## 10. CLIMATE / WEATHER
+
+### National Sources
+
+**Directorate General of Meteorology (Oman Meteorological Service)**
+- **Source/Provider**: Directorate General of Meteorology, Ministry of Transport, Communications and Information Technology
+- **Resolution/Scale**: Point data from weather stations
+- **Temporal Coverage**: Historical records dating to ~1900 (systematic observations); modern network from 1970s
+- **Update Frequency**: Real-time observations, daily records, monthly climatology
+- **Access Type**: Some data via open data portal (https://data.gov.om/bixytwb/weather); detailed data may require formal request
+- **API Availability**: Limited/unknown for detailed data
+- **Official URL**: https://data.gov.om/ and contact DG Meteorology
+- **Quality Assessment**: National meteorological authority with ground-based station network; includes temperature, humidity, rainfall, wind data; stations at key locations including Muscat, Salalah, Sohar, interior locations; climate indicators available through government data portal; most authoritative for Oman-specific weather patterns including cyclone/monsoon impacts; real-time and forecast data available[16][46]
+
+### Global Sources (Recommended)
+
+**ERA5 Reanalysis (Best Global Option)**
+- **Source/Provider**: European Centre for Medium-Range Weather Forecasts (ECMWF) / Copernicus Climate Change Service
+- **Resolution/Scale**: 31km (0.25° x 0.25°) spatial resolution
+- **Temporal Coverage**: January 1940 to present (3-month lag)
+- **Update Frequency**: Monthly updates (extends continuously)
+- **Access Type**: Open/Free (registration required)
+- **API Availability**: Yes - Climate Data Store (CDS) API
+- **Official URL**: https://cds.climate.copernicus.eu/datasets/reanalysis-era5-single-levels
+- **Quality Assessment**: Fifth-generation ECMWF reanalysis; hourly estimates for large number of climate variables; 137 vertical levels; combines model with global observations; excellent for Oman climate analysis (1950-2023 record available via World Bank Climate Portal); suitable for temperature, precipitation, wind, humidity analysis for pipeline design; daily and monthly aggregates available; superior to previous reanalysis products; accessible through multiple platforms including Google Earth Engine[47][48][49][50][51][52][53]
+
+**WorldClim v2.1**
+- **Source/Provider**: WorldClim / University of California
+- **Resolution/Scale**: Multiple resolutions (30 seconds ~1km to 2.5 minutes)
+- **Temporal Coverage**: Historical climate averages (1970-2000) and future projections
+- **Update Frequency**: Periodic updates with new climatology periods
+- **Access Type**: Open/Free
+- **API Availability**: Direct download only
+- **Official URL**: https://www.worldclim.org/
+- **Quality Assessment**: High-resolution interpolated climate surfaces; includes temperature (min/max/mean), precipitation, solar radiation, wind, water vapor; monthly averages useful for long-term climatology; widely used in climate modeling; good baseline for Oman but ERA5 provides more detailed temporal coverage
+
+## 11. ADMINISTRATIVE BOUNDARIES
+
+### National Sources
+
+**National Centre for Statistics and Information (NCSI) - Official Boundaries**
+- **Source/Provider**: National Centre for Statistics and Information (NCSI)
+- **Resolution/Scale**: High-precision digital boundaries
+- **Temporal Coverage**: Current administrative structure
+- **Update Frequency**: As administrative changes occur
+- **Access Type**: Some data publicly available; detailed boundaries may require request
+- **API Availability**: Limited
+- **Official URL**: https://www.ncsi.gov.om/
+- **Quality Assessment**: Official national statistics agency; authoritative source for legal administrative boundaries; hierarchy: Country > Governorate (Muhafazat) > Wilayat; most accurate for regulatory compliance and official reporting; coordinates with NSGIA for spatial accuracy[54]
+
+**NSGIA Administrative Boundaries**
+- **Source/Provider**: National Survey and Geospatial Information Authority
+- **Resolution/Scale**: Survey-grade precision
+- **Temporal Coverage**: Current (2022 boundaries available)
+- **Update Frequency**: Regular updates coordinated with NCSI
+- **Access Type**: Restricted/requires formal request
+- **API Availability**: No
+- **Official URL**: https://www.nsaomangeoportal.gov.om/en/
+- **Quality Assessment**: Geospatially accurate boundaries integrated with national geodetic framework; includes three administrative levels; highest spatial accuracy available; part of Oman National Spatial Data Infrastructure (ONSDI)[55][1]
+
+### Global Sources
+
+**GADM (Database of Global Administrative Areas)**
+- **Source/Provider**: GADM / University of California Davis
+- **Resolution/Scale**: High-resolution vector boundaries
+- **Temporal Coverage**: Current compilation (version 4.1)
+- **Update Frequency**: Irregular updates
+- **Access Type**: Open/Free (academic use)
+- **API Availability**: Direct download only
+- **Official URL**: https://gadm.org/
+- **Quality Assessment**: Comprehensive coverage for Oman with 3 administrative levels (0=country, 1=governorate, 2=wilayat); widely used global standard; boundaries derived from multiple sources; good quality for Oman but should verify with national sources for legal accuracy; available in multiple formats (shapefile, geopackage, R)[56]
+
+**HDX/Humanitarian Data Exchange - COD-AB**
+- **Source/Provider**: UN OCHA / Humanitarian Data Exchange
+- **Resolution/Scale**: Administrative levels 0-2
+- **Temporal Coverage**: Updated 2023
+- **Update Frequency**: As needed
+- **Access Type**: Open/Free
+- **API Availability**: HDX API available
+- **Official URL**: https://data.humdata.org/dataset/cod-ab-omn
+- **Quality Assessment**: Common Operational Dataset for Administrative Boundaries; suitable for humanitarian and development applications; sourced from GADM; regularly maintained; good interoperability with humanitarian sector tools[56]
+
+## 12. POPULATION / DEMOGRAPHICS
+
+### National Sources
+
+**National Centre for Statistics and Information (NCSI) - Census Data**
+- **Source/Provider**: National Centre for Statistics and Information
+- **Resolution/Scale**: Administrative unit level (Governorate/Wilayat)
+- **Temporal Coverage**: Census 2010 (baseline); estimates 2020-present
+- **Update Frequency**: Decennial census; annual estimates
+- **Access Type**: Published statistics publicly available; detailed spatial data may require request
+- **API Availability**: Limited
+- **Official URL**: https://www.ncsi.gov.om/
+- **Quality Assessment**: Official national census and demographic data; most authoritative for population counts, urban areas, demographic characteristics; administrative unit aggregations; limited spatial resolution but legally definitive population figures[57]
+
+### Global Sources
+
+**WorldPop**
+- **Source/Provider**: University of Southampton / WorldPop Project
+- **Resolution/Scale**: 100m resolution gridded population
+- **Temporal Coverage**: 2000-present (annual estimates)
+- **Update Frequency**: Annual updates
+- **Access Type**: Open/Free
+- **API Availability**: Direct download; some WMS services
+- **Official URL**: https://www.worldpop.org/
+- **Quality Assessment**: High-resolution gridded population estimates for Oman; uses census data, satellite imagery, and geospatial covariates with random forest modeling; 100m grid provides excellent spatial detail; includes age/sex structure datasets; metadata indicates census 2010 used for calibration; excellent for identifying populated areas to avoid in pipeline routing; more spatially detailed than census aggregations[58]
+
+**LandScan Global**
+- **Source/Provider**: Oak Ridge National Laboratory (ORNL)
+- **Resolution/Scale**: ~1km (30 arc-second) resolution
+- **Temporal Coverage**: Annual products (2000-present)
+- **Update Frequency**: Annual
+- **Access Type**: Free for US government and collaborators; requires registration for others
+- **API Availability**: No
+- **Official URL**: https://landscan.ornl.gov/
+- **Quality Assessment**: Ambient population distribution (24-hour average); considers daytime movement patterns; coarser than WorldPop but accounts for population mobility; useful for understanding exposure along pipeline routes; requires registration
+
+**Kontur Population Dataset**
+- **Source/Provider**: Kontur
+- **Resolution/Scale**: 400m H3 hexagons
+- **Temporal Coverage**: Recent estimates
+- **Update Frequency**: Periodic
+- **Access Type**: Open/Free
+- **API Availability**: Direct download
+- **Official URL**: https://data.humdata.org/ (via HDX)
+- **Quality Assessment**: Population density on OpenStreetMap administrative boundaries; integrates with OSM data; useful for rapid assessment; available with administrative aggregations for Oman[59]
+
+## 13. SATELLITE IMAGERY (COMMERCIAL)
+
+### Free Baseline Imagery
+
+**Sentinel-2 (Recommended Free Option)**
+- **Source/Provider**: European Space Agency / Copernicus Programme
+- **Resolution/Scale**: 10m (visible/NIR), 20m (red edge/SWIR), 60m (atmospheric bands)
+- **Temporal Coverage**: 2015-present
+- **Update Frequency**: 5-day revisit (2-satellite constellation); cloud-free composites vary
+- **Access Type**: Open/Free
+- **API Availability**: Yes - Copernicus Data Space Ecosystem, Google Earth Engine, AWS
+- **Official URL**: https://dataspace.copernicus.eu/
+- **Quality Assessment**: Excellent free baseline imagery; 13 spectral bands; 10m resolution suitable for detailed mapping; 5-day revisit ideal for monitoring; multispectral capabilities support land cover classification, vegetation monitoring; Level-2A atmospherically corrected products available; complete coverage of Oman; industry standard for free satellite data[13]
+
+### High-Resolution Commercial Imagery
+
+**Maxar Technologies (WorldView/GeoEye Constellation)**
+- **Source/Provider**: Maxar Technologies
+- **Resolution/Scale**: 30-50cm resolution (WorldView-3/4); sub-50cm multispectral
+- **Temporal Coverage**: Extensive archive from 2000s; current imagery
+- **Update Frequency**: On-demand tasking; archive coverage varies
+- **Access Type**: Commercial/Purchase (per km² or subscription)
+- **API Availability**: Yes - Maxar Platform API, SecureWatch API
+- **Official URL**: https://www.maxar.com/
+- **Quality Assessment**: Highest resolution commercial optical imagery; excellent for detailed pipeline route surveys, identifying obstacles, infrastructure conflicts; 30cm panchromatic, 1.2m multispectral with pansharpening to 30cm; WorldView-3 includes 8-band multispectral and 8-band SWIR; extensive archive for Oman; premium pricing; industry standard for engineering applications[60]
+
+**Airbus Defence and Space (Pléiades, SPOT)**
+- **Source/Provider**: Airbus Defence and Space
+- **Resolution/Scale**: 50cm (Pléiades Neo); 70cm (Pléiades 1A/1B); 1.5m (SPOT 6/7)
+- **Temporal Coverage**: Archive and current tasking
+- **Update Frequency**: On-demand tasking
+- **Access Type**: Commercial/Purchase
+- **API Availability**: Yes - OneAtlas API
+- **Official URL**: https://www.airbus.com/en/products-services/space/earth-observation
+- **Quality Assessment**: High-quality commercial imagery with 50cm resolution (Pléiades Neo); 70+ Earth observation satellites operated; excellent coverage and rapid tasking capability; competitive with Maxar; strong presence in Middle East; Pléiades constellation provides tri-stereo capability for 3D modeling[61][62]
+
+**Planet Labs**
+- **Source/Provider**: Planet Labs
+- **Resolution/Scale**: 3-5m (PlanetScope daily constellation); 50cm (SkySat)
+- **Temporal Coverage**: Daily global coverage (PlanetScope); SkySat archive and tasking
+- **Update Frequency**: Daily (PlanetScope); frequent revisit (SkySat)
+- **Access Type**: Commercial/Subscription or purchase
+- **API Availability**: Yes - Planet API
+- **Official URL**: https://www.planet.com/
+- **Quality Assessment**: Unique daily imaging capability with PlanetScope constellation (180+ satellites); 3-5m resolution suitable for monitoring and change detection; SkySat provides 50cm resolution for detailed surveys; excellent for temporal analysis and monitoring during construction; more affordable than Maxar/Airbus for monitoring applications
+
+**21st Century Aerospace Technology (21AT) - TripleSat/BJ-3**
+- **Source/Provider**: 21AT (Singapore-based)
+- **Resolution/Scale**: 30cm (BJ-3A/B); 80cm (TripleSat)
+- **Temporal Coverage**: 2021-present (BJ-3); 2015-present (TripleSat)
+- **Update Frequency**: Regular revisit; tasking available
+- **Access Type**: Commercial/Purchase
+- **API Availability**: Contact provider
+- **Official URL**: Contact through regional distributors
+- **Quality Assessment**: Competitive high-resolution option; 30cm BJ-3 constellation launched 2021-2022; TripleSat constellation follows same orbit with 33-minute spacing; growing presence in Middle East market; potentially more competitive pricing than US/European providers[60]
+
+## 14. SPECIAL DATASETS FOR OMAN
+
+### Seismic Hazard
+
+**Sultan Qaboos University - Earthquake Monitoring Center**
+- **Source/Provider**: Sultan Qaboos University Earthquake Monitoring Center
+- **Resolution/Scale**: Seismic source zones and hazard maps at regional scale
+- **Temporal Coverage**: Historical earthquakes from 734 CE; instrumental record ~15 years; hazard maps for return periods 475/2475 years
+- **Update Frequency**: Research updates; monitoring network continuous
+- **Access Type**: Published research accessible; detailed data requires academic collaboration
+- **API Availability**: No
+- **Official URL**: Contact Sultan Qaboos University
+- **Quality Assessment**: Comprehensive seismic hazard assessment for Oman; 26 seismic source zones identified (Oman Mountains, Oman Sea, Zagros, Makran); PSHA studies completed for major economic zones (Duqm); PGA maps available; critical for pipeline design in seismically active areas; site-specific studies conducted for major developments; incorporates historical and instrumental seismicity; Makran and Zagros zones significant contributors to hazard[63][64][65][66]
+
+**Site-Specific Seismic Studies**
+- **Source/Provider**: Various geotechnical consultants / research institutions
+- **Resolution/Scale**: Site-specific for major developments
+- **Temporal Coverage**: Project-specific
+- **Update Frequency**: Per project
+- **Access Type**: Restricted/project-specific
+- **API Availability**: No
+- **Quality Assessment**: Detailed PSHA studies available for economic zones (e.g., Duqm SEZAD); includes VS30 mapping, amplification factors, soil liquefaction potential; comprehensive for major industrial areas; requires commissioning for specific pipeline routes
+
+### Archaeological and Heritage Sites
+
+**Ministry of Heritage and Tourism**
+- **Source/Provider**: Ministry of Heritage and Tourism
+- **Resolution/Scale**: Point and polygon data for registered sites
+- **Temporal Coverage**: Current inventory
+- **Update Frequency**: As sites are documented/registered
+- **Access Type**: Restricted; requires formal consultation for development projects
+- **API Availability**: No
+- **Official URL**: Contact Ministry of Heritage and Tourism
+- **Quality Assessment**: Official registry of archaeological sites, UNESCO World Heritage sites (including ancient cities, forts, aflaj irrigation systems); mandatory consultation for infrastructure projects; Oman has significant archaeological heritage including ancient copper mining sites, frankincense trade routes, Islamic architecture; critical for pipeline routing to avoid protected sites; requires early consultation in planning process
+
+### Military Zones and Restricted Areas
+
+**Ministry of Defence / Royal Oman Police**
+- **Source/Provider**: Ministry of Defence, Royal Oman Police
+- **Resolution/Scale**: Precise boundaries (classified/restricted)
+- **Temporal Coverage**: Current operational areas
+- **Update Frequency**: As security requirements change
+- **Access Type**: Highly restricted; requires government-level coordination
+- **API Availability**: No
+- **Quality Assessment**: Military installations, training areas, security zones not publicly mapped; requires formal coordination through government channels; critical clearance needed early in pipeline planning; coastal areas may have naval restrictions; border areas with sensitive security considerations
+
+### Ophiolite and Mineral Resources
+
+**Ministry of Energy and Minerals - Mineral Concessions**
+- **Source/Provider**: Ministry of Energy and Minerals
+- **Resolution/Scale**: Detailed concession boundaries and mineral occurrence maps
+- **Temporal Coverage**: Current mining concessions and exploration licenses
+- **Update Frequency**: As concessions are granted/updated
+- **Access Type**: Concession map publicly viewable; detailed data restricted
+- **API Availability**: No
+- **Official URL**: https://mem.gov.om/public/minerals
+- **Quality Assessment**: Oman's unique ophiolite geology (Semail Ophiolite) includes economically significant chromite, copper, nickel laterites; mineral concessions and exploration areas must be avoided or coordinated; geological maps show ophiolite distribution, mineral deposits; important for identifying geotechnical challenges and avoiding resource conflicts[42][29]
+
+### Wadi Flood Hazard
+
+**Wadi Monitoring Network**
+- **Source/Provider**: Ministry of Water Resources / Ministry of Environment
+- **Resolution/Scale**: Gauging station network
+- **Temporal Coverage**: Historical flood records; real-time monitoring at key wadis
+- **Update Frequency**: Real-time during events; historical analysis periodic
+- **Access Type**: Restricted; requires formal request
+- **API Availability**: No
+- **Quality Assessment**: Critical for Oman's arid environment with flashflood risk; gauging stations on northern Jebel wadis; ephemeral stream networks require special consideration; historical records of wadi flows essential for pipeline crossing design; climate change increasing cyclone intensity affecting Oman coastal areas[14]
+
+### Land Ownership and Cadastre
+
+**Ministry of Housing - Cadastral Survey**
+- **Source/Provider**: Ministry of Housing
+- **Resolution/Scale**: Parcel-level precision
+- **Temporal Coverage**: Current registered properties
+- **Update Frequency**: Continuous as properties are registered
+- **Access Type**: Restricted; requires formal request for development projects
+- **API Availability**: No
+- **Official URL**: Contact Ministry of Housing
+- **Quality Assessment**: Official land ownership records; essential for right-of-way acquisition; integrated with NSGIA survey framework; formal cadastral surveying conducted by Ministry of Housing; early consultation required for pipeline route corridor[3]
+
+### Oman National Spatial Data Infrastructure (ONSDI)
+
+**National SDI Framework**
+- **Source/Provider**: NSGIA / Government of Oman
+- **Resolution/Scale**: Framework for all geospatial data
+- **Temporal Coverage**: Current infrastructure
+- **Update Frequency**: Ongoing development
+- **Access Type**: Controlled through Oman Geospatial Manual policies
+- **API Availability**: Limited
+- **Official URL**: https://www.nsaomangeoportal.gov.om/en/
+- **Quality Assessment**: Comprehensive framework including ONGD17 datum, OmanCORSNet (47 CORS stations), OmanGeoid vertical datum, standardized procedures; Oman Geospatial Manual provides specifications for all geospatial activities; formal data request process through NSGIA; integration of datasets from various ministries; supports e-services and data sharing between government entities; most reliable path to accessing official government geospatial data[54][1][2]
+
+---
+
+## Key Recommendations for Oman Pipeline Routing:
+
+1. **Start with NSGIA**: Formal data request to National Survey and Geospatial Information Authority is essential for accessing authoritative national datasets (topography, roads, administrative boundaries)[1][2]
+
+2. **Use Copernicus DEM**: Best free global elevation data (30m) with superior quality to SRTM and ASTER GDEM[6][4]
+
+3. **ESA WorldCover**: Highest quality free land cover at 10m resolution, updated annually[10][11]
+
+4. **Sentinel-2**: Free 10m multispectral imagery with 5-day revisit for baseline mapping[13]
+
+5. **ERA5 Climate Data**: Most comprehensive climate reanalysis with API access for temperature, precipitation, wind analysis[49][50]
+
+6. **Early Coordination Required**: Protected areas (Environment Authority), archaeological sites (Heritage Ministry), military zones (Defence Ministry), mineral concessions (Energy Ministry) require formal consultation[38][29]
+
+7. **Seismic Hazard**: Critical assessment needed - consult Sultan Qaboos University Earthquake Monitoring Center for site-specific studies[64][63]
+
+8. **Wadi Crossings**: Special attention to ephemeral stream flooding - coordinate with water resources authorities[15][14]
+
+9. **Commercial Imagery**: Budget for Maxar, Airbus, or Planet high-resolution imagery for detailed route surveys and obstacle identification[61][60]
+
+10. **WorldPop/WDPA**: Excellent free global datasets for population density (100m) and protected areas with API access[39][58]
+
+[1](https://www.nsaomangeoportal.gov.om/en/about-nsa)
+[2](https://geospatialworld.net/gwf/speaker/presentions2019/Data-sharing-and-integration-policy-in-Oman-Air_Commodore_Ahmed_Saif_Al-Badi.pdf)
+[3](https://geospatial.com/country_profiles/oman/)
+[4](https://essd.copernicus.org/articles/17/205/2025/)
+[5](https://essd.copernicus.org/preprints/essd-2024-277/essd-2024-277-ATC2.pdf)
+[6](https://dataspace.copernicus.eu/explore-data/data-collections/copernicus-contributing-missions/collections-description/COP-DEM)
+[7](https://portal.opentopography.org/raster?opentopoID=OTSDEM.032021.4326.3)
+[8](https://viewfinderpanoramas.org/dem3.html)
+[9](https://worldcover2020.esa.int)
+[10](https://terrascope.be/en/cases/worldcover-worldwide-land-cover-mapping)
+[11](https://esa-worldcover.org/en)
+[12](https://worldcover2021.esa.int/download)
+[13](https://www.eoportal.org/satellite-missions/copernicus-sentinel-2)
+[14](https://nora.nerc.ac.uk/id/eprint/508392/1/N508392CR.pdf)
+[15](https://gov.om/en/w/request-hydrogeological-and-hydrological-data)
+[16](https://ikcest-drr.data.ac.cn/info/9104c)
+[17](https://iho.int/uploads/user/Inter-Regional%20Coordination/RHC/NIOHC/NIOHC20/NIOHC20_2021_10.2n_EN_Oman_National_Report_v1.0.pdf)
+[18](https://iho.int/uploads/user/Inter-Regional%20Coordination/RHC/RSAHC/RSAHC9/RSAHC9_National_Report_Oman.pdf)
+[19](https://www.twonav.com/en/maps/tomtom-oman)
+[20](https://wiki.openstreetmap.org/wiki/Organised_Editing/Activities/TomTom)
+[21](https://wiki.openstreetmap.org/wiki/Oman)
+[22](https://data.humdata.org/dataset/hotosm_omn_roads)
+[23](https://data.nextgis.com/en/region/OM/msrd/)
+[24](https://www.hafeetrail.com)
+[25](https://wiki.openstreetmap.org/wiki/OpenRailwayMap)
+[26](https://data.humdata.org/dataset/hotosm_omn_railways)
+[27](https://openrailwaymap.org)
+[28](https://mem.gov.om)
+[29](https://mem.gov.om/public/minerals)
+[30](https://digital-oil-gas-map.com/product/oman-main-oil-line-map/)
+[31](https://geospatialworld.net/gwf/speaker/presentions2019/Use-GIS-Spatial-Data%20for-Pipeline-Route-Optimization-Amol_Ganesh.pdf)
+[32](https://www.chinagasmap.com/maps/digital-maps/world-oil-gas-pipeline/catalogue-oman-en.html)
+[33](https://digital-oil-gas-map.com/product/gis-datasets-of-mina-al-fahal-sohar-crude-oil-pipeline/)
+[34](https://globalenergymonitor.org/projects/global-gas-infrastructure-tracker/ggit-pipelines-dashboard/)
+[35](https://globalenergymonitor.org/projects/global-oil-infrastructure-tracker/global-oil-infrastructure-tracker-dashboard/)
+[36](https://en.wikipedia.org/wiki/List_of_protected_areas_of_Oman)
+[37](https://www.cbd.int/pa/doc/dossiers/oman-abt11-country-dossier2021.pdf)
+[38](https://www.ea.gov.om/en/the-authority/authority-mandates/nature-conservation/natural-reserves/)
+[39](https://www.protectedplanet.net/en/monthly-release-news/july-2024-update-of-the-wdpa-and-wd-oecm)
+[40](https://www.protectedplanet.net/country/OMN)
+[41](https://www.lyellcollection.org/doi/10.1144/sp392.1)
+[42](https://pubs.usgs.gov/of/1981/0452/report.pdf)
+[43](https://openjicareport.jica.go.jp/pdf/11255825_02.pdf)
+[44](https://sdg.iisd.org/news/fao-supports-mena-soil-partnership-and-soil-information-training-in-jordan/)
+[45](https://www.fao.org/soils-portal/data-hub/soil-maps-and-databases/soil-legacy-reports/en/?page=20&ipp=10&tx_dynalist_pi1%5Bpar%5D=YToxOntzOjE6IkwiO3M6MToiMCI7fQ%3D%3D)
+[46](https://data.gov.om/bixytwb/weather)
+[47](https://climateknowledgeportal.worldbank.org/country/oman/era5-historical)
+[48](https://climateknowledgeportal.worldbank.org/country/oman/climate-data-historical)
+[49](https://cds.climate.copernicus.eu/datasets/reanalysis-era5-complete?tab=d_download)
+[50](https://www.ecmwf.int/en/forecasts/dataset/ecmwf-reanalysis-v5)
+[51](https://developers.google.com/earth-engine/datasets/catalog/ECMWF_ERA5_DAILY)
+[52](https://cds.climate.copernicus.eu/datasets/reanalysis-era5-single-levels)
+[53](https://ui.adsabs.harvard.edu/abs/2024ThApC.tmp..438A/abstract)
+[54](https://www.ncsi.gov.om/Elibrary/LibraryContentDoc/ben_Oman%20National%20Spatial%20Data%20Infrastructure_1303dfbd-ce6d-4e13-afee-62c137632eef.pdf)
+[55](https://www.arcgis.com/home/item.html?id=452e5e2e19684a8ca27e784ffa5ff77f)
+[56](https://data.humdata.org/dataset/cod-ab-omn)
+[57](https://www.geo-ref.net/ph/omn.htm)
+[58](ftp://ftp.worldpop.org/GIS/Population/Individual_countries/OMN/Oman_100m_Population_metadata.html)
+[59](https://data.humdata.org/dataset/kontur-boundaries-oman)
+[60](https://www.geowgs84.com/countries/oman)
+[61](https://www.airbus.com/en/products-services/space/earth-observation/satellite-imagery)
+[62](https://www.airbus.com/en/products-services/space/earth-observation)
+[63](https://academic.oup.com/jge/article/18/5/740/6401992)
+[64](https://anwaar.squ.edu.om/Post/Post-Detail/ArticleID/96/The-Earthquake-Monitoring-Center-and-Seismic-Hazard-Studies-in-the-Sultanate)
+[65](https://dspace.mit.edu/bitstream/handle/1721.1/105216/12517_2012_Article_790.pdf?sequence=1&isAllowed=y)
+[66](https://www.iitk.ac.in/nicee/wcee/article/1943.pdf)
+[67](https://opentopography.org/id/OTLAS.022012.26913.1&minX=-106.216836&minY=32.834136&maxX=-106.203450&maxY=32.845069)
+[68](https://content.esri.com/support/whitepapers/ao_/middleast_0904.pdf)
+[69](https://data.nextgis.com/en/region/OM/dem/)
+[70](https://hub.arcgis.com/datasets/OSRL::global-oil-and-gas-features?layer=21)
+[71](https://dataone.org/datasets/c20fc073-92bf-4d48-90e5-67458cb14f48)
+[72](https://portal.opentopography.org/datasets?minX=-72.9052734375&minY=-34.644506677932334&maxX=-28.8720703125&maxY=4.770783772016472)
+[73](https://geospatialmedia.net/report/oman-report.pdf)
+[74](https://www.nsaomangeoportal.gov.om/en/)
+[75](https://ggim.un.org/knowledgebase/Attachment1387.aspx?AttachmentType=1)
+[76](https://www.developmentaid.org/organizations/view/444887/national-survey-authority-of-oman)
+[77](http://www.ontario.ca/page/soil-data)
+[78](https://unstats.un.org/unsd/geoinfo/UNGEGN/docs/11th-uncsgn-docs/E_Conf.105_105_CRP.105_THE%20EFFORTS%20OF%20THE%20NATIONAL%20SURVEY%20AUTHORITY%20IN%20THE%20STANDARDIZATION%20OF%20OMANI%20GEOGRAPHICAL%20NAMES.pdf)
+[79](https://www.fao.org/soils-portal/data-hub/soil-maps-and-databases/national-soil-information-centers/ar/)
+[80](http://omangeospatialforum.org/2014/bio.htm)
+[81](https://esa-worldcover.org/en/data-access)
+[82](https://openjicareport.jica.go.jp/pdf/10292670_04.pdf)
+[83](https://www.ordnancesurvey.co.uk/customers/case-studies/oman-geospatial-readiness)
+[84](https://www.indexmundi.com/facts/oman/protected-areas)
+[85](https://www.sciencedirect.com/science/article/abs/pii/S0341816223002515)
+[86](https://earth.esa.int/eogateway/documents/20142/37627/Technical%20Note%20on%20Quality%20Assessment%20for%20Copernicus%20DEM.pdf)
+[87](https://www.ceicdata.com/en/oman/land-use-protected-areas-and-national-wealth/om-marine-protected-areas--of-total-surface-area)
+[88](https://d-nb.info/1278558632/34)
+[89](https://old.mpatlas.org/mpa/sites/68820254/)
+[90](https://hub.worldpop.org/resources/docs/national_boundaries/global-input-population-data-summary.xlsx)
+[91](https://data.humdata.org/dataset/hotosm_omn_railways/resource/b398d89b-fe14-48d7-ad24-e7cc400b1022)
+[92](https://search.worldcat.org/title/Geological-map-Oman-1:250000.-Sheet-NF-40-08-Sur/oclc/38212007)
+[93](https://www.sudoc.fr/036132357)
+[94](https://searchworks.stanford.edu/view/6851843)
+[95](https://geospatialworld.net/blogs/omans-debut-satellite-first-images/)
+[96](https://www.sciencedirect.com/science/article/pii/S1040618223001787)
+[97](https://www.sciencedirect.com/science/article/pii/S0169136810000193)

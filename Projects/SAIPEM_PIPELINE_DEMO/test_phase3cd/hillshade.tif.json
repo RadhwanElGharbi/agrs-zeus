@@ -1,0 +1,9 @@
+{
+  "altitude": 45.0,
+  "azimuth": 315.0,
+  "input_dem": "../data/rasters/dem_tinitaly_10m.tif",
+  "output_raster": "hillshade.tif",
+  "timestamp_utc": "2025-10-15T15:52:27Z",
+  "tool": "raster_hillshade",
+  "z_factor": 1.0
+}

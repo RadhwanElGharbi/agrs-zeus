@@ -1,0 +1,632 @@
+# GIS Datasets for Oil & Gas Pipeline Routing in Norway
+
+## 1. ELEVATION/TERRAIN (DEM)
+
+### National High-Resolution DEM (NDH DTM1)
+- **Source:** Kartverket (Norwegian Mapping Authority)
+- **Resolution:** 1m × 1m (LiDAR-derived)
+- **Temporal Coverage:** 2016–present (ongoing acquisition)
+- **Update Frequency:** Continuous (project covers most of Norway)
+- **Access:** Open/Free
+- **API:** Yes - WMS/WFS services via Geonorge
+- **URL:** https://www.kartverket.no/en/api-and-data, https://www.geonorge.no
+- **Quality:** Excellent - highest resolution national DEM, LiDAR-based terrain model with vertical reference NN2000 (EVRF2007 compatible)[1][2][3]
+
+### National DEM 10m (DTM10/DOM10)
+- **Source:** Kartverket
+- **Resolution:** 10m × 10m
+- **Temporal Coverage:** Complete coverage (2018 version widely distributed)
+- **Update Frequency:** Periodic updates
+- **Access:** Open/Free
+- **API:** Yes - WMS/WFS via Geonorge
+- **URL:** https://www.geonorge.no
+- **Quality:** Very Good - complete nationwide coverage, LiDAR and photogrammetry-derived, suitable for regional analysis[2][3]
+
+### Copernicus DEM (Best Global Option)
+- **Source:** European Space Agency / Copernicus Programme
+- **Resolution:** 30m (GLO-30) and 90m (GLO-90)
+- **Temporal Coverage:** 2011–2015 (TanDEM-X mission data)
+- **Update Frequency:** Static baseline
+- **Access:** Open/Free
+- **API:** Yes - various download services
+- **URL:** https://land.copernicus.eu
+- **Quality:** Good - global consistency, lower resolution than national products but complete coverage including offshore contexts[4][5]
+
+## 2. LAND COVER / LAND USE
+
+### AR-STAT Land Resource Map
+- **Source:** NIBIO (Norwegian Institute of Bioeconomy Research) / Statistics Norway (SSB)
+- **Resolution:** High-resolution vector (cadastral parcel level)
+- **Temporal Coverage:** Annual updates
+- **Update Frequency:** Annually
+- **Access:** Open/Free via Geonorge
+- **API:** Yes - SSB API and Geonorge services
+- **URL:** https://www.ssb.no/en/natur-og-miljo/areal/statistikk/arealbruk-og-arealressurser, https://data.ssb.no/api
+- **Quality:** Excellent - hierarchical classification system, integrates cadastral data, building footprints from FKB, road networks, highly detailed for Norway[6][7][8]
+
+### National Land Use Statistics
+- **Source:** Statistics Norway (SSB)
+- **Resolution:** Vector - parcel and cadastral level
+- **Temporal Coverage:** Current
+- **Update Frequency:** Annually
+- **Access:** Open/Free
+- **API:** Yes - SSB has ~200 ready-made datasets in JSON-stat and CSV
+- **URL:** https://data.ssb.no/api, https://www.geonorge.no
+- **Quality:** Very Good - official statistics, harmonized with European standards, integrates multiple authoritative sources[7][8]
+
+### ESA WorldCover (Best Global)
+- **Source:** European Space Agency
+- **Resolution:** 10m
+- **Temporal Coverage:** 2020–2021
+- **Update Frequency:** Annual
+- **Access:** Open/Free
+- **API:** Yes
+- **URL:** https://worldcover.esa.int
+- **Quality:** Very Good - Sentinel-1 and Sentinel-2 based, 11 land cover classes, validated globally[5]
+
+### Copernicus Global Land Cover
+- **Source:** Copernicus Land Monitoring Service
+- **Resolution:** 10m (enhanced version)
+- **Temporal Coverage:** 2015–present
+- **Update Frequency:** Annual
+- **Access:** Open/Free
+- **API:** Yes
+- **URL:** https://land.copernicus.eu/en/products/global-dynamic-land-cover
+- **Quality:** Very Good - enhanced spatial detail over previous 100m versions[5]
+
+## 3. HYDROLOGY / WATER
+
+### National Hydrological Database (Hydra II)
+- **Source:** NVE (Norwegian Water Resources and Energy Directorate)
+- **Resolution:** Station-based time series and catchment networks
+- **Temporal Coverage:** Historical records (some >100 years) to present
+- **Update Frequency:** Real-time for many stations
+- **Access:** Open/Free
+- **API:** Likely available (contact NVE)
+- **URL:** https://www.nve.no/hydrology
+- **Quality:** Excellent - national reference dataset for climate studies, includes streamflow, groundwater, snow, glacier data, long-term quality-controlled records[9][10]
+
+### National River Network Database (REGINE)
+- **Source:** NVE
+- **Resolution:** Vector - detailed river segments, streams, lakes
+- **Temporal Coverage:** Current
+- **Update Frequency:** Periodic updates
+- **Access:** Open/Free via Geonorge
+- **API:** Yes - INSPIRE-compliant WFS
+- **URL:** https://www.geonorge.no, https://inspire-geoportal.ec.europa.eu
+- **Quality:** Excellent - complete coverage of watercourses including coastal fields, all elements (rivers, streams, lakes) geo-referenced[11][12]
+
+### Vann-Nett (Water Management Database)
+- **Source:** Miljødirektoratet / NVE
+- **Resolution:** Waterbody polygons and networks
+- **Temporal Coverage:** Current
+- **Update Frequency:** Regular updates for WFD compliance
+- **Access:** Open/Free
+- **API:** Via Geonorge services
+- **URL:** https://www.miljodirektoratet.no, https://www.geonorge.no
+- **Quality:** Very Good - EU Water Framework Directive compliant, ecological condition assessments included[13][12]
+
+### Global Surface Water Explorer (Best Global)
+- **Source:** European Commission Joint Research Centre
+- **Resolution:** 30m
+- **Temporal Coverage:** 1984–present (Landsat-based)
+- **Update Frequency:** Annual
+- **Access:** Open/Free
+- **API:** Yes - Google Earth Engine
+- **URL:** https://global-surface-water.appspot.com
+- **Quality:** Good - long-term temporal coverage, seasonal variations captured
+
+## 4. INFRASTRUCTURE - ROADS
+
+### National Road Database (NVDB)
+- **Source:** Statens vegvesen (Norwegian Public Roads Administration)
+- **Resolution:** Very detailed vector - centerline and regulation data
+- **Temporal Coverage:** Current
+- **Update Frequency:** Continuously updated
+- **Access:** Open/Free
+- **API:** Yes - NVDB API v3 (XML/JSON)
+- **URL:** https://dataut.vegvesen.no/en/dataset/vegnett-og-vegregulering-i-nvdb, http://nvdbtransportportal.vegdata.no
+- **Quality:** Excellent - complete coverage of public, private, forest roads; includes attributes like height restrictions, road width, bridges, tunnels, speed limits[14][15][16]
+
+### OpenStreetMap Norway
+- **Source:** OpenStreetMap contributors
+- **Resolution:** Variable vector data
+- **Temporal Coverage:** Current
+- **Update Frequency:** Continuous community updates
+- **Access:** Open/Free (ODbL license)
+- **API:** Yes - Overpass API
+- **URL:** https://www.openstreetmap.org
+- **Quality:** Very Good - Norway is among the most complete OSM countries globally (>97% estimated road completeness), though POI data is less complete; Denmark/Norway/Iceland considered top-tier OSM coverage[17][18][19]
+
+### Commercial Providers
+- **HERE Technologies:** High-precision road data, commercial license required
+- **TomTom:** Commercial navigation-grade data, license required
+- **Quality:** Excellent but expensive; unnecessary given high-quality open Norwegian data
+
+## 5. INFRASTRUCTURE - RAILWAYS
+
+### National Railway Network Dataset
+- **Source:** Bane NOR SF
+- **Resolution:** Geographic reference lines (linear referencing system)
+- **Temporal Coverage:** Current
+- **Update Frequency:** Annually
+- **Access:** Open/Free via Geonorge
+- **API:** Yes - INSPIRE Transport Network WFS
+- **URL:** https://www.geonorge.no, https://inspire-geoportal.ec.europa.eu/srv/api/records/c3da3591-cded-4584-a4b1-bc61b7d1f4f2
+- **Quality:** Excellent - official national railway infrastructure reference network, INSPIRE-compliant, suitable for linear positioning[20][21]
+
+### OpenStreetMap Railways
+- **Source:** OpenStreetMap contributors
+- **Resolution:** Vector
+- **Temporal Coverage:** Current
+- **Update Frequency:** Community-driven
+- **Access:** Open/Free
+- **API:** Yes - Overpass API
+- **URL:** https://www.openstreetmap.org
+- **Quality:** Good - reasonable coverage in Norway, but official Bane NOR data is more authoritative[19]
+
+## 6. INFRASTRUCTURE - UTILITIES (Power, Telecom)
+
+### National Electricity Transmission Data
+- **Source:** Various operators / NVE (regulatory oversight)
+- **Resolution:** Variable
+- **Temporal Coverage:** Current
+- **Update Frequency:** Unknown
+- **Access:** Restricted/requires request (limited public availability)
+- **API:** Unknown
+- **URL:** Contact NVE or individual operators
+- **Quality:** Unknown - data availability limited for security reasons
+
+### OpenInfraMap / OpenStreetMap
+- **Source:** OpenStreetMap contributors
+- **Resolution:** Vector
+- **Temporal Coverage:** Current
+- **Update Frequency:** Community-driven
+- **Access:** Open/Free
+- **API:** Yes - Overpass API
+- **URL:** https://openinframap.org, https://www.openstreetmap.org
+- **Quality:** Moderate - incomplete for utilities in Norway, attribute completeness low (~5-13% for industrial facilities)[17]
+
+## 7. INFRASTRUCTURE - PIPELINES
+
+### Norwegian Gas Transport System
+- **Source:** Gassco (operator) / Gassled (owner)
+- **Resolution:** Pipeline routes and facilities
+- **Temporal Coverage:** Current
+- **Update Frequency:** As infrastructure changes
+- **Access:** Restricted - limited public GIS data (maps available but not detailed datasets)
+- **API:** No public API
+- **URL:** https://www.norskpetroleum.no/en/production-and-exports, https://gassco.eu/en/about-us/where-we-are/pipelines-and-platforms
+- **Quality:** Excellent data exists but access is restricted; interactive maps show ~8,800 km of pipelines, major platforms, but detailed GIS layers require direct contact[22][23][24]
+
+### National Pipeline Registry
+- **Source:** Government / petroleum authorities
+- **Resolution:** Unknown
+- **Temporal Coverage:** Current
+- **Update Frequency:** Unknown
+- **Access:** Restricted/requires formal request
+- **API:** No
+- **URL:** Contact Norwegian Petroleum Directorate
+- **Quality:** Unknown public availability
+
+### OpenStreetMap Pipelines
+- **Source:** OpenStreetMap contributors
+- **Resolution:** Vector
+- **Temporal Coverage:** Current
+- **Update Frequency:** Limited
+- **Access:** Open/Free
+- **API:** Yes - Overpass API
+- **URL:** https://www.openstreetmap.org
+- **Quality:** Poor - typically very incomplete for pipeline infrastructure due to security and proprietary concerns[19]
+
+## 8. PROTECTED AREAS / ENVIRONMENTAL
+
+### National Protected Areas Database
+- **Source:** Miljødirektoratet (Norwegian Environment Agency)
+- **Resolution:** Polygon boundaries
+- **Temporal Coverage:** Current (includes historical protection laws from 1910 onwards)
+- **Update Frequency:** Regular updates as new areas designated
+- **Access:** Open/Free
+- **API:** Yes - WMS/WFS via Geonorge/Miljødirektoratet
+- **URL:** https://kartkatalog.miljodirektoratet.no/dataset/Details/0, https://www.geonorge.no
+- **Quality:** Excellent - official national dataset covering terrestrial and marine protected areas under multiple protection laws, links to legal regulations, managed by County Governors and National Park Boards[25][26][27]
+
+### Ramsar Sites
+- **Source:** Miljødirektoratet
+- **Resolution:** Polygon boundaries
+- **Temporal Coverage:** Current
+- **Update Frequency:** As designated
+- **Access:** Open/Free
+- **API:** Via Geonorge
+- **URL:** https://kartkatalog.miljodirektoratet.no
+- **Quality:** Excellent - internationally recognized wetlands[26]
+
+### World Database on Protected Areas (WDPA)
+- **Source:** UNEP-WCMC / IUCN
+- **Resolution:** Polygon boundaries
+- **Temporal Coverage:** Current
+- **Update Frequency:** Monthly
+- **Access:** Open/Free
+- **API:** Yes
+- **URL:** https://www.protectedplanet.net
+- **Quality:** Very Good - global standard, includes Norwegian data but national sources are more current[25]
+
+## 9. GEOLOGY / SOIL
+
+### National Geological Datasets
+- **Source:** NGU (Geological Survey of Norway)
+- **Resolution:** Various scales (1:50,000 to national compilations)
+- **Temporal Coverage:** Current and historical mapping
+- **Update Frequency:** Ongoing mapping programs
+- **Access:** Open/Free via Geonorge
+- **API:** Yes - WMS/WFS, Atom feed download service
+- **URL:** https://www.ngu.no/en/geologiske-kart/datasett, https://www.geonorge.no
+- **Quality:** Excellent - comprehensive bedrock geology, Quaternary deposits, high-resolution aeromagnetic/electromagnetic/radiometric surveys (particularly northern Norway), minerals data, marine geology via MAREANO program[28][29][30][31]
+
+### National Soil Maps
+- **Source:** NIBIO (Norwegian Institute of Bioeconomy Research)
+- **Resolution:** Variable (regional to national)
+- **Temporal Coverage:** Current
+- **Update Frequency:** Periodic updates
+- **Access:** Open/Free via Geonorge
+- **API:** Via Geonorge services
+- **URL:** https://www.geonorge.no
+- **Quality:** Very Good - agricultural focus, integrated with land resource mapping
+
+### Marine Geology (MAREANO)
+- **Source:** NGU / MAREANO program
+- **Resolution:** High-resolution seabed mapping
+- **Temporal Coverage:** 2006–present (ongoing)
+- **Update Frequency:** Ongoing surveys
+- **Access:** Open/Free
+- **API:** Yes - map services
+- **URL:** https://www.mareano.no/en/maps-and-data/geological-data
+- **Quality:** Excellent - detailed seafloor geology, critical for offshore pipeline routing[32]
+
+### FAO Harmonized World Soil Database (Best Global)
+- **Source:** FAO / IIASA
+- **Resolution:** 1 km
+- **Temporal Coverage:** Static (compiled from various sources)
+- **Update Frequency:** Periodic revisions
+- **Access:** Open/Free
+- **API:** No
+- **URL:** https://www.fao.org
+- **Quality:** Moderate - coarse resolution, national data superior for Norway
+
+## 10. CLIMATE / WEATHER
+
+### MET Norway Weather API
+- **Source:** MET Norway (Norwegian Meteorological Institute)
+- **Resolution:** 1 km (MET Nordic model), station data, various products
+- **Temporal Coverage:** Historical archives, real-time, forecasts
+- **Update Frequency:** Hourly updates for forecasts, continuous for observations
+- **Access:** Open/Free (CC BY 4.0 / NLOD license)
+- **API:** Yes - comprehensive API (api.met.no) with multiple services
+- **URL:** https://api.met.no, https://frost.met.no (historical/climate data)
+- **Quality:** Excellent - authoritative national source, 1 km resolution weather model for North Europe, comprehensive historical climate data via Frost API, real-time observations, satellite data[33][34][35][36][37]
+
+### THREDDS Data Server
+- **Source:** MET Norway
+- **Resolution:** Gridded atmospheric, ocean, wave data
+- **Temporal Coverage:** Various
+- **Update Frequency:** Regular
+- **Access:** Open/Free
+- **API:** Yes - OPeNDAP, NetCDF format
+- **URL:** https://thredds.met.no
+- **Quality:** Excellent - full-field data across larger areas[36]
+
+### ERA5 Reanalysis (Best Global Historical)
+- **Source:** ECMWF / Copernicus Climate Change Service
+- **Resolution:** ~31 km (0.25°)
+- **Temporal Coverage:** 1940–present
+- **Update Frequency:** Near real-time (5-day lag)
+- **Access:** Open/Free
+- **API:** Yes - Climate Data Store API
+- **URL:** https://cds.climate.copernicus.eu
+- **Quality:** Excellent - global coverage, hourly temporal resolution, comprehensive atmospheric variables
+
+### WorldClim (Global Climatology)
+- **Source:** WorldClim.org
+- **Resolution:** 1 km (30 arc-seconds)
+- **Temporal Coverage:** 1970–2000 baseline, future projections available
+- **Update Frequency:** Static climatologies
+- **Access:** Open/Free
+- **API:** No - direct download
+- **URL:** https://www.worldclim.org
+- **Quality:** Very Good - standard for species distribution modeling and climate analysis
+
+## 11. ADMINISTRATIVE BOUNDARIES
+
+### Official Administrative Boundaries
+- **Source:** Kartverket / SSB (Statistics Norway)
+- **Resolution:** Vector - precise legal boundaries
+- **Temporal Coverage:** Current
+- **Update Frequency:** As administrative changes occur
+- **Access:** Open/Free
+- **API:** Yes - WFS via Geonorge
+- **URL:** https://www.geonorge.no, https://www.kartverket.no/en/api-and-data
+- **Quality:** Excellent - official legal boundaries for municipalities, counties, cadastral parcels, property boundaries, most authoritative source[38][39][1]
+
+### GADM (Global Administrative Areas)
+- **Source:** GADM
+- **Resolution:** Vector - multiple administrative levels
+- **Temporal Coverage:** Current
+- **Update Frequency:** Periodic updates
+- **Access:** Open/Free (non-commercial use)
+- **API:** No - direct download
+- **URL:** https://gadm.org
+- **Quality:** Good - global consistency but Norwegian official data is more accurate and current
+
+## 12. POPULATION / DEMOGRAPHICS
+
+### National Census Data
+- **Source:** Statistics Norway (SSB)
+- **Resolution:** Municipality level, grid cells available
+- **Temporal Coverage:** Historical census data to present
+- **Update Frequency:** Annual population estimates, census every 10 years
+- **Access:** Open/Free
+- **API:** Yes - SSB API (~200 datasets in JSON-stat/CSV)
+- **URL:** https://data.ssb.no/api, https://www.ssb.no
+- **Quality:** Excellent - official national statistics, most authoritative for Norway[8][7]
+
+### WorldPop (Best Global)
+- **Source:** University of Southampton / WorldPop
+- **Resolution:** 100m gridded
+- **Temporal Coverage:** 2000–2020 (annual)
+- **Update Frequency:** Annual historical, periodic updates
+- **Access:** Open/Free (various licenses depending on data source)
+- **API:** Limited
+- **URL:** https://hub.worldpop.org
+- **Quality:** Very Good - high-resolution gridded population, integrates building footprints and satellite data[40][41]
+
+### LandScan Global
+- **Source:** Oak Ridge National Laboratory (US)
+- **Resolution:** ~1 km
+- **Temporal Coverage:** 2000–present (annual)
+- **Update Frequency:** Annual
+- **Access:** Restricted - requires agreement
+- **API:** No
+- **URL:** https://landscan.ornl.gov
+- **Quality:** Very Good - ambient population distribution (24-hour average), industry standard but access restricted[42]
+
+## 13. SATELLITE IMAGERY
+
+### Sentinel-2 (Free Baseline)
+- **Source:** European Space Agency / Copernicus Programme
+- **Resolution:** 10m (visible/NIR), 20m (red-edge/SWIR), 60m (atmospheric)
+- **Temporal Coverage:** 2015–present
+- **Update Frequency:** 5-day revisit (2 satellites)
+- **Access:** Open/Free
+- **API:** Yes - Copernicus Open Access Hub, Google Earth Engine
+- **URL:** https://scihub.copernicus.eu, https://earthengine.google.com
+- **Quality:** Excellent - free multispectral imagery, high temporal frequency, suitable for vegetation/land cover analysis, Norway has dedicated Copernicus Glacier Service using Sentinel data[43]
+
+### Maxar (WorldView, GeoEye)
+- **Source:** Maxar Technologies
+- **Resolution:** 30-50 cm (commercial high-resolution)
+- **Temporal Coverage:** Archive and tasking
+- **Update Frequency:** On-demand tasking
+- **Access:** Commercial/purchase
+- **API:** Yes - via commercial platforms
+- **URL:** https://www.maxar.com
+- **Quality:** Excellent - highest commercial resolution, costly
+
+### Airbus Intelligence (Pléiades, SPOT)
+- **Source:** Airbus Defence and Space
+- **Resolution:** 50 cm (Pléiades), 1.5m (SPOT)
+- **Temporal Coverage:** Archive and tasking
+- **Update Frequency:** On-demand
+- **Access:** Commercial/purchase
+- **API:** Yes - via OneAtlas platform
+- **URL:** https://www.intelligence-airbusds.com
+- **Quality:** Excellent - high-resolution commercial imagery
+
+### Planet Labs
+- **Source:** Planet Labs
+- **Resolution:** 3m (PlanetScope daily), 50 cm (SkySat)
+- **Temporal Coverage:** 2016–present (daily coverage)
+- **Update Frequency:** Daily global coverage
+- **Access:** Commercial/purchase (some free education/research)
+- **API:** Yes - Planet API
+- **URL:** https://www.planet.com
+- **Quality:** Very Good - unique daily revisit capability, lower resolution than competitors
+
+### National Orthophotos
+- **Source:** Kartverket
+- **Resolution:** Variable (typically 10-30 cm for detailed areas)
+- **Temporal Coverage:** Periodic aerial surveys
+- **Update Frequency:** Multi-year cycles
+- **Access:** Some free, detailed orthophotos may require purchase
+- **API:** Yes - WMS services via Geonorge
+- **URL:** https://www.kartverket.no/en/api-and-data/order-geospatial-data
+- **Quality:** Excellent - highest resolution national coverage, most detailed free orthophotos may require purchase[44]
+
+## 14. SPECIAL DATASETS FOR NORWAY
+
+### National Landslide Susceptibility Maps
+- **Source:** NVE / NGU
+- **Resolution:** Catchment level (debris flows, debris slides) and site-specific (rock avalanches)
+- **Temporal Coverage:** Current (2014 national map, continuously updated)
+- **Update Frequency:** Ongoing updates
+- **Access:** Open/Free via NVE Atlas
+- **API:** Map services available
+- **URL:** https://www.nve.no/hydrology, NVE Atlas, https://www.ngu.no
+- **Quality:** Excellent - national susceptibility maps for landslides in soils (4 classes: low to very high), quick clay slides, rock fall hazards, debris avalanche susceptibility; critical for pipeline routing in mountainous terrain[45][46][47][48]
+
+### Unstable Rock Slope Database
+- **Source:** NGU
+- **Resolution:** Site-specific polygons and monitoring data
+- **Temporal Coverage:** Current
+- **Update Frequency:** Ongoing monitoring
+- **Access:** Open/Free
+- **API:** Map services
+- **URL:** https://www.ngu.no, viewable via web applications
+- **Quality:** Excellent - systematic mapping of potentially catastrophic rock slopes, 3D visualization available, critical safety data[47][49]
+
+### Quick Clay (Kvikkleire) Maps
+- **Source:** NGU / NVE
+- **Resolution:** Variable scales (municipal to site-specific)
+- **Temporal Coverage:** Current
+- **Update Frequency:** Ongoing mapping
+- **Access:** Open/Free via NVE Atlas
+- **API:** Via map services
+- **URL:** NVE Atlas, https://www.ngu.no
+- **Quality:** Excellent - critical for construction in sensitive clay areas, unique Norwegian hazard[46]
+
+### Archaeological/Cultural Heritage Sites
+- **Source:** Directorate for Cultural Heritage / Riksantikvaren
+- **Resolution:** Point and polygon features
+- **Temporal Coverage:** Current
+- **Update Frequency:** Ongoing registration
+- **Access:** Restricted for sensitive sites / Open for general heritage
+- **API:** Limited
+- **URL:** Contact Riksantikvaren
+- **Quality:** Very Good - nationwide LiDAR-based automated detection underway, important for regulatory compliance[50]
+
+### Avalanche Hazard Data
+- **Source:** NVE
+- **Resolution:** Catchment and zone-specific
+- **Temporal Coverage:** Current
+- **Update Frequency:** Continuous for warning service
+- **Access:** Open/Free via Varsom.no
+- **API:** Likely available
+- **URL:** https://www.varsom.no, https://www.nve.no
+- **Quality:** Excellent - operational national warning service for snow avalanches, critical for mountain pipeline routes[9]
+
+### Permafrost and Ground Ice Data
+- **Source:** NGU / University research groups
+- **Resolution:** Regional models and site-specific
+- **Temporal Coverage:** Current
+- **Update Frequency:** Research-dependent
+- **Access:** Variable (contact researchers)
+- **API:** No
+- **URL:** Contact NGU
+- **Quality:** Moderate - limited coverage, mainly northern Norway and mountain areas
+
+### Seismic Hazard Data
+- **Source:** NORSAR / NGU
+- **Resolution:** Regional hazard zones
+- **Temporal Coverage:** Current seismic model
+- **Update Frequency:** Periodic updates
+- **Access:** Open (general maps) / Restricted (detailed)
+- **API:** No
+- **URL:** https://www.norsar.no
+- **Quality:** Good - Norway has relatively low seismicity, mapped zones available
+
+### Marine Protected Areas
+- **Source:** Miljødirektoratet / Fiskeridirektoratet
+- **Resolution:** Polygon boundaries
+- **Temporal Coverage:** Current
+- **Update Frequency:** As designated
+- **Access:** Open/Free
+- **API:** Via Geonorge
+- **URL:** https://kartkatalog.miljodirektoratet.no
+- **Quality:** Excellent - 36 first areas in national marine protection plan mapped[26]
+
+### Reindeer Husbandry Areas (Sami Indigenous Lands)
+- **Source:** Reindrift/agricultural authorities
+- **Resolution:** Administrative boundaries
+- **Temporal Coverage:** Current
+- **Update Frequency:** As agreements change
+- **Access:** Open via Geonorge
+- **API:** Via Geonorge services
+- **URL:** https://www.geonorge.no
+- **Quality:** Very Good - legally designated areas requiring consultation
+
+### Military Restricted Areas
+- **Source:** Norwegian Defence
+- **Resolution:** Zone boundaries
+- **Temporal Coverage:** Current
+- **Update Frequency:** As restrictions change
+- **Access:** Restricted information / Basic zones public
+- **API:** No
+- **URL:** Contact Norwegian Defence authorities
+- **Quality:** Limited public detail
+
+---
+
+## Key Access Portals
+
+**Geonorge** (https://www.geonorge.no) is Norway's central geospatial data portal and should be the first stop for all national datasets. It provides integrated access to data from Kartverket, NGU, NVE, Miljødirektoratet, SSB, and other agencies with standardized metadata, WMS/WFS APIs, and bulk download options.[51][52][53]
+
+**Norway Digital** is the national SDI framework coordinating data sharing across agencies, ensuring INSPIRE compliance and interoperability.[39][54][38]
+
+For pipeline routing in Norway, prioritize the exceptional 1m LiDAR elevation data (NDH DTM1), official road/railway networks, NVE hydrological data, landslide/quick clay hazard maps, and protected areas from Miljødirektoratet. The quality and completeness of Norwegian national datasets far exceed global alternatives.[1][45][25]
+
+[1](https://www.kartverket.no/en/api-and-data)
+[2](https://help.emd.dk/mediawiki/index.php/Norwegian_Elevation_Models)
+[3](https://scalgo.com/en-US/scalgo-live-documentation/country-specific/norway)
+[4](https://land.copernicus.eu/en/dataset-catalog)
+[5](https://land.copernicus.eu/en/products/global-dynamic-land-cover/land-cover-2020-raster-10-m-global-annual)
+[6](https://www.efgs.info/11-7-1-norway/)
+[7](https://www.ssb.no/en/natur-og-miljo/areal/statistikk/arealbruk-og-arealressurser)
+[8](https://data.ssb.no/api/?lang=en)
+[9](https://www.nve.no/hydrology/)
+[10](https://www.nve.no/hydrology/norwegian-hydrological-reference-dataset-for-climate-change-studies/)
+[11](https://inspire-geoportal.ec.europa.eu/srv/api/records/3f95a194-0968-4457-a500-912958de3d39?language=eng)
+[12](https://artsdatabanken.no/Pages/318300/Freshwater)
+[13](https://www.miljodirektoratet.no/globalassets/publikasjoner/m1508/m1508.pdf)
+[14](https://dataut.vegvesen.no/en/dataset/?groups=nap&organization=statens-vegvesen)
+[15](https://dataut.vegvesen.no/en/dataset/vegnett-og-vegregulering-i-nvdb)
+[16](https://www.vegvesen.no/en/fag/technology/open-data/)
+[17](https://agile-giss.copernicus.org/articles/5/34/2024/agile-giss-5-34-2024.pdf)
+[18](https://www.reddit.com/r/openstreetmap/comments/hbf8l0/how_complete_are_countries_mapped_in_osm/)
+[19](https://wiki.openstreetmap.org/wiki/Norway)
+[20](https://inspire-geoportal.ec.europa.eu/srv/api/records/c3da3591-cded-4584-a4b1-bc61b7d1f4f2)
+[21](https://www.banenor.no/contentassets/17110f21dc84417b9ff3376e9bcce4d8/nordic-perspective-on-bim-2024.pdf)
+[22](https://www.norskpetroleum.no/en/production-and-exports/the-oil-and-gas-pipeline-system/)
+[23](https://gassco.eu/en/about-us/where-we-are/pipelines-and-platforms/)
+[24](https://www.eia.gov/international/content/analysis/countries_long/norway/)
+[25](https://kartkatalog.miljodirektoratet.no/dataset/Details/0?lang=en-us)
+[26](https://kartkatalog.miljodirektoratet.no/Dataset?lang=en-us)
+[27](https://www.eea.europa.eu/en/europe-environment-2025/countries/norway/terrestrial-protected-areas)
+[28](https://www.forskningsradet.no/siteassets/publikasjoner/2024/evalnat/ngu-final-report.pdf)
+[29](https://www.lyellcollection.org/doi/10.1144/SP541-2023-84)
+[30](https://www.ngu.no/en/geologiske-kart/datasett)
+[31](https://www.ngu.no/en/geologiske-kart)
+[32](https://www.mareano.no/en/maps-and-data/geological-data)
+[33](https://api.met.no)
+[34](https://open-meteo.com/en/docs/metno-api)
+[35](https://www.clarify.io/integrations-browse/met-norwegian-meteorological-institute)
+[36](https://api.store/norway-api/difi-api/weather-data-from-the-meteorological-institute-api)
+[37](https://publicapis.io/meteorologisk-institutt-api)
+[38](https://www.regjeringen.no/en/dokumenter/national-geospatial-strategy-towards-2025/id2617560/?ch=5)
+[39](https://www.geonorge.no/en/infrastructure/norway-digital/spatial-data-infrastructure/)
+[40](https://hub.worldpop.org/geodata/summary?id=48005)
+[41](https://tech.popdata.org/dhs-research-hub/posts/2024-08-30-pop-density/)
+[42](https://www.eastview.com/resources/e-collections/landscan/)
+[43](https://www.nve.no/hydrology/glaciers/copernicus-glacier-service/)
+[44](https://www.kartverket.no/en/api-and-data/order-geospatial-data)
+[45](https://publikasjoner.nve.no/rapport/2019/rapport2019_01.pdf)
+[46](https://nhess.copernicus.org/articles/23/1577/)
+[47](https://static.ngu.no/upload/Publikasjoner/Rapporter/2012/2012_029.pdf)
+[48](https://nhess.copernicus.org/preprints/nhess-2022-266/)
+[49](https://earsc.org/sebs/wp-content/uploads/2020/07/Ground-Movement-Monitoring-in-Norway-final.pdf)
+[50](https://www.sciencedirect.com/science/article/pii/S0303243420308849)
+[51](https://www.fig.net/resources/proceedings/fig_proceedings/fig2024/papers/ts11a/TS11A_saeter_12603.pdf)
+[52](https://www.geonorge.no/en/for-developers/apis/norwegian-metadata-api/)
+[53](https://www.geonorge.no/en/for-developers/apis/)
+[54](https://www.geonorge.no/en/infrastructure/norway-digital/spatial-data-infrastructure/laws-and-regulations/inspire-in-norway/)
+[55](https://www.reddit.com/r/gis/comments/1lk3rua/free_lidar_and_orthophoto_dataset/)
+[56](https://publikasjoner.nve.no/rapport/2023/rapport2023_02.pdf)
+[57](https://www.ngu.no/en/geological-mapping/what-datasets-are-available-insar-norway)
+[58](https://forum.transdem.de/viewtopic.php?t=519)
+[59](https://ninanor.github.io/ecosystemCondition/gjengroing.html)
+[60](https://essd.copernicus.org/preprints/essd-2024-602/essd-2024-602-manuscript-version4.pdf)
+[61](https://www.sciencedirect.com/science/article/pii/S136403212300655X)
+[62](https://www.nature.com/articles/s41597-024-03706-1)
+[63](https://www.environmentagency.no)
+[64](https://dataut.vegvesen.no/en/dataset/)
+[65](https://www.digicomply.com/food-regulatory-bodies-standards-and-authorities/norwegian-environment-agency-milj%C3%B8direktoratet)
+[66](https://www.sgi-network.org/2024/Norway/Environmental_Sustainability)
+[67](http://norway.cartography.no/wp-content/uploads/2019/06/Report_ICC2019_Norway_Final.pdf)
+[68](https://developer.yr.no)
+[69](https://open-meteo.com)
+[70](https://www.gem.wiki/Europipe_II_Gas_Pipeline)
+[71](https://github.com/imangR/frostr)
+[72](https://api.store/norway-api/kartverket-api)
+[73](https://www.meteomatics.com/en/weather-api/)
+[74](https://www.equinor.com/energy/data-sharing)
+[75](https://community.openstreetmap.org/t/poi-quality-and-usage-any-corporates-contributing/107488)
+[76](http://www.diva-portal.org/smash/get/diva2:1471546/FULLTEXT01.pdf)
+[77](https://wiki.openstreetmap.org/wiki/Completeness)

@@ -1,0 +1,235 @@
+Based on the research gathered, I can provide detailed implementation instructions for automatically fetching Copernicus DEM EEA-10 (10m) data.
+
+## Human Intervention Required: Credentials Setup
+
+Access to EEA-10 data is **restricted** to specific user categories based in the EU or Copernicus-contributing countries. The following eligibility applies:[1][2]
+
+Eligible categories that can access EEA-10 include Public Authorities, Copernicus Services, EU institutions, Union-funded research projects, and Copernicus Operators. Standard public users can only access GLO-30 and GLO-90, not EEA-10.[1]
+
+### Credential Setup Steps
+
+1. Register at the Copernicus Data Space Ecosystem: https://dataspace.copernicus.eu/[3]
+2. Provide email address and password during registration[3]
+3. After registration, navigate to Dashboard → User Settings → OAuth clients section[4]
+4. Click "Create" button to register an OAuth client[4]
+5. Provide a name for the OAuth client and set expiry preferences[4]
+6. Copy both the **client ID** and **client secret** - the secret cannot be retrieved later[4]
+7. If applying as a Public Authority or other eligible category, ensure organizational verification through the platform[5]
+
+## Cursor Implementation Instructions
+
+### Implementation Overview
+
+Create a Python module to automatically fetch Copernicus DEM EEA-10 tiles using the Copernicus Data Space Ecosystem OData API with OAuth2 authentication.[1][4]
+
+### Core Requirements
+
+```
+Install required packages:
+- requests
+- oauthlib
+- requests-oauthlib
+- pandas (for data handling)
+```
+
+### Module Structure
+
+Create a class `CopernicusDEMFetcher` with the following functionality:
+
+**1. Authentication Component**
+- Store OAuth client credentials (client_id, client_secret) as environment variables or secure configuration
+- Implement OAuth2 token fetching using endpoint: `https://identity.dataspace.copernicus.eu/auth/realms/CDSE/protocol/openid-connect/token`[4]
+- Token should be reused within validity period (typically 10 minutes) and refreshed when expired[3]
+- Use BackendApplicationClient from oauthlib.oauth2[4]
+
+**2. Query Construction**
+- Base catalog URL: `https://catalogue.dataspace.copernicus.eu/odata/v1/Products`[6]
+- Filter by collection name: `Collection/Name eq 'COP-DEM_EEA-10-DGED'` or `Collection/Name eq 'COP-DEM_EEA-10-INSP'`[1]
+- Support spatial filtering using bounding box coordinates in WGS84[1]
+- Support tile name filtering if specific tiles are known
+- Include OData query parameters: $filter, $top, $orderby[6]
+
+**3. Download Component**
+- Parse OData response to extract product S3Path or download URL[6]
+- Products are organized in 1°x1° tiles (DGED format) or 100km x 100km tiles (INSPIRE format)[1]
+- File format: GeoTIFF with 32-bit floating point (DGED/INSPIRE)[1]
+- Coordinate Reference System: WGS84-G1150 (EPSG 4326) for DGED, EPSG 3035 for INSPIRE[1]
+- Resolution: 0.3 arcseconds (INSPIRE) or 0.4 arcseconds (DGED)[1]
+- Implement authenticated download using the OAuth2 session
+- Save files to specified output directory with original naming convention
+
+**4. Error Handling**
+- Handle HTTP 429 errors (too many token requests) by implementing token reuse[4]
+- Handle authentication failures with clear error messages
+- Implement retry logic for network failures
+- Validate user eligibility and provide clear error if access is denied
+
+### Code Template for Cursor
+
+```python
+from oauthlib.oauth2 import BackendApplicationClient
+from requests_oauthlib import OAuth2Session
+import requests
+import os
+import json
+from pathlib import Path
+
+class CopernicusDEMFetcher:
+    def __init__(self, client_id, client_secret, output_dir='./dem_data'):
+        self.client_id = client_id
+        self.client_secret = client_secret
+        self.output_dir = Path(output_dir)
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+        self.token_url = 'https://identity.dataspace.copernicus.eu/auth/realms/CDSE/protocol/openid-connect/token'
+        self.catalog_url = 'https://catalogue.dataspace.copernicus.eu/odata/v1/Products'
+        self.oauth = None
+        self.token = None
+        
+    def authenticate(self):
+        """Authenticate and obtain OAuth2 token"""
+        client = BackendApplicationClient(client_id=self.client_id)
+        self.oauth = OAuth2Session(client=client)
+        
+        # Register compliance hook to handle errors correctly
+        def sentinelhub_compliance_hook(response):
+            response.raise_for_status()
+            return response
+        self.oauth.register_compliance_hook('access_token_response', sentinelhub_compliance_hook)
+        
+        self.token = self.oauth.fetch_token(
+            token_url=self.token_url,
+            client_secret=self.client_secret,
+            include_client_id=True
+        )
+        return self.token
+    
+    def search_tiles(self, bbox=None, collection='COP-DEM_EEA-10-DGED', max_results=100):
+        """
+        Search for EEA-10 tiles
+        bbox: tuple of (min_lon, min_lat, max_lon, max_lat) in WGS84
+        collection: 'COP-DEM_EEA-10-DGED' or 'COP-DEM_EEA-10-INSP'
+        """
+        if not self.oauth:
+            self.authenticate()
+        
+        # Build OData filter
+        filter_parts = [f"Collection/Name eq '{collection}'"]
+        
+        if bbox:
+            min_lon, min_lat, max_lon, max_lat = bbox
+            # Add spatial filter using OData.CSC intersects function
+            filter_parts.append(
+                f"OData.CSC.Intersects(area=geography'SRID=4326;POLYGON(({min_lon} {min_lat},{max_lon} {min_lat},{max_lon} {max_lat},{min_lon} {max_lat},{min_lon} {min_lat}))')"
+            )
+        
+        filter_query = ' and '.join(filter_parts)
+        
+        params = {
+            '$filter': filter_query,
+            '$top': max_results,
+            '$orderby': 'ContentDate/Start desc'
+        }
+        
+        response = self.oauth.get(self.catalog_url, params=params)
+        response.raise_for_status()
+        return response.json()['value']
+    
+    def download_tile(self, product_info):
+        """Download a single tile"""
+        product_id = product_info['Id']
+        product_name = product_info['Name']
+        
+        # Construct download URL
+        download_url = f"https://zipper.dataspace.copernicus.eu/odata/v1/Products({product_id})/$value"
+        
+        output_file = self.output_dir / f"{product_name}.zip"
+        
+        if output_file.exists():
+            print(f"File {product_name} already exists, skipping")
+            return output_file
+        
+        print(f"Downloading {product_name}...")
+        response = self.oauth.get(download_url, stream=True)
+        response.raise_for_status()
+        
+        with open(output_file, 'wb') as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                f.write(chunk)
+        
+        print(f"Downloaded: {output_file}")
+        return output_file
+    
+    def fetch_tiles_for_area(self, bbox, collection='COP-DEM_EEA-10-DGED'):
+        """
+        Main method: search and download all tiles for a bounding box
+        bbox: tuple of (min_lon, min_lat, max_lon, max_lat)
+        """
+        tiles = self.search_tiles(bbox=bbox, collection=collection)
+        print(f"Found {len(tiles)} tiles")
+        
+        downloaded_files = []
+        for tile in tiles:
+            try:
+                file_path = self.download_tile(tile)
+                downloaded_files.append(file_path)
+            except Exception as e:
+                print(f"Error downloading {tile['Name']}: {e}")
+                
+        return downloaded_files
+
+# Usage example
+if __name__ == "__main__":
+    # Load credentials from environment variables
+    CLIENT_ID = os.getenv('COPERNICUS_CLIENT_ID')
+    CLIENT_SECRET = os.getenv('COPERNICUS_CLIENT_SECRET')
+    
+    fetcher = CopernicusDEMFetcher(
+        client_id=CLIENT_ID,
+        client_secret=CLIENT_SECRET,
+        output_dir='./copernicus_dem'
+    )
+    
+    # Example: Download tiles for a specific area (coordinates in WGS84)
+    bbox = (5.0, 45.0, 10.0, 48.0)  # Example area
+    files = fetcher.fetch_tiles_for_area(bbox=bbox)
+```
+
+### Configuration Notes
+
+Store credentials securely using environment variables or a configuration file that is excluded from version control. Token validity is 10 minutes with option to refresh up to 60 minutes total. Do not request a new token for each API call - reuse tokens within validity period. EEA-10 covers 39 European countries at 10m resolution with two formats available: DGED (1°x1° tiles) and INSPIRE (100km x 100km tiles).[3][4][1]
+
+[1](https://dataspace.copernicus.eu/explore-data/data-collections/copernicus-contributing-missions/collections-description/COP-DEM)
+[2](https://dataspace.copernicus.eu/news/2025-7-4-updates-ccm-data-license-access-rules)
+[3](https://step.esa.int/thirdparties/sen2cor/2.12.0/docs/CDSE_DEM_Downloader_v1_3.pdf)
+[4](https://documentation.dataspace.copernicus.eu/APIs/SentinelHub/Overview/Authentication.html)
+[5](https://dataspace.copernicus.eu/explore-data/data-collections/copernicus-contributing-missions/ccm-user-categories)
+[6](https://documentation.dataspace.copernicus.eu/APIs/OData.html)
+[7](https://dataspace.copernicus.eu/news/2025-7-1-copernicus-contributing-missions-cop-dem-10mt-now-available-public-authorities-users)
+[8](https://portal.opentopography.org/datasetMetadata?otCollectionID=OT.032021.4326.1)
+[9](https://docs.digitalearthafrica.org/en/latest/data_specs/COP_DEM_specs.html)
+[10](https://knowledgebase.code-de.org/en/latest/eodata/Copernicus-DEM-EEA-10-Access-in-the-CODE-DE-Repository-CODE-DE.html)
+[11](https://documentation.dataspace.copernicus.eu/APIs/SentinelHub/Data/DEM.html)
+[12](https://www.reddit.com/r/gis/comments/1b0fqo3/is_it_possibile_to_download_entire_dem_dataset/)
+[13](https://egnos.gsc-europa.eu/sites/default/files/2025-07/Guide%20on%20Copernicus%20DEM%20GLO%20-%2030%20for%20Flight%20Procedure%20Design.pdf)
+[14](https://cis2.eea.europa.eu/data/491/)
+[15](https://documentation.dataspace.copernicus.eu/Registration.html)
+[16](https://community.planet.com/analysis-apis-81/how-to-get-copernicus-dem-geotiffs-for-a-bounding-box-using-python-4492)
+[17](https://portal.opentopography.org/raster?opentopoID=OTSDEM.032021.4326.3)
+[18](https://eodag.readthedocs.io/en/stable/notebooks/tutos/tuto_cop_dem.html)
+[19](https://documentation.dataspace.copernicus.eu/APIs.html)
+[20](https://earth.esa.int/eogateway/documents/20142/37627/Technical%20Note%20on%20Quality%20Assessment%20for%20Copernicus%20DEM.pdf)
+[21](https://karttur.github.io/geoimagine02-docs/blog/blog-global-dems/)
+[22](https://www.earthdata.nasa.gov/learn/data-recipes/create-dem-using-sentinel-1-data)
+[23](https://pyrosar.readthedocs.io/en/v0.22.1/api/auxdata.html)
+[24](https://pypi.org/project/copernicusapi/)
+[25](https://documentation.dataspace.copernicus.eu/Ecosystem/Ecosystem_Services_Onboarding.html)
+[26](https://knowledgebase.code-de.org/en/latest/eodata/eodata.html)
+[27](https://www.ecmwf.int/sites/default/files/elibrary/2017/17104-copernicus-full-free-and-open-data-policy_0.pdf)
+[28](https://collections.sentinel-hub.com/copernicus-dem/)
+[29](https://documentation.dataspace.copernicus.eu/FAQ.html)
+[30](https://registry.opendata.aws/copernicus-dem/)
+[31](https://www.copernicus.eu/sites/default/files/documents/Factsheet_Data_Access_Copernicus_Space_Component.pdf)
+[32](https://www.esri.com/arcgis-blog/products/arcgis-pro/imagery/explore-the-copernicus-data-space-ecosystem-with-arcgis-pro)
+[33](https://www.euspa.europa.eu/eu-space-programme/copernicus)
+[34](https://assets.publishing.service.gov.uk/media/65dca972cf7eb10015f57f1c/uk_organisations_copernicus_space_component_guidance.pdf)
+[35](https://space-economy.esa.int/article/75/the-benefits-of-copernicus-sentinel-data-to-society-environment-and-economy)

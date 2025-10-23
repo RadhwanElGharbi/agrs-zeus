@@ -1,0 +1,157 @@
+## WRI Aqueduct Floods (Best Option for Direct Download)
+
+The **WRI Aqueduct Floods dataset** provides the most accessible direct download option for 100-year riverine flood hazard data.[1][2]
+
+**Direct Download Access:**
+- **S3 Bucket Base URL**: `https://wri-projects.s3.amazonaws.com/AqueductFloodTool/download/v2/`
+- **File Structure**: `inunriver_[climatescenario]_[model]_[year]_rp[returnperiod].tif`
+- **Example for 100-year baseline**: `inunriver_historical_000000000WATCH_1980_rp00100.tif`
+- **Format**: GeoTIFF showing inundation depth in meters
+- **Resolution**: 1000 meters (~30 arc-seconds)
+- **Coverage**: Global
+- **Return Periods Available**: 2, 5, 10, 25, 50, 100, 250, 500, 1000 years[2]
+
+**Download Command:**
+```bash
+wget https://wri-projects.s3.amazonaws.com/AqueductFloodTool/download/v2/inunriver_historical_000000000WATCH_1980_rp00100.tif
+```
+
+**License**: Free to use with attribution to World Resources Institute; no restrictions on use or distribution.[2]
+
+## Google Earth Engine Access
+
+**Dataset ID**: `WRI/Aqueduct_Flood_Hazard_Maps/V2`[2]
+
+**JavaScript Code Example:**
+```javascript
+var dataset = ee.ImageCollection('WRI/Aqueduct_Flood_Hazard_Maps/V2')
+  .filter(ee.Filter.eq('floodtype', 'inunriver'))
+  .filter(ee.Filter.eq('returnperiod', 100));
+```
+
+This provides programmatic access without manual downloads.[2]
+
+## Global Flood Database
+
+**Direct Download via Google Cloud Storage:**
+- **GCS Bucket**: `gs://gfd_v1_4`
+- **Format**: GeoTIFF
+- **Coverage**: 913 individual flood events (2000-2018), not continuous baseline hazard
+- **Download Command**:
+```bash
+gsutil -m cp -r gs://gfd_v1_4 ./local_directory
+```
+- **Web Portal**: http://global-flood-database.cloudtostreet.info/[3][4][5]
+
+**Note**: This is an observed flood event database rather than modeled hazard scenarios, so it differs from baseline hazard mapping.[6][3]
+
+**Google Earth Engine**: `GLOBAL_FLOOD_DB/MODIS_EVENTS/V1`[6]
+
+## Microsoft Planetary Computer - Deltares Floods
+
+**API Access**: Available via STAC API at `https://planetarycomputer.microsoft.com/api/stac/v1`[7]
+
+**Collection ID**: `deltares-floods`
+
+**Format**: NetCDF (not GeoTIFF), 90m resolution
+
+**Coverage**: Global coastal flood maps (not riverine)[8][9][7]
+
+**Python Access Example:**
+```python
+import pystac_client
+catalog = pystac_client.Client.open(
+    "https://planetarycomputer.microsoft.com/api/stac/v1"
+)
+search = catalog.search(
+    collections=["deltares-floods"],
+    query={"deltares:return_period": {"eq": 100}}
+)
+```
+
+**License**: Open access with attribution required[8][7]
+
+## Copernicus GLOFAS
+
+**Coverage**: Global 100-year return period flood hazard maps at 100m resolution[10]
+
+**Access Method**: Registered users only via password-protected OGC service[11][10]
+
+**Request Access**: info@globalfloods.eu[11]
+
+**Data Format**: Available through WMS-T (Web Map Service), FTP (on request), or ECMWF MARS archive[11]
+
+**Note**: No direct public download URL; requires registration and tailored data requests.[10][11]
+
+## FATHOM Global Flood Maps
+
+**Access**: Commercial/requires paid account[12][13][14]
+
+**Format**: GeoTIFF available through Fathom API
+
+**Resolution**: ~30 meters (1 arc-second) globally, 10m where regional data permits[14]
+
+**Coverage**: Fluvial, pluvial, and coastal flooding with 100-year return period available[14]
+
+**Request Account**: https://www.fathom.global/fathom-jacobs-licence/[12]
+
+**Not available on AWS Open Data or as free download**.[14]
+
+## File Sizes and Specifications
+
+**WRI Aqueduct**: Individual global tiles vary but expect 500MB-2GB per return period scenario for riverine flooding.[15][1]
+
+**Global Flood Database**: Full database is several GB; individual event maps are typically 50-500MB.[4][3]
+
+## Summary Recommendation
+
+For **immediate curl/wget download** of 100-year riverine flood baseline data, use the **WRI Aqueduct S3 bucket**. For **programmatic access**, leverage **Google Earth Engine** with the WRI dataset. The **Global Flood Database** provides observed events rather than baseline hazards. **FATHOM** offers highest resolution but requires paid access, while **GLOFAS** requires registration but is free.[1][3][10][2]
+
+[1](https://wri-projects.s3.amazonaws.com/AqueductFloodTool/download/v2/index.html)
+[2](https://developers.google.com/earth-engine/datasets/catalog/WRI_Aqueduct_Flood_Hazard_Maps_V2)
+[3](https://github.com/cloudtostreet/MODIS_GlobalFloodDatabase)
+[4](https://storage.googleapis.com/gfd_metadata/README_GFD.pdf)
+[5](https://global-flood-database.cloudtostreet.ai)
+[6](https://developers.google.com/earth-engine/datasets/catalog/GLOBAL_FLOOD_DB_MODIS_EVENTS_V1)
+[7](https://handbook.climaax.eu/notebooks/workflows/FLOODS/01_Coastal_flooding/Hazard_assessment_FLOOD_COASTAL_floodmaps.html)
+[8](https://ai4edatasetspublicassets.blob.core.windows.net/assets/aod_docs/11206409-003-ZWS-0003_v0.1-Planetary-Computer-Deltares-global-flood-docs.pdf)
+[9](https://planetarycomputer.microsoft.com/dataset/deltares-floods)
+[10](http://data.europa.eu/89h/da4d7f64-a5c3-403f-bd2b-11a97176031e)
+[11](https://global-flood.emergency.copernicus.eu/general-information/data-and-services/)
+[12](https://help.floodmodeller.com/docs/fathom-data-technical-reference)
+[13](https://help.floodmodeller.com/docs/fathom)
+[14](https://www.fathom.global/product/global-flood-map/)
+[15](https://wri-projects.s3.amazonaws.com/AqueductFloodTool/download/v2/_Aqueduct_Floods_Data_Dictionary.xlsx)
+[16](https://www.wri.org/data/aqueduct-floods-hazard-maps)
+[17](https://www.wri.org/applications/aqueduct/floods/)
+[18](https://github.com/nismod/aqueduct)
+[19](https://hub.arcgis.com/datasets/8ae9748684164474a7006db325bc3154_39?uiVersion=content-views)
+[20](https://climada-petals.readthedocs.io/en/v5.0.0/glofas_rf.html)
+[21](https://www.un-spider.org/links-and-resources/data-sources/aqueduct-global-flood-analyzer-wri)
+[22](https://global-flood.emergency.copernicus.eu)
+[23](https://www.fathom.global/product/global-flood-map/us-flood-map/)
+[24](https://resourcewatch.org/data/explore/wat007-flood-risk)
+[25](https://global-flood.emergency.copernicus.eu/general-information/data-access/)
+[26](https://oasishub.co/dataset/global-fathom-global-version-2-fathom)
+[27](https://arc-gis-hub-home-arcgishub.hub.arcgis.com/datasets/nga::water-supply-control/explore?layer=40&showTable=true)
+[28](https://aws.amazon.com/blogs/publicsector/communicating-national-flood-risk-assessment-using-aws/)
+[29](https://registry.opendata.aws)
+[30](https://registry.opendata.aws/tag/disaster-response/)
+[31](https://aws.amazon.com/blogs/publicsector/open-data-helps-recovery-aftermath-devastating-weather-events/)
+[32](https://www.earthdata.nasa.gov/s3fs-public/2025-04/MCDWD_VCDWD_UserGuide_RevE_04.22.25.pdf?VersionId=Po3vfVbnwG3mscki7ncvcRSCxpe0HY60)
+[33](https://github.com/microsoft/ai4g-flood)
+[34](https://aws.amazon.com/blogs/publicsector/interactive-access-and-visualization-of-geospatial-data-from-the-aws-open-data-program/)
+[35](https://www.reddit.com/r/climatechange/comments/1grzfbz/downloadable_geotiff_flood_data_current_and/)
+[36](https://aws.amazon.com/blogs/publicsector/34-new-updated-datasets-registry-open-data-new-data-land-use-alzheimers-disease-more/)
+[37](https://planetarycomputer.microsoft.com/catalog)
+[38](https://natural-resources.canada.ca/science-data/science-research/natural-hazards/flood-mapping/data-related-flood-mapping)
+[39](https://cmr.earthdata.nasa.gov/search/concepts/C2781412798-MLHUB.html)
+[40](https://www.drivendata.org/competitions/81/detect-flood-water/)
+[41](https://www.wri.org/applications/aqueduct/water-risk-atlas/)
+[42](https://proalimentarius.com/uploads/Rapport%20stress%20hydrique.pdf)
+[43](https://spaceml-org.github.io/ml4floods/content/worldfloods_dataset.html)
+[44](https://rammb.cira.colostate.edu/training/visit/links_and_tutorials/06_NOAA_Public_Datasets_on_Google_Cloud.pdf)
+[45](https://hub.arcgis.com/datasets/nga::water-supply-control?layer=40)
+[46](https://resourcewatch.org/data/explore/wat055-Aqueduct-Riverine-Flood-Risk)
+[47](https://reproducibility.worldbank.org/index.php/catalog/186/download/530/README.pdf)
+[48](https://github.com/microsoft/AIforEarthDataSets)

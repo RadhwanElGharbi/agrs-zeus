@@ -1,0 +1,585 @@
+# GIS Datasets for Oil & Gas Pipeline Routing in Kuwait
+
+## 1. ELEVATION/TERRAIN (DEM)
+
+### **Copernicus DEM GLO-30**
+- **Source:** European Space Agency / Copernicus Programme
+- **Resolution:** 30 meters (GLO-30 Public where available, 90m elsewhere)
+- **Temporal Coverage:** Current (static dataset based on 2011-2015 data)
+- **Update Frequency:** Static
+- **Access Type:** Open/Free
+- **API:** Yes - Sentinel Hub API, Copernicus Data Space API
+- **URL:** https://dataspace.copernicus.eu/ and https://portal.opentopography.org/
+- **Quality:** Excellent - Most accurate global DEM for Kuwait, superior to SRTM with RMSE typically 2-6m vertically[1][2][3]
+
+### **SRTM 30m DEM**
+- **Source:** NASA/USGS
+- **Resolution:** 30 meters (1 arc-second)
+- **Temporal Coverage:** February 2000
+- **Update Frequency:** Static
+- **Access Type:** Open/Free
+- **API:** Yes - USGS Earth Explorer API
+- **URL:** https://earthexplorer.usgs.gov
+- **Quality:** Good - RMSE ~6-10m vertically, widely validated, suitable for regional pipeline routing[4][5]
+
+### **ASTER GDEM v3**
+- **Source:** NASA/METI
+- **Resolution:** 30 meters
+- **Temporal Coverage:** 2000-2013
+- **Update Frequency:** Static (version 3 released 2019)
+- **Access Type:** Open/Free
+- **API:** Yes - NASA Earthdata API
+- **URL:** https://earthexplorer.usgs.gov
+- **Quality:** Moderate - Less accurate than SRTM and Copernicus in flat desert terrain, RMSE 8-15m[5]
+
+### **Kuwait Survey Department Topographic Data**
+- **Source:** Kuwait Survey Department, Ministry of Public Works
+- **Resolution:** 1:10,000 orthophoto maps (688 sheets), 1:25,000 line mapping
+- **Temporal Coverage:** Originally captured 1960s-1980s by Hunting Surveys and Asia Air Survey
+- **Update Frequency:** Irregular updates
+- **Access Type:** Restricted/Requires request from government
+- **API:** No
+- **URL:** Contact Survey Department directly
+- **Quality:** High accuracy for historical baseline, may be outdated; integrated into KUDAMS system using Kuwait Transverse Mercator grid[6][7]
+
+### **Kuwait Oil Company (KOC) LiDAR DEM**
+- **Source:** Kuwait Oil Company
+- **Resolution:** 10 cm accuracy from recent aerial surveys
+- **Temporal Coverage:** 2010s-present (ongoing updates)
+- **Update Frequency:** Project-based updates
+- **Access Type:** Restricted - Internal KOC use, may require formal request
+- **API:** No public API
+- **URL:** Contact KOC directly
+- **Quality:** Excellent - Highest resolution DEM available for Kuwait oil field areas, three-dimensional terrain mapping[8][9]
+
+## 2. LAND COVER / LAND USE
+
+### **ESA WorldCover**
+- **Source:** European Space Agency WorldCover Consortium
+- **Resolution:** 10 meters
+- **Temporal Coverage:** 2020, 2021 (annual products)
+- **Update Frequency:** Annually
+- **Access Type:** Open/Free
+- **API:** Yes - Sentinel Hub API, Google Earth Engine
+- **URL:** https://esa-worldcover.org/ and https://worldcover2021.esa.int/download
+- **Quality:** Excellent - 11 land cover classes, combines Sentinel-1 SAR and Sentinel-2 optical, ~75% overall accuracy, ideal for Kuwait's desert and coastal environments[10][11][12]
+
+### **Google Dynamic World (Sentinel-2 based)**
+- **Source:** Google/World Resources Institute
+- **Resolution:** 10 meters
+- **Temporal Coverage:** 2015-present
+- **Update Frequency:** Near real-time (every Sentinel-2 pass)
+- **Access Type:** Open/Free
+- **API:** Yes - Google Earth Engine API
+- **URL:** https://www.dynamicworld.app/
+- **Quality:** Very good - Near real-time updates, 9 land cover classes, useful for monitoring construction and land use changes
+
+### **Kuwait EPA eMISK Land Cover Data**
+- **Source:** Kuwait Environment Public Authority (EPA)
+- **Resolution:** Variable (integrated with topographic, geomorphological data)
+- **Temporal Coverage:** Current - 20+ years of monitoring data
+- **Update Frequency:** Ongoing updates
+- **Access Type:** Restricted - Government agency access via eMISK Enterprise system
+- **API:** No public API
+- **URL:** https://epa.gov.kw/en-us/eMISK and www.beatona.net
+- **Quality:** High - Customized for Kuwait environmental management, integrates 11 environmental domains with 250+ geographic layers[13][14][15]
+
+### **Sentinel-2 Land Cover Classification (Custom)**
+- **Source:** ESA Copernicus Programme
+- **Resolution:** 10-20 meters
+- **Temporal Coverage:** 2015-present
+- **Update Frequency:** 5-day revisit time
+- **Access Type:** Open/Free
+- **API:** Yes - Copernicus Open Access Hub API, Google Earth Engine
+- **URL:** https://dataspace.copernicus.eu/
+- **Quality:** Excellent - Raw imagery for custom classification, 13 spectral bands, suitable for desert vegetation mapping
+
+## 3. HYDROLOGY / WATER
+
+### **Kuwait EPA Water Resources Database**
+- **Source:** Kuwait Environment Public Authority
+- **Resolution:** Variable - includes wells, aquifers, wadis
+- **Temporal Coverage:** Current - 20+ years monitoring
+- **Update Frequency:** Continuous monitoring
+- **Access Type:** Restricted - Government access via eMISK
+- **API:** No public API
+- **URL:** https://epa.gov.kw/en-us/eMISK
+- **Quality:** Excellent - Most authoritative source for Kuwait water resources, includes fresh and brackish groundwater, wadis, drainage networks[7][15]
+
+### **Kuwait Institute for Scientific Research (KISR) Hydrological Data**
+- **Source:** Kuwait Institute for Scientific Research
+- **Resolution:** Variable - includes bathymetric and hydrological mapping
+- **Temporal Coverage:** 1980s-present
+- **Update Frequency:** Project-based
+- **Access Type:** Restricted/Requires request
+- **API:** No
+- **URL:** www.kisr.edu.kw (contact directly)
+- **Quality:** High - Environmental GIS with detailed hydrological and geomorphological data for Kuwait[6]
+
+### **Global Surface Water Explorer**
+- **Source:** European Commission Joint Research Centre
+- **Resolution:** 30 meters
+- **Temporal Coverage:** 1984-present
+- **Update Frequency:** Annual updates
+- **Access Type:** Open/Free
+- **API:** Yes - Google Earth Engine API
+- **URL:** https://global-surface-water.appspot.com/
+- **Quality:** Very good - Limited natural surface water in Kuwait, but excellent for coastal areas and seasonal water bodies
+
+### **HydroSHEDS / HydroRIVERS**
+- **Source:** WWF/McGill University/USGS
+- **Resolution:** 15 arc-seconds (~500m)
+- **Temporal Coverage:** Current (static baseline)
+- **Update Frequency:** Periodic major updates
+- **Access Type:** Open/Free
+- **API:** No - Download only
+- **URL:** https://www.hydrosheds.org/
+- **Quality:** Good for global coverage, but limited utility for Kuwait due to lack of perennial rivers; useful for wadi mapping and catchment delineation[16][17][18]
+
+### **GLWD v2 (Global Lakes and Wetlands Database)**
+- **Source:** McGill University
+- **Resolution:** 15 arc-seconds (~500m)
+- **Temporal Coverage:** 1990-2020
+- **Update Frequency:** Static
+- **Access Type:** Open/Free
+- **API:** No
+- **URL:** https://www.hydrosheds.org/products/glwd
+- **Quality:** Moderate - Limited wetlands in Kuwait, primarily relevant for coastal areas[19]
+
+## 4. INFRASTRUCTURE - ROADS
+
+### **Kuwait Survey Department Road Network**
+- **Source:** Kuwait Survey Department / Public Authority for Civil Information (PACI)
+- **Resolution:** High precision - street level with building footprints
+- **Temporal Coverage:** Current - continuously updated via Kuwait Finder system
+- **Update Frequency:** Regular updates using deep learning/AI on satellite imagery
+- **Access Type:** Restricted - Government use, may require formal request
+- **API:** Likely internal only
+- **URL:** Contact PACI or Survey Department
+- **Quality:** Excellent - Most authoritative and current road network for Kuwait, includes ring roads and detailed urban street networks[20][6]
+
+### **HERE Technologies Kuwait Roads**
+- **Source:** HERE Technologies
+- **Resolution:** Road centerline with attributes (speed limits, road class, restrictions)
+- **Temporal Coverage:** Current
+- **Update Frequency:** Quarterly updates
+- **Access Type:** Commercial/Purchase
+- **API:** Yes - HERE Location Services API
+- **URL:** https://www.here.com/
+- **Quality:** Excellent - High-quality commercial dataset with detailed road attributes, routing restrictions, widely used in oil & gas industry
+
+### **TomTom Kuwait Roads**
+- **Source:** TomTom
+- **Resolution:** Road centerline with traffic data
+- **Temporal Coverage:** Current
+- **Update Frequency:** Regular updates
+- **Access Type:** Commercial/Purchase
+- **API:** Yes - TomTom Maps API, Routing API
+- **URL:** https://developer.tomtom.com/
+- **Quality:** Excellent - Includes real-time traffic data, 24% congestion level in Kuwait City, comprehensive road network coverage[21][22][23]
+
+### **OpenStreetMap Kuwait**
+- **Source:** OpenStreetMap Foundation / Community contributors
+- **Resolution:** Variable - road centerlines
+- **Temporal Coverage:** Current - continuously updated
+- **Update Frequency:** Continuous community updates
+- **Access Type:** Open/Free
+- **API:** Yes - Overpass API, OSM API
+- **URL:** https://www.openstreetmap.org/
+- **Quality:** Good - ~31,100 km of roads mapped (~48% of total estimated), includes ring road classifications (1st-7th Ring Roads), major routes like Gulf Street (Route 25), Jahra Road (Route 80)[24][25]
+
+## 5. INFRASTRUCTURE - RAILWAYS
+
+### **Kuwait National Railway Project (KNRR) Data**
+- **Source:** Public Authority for Roads and Land Transport (PART) / Ministry of Communications
+- **Resolution:** Engineering design level
+- **Temporal Coverage:** In development - planned completion 2028
+- **Update Frequency:** Project development phase
+- **Access Type:** Restricted - Government/contractor access
+- **API:** No
+- **URL:** https://www.kuwaitrailroad.com/ and www.moc.kw
+- **Quality:** Not yet operational - 265km double-track network planned (111km GCC component to Saudi border, freight line to Boubyan Port), 120-200 km/h speeds[26][27][28]
+
+### **Gulf Railway Network (GCC Railway)**
+- **Source:** GCC Railway Authority
+- **Resolution:** Regional network planning
+- **Temporal Coverage:** Under development - scheduled 2030
+- **Update Frequency:** Project phase
+- **Access Type:** Restricted
+- **API:** No
+- **URL:** Contact GCC Railway Authority
+- **Quality:** Future infrastructure - 2,177 km network connecting six Gulf countries, Kuwait segment in design phase[29][30]
+
+### **OpenStreetMap Kuwait Railways**
+- **Source:** OpenStreetMap Community
+- **Resolution:** Vector line data
+- **Temporal Coverage:** Current
+- **Update Frequency:** Community updates
+- **Access Type:** Open/Free
+- **API:** Yes - Overpass API
+- **URL:** https://www.openstreetmap.org/
+- **Quality:** Limited - Minimal existing railway infrastructure in Kuwait, primarily future planned routes
+
+## 6. INFRASTRUCTURE - UTILITIES (Power, Telecom)
+
+### **Kuwait Ministry of Electricity and Water (MEW) GIS Data**
+- **Source:** Ministry of Electricity and Water
+- **Resolution:** High precision - facility and network level
+- **Temporal Coverage:** Historical archive converted from paper maps + current digital data
+- **Update Frequency:** Continuous updates
+- **Access Type:** Restricted - Government/utility use
+- **API:** Likely internal only
+- **URL:** https://www.mew.gov.kw/
+- **Quality:** Excellent - Comprehensive electricity transmission and water distribution networks, 16,000+ digitized maps, ArcFM-based utility GIS covering 3+ million consumers[31][32]
+
+### **OpenStreetMap / OpenInfraMap Kuwait Utilities**
+- **Source:** OpenStreetMap Community
+- **Resolution:** Variable
+- **Temporal Coverage:** Current
+- **Update Frequency:** Community updates
+- **Access Type:** Open/Free
+- **API:** Yes - Overpass API
+- **URL:** https://openinframap.org/ and https://www.openstreetmap.org/
+- **Quality:** Limited - Incomplete coverage for Kuwait, useful for public infrastructure mapping but not comprehensive for pipeline routing
+
+## 7. INFRASTRUCTURE - PIPELINES
+
+### **Kuwait Oil Company (KOC) Pipeline GIS Database**
+- **Source:** Kuwait Oil Company - Integrated Masterplan (IMP) Project
+- **Resolution:** Asset-level precision - includes all wells, pipelines, manifolds
+- **Temporal Coverage:** Current - continuously updated
+- **Update Frequency:** Real-time updates via field surveys and aerial imagery
+- **Access Type:** Restricted - Internal KOC use only, extremely sensitive data
+- **API:** Internal ArcGIS Server/Portal APIs only
+- **URL:** Contact KOC directly (formal request required)
+- **Quality:** Excellent - Most comprehensive and accurate pipeline database for Kuwait, includes aboveground/underground pipelines, pipe diameters, crude types, metal tag IDs, built using ArcSDE geodatabase with CAD integration[33][34][35][36][8]
+
+### **Kuwait National Petroleum Company (KNPC) Infrastructure Data**
+- **Source:** Kuwait National Petroleum Company
+- **Resolution:** Facility and network level
+- **Temporal Coverage:** Current
+- **Update Frequency:** Regular updates
+- **Access Type:** Restricted - Internal use, requires formal government request
+- **API:** No public API
+- **URL:** Contact KNPC directly
+- **Quality:** High - Geological and infrastructure mapping at 1:50,000, 1:100,000, 1:250,000 scales prepared by Hunting Geology and Geophysics (1981)[6]
+
+### **OpenStreetMap Kuwait Pipelines**
+- **Source:** OpenStreetMap Community
+- **Resolution:** Line features
+- **Temporal Coverage:** Current
+- **Update Frequency:** Community updates
+- **Access Type:** Open/Free
+- **API:** Yes - Overpass API
+- **URL:** https://www.openstreetmap.org/
+- **Quality:** Very limited - Incomplete and not authoritative, should not be relied upon for pipeline routing decisions
+
+## 8. PROTECTED AREAS / ENVIRONMENTAL
+
+### **Kuwait EPA Protected Areas Database**
+- **Source:** Kuwait Environment Public Authority
+- **Resolution:** Vector polygons with boundaries
+- **Temporal Coverage:** Current - established under 2016 environment protection law
+- **Update Frequency:** Updated as new areas designated
+- **Access Type:** Restricted - Access via eMISK system or www.beatona.net
+- **API:** No public API
+- **URL:** https://epa.gov.kw/ and www.beatona.net
+- **Quality:** Excellent - Most authoritative source for Kuwait protected areas, wildlife reserves, conservation areas[14][15]
+
+### **World Database on Protected Areas (WDPA)**
+- **Source:** UNEP-WCMC / IUCN
+- **Resolution:** Vector polygons
+- **Temporal Coverage:** Current - updated September 2025
+- **Update Frequency:** Monthly updates
+- **Access Type:** Open/Free
+- **API:** Yes - Protected Planet API
+- **URL:** https://www.protectedplanet.net/en/country/KWT
+- **Quality:** Good - 39 protected areas reported (15 terrestrial covering 17.1% of Kuwait, 3 marine covering 1.4%), includes proposed areas; national reporting shows 9.3% terrestrial coverage[37][38][39][40]
+
+### **Kuwait National Parks and Reserves**
+- **Source:** Kuwait EPA / Ministry of Environment
+- **Resolution:** Vector boundaries
+- **Temporal Coverage:** Current
+- **Update Frequency:** As designated
+- **Access Type:** Restricted/Requires request
+- **API:** No
+- **URL:** Contact Kuwait EPA
+- **Quality:** High - Includes marine protected areas (3 implemented, 19 proposed covering 126 km²)[41]
+
+## 9. GEOLOGY / SOIL
+
+### **Kuwait Geological Survey Maps**
+- **Source:** Geologische Bundesanstalt (GBA) Austria / Kuwait Oil Company
+- **Resolution:** 1:250,000 (best available), 1:100,000, 1:50,000 scales
+- **Temporal Coverage:** 1981 compilation (based on LANDSAT imagery)
+- **Update Frequency:** Historic - not regularly updated
+- **Access Type:** Restricted/Requires request
+- **API:** No
+- **URL:** Contact Kuwait government geological authorities
+- **Quality:** Good - GBA 1:250,000 compilation remains best available geological mapping of Kuwait[6]
+
+### **Kuwait Soil Survey (1999)**
+- **Source:** Government of Kuwait / AACM International Consultant
+- **Resolution:** 1:100,000 reconnaissance, 1:25,000 semi-detailed
+- **Temporal Coverage:** 1999 (field survey)
+- **Update Frequency:** No regular updates
+- **Access Type:** Restricted/Requires request from agricultural authorities
+- **API:** No
+- **URL:** Contact Kuwait Agricultural Department or KISR
+- **Quality:** Very good - 8,400 observation points covering 16,800 km², 105 soil profiles described, 570 horizons analyzed, includes soil taxa classification (Haplocalcids, Petrocalcids, Haplogypsids) following USDA-NRCS standards[42][43]
+
+### **FAO Reconnaissance Soil Survey (1965-1968)**
+- **Source:** FAO / Kuwait Ministry of Public Works
+- **Resolution:** 1:250,000, published at 1:500,000
+- **Temporal Coverage:** 1965-1968 field surveys
+- **Update Frequency:** Historic dataset
+- **Access Type:** Open/Free
+- **API:** No
+- **URL:** https://www.fao.org/
+- **Quality:** Moderate - Historic baseline, includes soil irrigability classifications and rangeland suitability, outdated but useful for regional context[44]
+
+### **FAO Harmonized World Soil Database (HWSD)**
+- **Source:** FAO / IIASA
+- **Resolution:** 1 km (30 arc-seconds)
+- **Temporal Coverage:** Current (compilation of various sources)
+- **Update Frequency:** Periodic major updates
+- **Access Type:** Open/Free
+- **API:** No - Download only
+- **URL:** https://www.fao.org/soils-portal/
+- **Quality:** Moderate - Global coverage, lower resolution than national surveys, suitable for regional assessment
+
+### **OneGeology Portal**
+- **Source:** OneGeology Consortium / USGS
+- **Resolution:** Variable by contributing survey
+- **Temporal Coverage:** Current
+- **Update Frequency:** Contributing survey dependent
+- **Access Type:** Open/Free
+- **API:** Yes - WMS/WFS services
+- **URL:** http://www.onegeology.org/
+- **Quality:** Good - Access to Arabian Peninsula bedrock geology including Kuwait[45][46][47]
+
+## 10. CLIMATE / WEATHER
+
+### **Kuwait Meteorological Department**
+- **Source:** Kuwait Directorate General of Civil Aviation - Meteorological Department
+- **Resolution:** Station-based observations
+- **Temporal Coverage:** Historical records (1960s-present)
+- **Update Frequency:** Real-time observations, daily forecasts
+- **Access Type:** Partially open - historical data may require request
+- **API:** Uncertain - contact department
+- **URL:** https://www.met.gov.kw/
+- **Quality:** Excellent - Most authoritative source for Kuwait weather data, climate statistics, temperature, humidity, precipitation[48]
+
+### **Kuwait Automatic Weather Observation System (KAWOS)**
+- **Source:** Kuwait Meteorological Services
+- **Resolution:** Multiple station network
+- **Temporal Coverage:** 2008-present
+- **Update Frequency:** Real-time
+- **Access Type:** Restricted - Government/research access
+- **API:** Uncertain
+- **URL:** Contact Kuwait Met Department
+- **Quality:** Excellent - High-quality rain gauge and weather station data for semi-arid conditions[49]
+
+### **ERA5 Reanalysis**
+- **Source:** European Centre for Medium-Range Weather Forecasts (ECMWF)
+- **Resolution:** 0.25° × 0.25° (~25-30 km)
+- **Temporal Coverage:** 1940-present (hourly data)
+- **Update Frequency:** Daily updates with 5-day lag
+- **Access Type:** Open/Free
+- **API:** Yes - Copernicus Climate Data Store API
+- **URL:** https://cds.climate.copernicus.eu/
+- **Quality:** Excellent - Strong predictive capability for Kuwait (R~0.6-0.9), ~3% median bias for precipitation, validated against KAWOS data, superior to NCEP reanalysis[50][51][49]
+
+### **WorldClim**
+- **Source:** WorldClim / University of California
+- **Resolution:** 30 arc-seconds (~1 km) to 2.5 arc-minutes
+- **Temporal Coverage:** 1970-2000 baseline, future projections available
+- **Update Frequency:** Periodic major updates
+- **Access Type:** Open/Free
+- **API:** No - Download only
+- **URL:** https://www.worldclim.org/
+- **Quality:** Very good - Long-term climate normals for temperature, precipitation, suitable for pipeline design climate parameters
+
+## 11. ADMINISTRATIVE BOUNDARIES
+
+### **Kuwait Survey Department Official Boundaries**
+- **Source:** Kuwait Survey Department / National Geospatial Information Authority
+- **Resolution:** Precise legal boundaries
+- **Temporal Coverage:** Current
+- **Update Frequency:** As administrative changes occur
+- **Access Type:** Restricted/Requires request
+- **API:** No
+- **URL:** Contact Survey Department, P.O. Box 830, 22008 Kuwait
+- **Quality:** Excellent - Official authoritative boundaries for 6 governorates (Al Ahmadi, Al Asimah, Al Farwaniyah, Al Jahra, Hawalli, Mubarak Al-Kabeer)[52][53][6]
+
+### **GADM (Database of Global Administrative Areas)**
+- **Source:** GADM Project
+- **Resolution:** Administrative level 0-1 (country and governorate)
+- **Temporal Coverage:** Current
+- **Update Frequency:** Periodic updates
+- **Access Type:** Open/Free for non-commercial use
+- **API:** No - Download only
+- **URL:** https://gadm.org/
+- **Quality:** Very good - 6 governorates mapped, widely used for GIS applications, derived from multiple sources[54]
+
+### **HDX COD-AB Kuwait**
+- **Source:** UN OCHA / Humanitarian Data Exchange
+- **Resolution:** Administrative levels 0-1
+- **Temporal Coverage:** Current (most recent update June 2023)
+- **Update Frequency:** Annual
+- **Access Type:** Open/Free
+- **API:** Yes - HDX API
+- **URL:** https://data.humdata.org/dataset/cod-ab-kwt
+- **Quality:** Good - Edge-matched administrative boundaries suitable for humanitarian and development applications[55][54]
+
+## 12. POPULATION / DEMOGRAPHICS
+
+### **Kuwait Public Authority for Civil Information (PACI)**
+- **Source:** PACI / Kuwait Central Statistics Bureau
+- **Resolution:** Governorate and district level
+- **Temporal Coverage:** Most recent official census 2005, current population estimates
+- **Update Frequency:** Irregular census, annual estimates
+- **Access Type:** Restricted/Requires request
+- **API:** No public API
+- **URL:** Contact PACI or Kuwait Central Statistics Bureau
+- **Quality:** Excellent - Official population statistics, 4.82 million total (2024), 1.53 million Kuwaiti citizens, 3.29 million expatriates[56][57]
+
+### **WorldPop Kuwait**
+- **Source:** WorldPop / University of Southampton
+- **Resolution:** 100 meters (3 arc-seconds)
+- **Temporal Coverage:** 2000-2020 (annual datasets)
+- **Update Frequency:** Annual
+- **Access Type:** Open/Free
+- **API:** No - Download only
+- **URL:** https://hub.worldpop.org/ and https://data.worldpop.org/
+- **Quality:** Very good - UN-adjusted population density grids, useful for identifying populated areas for pipeline routing avoidance[58][59]
+
+### **LandScan Global Population**
+- **Source:** Oak Ridge National Laboratory (ORNL)
+- **Resolution:** 1 km (30 arc-seconds)
+- **Temporal Coverage:** Annual datasets
+- **Update Frequency:** Annual
+- **Access Type:** Free for US government and academic use, commercial licensing available
+- **API:** No
+- **URL:** https://landscan.ornl.gov/
+- **Quality:** Excellent - Ambient (24-hour average) population distribution, integrates nighttime lights and infrastructure data, well-suited for Kuwait's energy-rich context[60]
+
+### **Esri Demographics for Kuwait**
+- **Source:** Esri / Michael Bauer Research GmbH
+- **Resolution:** Administrative unit aggregation
+- **Temporal Coverage:** Current
+- **Update Frequency:** Regular updates
+- **Access Type:** Commercial - Esri subscription required
+- **API:** Yes - ArcGIS Living Atlas
+- **URL:** ArcGIS Living Atlas
+- **Quality:** Good - Standard demographic variables for business and planning applications[61]
+
+## 13. SATELLITE IMAGERY (COMMERCIAL)
+
+### **Maxar Technologies (WorldView, GeoEye)**
+- **Source:** Maxar Technologies
+- **Resolution:** 30 cm (WorldView-3, WorldView Legion), 50 cm (WorldView-1/2, GeoEye-1)
+- **Temporal Coverage:** 2000s-present (extensive archive)
+- **Update Frequency:** On-demand tasking, routine collections
+- **Access Type:** Commercial/Purchase
+- **API:** Yes - Maxar Sec
+
+[1](https://dataspace.copernicus.eu/explore-data/data-collections/copernicus-contributing-missions/collections-description/COP-DEM)
+[2](https://d-nb.info/1278558632/34)
+[3](https://documentation.dataspace.copernicus.eu/APIs/SentinelHub/Data/DEM.html)
+[4](https://isprs-archives.copernicus.org/articles/XXXIX-B1/27/2012/)
+[5](https://esurf.copernicus.org/articles/5/211/2017/esurf-5-211-2017.pdf)
+[6](https://geospatial.com/country_profiles/kuwait/)
+[7](https://www.ce.utexas.edu/prof/maidment/giswr2009/termproj/alrukaibi.pdf)
+[8](https://geospatialworld.net/news/koc-project-implement-gis-system-for-map-charting/)
+[9](https://www.asprs.org/wp-content/uploads/2022/01/05-21-HLA-Mapping-Kuwait-Oil-Fields.pdf)
+[10](https://collections.sentinel-hub.com/worldcover/)
+[11](https://developers.google.com/earth-engine/datasets/catalog/ESA_WorldCover_v200)
+[12](https://worldcover2020.esa.int/download)
+[13](https://www.giscon.de/en/information/archive/612-emisk-enterprise-gis)
+[14](https://www.giscon.de/en/company/references/396-gis-consultancy-and-strategic-planning-for-the-environment-public-authority-epa-kuwait-march-2008-present)
+[15](https://epa.gov.kw/en-us/eMISK)
+[16](https://www.arcgis.com/home/item.html?id=ea4bdf7e98d14ac48084d1e20a5ea78a)
+[17](https://www.hydrosheds.org/products/hydrorivers)
+[18](https://www.hydrosheds.org/products)
+[19](https://www.hydrosheds.org/products/glwd)
+[20](https://www.esri.com/about/newsroom/blog/deep-learning-helps-kuwait-automate-map-updates)
+[21](https://www.tomtom.com/traffic-index/kuwait-city-traffic/)
+[22](https://www.tomtom.com/traffic-index/kuwait-country-traffic/)
+[23](https://developer.tomtom.com/routing-api/documentation/tomtom-maps/product-information/market-coverage)
+[24](https://wiki.openstreetmap.org/wiki/Kuwait)
+[25](https://data.humdata.org/dataset/hotosm_kwt_roads)
+[26](https://icorppro.com/?p=2922)
+[27](https://www.kuwaitrailroad.com)
+[28](https://www.globalinfrastructureexpo.com/vision-2030-in-focus-at-saudi-infrastructure-expo-2024-copy/)
+[29](https://www.railway.supply/kuwait-launches-gulf-railway-project-to-connect-six-gulf-countries/)
+[30](https://en.wikipedia.org/wiki/Gulf_Railway)
+[31](https://www.esri.com/about/newsroom/arcnews/kuwaits-ministry-of-electric-and-water-streamlines-utility-services)
+[32](https://www.mew.gov.kw/en/ShowStructureDetails?name=Planning%2C+Training+and+Information+Systems+Sector)
+[33](https://www.esri.com/about/newsroom/arcnews/with-a-comprehensive-geodatabase-oil-production-in-kuwait-gets-more-efficient)
+[34](https://www.esri.com/en-us/lg/industry/petroleum-and-pipeline/stories/koc-case-study)
+[35](https://www.youtube.com/watch?v=Xl4SG2Ywjb0)
+[36](https://www.openware.com.kw/content/dam/distributor-share/openware-com-kw/home/openware-koc-updating-masterplan-062020.pdf)
+[37](https://www.protectedplanet.net/en/country/KWT)
+[38](https://www.cbd.int/pa/doc/dossiers/kuwait-abt11-country-dossier2021.pdf)
+[39](https://www.kockw.com/sites/EN/Other%20Publications/Environmental/Restoring%20the%20Nature%20of%20Kuwait.pdf)
+[40](https://www.arcgis.com/home/item.html?id=ae78aeb913a343d69e950b53e29076f7)
+[41](http://www.seaaroundus.org/data/)
+[42](https://www.biosaline.org/sites/default/files/publicationsfile/reconnaissance_soil_survey_for_the_state.pdf)
+[43](https://www.semanticscholar.org/paper/Reconnaissance-Soil-Survey-for-the-State-of-Kuwait-Omar-Shahid/e8c559ddb1c1bb15b083545f2e6b706c01e70b49)
+[44](https://www.fao.org/4/88418e/88418e.pdf)
+[45](https://www.usgs.gov/media/images/world-geologic-maps-data-downloads)
+[46](https://dataone.org/datasets/c20fc073-92bf-4d48-90e5-67458cb14f48)
+[47](https://catalog.data.gov/dataset/bedrock-geology-of-the-arabian-peninsula-and-selected-adjacent-areas-geo2bg)
+[48](https://www.met.gov.kw/Climate/climate_stat.php?lang=eng)
+[49](https://mypure.auk.edu.kw/en/publications/evaluation-of-era5-and-ncep-reanalysis-climate-models-for-precipi)
+[50](https://climateknowledgeportal.worldbank.org/country/kuwait/era5-historical)
+[51](https://cds.climate.copernicus.eu/datasets/reanalysis-era5-single-levels)
+[52](https://salb.un.org/en/data/kwt)
+[53](https://www.geopostcodes.com/country/kuwait/administrative-divisions/)
+[54](https://data.humdata.org/dataset/cod-em-kwt)
+[55](https://data.humdata.org/dataset/cod-ab-kwt)
+[56](https://worldpopulationreview.com/countries/kuwait)
+[57](https://en.wikipedia.org/wiki/Kuwait)
+[58](https://data.worldpop.org/GIS/Population/Global_2000_2020/2017/KWT/kwt_ppp_2017_metadata.html)
+[59](https://hub.worldpop.org/geodata/summary?id=47060)
+[60](https://www.asprs.org/wp-content/uploads/pers/2000journal/july/2000_jul_849-857.pdf)
+[61](https://doc.arcgis.com/en/esri-demographics/latest/esri-demographics/kuwait.htm)
+[62](https://www.whiteclouds.com/blog/kuwait-watershed-maps/)
+[63](https://earthexplorer.usgs.gov)
+[64](https://mdl.library.utoronto.ca/geospatial-data)
+[65](https://epa.gov.kw/en-us/envdata)
+[66](https://www.esri.com/about/newsroom/arcnews/gis-helps-improve-groundwater-management-in-kuwait)
+[67](https://resource.geospatialworld.net/user/environment-public-authority-epa-kuwait)
+[68](https://e.gov.kw/sites/kgoenglish/Pages/OtherTopics/OurEnvironment.aspx)
+[69](https://www.arcgis.com/home/item.html?id=5a7432e57ac24afe82eaf0f3f53e5d94)
+[70](https://opentopography.org/id/OTLAS.022012.26913.1&minX=-106.216836&minY=32.834136&maxX=-106.203450&maxY=32.845069)
+[71](https://www.maptrove.ca/kuwait-road-map.html)
+[72](https://portal.opentopography.org/raster?opentopoID=OTSDEM.032021.4326.3)
+[73](https://esa-worldcover.org/en)
+[74](https://worldcover2021.esa.int/download)
+[75](https://esa-worldcover.org/en/data-access)
+[76](https://unstats.un.org/unsd/envstats/Questionnaires/2019/Tables/Terrestrial_Marine%20protected%20areas.xlsx)
+[77](https://www.sprep.org/attachments/VirLib/Global/2018-list-protected-areas.pdf)
+[78](https://map.navigatormap.org/site-detail?site_id=26545&lang=ar_AR)
+[79](https://www.worldometers.info/world-population/kuwait-population/)
+[80](https://climate.onebuilding.org/sources/)
+[81](https://www.geowgs84.com/countries/kuwait)
+[82](https://pacgeo.com/products)
+[83](https://www.fao.org/4/as352e/as352e.pdf)
+[84](https://www.airbus.com/en/products-services/space/earth-observation/satellite-imagery)
+[85](https://www.sciencedirect.com/science/article/abs/pii/S0140196300907407)
+[86](https://space-solutions.airbus.com/resources/satellite-image-gallery/various/dmc-constellation-satellite-image-rgb-kuwait/)
+[87](https://www.scirp.org/journal/paperinformation?paperid=123399)
+[88](https://up42.com/blog/up42-partners-with-maxar)
+[89](https://www.maxar.com/maxar-intelligence/partner-ecosystem/find-a-partner)
+[90](https://www.academia.edu/60467452/Mapping_the_vegetation_of_Kuwait_through_reconnaissance_soil_survey)
+[91](https://up42.com/blog/tasking-maxar-satellites-via-up42)
+[92](https://library.oapen.org/bitstream/id/0f1b7ea9-1963-4de6-b452-a503379143de/978-3-031-16727-0.pdf)
+[93](https://www.geo-ref.net/ph/kwt.htm)
+[94](https://geo2day.com/asia/kuwait.html)
+[95](https://gulfmagazine.co/10-billion-rail-infrastructure/)
+[96](https://www.hydrosheds.org)
+[97](https://kdipa.gov.kw/wp-content/uploads/2022/06/Air-Maritime-and-Rail-Transport-Sector.pdf)
+[98](https://www.hydroshare.org/resource/da946dee3ada4a67860d057134916553/)
+[99](https://wbwaterdata.org/dataset?tags=rainfall)

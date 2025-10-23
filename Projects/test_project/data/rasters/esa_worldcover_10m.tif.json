@@ -1,0 +1,44 @@
+{
+  "accuracy": {
+    "global": "74.4%",
+    "note": "Accuracy varies by region and land cover class. Verify critical areas with field surveys."
+  },
+  "classification": {
+    "10": "Tree cover",
+    "100": "Moss and lichen",
+    "20": "Shrubland",
+    "30": "Grassland",
+    "40": "Cropland",
+    "50": "Built-up",
+    "60": "Bare / sparse vegetation",
+    "70": "Snow and ice",
+    "80": "Permanent water bodies",
+    "90": "Herbaceous wetland",
+    "95": "Mangroves"
+  },
+  "output": {
+    "bands": 1,
+    "compression": "ZSTD",
+    "crs": "EPSG:4326",
+    "data_type": "Byte",
+    "format": "Cloud Optimized GeoTIFF",
+    "resolution_meters": 10
+  },
+  "query": {
+    "aoi_file": "",
+    "bbox": "13.454779,42.857057,13.938769,43.438886",
+    "tiles_downloaded": 1,
+    "tiles_requested": 1
+  },
+  "source": {
+    "attribution": "© ESA WorldCover project 2021 / Contains modified Copernicus Sentinel data (2020/2021)",
+    "license": "CC BY 4.0",
+    "product": "ESA WorldCover",
+    "provider": "European Space Agency (ESA)",
+    "url": "https://esa-worldcover.org/",
+    "version": "v200",
+    "year": "2021"
+  },
+  "timestamp": "2025-10-23T20:40:24Z",
+  "tool": "esa_worldcover_fetch"
+}

@@ -1,0 +1,584 @@
+# Comprehensive GIS Datasets for Oil & Gas Pipeline Routing in the United States
+
+## 1. ELEVATION/TERRAIN (DEM)
+
+### USGS 3D Elevation Program (3DEP) - LiDAR-Derived DEMs
+**Dataset Name:** 3DEP Standard Digital Elevation Models[1][2]
+**Source/Provider:** U.S. Geological Survey (USGS)[1]
+**Resolution/Scale:** 1-meter (project-based LiDAR), 1/3 arc-second (~10m), 1 arc-second (~30m)[3]
+**Temporal Coverage:** 2000-present, continuously updated[4]
+**Update Frequency:** Continuous integration as new LiDAR data becomes available[3]
+**Access Type:** Open/Free[2]
+**API Availability:** Yes - The National Map API (TNMAccess), OpenTopography API, Google Earth Engine[5][6][7]
+**Official URL:** https://www.usgs.gov/3d-elevation-program[1]
+**Quality Assessment:** Highest quality national elevation data for the US. The 1m LiDAR-derived DEMs represent bare-earth topography with vertical accuracy typically better than 10cm RMSE for flat terrain. Seamless within projects but may have slight discontinuities across project boundaries. Covers CONUS, Alaska, Hawaii, and territories with varying completeness.[2][3]
+
+### Copernicus DEM (Global Coverage)
+**Dataset Name:** Copernicus Digital Elevation Model  
+**Source/Provider:** European Space Agency / Copernicus Programme  
+**Resolution/Scale:** 30m and 90m  
+**Temporal Coverage:** 2011-2015 (acquisition period)  
+**Update Frequency:** Static (completed mission)  
+**Access Type:** Open/Free  
+**API Availability:** Yes - via OpenTopography and various portals  
+**Official URL:** Available through multiple distributors  
+**Quality Assessment:** Good global coverage with consistent quality. For US applications, 3DEP is superior, but Copernicus provides seamless coverage including areas not yet covered by 3DEP LiDAR.
+
+## 2. LAND COVER / LAND USE
+
+### National Land Cover Database (NLCD)
+**Dataset Name:** NLCD 2021 and Annual NLCD[8][9]
+**Source/Provider:** Multi-Resolution Land Characteristics (MRLC) Consortium - USGS/EPA/NOAA/USFS partnership[9][8]
+**Resolution/Scale:** 30m (Landsat-based)[10]
+**Temporal Coverage:** Historical epochs (2001, 2004, 2006, 2008, 2011, 2013, 2016, 2019, 2021) plus annual products from 2000-present[11]
+**Update Frequency:** Major releases every 2-5 years; annual products updated yearly[11]
+**Access Type:** Open/Free[8]
+**API Availability:** Yes - WMS services available through MRLC[8]
+**Official URL:** https://www.mrlc.gov[8]
+**Quality Assessment:** Authoritative US land cover product with 16 Anderson Level II classes. Excellent temporal consistency for change detection. Overall accuracy typically 85-90%. Includes impervious surface, tree canopy, and land cover change products. Essential for environmental impact assessments.[12][9]
+
+### ESA WorldCover (Global)
+**Dataset Name:** ESA WorldCover  
+**Source/Provider:** European Space Agency  
+**Resolution/Scale:** 10m (Sentinel-based)  
+**Temporal Coverage:** 2020, 2021  
+**Update Frequency:** Annual  
+**Access Type:** Open/Free  
+**API Availability:** Yes - WMS/WFS services  
+**Official URL:** Available through ESA portals  
+**Quality Assessment:** Higher resolution than NLCD but with simplified classification scheme (11 classes). Excellent for fine-scale land cover analysis.
+
+## 3. HYDROLOGY / WATER
+
+### NHDPlus High Resolution (NHDPlus HR)
+**Dataset Name:** National Hydrography Dataset Plus High Resolution[13][14]
+**Source/Provider:** U.S. Geological Survey / U.S. EPA[14][13]
+**Resolution/Scale:** 1:24,000 or better[13]
+**Temporal Coverage:** Current - based on latest NHD updates[15]
+**Update Frequency:** Continuous updates through 3D Hydrography Program (3DHP)[15]
+**Access Type:** Open/Free[14]
+**API Availability:** Yes - The National Map API, WMS/WFS services[15]
+**Official URL:** https://www.usgs.gov/national-hydrography[13]
+**Quality Assessment:** Most comprehensive hydrography dataset for the US. Includes streams, rivers, lakes, wetlands, flow direction, catchments, and value-added attributes. Complete coverage for CONUS, Hawaii, US Territories, with Alaska in progress. Derived from 10m 3DEP data ensuring high accuracy. Critical for water crossing analysis and watershed delineation.[14][13]
+
+### NHDPlus Version 2 (Legacy)
+**Dataset Name:** NHDPlus V2  
+**Source/Provider:** EPA/USGS[14]
+**Resolution/Scale:** 1:100,000  
+**Temporal Coverage:** Complete national coverage  
+**Update Frequency:** Static (superseded by NHDPlus HR)[14]
+**Access Type:** Open/Free  
+**API Availability:** Limited  
+**Official URL:** https://www.epa.gov/waterdata/nhdplus-national-hydrography-dataset-plus[14]
+**Quality Assessment:** Complete national coverage with flow routing and catchment delineation. Still useful for network analysis where NHDPlus HR coverage is incomplete.
+
+## 4. INFRASTRUCTURE - ROADS
+
+### National Transportation Atlas Database (NTAD) - Road Networks
+**Dataset Name:** NTAD Roads and Highways[16][17]
+**Source/Provider:** Bureau of Transportation Statistics (BTS), U.S. Department of Transportation[16]
+**Resolution/Scale:** Varies by dataset; typically 1:100,000 or better  
+**Temporal Coverage:** Current[16]
+**Update Frequency:** Continuous updates (changed from annual in 2016)[16]
+**Access Type:** Open/Free[16]
+**API Availability:** Yes - REST API via ArcGIS services[17][18]
+**Official URL:** https://www.bts.gov/ntad[16]
+**Quality Assessment:** Comprehensive national road network including functional classification, ownership, and attributes. Approximately 90 datasets in total. Suitable for national and regional planning. API access enables programmatic queries.[18][16]
+
+### Census TIGER/Line Roads
+**Dataset Name:** TIGER/Line Shapefiles - Roads[19]
+**Source/Provider:** U.S. Census Bureau[20]
+**Resolution/Scale:** High detail, typically 1:24,000 equivalent  
+**Temporal Coverage:** Current (as of January 1 of release year)[19]
+**Update Frequency:** Annual updates (September release)[19]
+**Access Type:** Open/Free[20]
+**API Availability:** Yes - TIGERweb GeoServices REST API[21]
+**Official URL:** https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html[19]
+**Quality Assessment:** Most detailed free road network for the US. Includes all public roads with detailed attribution. Excellent topology. Updated annually but may lag behind commercial providers for very recent changes.[22][20]
+
+### OpenStreetMap (OSM) US Coverage
+**Dataset Name:** OpenStreetMap United States  
+**Source/Provider:** OpenStreetMap Community  
+**Resolution/Scale:** Variable, typically very detailed in urban areas  
+**Temporal Coverage:** Current (live updates)  
+**Update Frequency:** Real-time continuous updates  
+**Access Type:** Open/Free (ODbL license)  
+**API Availability:** Yes - Overpass API, various extracts  
+**Official URL:** https://www.openstreetmap.org  
+**Quality Assessment:** Excellent coverage in urban areas, variable in rural regions. Generally very good road network completeness in the US (>95% of major roads). Crowdsourced data requires validation but often more current than official sources. Road attributes vary by region.
+
+## 5. INFRASTRUCTURE - RAILWAYS
+
+### North American Rail Network (NARN)
+**Dataset Name:** North American Rail Network Lines and Nodes[23][18]
+**Source/Provider:** Federal Railroad Administration (FRA)[24][18]
+**Resolution/Scale:** 1:24,000 or better  
+**Temporal Coverage:** Updated July 18, 2025[24]
+**Update Frequency:** Periodic updates (multiple times per year)[18]
+**Access Type:** Open/Free[18]
+**API Availability:** Yes - REST API via BTS ArcGIS services[18]
+**Official URL:** https://geodata.bts.gov[18]
+**Quality Assessment:** Authoritative rail network data recognized as a National Geospatial Data Asset (NGDA). Includes ownership, trackage rights, passenger/freight designation, and detailed attributes. Complete coverage of Class I, II, III railroads and industrial spurs. Excellent accuracy and completeness for pipeline-rail crossing analysis.[23][18]
+
+### OpenStreetMap Railways
+**Dataset Name:** OSM Railway Network  
+**Source/Provider:** OpenStreetMap Community  
+**Resolution/Scale:** Variable  
+**Temporal Coverage:** Current  
+**Update Frequency:** Real-time  
+**Access Type:** Open/Free  
+**API Availability:** Yes - Overpass API  
+**Official URL:** https://www.openstreetmap.org  
+**Quality Assessment:** Good coverage for active rail lines, excellent for abandoned/historic railways. May include rail lines not in official datasets. Requires validation against FRA data.
+
+## 6. INFRASTRUCTURE - UTILITIES (Power, Telecom)
+
+### EIA Electric Power Transmission Lines
+**Dataset Name:** U.S. Electric Power Transmission Lines[25][26]
+**Source/Provider:** U.S. Energy Information Administration (EIA)[25]
+**Resolution/Scale:** Based on utility submissions and public sources  
+**Temporal Coverage:** Current  
+**Update Frequency:** Updated with EIA-861 and EIA-860 survey cycles[27]
+**Access Type:** Open/Free (spatial data available through various portals)[26]
+**API Availability:** Yes - EIA Open Data API v2[26][25]
+**Official URL:** https://www.eia.gov/opendata[26]
+**Quality Assessment:** Comprehensive transmission line data (typically 115kV and above). API provides access to operational and statistical data but spatial GIS data availability varies. Best combined with HIFLD infrastructure data for complete coverage.[25][26]
+
+### OpenInfraMap / OpenStreetMap Utilities
+**Dataset Name:** OpenStreetMap Power Infrastructure  
+**Source/Provider:** OpenStreetMap Community  
+**Resolution/Scale:** Variable  
+**Temporal Coverage:** Current  
+**Update Frequency:** Real-time  
+**Access Type:** Open/Free  
+**API Availability:** Yes - Overpass API  
+**Official URL:** https://openinframap.org  
+**Quality Assessment:** Good coverage for major transmission lines, variable for distribution. Crowdsourced data requires validation. Often includes infrastructure not publicly mapped elsewhere. Useful for supplementing official datasets.
+
+## 7. INFRASTRUCTURE - PIPELINES
+
+### National Pipeline Mapping System (NPMS)
+**Dataset Name:** NPMS Pipeline Data[28][29]
+**Source/Provider:** Pipeline and Hazardous Materials Safety Administration (PHMSA), U.S. Department of Transportation[29][28]
+**Resolution/Scale:** Transmission pipelines only (not gathering or distribution)[28]
+**Temporal Coverage:** Current - updated annually by operators[29]
+**Update Frequency:** Annual operator submissions[28]
+**Access Type:** Restricted - Public Map Viewer (county-level view) or PIMMA (requires authorization)[30][28]
+**API Availability:** No - web viewer only, GIS data requires formal request[30]
+**Official URL:** https://www.npms.phmsa.dot.gov[31]
+**Quality Assessment:** Most comprehensive pipeline location data for the US. Includes gas transmission and hazardous liquid pipelines, LNG plants, and breakout tanks. Does NOT include gathering or distribution lines, interconnects, valves, or operational details. Public viewer limited to county-level access; full GIS data requires government/operator authorization. Essential but access-restricted dataset.[29][30][28]
+
+### OpenStreetMap Pipelines
+**Dataset Name:** OSM Pipeline Network  
+**Source/Provider:** OpenStreetMap Community  
+**Resolution/Scale:** Variable  
+**Temporal Coverage:** Current  
+**Update Frequency:** Real-time  
+**Access Type:** Open/Free  
+**API Availability:** Yes - Overpass API  
+**Official URL:** https://www.openstreetmap.org  
+**Quality Assessment:** Generally incomplete for pipelines as most are not visible or publicly documented. May include above-ground sections and compressor stations. NOT suitable as primary pipeline data source.
+
+## 8. PROTECTED AREAS / ENVIRONMENTAL
+
+### Protected Areas Database of the United States (PAD-US)
+**Dataset Name:** PAD-US 3.0[32][33][34]
+**Source/Provider:** U.S. Geological Survey Gap Analysis Project[33][32]
+**Resolution/Scale:** Variable by jurisdiction - typically 1:24,000 or better  
+**Temporal Coverage:** Current as of May 2023 (v3.0)[34]
+**Update Frequency:** Major releases every 1-2 years[32]
+**Access Type:** Open/Free[32]
+**API Availability:** Limited - downloadable geodatabase, WMS services available[32]
+**Official URL:** https://www.usgs.gov/programs/gap-analysis-project/science/pad-us-data-overview[32]
+**Quality Assessment:** Official national inventory of protected areas including federal, state, local, nonprofit, and tribal lands. Includes 25+ attributes covering ownership, management, designation type, and GAP status codes. Five feature classes (Fee, Designation, Easement, Marine, Proclamation). Comprehensive coverage of National Parks, Wildlife Refuges, Wilderness Areas, Conservation Easements, and state/local protected areas. Essential for environmental constraint analysis.[35][33][32]
+
+### World Database on Protected Areas (WDPA)
+**Dataset Name:** WDPA  
+**Source/Provider:** UNEP-WCMC  
+**Resolution/Scale:** Global  
+**Temporal Coverage:** Current  
+**Update Frequency:** Monthly  
+**Access Type:** Open/Free  
+**API Availability:** Yes  
+**Official URL:** https://www.protectedplanet.net  
+**Quality Assessment:** PAD-US data feeds into WDPA. For US applications, use PAD-US as it's more comprehensive and current.
+
+## 9. GEOLOGY / SOIL
+
+### USGS National Geologic Map Database
+**Dataset Name:** NGMDB and State Geological Survey Maps[36][37]
+**Source/Provider:** U.S. Geological Survey[37][36]
+**Resolution/Scale:** Varies by map - typically 1:24,000 to 1:250,000  
+**Temporal Coverage:** Historical to current  
+**Update Frequency:** Continuous additions[37]
+**Access Type:** Open/Free[36]
+**API Availability:** Limited - MapView interface, some WMS services[38][39]
+**Official URL:** https://ngmdb.usgs.gov[37]
+**Quality Assessment:** Comprehensive collection of geologic maps from USGS and state surveys. Variable coverage and detail across the country. Essential for understanding bedrock geology, structural features, and geologic hazards. Newer maps available digitally; many older maps being digitized.[36][37]
+
+### OneGeology
+**Dataset Name:** OneGeology Portal[40][41]
+**Source/Provider:** International consortium including USGS[40]
+**Resolution/Scale:** Variable by contributing survey  
+**Temporal Coverage:** Current  
+**Update Frequency:** Continuous  
+**Access Type:** Open/Free[40]
+**API Availability:** Yes - WMS/WFS services[42]
+**Official URL:** https://portal.onegeology.org[41]
+**Quality Assessment:** Provides access to global geological survey data through standardized web services. US coverage from USGS. Useful for cross-border projects and accessing state geological survey data through single portal.[41][40]
+
+### NRCS Soil Survey Geographic Database (SSURGO)
+**Dataset Name:** SSURGO and gSSURGO[43][44]
+**Source/Provider:** USDA Natural Resources Conservation Service (NRCS)[44][43]
+**Resolution/Scale:** 1:12,000 to 1:63,360 (detailed soil mapping units)[45]
+**Temporal Coverage:** Current - based on century of soil survey work[45]
+**Update Frequency:** Continuous updates via Web Soil Survey, annual gSSURGO releases[44][45]
+**Access Type:** Open/Free[43]
+**API Availability:** Yes - Soil Data Access (SDA) API with REST/POST and WMS/WFS services[45]
+**Official URL:** https://websoilsurvey.nrcs.usda.gov[46]
+**Quality Assessment:** Most detailed soil data available for the US. Includes physical, chemical, and interpretive properties. gSSURGO provides statewide rasters (10m resolution by state, 30m for CONUS). 7,000-10,000 daily users. Extensive attribute tables with interpretations for construction, agriculture, and engineering. Essential for pipeline routing (corrosivity, depth to bedrock, drainage, bearing capacity). API access enables efficient large-area queries.[47][45]
+
+### FAO Harmonized World Soil Database (HWSD)
+**Dataset Name:** HWSD v1.2  
+**Source/Provider:** FAO/IIASA  
+**Resolution/Scale:** 1km (coarse)  
+**Temporal Coverage:** Static  
+**Update Frequency:** Infrequent updates  
+**Access Type:** Open/Free  
+**API Availability:** No  
+**Official URL:** Available through FAO  
+**Quality Assessment:** For US applications, SSURGO is vastly superior. HWSD useful only for international consistency or areas without SSURGO coverage.
+
+## 10. CLIMATE / WEATHER
+
+### NOAA National Weather Service API
+**Dataset Name:** NWS API and Climate Data Online (CDO)[48][49]
+**Source/Provider:** National Oceanic and Atmospheric Administration (NOAA)[49][48]
+**Resolution/Scale:** Station-based observations plus gridded products  
+**Temporal Coverage:** Historical (1800s to present) and real-time[50][51]
+**Update Frequency:** Real-time for forecasts/observations; historical data continuously archived[48]
+**Access Type:** Open/Free[49][48]
+**API Availability:** Yes - NWS API (weather.gov/api), CDO API v2, REST services, THREDDS servers[52][48][49]
+**Official URL:** https://www.weather.gov/documentation/services-web-api (NWS API)[48]
+https://www.ncei.noaa.gov/cdo-web/ (CDO)[51]
+**Quality Assessment:** Comprehensive weather and climate data including temperature, precipitation, wind, degree days, extreme events, and 30-year normals. NWS API provides forecasts, alerts, and observations. CDO provides historical data from Global Historical Climatology Network (GHCNd). Multiple access methods (API, web services, bulk downloads). Excellent data quality with extensive station network. Essential for design parameters and construction planning.[50][51][49][48]
+
+### ERA5 Reanalysis (Global)
+**Dataset Name:** ERA5  
+**Source/Provider:** ECMWF/Copernicus  
+**Resolution/Scale:** ~31km (0.25 degree)  
+**Temporal Coverage:** 1940-present  
+**Update Frequency:** Near real-time (5-day lag)  
+**Access Type:** Open/Free  
+**API Availability:** Yes - Climate Data Store API  
+**Official URL:** Available through Copernicus Climate Data Store  
+**Quality Assessment:** Highest quality global reanalysis. Hourly data for hundreds of variables. Excellent for locations without ground stations and for obtaining consistent historical climatologies.
+
+### WorldClim (Global)
+**Dataset Name:** WorldClim v2.1  
+**Source/Provider:** WorldClim.org  
+**Resolution/Scale:** 30 arc-seconds (~1km) to 10 minutes  
+**Temporal Coverage:** 1970-2000 averages, future projections  
+**Update Frequency:** Periodic major releases  
+**Access Type:** Open/Free  
+**API Availability:** No - tile downloads  
+**Official URL:** https://www.worldclim.org  
+**Quality Assessment:** High-resolution interpolated climate surfaces. Good for spatial climate analysis. For US, PRISM climate data may provide higher quality.
+
+## 11. ADMINISTRATIVE BOUNDARIES
+
+### Census TIGER/Line Boundaries
+**Dataset Name:** TIGER/Line Shapefiles[20][19]
+**Source/Provider:** U.S. Census Bureau[20][19]
+**Resolution/Scale:** High precision, legally defined boundaries  
+**Temporal Coverage:** Current as of January 1, 2025 (2025 release)[19]
+**Update Frequency:** Annual (September release)[19]
+**Access Type:** Open/Free[20]
+**API Availability:** Yes - TIGERweb GeoServices REST API, Census Data API[53][21]
+**Official URL:** https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html[19]
+**Quality Assessment:** Definitive source for US administrative boundaries. Includes states, counties, county subdivisions, places, census tracts, block groups, blocks, voting districts, and more. Legally accurate boundaries updated annually. Essential for jurisdictional analysis, permitting, and regulatory compliance. API enables programmatic access. Can be joined with census demographic data via GEOIDs.[22][20][19]
+
+### GADM (Global Administrative Areas)
+**Dataset Name:** GADM  
+**Source/Provider:** GADM.org  
+**Resolution/Scale:** Multiple administrative levels  
+**Temporal Coverage:** Current  
+**Update Frequency:** Periodic  
+**Access Type:** Open/Free (academic use)  
+**API Availability:** No - download only  
+**Official URL:** https://gadm.org  
+**Quality Assessment:** For US applications, Census TIGER boundaries are more accurate and current. GADM useful for international consistency or cross-border projects.
+
+## 12. POPULATION / DEMOGRAPHICS
+
+### U.S. Census Bureau Data
+**Dataset Name:** Decennial Census and American Community Survey (ACS)[53]
+**Source/Provider:** U.S. Census Bureau[53]
+**Resolution/Scale:** Block, Block Group, Census Tract, County levels[20]
+**Temporal Coverage:** Decennial Census (2020, 2010, etc.); ACS annual/5-year estimates[53]
+**Update Frequency:** Decennial Census every 10 years; ACS annual updates[53]
+**Access Type:** Open/Free[53]
+**API Availability:** Yes - Census Data API[53]
+**Official URL:** https://www.census.gov/data/developers[53]
+**Quality Assessment:** Official US population and demographic data. Census provides complete enumeration at block level (highest resolution). ACS provides detailed socioeconomic data at larger geographies. Join to TIGER boundaries using GEOIDs for mapping. Excellent data quality and comprehensive coverage. API enables efficient queries.[20][53]
+
+### LandScan Global Population Database
+**Dataset Name:** LandScan[54][55]
+**Source/Provider:** Oak Ridge National Laboratory (ORNL)[55]
+**Resolution/Scale:** 30 arc-seconds (~1km)[55]
+**Temporal Coverage:** Annual products from 2000-present[54][55]
+**Update Frequency:** Annual[54]
+**Access Type:** Restricted - requires approval for LandScan HD; global product more accessible[54]
+**API Availability:** Limited  
+**Official URL:** Available through ORNL and licensed distributors[54]
+**Quality Assessment:** Industry standard for ambient population distribution (day/night averaged). Uses sophisticated dasymetric modeling. LandScan Global provides consistent 1km gridded population. Higher resolution LandScan HD available for US but restricted. Good for areas between census geographies.[55][54]
+
+### WorldPop
+**Dataset Name:** WorldPop Global Population Datasets[56][57]
+**Source/Provider:** WorldPop / University of Southampton[57]
+**Resolution/Scale:** 100m (US coverage)[56]
+**Temporal Coverage:** 2000-2020, with annual products[56]
+**Update Frequency:** Annual to periodic[57]
+**Access Type:** Open/Free[57]
+**API Availability:** Yes - WorldPop API and WOPR API[58][56][57]
+**Official URL:** https://www.worldpop.org[57]
+**Quality Assessment:** High-resolution population grids using random forest modeling and census data. API allows spatial queries for population totals within custom areas. Includes age/sex structure products. Good complement to census data for gridded population analysis.[59][56][57]
+
+## 13. SATELLITE IMAGERY (COMMERCIAL)
+
+### Maxar (WorldView, GeoEye)
+**Dataset Name:** Maxar Constellation (WorldView-1/2/3/4, GeoEye-1)[60]
+**Source/Provider:** Maxar Intelligence[60]
+**Resolution/Scale:** 31cm to 50cm panchromatic; 1.2m to 2m multispectral[60]
+**Temporal Coverage:** Extensive archive from early 2000s; on-demand tasking[60]
+**Update Frequency:** On-demand and systematic collection  
+**Access Type:** Commercial/Purchase (NASA-funded researchers can access through CSDA)[60]
+**API Availability:** Yes - Maxar platform APIs  
+**Official URL:** https://www.maxar.com  
+**Quality Assessment:** Highest resolution commercial satellite imagery available. WorldView-3 offers 31cm pan resolution. Extensive archive and rapid revisit capability. Multispectral and shortwave infrared bands useful for various analysis. Industry standard for high-resolution needs. Licensing and cost vary by project.[61][60]
+
+### Planet Labs (PlanetScope, SkySat)
+**Dataset Name:** Planet Imagery[62]
+**Source/Provider:** Planet Labs  
+**Resolution/Scale:** PlanetScope: 3m; SkySat: 50cm[62]
+**Temporal Coverage:** Daily global coverage (PlanetScope); SkySat on demand  
+**Update Frequency:** Daily revisit[62]
+**Access Type:** Commercial/Purchase  
+**API Availability:** Yes - Planet API  
+**Official URL:** https://www.planet.com  
+**Quality Assessment:** PlanetScope provides unprecedented temporal frequency with daily global coverage at 3m resolution. SkySat offers sub-meter imagery and video. Excellent for change detection and monitoring. Lower resolution than Maxar but superior temporal coverage.[62]
+
+### Airbus (Pléiades, SPOT)
+**Dataset Name:** Airbus Defense and Space Imagery  
+**Source/Provider:** Airbus  
+**Resolution/Scale:** Pléiades: 50cm; SPOT 6/7: 1.5m  
+**Temporal Coverage:** Extensive archive and on-demand  
+**Update Frequency:** Regular collection cycles  
+**Access Type:** Commercial/Purchase  
+**API Availability:** Yes  
+**Official URL:** https://www.intelligence-airbusds.com  
+**Quality Assessment:** High-quality commercial imagery comparable to Maxar. Pléiades offers 50cm resolution. Good alternative source with competitive pricing.
+
+### Sentinel-2 (Free Baseline)
+**Dataset Name:** Sentinel-2 A/B  
+**Source/Provider:** European Space Agency / Copernicus Programme  
+**Resolution/Scale:** 10m (visible/NIR), 20m (red edge/SWIR), 60m (coastal/cirrus)[62]
+**Temporal Coverage:** 2015-present  
+**Update Frequency:** 5-day revisit (2 satellites)[62]
+**Access Type:** Open/Free  
+**API Availability:** Yes - Copernicus API, Google Earth Engine, AWS  
+**Official URL:** https://scihub.copernicus.eu  
+**Quality Assessment:** Best free optical satellite imagery available. 10m resolution in visible and NIR bands excellent for most regional analysis. 5-day revisit enables change detection. 13 spectral bands support various indices. Cloud cover can be limiting factor. Essential baseline imagery for all projects.[63][62]
+
+## 14. SPECIAL DATASETS FOR UNITED STATES
+
+### USGS Earthquake Hazards Program - Seismic Hazard Maps
+**Dataset Name:** National Seismic Hazard Model (NSHM)[64][65][66]
+**Source/Provider:** U.S. Geological Survey Earthquake Hazards Program[65][66]
+**Resolution/Scale:** Various scales from site-specific to national  
+**Temporal Coverage:** Current model; historical earthquake catalog from 1700s[65]
+**Update Frequency:** Major model updates every ~6 years; earthquake catalog real-time[66][65]
+**Access Type:** Open/Free[65]
+**API Availability:** Yes - Earthquake Catalog API (FDSN Web Service), web services[67][65]
+**Official URL:** https://earthquake.usgs.gov[65]
+**Quality Assessment:** Authoritative source for seismic hazard assessment in the US. Provides probabilistic seismic hazard maps used for building codes and design. Includes active fault database (QFaults), ground motion models, and earthquake catalog. Essential for pipeline design in seismically active regions. API provides programmatic access to earthquake data.[66][67][65]
+
+### FEMA National Flood Hazard Layer (NFHL)
+**Dataset Name:** National Flood Hazard Layer[68][69][70]
+**Source/Provider:** Federal Emergency Management Agency (FEMA)[69][68]
+**Resolution/Scale:** Detailed mapping, scale varies by study  
+**Temporal Coverage:** Current effective flood maps[69]
+**Update Frequency:** Continuous updates as maps reach effective date[69]
+**Access Type:** Open/Free[69]
+**API Availability:** Yes - FEMA web services, REST APIs[68]
+**Official URL:** https://msc.fema.gov[71]
+**Quality Assessment:** Comprehensive flood hazard data including flood zones, base flood elevations, floodways, and coastal flood hazards. Digital Flood Insurance Rate Maps (DFIRM) provide detailed regulatory information. Essential for understanding flood risk at water crossings and low-lying areas. Includes Letters of Map Revision (LOMR). Updated continuously but coverage completeness varies (modernized vs. older studies).[72][68][69]
+
+### Bureau of Land Management Surface Management Agency
+**Dataset Name:** BLM Surface Management Agency (SMA)  
+**Source/Provider:** Bureau of Land Management  
+**Resolution/Scale:** Parcel-level  
+**Temporal Coverage:** Current  
+**Update Frequency:** Quarterly updates  
+**Access Type:** Open/Free  
+**API Availability:** Yes - BLM web services  
+**Official URL:** https://www.blm.gov  
+**Quality Assessment:** Shows federal land ownership and management by agency (BLM, USFS, NPS, DOD, etc.). Critical for identifying federal lands requiring special permitting. Particularly important for western states where federal ownership is extensive.
+
+### Native American Lands / Tribal Boundaries
+**Dataset Name:** American Indian, Alaska Native, Native Hawaiian Areas  
+**Source/Provider:** U.S. Census Bureau (TIGER files)[20]
+**Resolution/Scale:** Legal boundaries  
+**Temporal Coverage:** Current  
+**Update Frequency:** Annual[20]
+**Access Type:** Open/Free  
+**API Availability:** Yes - TIGERweb API[21]
+**Official URL:** Part of TIGER/Line files[19]
+**Quality Assessment:** Official boundaries for reservations, trust lands, and tribal statistical areas. Essential for identifying tribal consultation requirements. Updated through Boundary and Annexation Survey.[20]
+
+### USGS Landslide Hazard Mapping
+**Dataset Name:** USGS Landslide Inventory and Susceptibility Maps  
+**Source/Provider:** U.S. Geological Survey  
+**Resolution/Scale:** Various scales, typically regional  
+**Temporal Coverage:** Historical inventory  
+**Update Frequency:** Periodic updates  
+**Access Type:** Open/Free  
+**API Availability:** Limited  
+**Official URL:** https://www.usgs.gov  
+**Quality Assessment:** Maps of landslide susceptibility and historical landslide locations. Coverage varies by region (best in Pacific Northwest, Appalachians, Alaska). Essential for steep terrain routing.
+
+### Archaeological Site Databases
+**Dataset Name:** State Historic Preservation Office (SHPO) databases  
+**Source/Provider:** Individual state SHPOs and National Park Service  
+**Resolution/Scale:** Site-specific  
+**Temporal Coverage:** Comprehensive inventories  
+**Update Frequency:** Continuous updates  
+**Access Type:** Restricted - requires formal request and approval  
+**API Availability:** No  
+**Official URL:** Contact individual state SHPOs  
+**Quality Assessment:** Sensitive cultural resource data. Access restricted to protect sites. Required for Section 106 NHPA compliance. Must request through official channels during permitting.
+
+### Military Installations and Restricted Airspace
+**Dataset Name:** DOD Installations and Restricted Areas  
+**Source/Provider:** Department of Defense / FAA  
+**Resolution/Scale:** Installation boundaries  
+**Temporal Coverage:** Current  
+**Update Frequency:** As needed  
+**Access Type:** Open/Free (unclassified boundaries)  
+**API Availability:** Limited  
+**Official URL:** Various DOD and FAA sources  
+**Quality Assessment:** Identifies military bases, training ranges, and restricted airspace requiring coordination. Critical for security-sensitive routing.
+
+### USDA CropScape / Cropland Data Layer
+**Dataset Name:** Cropland Data Layer (CDL)  
+**Source/Provider:** USDA National Agricultural Statistics Service  
+**Resolution/Scale:** 30m  
+**Temporal Coverage:** Annual from 1997-present  
+**Update Frequency:** Annual  
+**Access Type:** Open/Free  
+**API Availability:** Yes - CropScape web service  
+**Official URL:** https://nassgeodata.gmu.edu/CropScape  
+**Quality Assessment:** Detailed agricultural land use with crop-specific classifications. Excellent accuracy (85-95%) for major crops. Useful for agricultural impact assessment and temporary workspace planning.
+
+***
+
+This comprehensive dataset inventory provides the foundation for high-quality oil and gas pipeline routing GIS analysis in the United States. Priority should be given to USGS 3DEP elevation data, NHDPlus HR for hydrology, PAD-US for environmental constraints, SSURGO for soils, Census TIGER for boundaries, and NPMS for existing pipeline locations (though access to full NPMS data requires authorization). The combination of these authoritative federal datasets with targeted commercial high-resolution imagery provides optimal data coverage for pipeline route analysis and permitting.
+
+[1](https://www.usgs.gov/3d-elevation-program)
+[2](https://www.usgs.gov/3d-elevation-program/about-3dep-products-services)
+[3](https://opentopography.org/news/USGS-3DEP-DEMs-now-available)
+[4](https://www.usgs.gov/the-national-map-data-delivery/gis-data-download)
+[5](https://opentopography.org/news/api-access-usgs-3dep-rasters-now-available)
+[6](https://developers.google.com/earth-engine/datasets/catalog/USGS_3DEP_1m)
+[7](https://www.usgs.gov/faqs/there-api-accessing-national-map-data)
+[8](https://www.mrlc.gov/home)
+[9](https://www.epa.gov/eco-research/multi-resolution-land-characteristics-mrlc-consortium)
+[10](https://www.usgs.gov/centers/eros/science/national-land-cover-database)
+[11](https://www.usgs.gov/centers/eros/science/annual-national-land-cover-database)
+[12](http://www.climatehubs.usda.gov/content/national-land-cover-database)
+[13](https://www.usgs.gov/national-hydrography/nhdplus-high-resolution)
+[14](https://www.epa.gov/waterdata/nhdplus-national-hydrography-dataset-plus)
+[15](https://www.usgs.gov/national-hydrography/access-national-hydrography-products)
+[16](https://www.bts.gov/ntad)
+[17](https://data-usdot.opendata.arcgis.com)
+[18](https://railroads.dot.gov/rail-network-development/maps-and-data/maps-geographic-information-system/maps-geographic)
+[19](https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html)
+[20](https://redistrictingdatahub.org/data/about-our-data/tiger-boundary-files/)
+[21](https://www.census.gov/data/developers/data-sets/TIGERweb-map-service.html)
+[22](https://libguides.brown.edu/census/gis)
+[23](https://geodata.bts.gov/datasets/usdot::north-american-rail-network-lines/about)
+[24](https://catalog.data.gov/dataset/north-american-rail-network-lines3)
+[25](https://www.eia.gov/opendata/documentation.php)
+[26](https://www.eia.gov/opendata/)
+[27](https://resilience.climate.gov/items/d4090758322c4d32a4cd002ffaa0aa12)
+[28](https://ngafirstresponder.com/mapping.php)
+[29](https://www.npms.phmsa.dot.gov/About.aspx)
+[30](https://www.npms.phmsa.dot.gov/AboutPIMMA.aspx)
+[31](https://www.npms.phmsa.dot.gov)
+[32](https://www.usgs.gov/programs/gap-analysis-project/science/pad-us-data-overview)
+[33](https://www.usgs.gov/data/protected-areas-database-united-states-pad-us-21-world-database-protected-areas-wdpa)
+[34](https://www.usgs.gov/data/protected-areas-database-united-states-pad-us-30-world-database-protected-areas-wdpa)
+[35](https://maris.mississippi.edu/METAdata/METAdata_Environmental/MS_USGSPADProtectedAreasData_2021_meta.pdf)
+[36](https://www.usgs.gov/products/maps)
+[37](https://ngmdb.usgs.gov)
+[38](https://ngmdb.usgs.gov/mapview/?center=-)
+[39](https://www.usgs.gov/sciencebase-instructions-and-documentation/api-and-web-services)
+[40](https://onegeology.org)
+[41](https://portal.onegeology.org/OnegeologyGlobal/)
+[42](https://geothermal.isgs.illinois.edu/arcgis/rest/services/OneGeology/ILGS_INGS_Geology/MapServer)
+[43](https://www.nrcs.usda.gov/resources/data-and-reports/soil-survey-geographic-database-ssurgo)
+[44](https://www.nrcs.usda.gov/resources/data-and-reports/gridded-soil-survey-geographic-gssurgo-database)
+[45](http://ncss-tech.github.io/misc/soil-data-sources/ssurgo.html)
+[46](https://websoilsurvey.nrcs.usda.gov)
+[47](https://www.nrcs.usda.gov/sites/default/files/2022-08/gSSURGO_UserGuide_July2020.pdf)
+[48](https://www.weather.gov/documentation/services-web-api)
+[49](https://www.ncdc.noaa.gov/cdo-web/webservices)
+[50](https://www.climate.gov/maps-data/dataset/past-weather-zip-code-data-table)
+[51](https://www.ncei.noaa.gov/cdo-web/)
+[52](https://www.ncdc.noaa.gov/cdo-web/webservices/getstarted)
+[53](https://www.census.gov/data/developers/guidance/api-user-guide.html)
+[54](https://www.eastview.com/resources/e-collections/landscan/)
+[55](https://www.nature.com/articles/s41597-025-04817-z)
+[56](https://www.worldpop.org/sdi/advancedapi/)
+[57](https://www.worldpop.org)
+[58](https://www.worldpop.org/sdi/introapi/)
+[59](https://www.worldpop.org/methods/)
+[60](https://www.earthdata.nasa.gov/about/csda/vendor-maxar)
+[61](https://blog.maxar.com/earth-intelligence/2021/the-convergence-of-geospatial-data-has-great-potential-but-requires-robust-commitment-to-public-private-partnerships)
+[62](https://community.planet.com/analysis-apis-81/what-is-a-useful-map-resolution-3981)
+[63](https://eos.com/blog/free-satellite-imagery-sources/)
+[64](https://www.openassistantgpt.io/integrations/api-integrations/science-math/usgs-earthquake-hazards-program)
+[65](https://earthquake.usgs.gov/fdsnws/event/1/)
+[66](https://www.usgs.gov/programs/earthquake-hazards/hazards)
+[67](https://earthquake.usgs.gov/ws/)
+[68](https://help.addresscloud.com/article/130-data-fenfhl)
+[69](https://coast.noaa.gov/digitalcoast/data/flood.html)
+[70](https://www.arcgis.com/apps/webappviewer/index.html?id=8b0adb51996444d4879338b5529aa9cd)
+[71](https://msc.fema.gov)
+[72](https://www.precisely.com/data-guide/products/flood-risk/)
+[73](https://www.usgs.gov/faqs/what-lidar-data-and-where-can-i-download-it)
+[74](https://www.usgs.gov/national-hydrography/national-hydrography-dataset)
+[75](https://apps.nationalmap.gov/lidar-explorer/)
+[76](https://catalog.data.gov/dataset/?_metadata_type_limit=0&q=%22National+Hydrography+Dataset%22&_res_format_limit=0)
+[77](https://coast.noaa.gov/digitalcoast/data/nlcd.html)
+[78](https://www.transportation.gov/tags/ntad)
+[79](https://data-usdot.opendata.arcgis.com/search?tags=highway)
+[80](https://catalog.data.gov/dataset/?tags=rail&_tags_limit=0)
+[81](https://www.transportation.gov/tags/national-transportation-atlas-database-ntad)
+[82](https://www.usgs.gov/programs/gap-analysis-project/science/protected-areas)
+[83](https://www.npms.phmsa.dot.gov/publicviewer/)
+[84](https://railroads.dot.gov/rail-network-development/freight-rail/data-resources)
+[85](https://www.usgs.gov/products/web-tools/apis)
+[86](https://www.weather.gov/wrh/climate)
+[87](https://www.arcgis.com/home/item.html?id=cdc49bd63ea54dd2977f3f2853e07fff)
+[88](https://www.usgs.gov/data/nrcs-fy2018-soil-properties-and-interpretations-derived-using-gssurgo-data-and-tools)
+[89](https://gisdata.mn.gov/dataset/geos-gssurgo)
+[90](https://blog.maxar.com/earth-intelligence/2016/real-technology-real-benefits-part-3-image-quality)
+[91](https://www.arcgis.com/home/item.html?id=2af9435fb0f447258c38e8d9609a34cd)
+[92](https://datons.ai/eia-api-automating-us-energy-data-with-python/)
+[93](https://ramikrispin.github.io/EIAapi/articles/intro.html)
+[94](https://catalystcoop-pudl.readthedocs.io/en/latest/data_sources/eiaapi.html)
+[95](https://cran.r-project.org/web/packages/EIAapi/EIAapi.pdf)
+[96](https://www.epa.gov/power-sector/power-sector-data)
+[97](https://cran.r-project.org/web/packages/EIAapi/readme/README.html)
+[98](https://github.com/open-energy-transition/Awesome-Electric-Grid-Mapping)

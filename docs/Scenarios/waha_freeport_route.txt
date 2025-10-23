@@ -1,0 +1,19 @@
+# Waha to Freeport Pipeline Route Coordinates
+# Approximate straight-line distance: ~840 km
+
+# Point A: Waha, Texas (Permian Basin)
+# Coordinates: 31.85°N, 102.15°W
+
+# Point B: Freeport, Texas (Gulf Coast)
+# Coordinates: 28.95°N, 95.35°W
+
+# Corridor width: 3 km (1.5 km each side of centerline)
+# This provides sufficient buffer for routing optimization while conserving disk space
+
+# Bounding box for data acquisition (with margin):
+# West: -102.65, East: -94.85, South: 28.45, North: 32.35
+# Format: minx,miny,maxx,maxy
+BBOX=-102.65,28.45,-94.85,32.35
+
+# Centerline (approximate great circle route)
+# This will be refined with constraint analysis

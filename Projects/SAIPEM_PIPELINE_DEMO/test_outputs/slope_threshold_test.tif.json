@@ -1,0 +1,11 @@
+{
+  "above_value": 1.0,
+  "below_value": 0.0,
+  "expression": "where(A>20.000000,1.000000,0.000000)",
+  "input_raster": "test_outputs/slope_test.tif",
+  "inverted": false,
+  "output_raster": "test_outputs/slope_threshold_test.tif",
+  "threshold_value": 20.0,
+  "timestamp_utc": "2025-10-13T15:53:38Z",
+  "tool": "raster_threshold"
+}

@@ -1,0 +1,10 @@
+{
+  "asset": "JRC/GSW1_4/GlobalSurfaceWater",
+  "bands": "occurrence",
+  "bbox": "13.454779,42.857057,13.938769,43.438886",
+  "crs": "EPSG:32633",
+  "scale_m": "30",
+  "tile_pixels": 2048,
+  "timestamp_utc": "2025-10-12T08:26:58Z",
+  "tool": "gee_tile_export"
+}

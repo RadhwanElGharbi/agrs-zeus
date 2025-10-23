@@ -1,0 +1,370 @@
+Based on research of TINITALY's data access methods, here are the detailed implementation instructions for Cursor to automatically download TINITALY DEM data.
+
+## Human Intervention: None Required
+
+TINITALY 1.1 is freely accessible under CC BY 4.0 license with no authentication or credentials needed. Data is distributed as 193 tile files covering the entire Italian territory.[1][2][3]
+
+## Cursor Implementation Instructions
+
+### Implementation Overview
+
+Create a Python module to automatically download TINITALY DEM tiles (10m resolution) from the INGV public repository. TINITALY is distributed as a tiled dataset with 193 individual zip files, each containing GeoTIFF data in ESRI ASCII Raster format.[4][3][1]
+
+### Access Methods Available
+
+TINITALY offers three download options :[3]
+
+1. **Direct HTTP tile downloads** (recommended for automation): Individual tiles as zip files
+2. **WMS (Web Map Service)**: http://tinitaly.pi.ingv.it/TINItaly_1_1/wms
+3. **WCS (Web Coverage Service)**: http://tinitaly.pi.ingv.it/TINItaly_1_1/wcs
+4. **WMTS (Web Map Tile Service)**: https://tinitaly.pi.ingv.it/TINItaly_1_1/gwc/service/wmts
+
+For pipeline routing automation, direct tile downloads are optimal.[1]
+
+### Dataset Specifications
+
+**Resolution**: 10 meters[4]
+**Coverage**: Entire Italian territory[2]
+**Vertical Accuracy**: RMSE < 3.5 meters[2]
+**Coordinate System**: UTM WGS84 Zone 32N (EPSG:32632)[3]
+**No Data Value**: -9999[2]
+**Format**: GeoTIFF packaged in zip files, encoded as ESRI ASCII Raster[3]
+**Tiles**: 193 individual tiles covering Italy[3]
+**License**: CC BY 4.0 (freely usable with citation)[1][2]
+
+### Module Structure
+
+Create a class `TinitalyDEMFetcher` with the following functionality:
+
+**1. Tile Inventory Component**
+- Parse the TINITALY download page at https://tinitaly.pi.ingv.it/Download_Area1_1.html[1]
+- Extract all tile download URLs (193 tiles total)[3]
+- Tiles are organized spatially covering the Italian territory
+- Build a tile index mapping spatial coordinates to tile URLs
+
+**2. Spatial Query Component**
+- Accept bounding box input in WGS84 coordinates (EPSG:4326)
+- Transform bounding box to UTM 32N (EPSG:32632) to match TINITALY CRS[3]
+- Identify which tiles intersect with the query area
+- Return list of relevant tile URLs for download
+
+**3. Download Component**
+- Download selected tiles via HTTP GET requests (no authentication required)[1]
+- Save zip files to specified output directory
+- Extract GeoTIFF files from zip archives
+- Handle existing files with skip or overwrite options
+- Implement progress tracking for multiple tile downloads
+
+**4. Mosaic Component (Optional)**
+- Merge multiple tiles into a single raster if area spans multiple tiles
+- Use GDAL for merging operations
+- Clip merged raster to exact bounding box requested
+
+### Code Template for Cursor
+
+```python
+import requests
+from bs4 import BeautifulSoup
+import zipfile
+from pathlib import Path
+import re
+from typing import List, Tuple, Optional
+import time
+
+class TinitalyDEMFetcher:
+    def __init__(self, output_dir='./tinitaly_data'):
+        self.output_dir = Path(output_dir)
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+        self.base_url = 'https://tinitaly.pi.ingv.it'
+        self.download_page = f'{self.base_url}/Download_Area1_1.html'
+        self.tiles = []
+        
+    def fetch_tile_inventory(self):
+        """
+        Scrape the TINITALY download page to get all tile URLs
+        """
+        print("Fetching tile inventory from TINITALY...")
+        response = requests.get(self.download_page, timeout=30)
+        response.raise_for_status()
+        
+        soup = BeautifulSoup(response.content, 'html.parser')
+        
+        # Find all download links (typically anchor tags with .zip or tile references)
+        links = soup.find_all('a', href=True)
+        
+        for link in links:
+            href = link['href']
+            # Filter for tile download links (adjust pattern based on actual page structure)
+            if '.zip' in href.lower() or 'tile' in href.lower():
+                # Construct absolute URL if relative
+                if not href.startswith('http'):
+                    tile_url = f"{self.base_url}/{href.lstrip('/')}"
+                else:
+                    tile_url = href
+                
+                self.tiles.append({
+                    'url': tile_url,
+                    'filename': Path(href).name
+                })
+        
+        print(f"Found {len(self.tiles)} tiles")
+        return self.tiles
+    
+    def download_tile(self, tile_info: dict, extract: bool = True):
+        """
+        Download a single tile
+        tile_info: dict with 'url' and 'filename'
+        extract: whether to extract the zip file
+        """
+        tile_url = tile_info['url']
+        filename = tile_info['filename']
+        
+        output_file = self.output_dir / filename
+        
+        # Skip if already downloaded
+        if output_file.exists():
+            print(f"Tile {filename} already exists, skipping")
+            return output_file
+        
+        print(f"Downloading {filename}...")
+        
+        try:
+            response = requests.get(tile_url, stream=True, timeout=60)
+            response.raise_for_status()
+            
+            # Download with progress
+            total_size = int(response.headers.get('content-length', 0))
+            
+            with open(output_file, 'wb') as f:
+                if total_size == 0:
+                    f.write(response.content)
+                else:
+                    downloaded = 0
+                    for chunk in response.iter_content(chunk_size=8192):
+                        f.write(chunk)
+                        downloaded += len(chunk)
+                        progress = (downloaded / total_size) * 100
+                        print(f"Progress: {progress:.1f}%", end='\r')
+            
+            print(f"\nDownloaded: {output_file}")
+            
+            # Extract if zip file
+            if extract and output_file.suffix.lower() == '.zip':
+                print(f"Extracting {filename}...")
+                with zipfile.ZipFile(output_file, 'r') as zip_ref:
+                    zip_ref.extractall(self.output_dir)
+                print(f"Extracted to {self.output_dir}")
+            
+            return output_file
+            
+        except Exception as e:
+            print(f"Error downloading {filename}: {e}")
+            if output_file.exists():
+                output_file.unlink()  # Remove partial download
+            raise
+    
+    def download_all_tiles(self, extract: bool = True, delay: float = 1.0):
+        """
+        Download all available tiles
+        delay: seconds to wait between downloads (be respectful to server)
+        """
+        if not self.tiles:
+            self.fetch_tile_inventory()
+        
+        downloaded_files = []
+        
+        for i, tile in enumerate(self.tiles, 1):
+            print(f"\n[{i}/{len(self.tiles)}] Processing tile...")
+            try:
+                file_path = self.download_tile(tile, extract=extract)
+                downloaded_files.append(file_path)
+                
+                # Delay between requests
+                if i < len(self.tiles):
+                    time.sleep(delay)
+                    
+            except Exception as e:
+                print(f"Failed to download tile: {e}")
+                continue
+        
+        return downloaded_files
+    
+    def download_tiles_by_indices(self, tile_indices: List[int], extract: bool = True):
+        """
+        Download specific tiles by their index numbers
+        tile_indices: list of tile numbers to download (0-based indexing)
+        """
+        if not self.tiles:
+            self.fetch_tile_inventory()
+        
+        downloaded_files = []
+        
+        for idx in tile_indices:
+            if idx < 0 or idx >= len(self.tiles):
+                print(f"Invalid tile index: {idx}")
+                continue
+            
+            tile = self.tiles[idx]
+            try:
+                file_path = self.download_tile(tile, extract=extract)
+                downloaded_files.append(file_path)
+                time.sleep(1)  # Be respectful to server
+            except Exception as e:
+                print(f"Failed to download tile {idx}: {e}")
+                continue
+        
+        return downloaded_files
+    
+    def get_tiles_for_bbox(self, bbox: Tuple[float, float, float, float]) -> List[dict]:
+        """
+        Get tiles that intersect with bounding box
+        bbox: (min_lon, min_lat, max_lon, max_lat) in WGS84
+        
+        Note: This requires spatial indexing of tiles which may need
+        additional parsing of tile metadata or tile naming convention
+        """
+        # This is a placeholder - actual implementation requires
+        # understanding TINITALY's tile naming/organization scheme
+        print("WARNING: Spatial filtering not yet implemented")
+        print("Tile naming convention needs to be analyzed for spatial indexing")
+        print("Recommendation: Download all tiles or specify tile indices manually")
+        return self.tiles
+
+# Usage example
+if __name__ == "__main__":
+    fetcher = TinitalyDEMFetcher(output_dir='./tinitaly_dem')
+    
+    # Option 1: Fetch inventory and see available tiles
+    tiles = fetcher.fetch_tile_inventory()
+    print(f"\nTotal tiles available: {len(tiles)}")
+    
+    # Option 2: Download all tiles (193 tiles, ~XX GB total)
+    # Uncomment to download all
+    # fetcher.download_all_tiles(extract=True, delay=2.0)
+    
+    # Option 3: Download specific tiles by index
+    # Example: download first 5 tiles
+    fetcher.download_tiles_by_indices([0, 1, 2, 3, 4], extract=True)
+    
+    # Option 4: For specific geographic area
+    # Note: Requires implementing spatial indexing
+    # bbox = (9.0, 40.0, 12.0, 43.0)  # Example: part of central Italy
+    # tiles_for_area = fetcher.get_tiles_for_bbox(bbox)
+```
+
+### Enhanced Implementation with WCS Access
+
+For programmatic access to specific geographic areas without downloading all tiles, use the WCS service :[3]
+
+```python
+from owslib.wcs import WebCoverageService
+import rasterio
+from rasterio.io import MemoryFile
+import requests
+
+class TinitalyWCSFetcher:
+    def __init__(self, output_dir='./tinitaly_wcs'):
+        self.output_dir = Path(output_dir)
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+        self.wcs_url = 'http://tinitaly.pi.ingv.it/TINItaly_1_1/wcs'
+        
+    def fetch_area(self, bbox: Tuple[float, float, float, float], 
+                   output_filename: str = 'tinitaly_subset.tif'):
+        """
+        Fetch DEM data for specific bounding box via WCS
+        bbox: (min_lon, min_lat, max_lon, max_lat) in WGS84
+        """
+        # Connect to WCS service
+        wcs = WebCoverageService(self.wcs_url, version='1.0.0')
+        
+        # Get coverage identifier (layer name)
+        print("Available coverages:", list(wcs.contents.keys()))
+        
+        # Request coverage for bounding box
+        # Note: Adjust coverage_id based on actual WCS capabilities
+        coverage_id = list(wcs.contents.keys())[0]  # Use first available coverage
+        
+        # Build WCS GetCoverage request
+        params = {
+            'service': 'WCS',
+            'version': '1.0.0',
+            'request': 'GetCoverage',
+            'coverage': coverage_id,
+            'bbox': f"{bbox[0]},{bbox[1]},{bbox[2]},{bbox[3]}",
+            'crs': 'EPSG:4326',
+            'format': 'GeoTIFF',
+            'width': 1024,  # Adjust resolution as needed
+            'height': 1024
+        }
+        
+        response = requests.get(self.wcs_url, params=params, stream=True)
+        response.raise_for_status()
+        
+        output_file = self.output_dir / output_filename
+        
+        with open(output_file, 'wb') as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                f.write(chunk)
+        
+        print(f"Downloaded DEM subset to {output_file}")
+        return output_file
+
+# Usage
+wcs_fetcher = TinitalyWCSFetcher()
+bbox = (12.4, 41.8, 12.6, 42.0)  # Rome area example
+wcs_fetcher.fetch_area(bbox, 'rome_dem.tif')
+```
+
+### Required Python Packages
+
+```
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+rasterio>=1.3.0
+owslib>=0.29.0
+pyproj>=3.6.0
+gdal>=3.7.0
+```
+
+### Citation Requirement
+
+All uses of TINITALY data must include the following citation :[1]
+
+```
+Tarquini S., I. Isola, M. Favalli, A. Battistini, G. Dotta, (2023). 
+TINITALY, a digital elevation model of Italy with a 10 meters cell size (Version 1.1). 
+Istituto Nazionale di Geofisica e Vulcanologia (INGV). 
+https://doi.org/10.13127/tinitaly/1.1
+```
+
+### Implementation Notes
+
+The tile download approach requires parsing the HTML structure of the download page to extract tile URLs. TINITALY organizes 193 tiles spatially across Italy, but the exact tile naming convention and spatial index need to be derived from the download page structure. For area-specific downloads, the WCS service provides a more efficient method to extract only the required geographic extent without downloading entire tiles. The dataset covers the entire Italian territory with seamless coverage at 10m resolution and vertical accuracy better than 3.5 meters RMSE.[2][1][3]
+
+[1](https://tinitaly.pi.ingv.it/Download_Area1_1.html)
+[2](https://gee-community-catalog.org/projects/tinitaly/)
+[3](https://geodati.gov.it/geoportalRNDTPA/catalog/search/resource/details.page?uuid=ingv%3Ahttps%3A%2F%2Fdata.ingv.it%2Fmetadata%2Fiso19115%2F807.xml)
+[4](https://tinitaly.pi.ingv.it)
+[5](https://data.europa.eu/data/datasets/ingv-https-data-ingv-it-metadata-iso19115-807-xml?locale=en)
+[6](https://support.plexearth.com/hc/en-us/articles/30581901387549-Terrain-Data-Access-DEM-data-for-Italy-TINITALY-1-1-INGV)
+[7](https://www.sciencedirect.com/science/article/abs/pii/S0169555X16301477)
+[8](https://data.ingv.it/dataset/185)
+[9](https://data.ingv.it/docs/implementation/)
+[10](https://www.opendem.info/archiv_2020.html)
+[11](https://data.ingv.it/en/dataset/185)
+[12](https://www.youtube.com/watch?v=ZnBRXp4RPSk)
+[13](https://landscapearchaeology.org/lidar-data/)
+[14](http://tinitaly.pi.ingv.it/GEOM_Tarquini_Nannipieri_TINITALY_final_color_2_post_with_freeLINK.pdf)
+[15](https://help.emd.dk/mediawiki/index.php/Italian_Elevation_Model_-_TINITALY)
+[16](https://data.ingv.it/docs/principles/)
+[17](http://www.ingv.it/en/ingv-newsletter-n-2-February-2021-year-xv/dem-tinitaly-the-digital-map-of-the-Italian-territory)
+[18](http://www.ingv.it/en/resources-and-services/openscience/catalogs-and-databases)
+[19](https://tinitaly.pi.ingv.it/Tinitaly_1_1_AccompanyingNotes.pdf)
+[20](https://www.opendem.info/opendemeu_meta_italy.html)
+[21](https://www.academia.edu/41769377/TINITALY_01_a_new_Triangular_Irregular_Network_of_Italy)
+[22](https://webgis.pi.ingv.it/index2.html)
+[23](http://tinitaly.pi.ingv.it)
+[24](https://data.ingv.it/en/dataset/807)
+[25](https://data.ingv.it/it/dataset/807)
+[26](http://tinitaly.pi.ingv.it/wmts_service.html)
+[27](https://www.academia.edu/14356531/A_website_to_explore_the_TINITALY_01_DEM)

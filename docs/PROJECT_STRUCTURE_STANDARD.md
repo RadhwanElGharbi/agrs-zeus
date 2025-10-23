@@ -1,0 +1,1091 @@
+# AGRS Project Structure Standard
+
+**Version:** 1.0  
+**Established:** October 11, 2025  
+**Status:** MANDATORY for all new projects
+
+---
+
+## Overview
+
+This document defines the mandatory structure and workflow for all AGRS geospatial projects. Consistency in project organization, data management, and documentation is critical for reproducibility, quality assurance, and team collaboration.
+
+---
+
+## Project Directory Structure
+
+### Root Location
+
+```
+/opt/agrs/Projects/
+```
+
+All new projects MUST be created under this directory.
+
+### Project Folder Naming
+
+```
+/opt/agrs/Projects/<PROJECT_NAME>/
+```
+
+- **PROJECT_NAME** should be descriptive and typically AOI-based
+- Examples:
+  - `SAIPEM_Central_Italy/`
+  - `TransCanada_Alberta_Corridor/`
+  - `Saudi_Aramco_Eastern_Province/`
+- Use underscores for spaces, avoid special characters
+
+### Required Project Structure
+
+```
+/opt/agrs/Projects/<PROJECT_NAME>/
+├── project_metadata.json          # Project configuration and CRS
+├── aoi/                            # Area of Interest definition
+│   ├── aoi.geojson                 # Primary AOI geometry
+│   ├── aoi.gpkg                    # Alternative AOI format
+│   └── aoi_metadata.json           # AOI source, CRS, units
+├── data/                           # All fetched datasets
+│   ├── vectors/                    # Vector data (GPKG, GeoJSON, SHP)
+│   │   ├── <dataset_name>.gpkg
+│   │   └── <dataset_name>.json     # Sidecar metadata
+│   ├── rasters/                    # Raster data (GeoTIFF, COG)
+│   │   ├── <dataset_name>.tif
+│   │   └── <dataset_name>.json     # Sidecar metadata
+│   └── raw/                        # Original downloaded data (before processing)
+├── derived/                        # Processed/derived datasets
+│   ├── terrain_analysis/
+│   ├── cost_surfaces/
+│   └── constraints/
+├── outputs/                        # Final deliverables
+│   ├── routing_results/
+│   ├── reports/
+│   └── figures/
+├── logs/                           # Operation logs
+│   ├── project.log                 # Main project log (all operations)
+│   ├── fetch.log                   # Data acquisition log
+│   ├── processing.log              # Geoprocessing operations log
+│   └── perplexity_queries.log      # All Perplexity searches (query ID, timestamp, params)
+└── docs/                           # Project documentation
+    ├── README.md
+    ├── data_sources.md
+    └── perplexity_research/        # All Perplexity AI research
+        ├── aoi_intelligence.md
+        ├── regulatory_authorities.md
+        ├── stakeholders.md
+        ├── permitting.md
+        ├── environmental_constraints.md
+        ├── risk_assessment.md
+        ├── research_summary.md
+        └── queries/                # Individual query logs with unique IDs
+            ├── <PROJECT_ID>_QUERY_001.json
+            ├── <PROJECT_ID>_QUERY_002.json
+            └── ...
+```
+
+---
+
+## Project Initialization Requirements
+
+### 1. Area of Interest (AOI)
+
+**MANDATORY**: Every project must start with a defined AOI.
+
+**Accepted Formats:**
+- GeoJSON (`.geojson`)
+- GeoPackage (`.gpkg`)
+- Shapefile (`.shp` + associated files)
+- KML/KMZ (`.kml`, `.kmz`)
+
+**AOI Metadata Requirements** (`aoi/aoi_metadata.json`):
+
+```json
+{
+  "source": "Client-provided / Digitized / Extracted from <source>",
+  "date_created": "2025-10-11",
+  "crs": {
+    "epsg": 32633,
+    "proj4": "+proj=utm +zone=33 +datum=WGS84 +units=m +no_defs",
+    "name": "WGS 84 / UTM zone 33N"
+  },
+  "bounds": {
+    "minx": 300000.0,
+    "miny": 4500000.0,
+    "maxx": 500000.0,
+    "maxy": 4700000.0,
+    "units": "meters"
+  },
+  "area_km2": 40000.0,
+  "description": "SAIPEM pipeline routing corridor, Central Italy"
+}
+```
+
+---
+
+### 2. Coordinate Reference System (CRS)
+
+**MANDATORY**: Project CRS must be explicitly defined in `project_metadata.json`.
+
+**Guidelines:**
+- Use **projected CRS** (UTM, local grid) for accurate distance/area calculations
+- Avoid geographic CRS (lat/lon) for projects requiring terrain analysis or routing
+- Document CRS with EPSG code, PROJ4 string, and human-readable name
+- **All datasets must be reprojected to the project CRS**
+
+**Example Project Metadata** (`project_metadata.json`):
+
+```json
+{
+  "project_name": "SAIPEM Central Italy Pipeline Routing",
+  "project_code": "SAIPEM_IT_2025",
+  "client": "SAIPEM S.p.A.",
+  "date_created": "2025-10-11",
+  "status": "active",
+  "crs": {
+    "epsg": 32633,
+    "proj4": "+proj=utm +zone=33 +datum=WGS84 +units=m +no_defs",
+    "name": "WGS 84 / UTM zone 33N",
+    "units": "meters"
+  },
+  "measurement_system": "SI",
+  "units": {
+    "length": "meters",
+    "area": "square_meters",
+    "elevation": "meters",
+    "temperature": "celsius",
+    "note": "All measurements use SI units unless explicitly stated otherwise"
+  },
+  "aoi": {
+    "file": "aoi/aoi.geojson",
+    "area_km2": 40000.0
+  },
+  "contacts": {
+    "project_manager": "Name",
+    "gis_lead": "Name",
+    "client_contact": "Name"
+  }
+}
+```
+
+---
+
+### 3. Measurement Units
+
+**DEFAULT**: SI units for all measurements
+
+**Required Documentation:**
+- Length: meters (m)
+- Area: square meters (m²) or square kilometers (km²)
+- Elevation: meters above sea level (m ASL)
+- Slope: percentage (%) or degrees (°)
+- Temperature: Celsius (°C)
+- Volume: cubic meters (m³)
+- Cost: USD or local currency (must be specified)
+
+**CRITICAL**: Unit consistency across all datasets is mandatory. Document any deviations from SI in dataset metadata.
+
+---
+
+## Data Acquisition Workflow
+
+### 1. Immediate Data Fetching
+
+Once AOI and CRS are defined, **all relevant datasets must be fetched immediately** using available CLI tools.
+
+**Standard Dataset Categories:**
+- Transportation networks (roads, railways, waterways)
+- Administrative boundaries
+- Elevation (DEMs)
+- Land cover
+- Protected areas
+- Existing infrastructure (pipelines, utilities)
+- Population density
+- Hydrology (water bodies, flood zones)
+- Soil properties
+- Seismic hazard (if applicable)
+
+**Fetch Commands** (examples):
+
+```bash
+cd /opt/agrs/Projects/<PROJECT_NAME>
+
+# Fetch all standard datasets for AOI
+zeus tools osm_roads_fetch --aoi aoi/aoi.geojson -o data/vectors/roads.gpkg
+zeus tools osm_railways_fetch --aoi aoi/aoi.geojson -o data/vectors/railways.gpkg
+zeus tools osm_waterways_fetch --aoi aoi/aoi.geojson -o data/vectors/waterways.gpkg
+zeus tools gadm_fetch --country ITA --aoi aoi/aoi.geojson -o data/vectors/boundaries.gpkg
+zeus tools tinitaly_fetch --aoi aoi/aoi.geojson -o data/rasters/dem_tinitaly.tif
+zeus tools esa_worldcover_fetch --aoi aoi/aoi.geojson -o data/rasters/landcover_esa.tif
+# ... (continue for all relevant datasets)
+```
+
+All fetch operations must be logged to `logs/fetch.log`.
+
+---
+
+### 2. JSON Sidecar Files
+
+**MANDATORY**: Every dataset MUST have a corresponding JSON sidecar file with complete metadata.
+
+**Naming Convention:**
+- Dataset: `data/rasters/dem_tinitaly.tif`
+- Sidecar: `data/rasters/dem_tinitaly.json`
+
+**Sidecar Schema** (complete example):
+
+```json
+{
+  "dataset_name": "TINITALY DEM 10m",
+  "filename": "dem_tinitaly.tif",
+  "type": "raster",
+  "format": "GeoTIFF (COG)",
+  "source": {
+    "name": "Istituto Nazionale di Geofisica e Vulcanologia (INGV)",
+    "url": "https://tinitaly.pi.ingv.it/",
+    "citation": "Tarquini, S., et al. (2012). TINITALY/01: a new Triangular Irregular Network of Italy. Annals of Geophysics, 55(2).",
+    "license": "CC BY 4.0"
+  },
+  "acquisition": {
+    "method": "automated",
+    "tool": "zeus tools tinitaly_fetch",
+    "command": "zeus tools tinitaly_fetch --aoi aoi/aoi.geojson -o data/rasters/dem_tinitaly.tif",
+    "date_fetched": "2025-10-11T15:30:00Z",
+    "user": "radwan-el-gharbi"
+  },
+  "spatial": {
+    "crs": {
+      "epsg": 32633,
+      "proj4": "+proj=utm +zone=33 +datum=WGS84 +units=m +no_defs",
+      "name": "WGS 84 / UTM zone 33N"
+    },
+    "extent": {
+      "minx": 300000.0,
+      "miny": 4500000.0,
+      "maxx": 500000.0,
+      "maxy": 4700000.0,
+      "units": "meters"
+    },
+    "resolution": {
+      "x": 10.0,
+      "y": 10.0,
+      "units": "meters"
+    },
+    "dimensions": {
+      "width": 20000,
+      "height": 20000,
+      "bands": 1
+    }
+  },
+  "attributes": {
+    "band_1": {
+      "name": "elevation",
+      "description": "Elevation above sea level",
+      "units": "meters",
+      "nodata_value": -9999.0,
+      "data_type": "Float32",
+      "statistics": {
+        "min": 0.0,
+        "max": 2500.0,
+        "mean": 450.0,
+        "stddev": 350.0
+      }
+    }
+  },
+  "processing": {
+    "original_crs": "EPSG:4326",
+    "reprojected": true,
+    "reprojection_method": "bilinear",
+    "clipped_to_aoi": true,
+    "mosaicked": true,
+    "validated": true
+  },
+  "quality": {
+    "completeness": 100,
+    "accuracy": "±5m vertical, ±10m horizontal",
+    "temporal_coverage": "2012",
+    "issues": []
+  },
+  "file_info": {
+    "size_bytes": 77594624,
+    "size_human": "74 MB",
+    "checksum_md5": "a1b2c3d4e5f6...",
+    "compression": "DEFLATE",
+    "tiled": true,
+    "overviews": true
+  },
+  "metadata_version": "1.0",
+  "last_updated": "2025-10-11T15:45:00Z"
+}
+```
+
+**Vector Dataset Sidecar Example:**
+
+```json
+{
+  "dataset_name": "OSM Waterways Enhanced",
+  "filename": "waterways_enhanced.gpkg",
+  "type": "vector",
+  "format": "GeoPackage",
+  "geometry_type": "LineString",
+  "source": {
+    "name": "OpenStreetMap",
+    "url": "https://www.openstreetmap.org/",
+    "api": "Overpass API",
+    "license": "ODbL 1.0"
+  },
+  "acquisition": {
+    "method": "automated",
+    "tool": "zeus tools osm_waterways_fetch",
+    "command": "zeus tools osm_waterways_fetch --aoi aoi/aoi.geojson -o data/vectors/waterways_enhanced.gpkg",
+    "date_fetched": "2025-10-11T14:20:00Z",
+    "user": "radwan-el-gharbi"
+  },
+  "spatial": {
+    "crs": {
+      "epsg": 32633,
+      "name": "WGS 84 / UTM zone 33N"
+    },
+    "extent": {
+      "minx": 300000.0,
+      "miny": 4500000.0,
+      "maxx": 500000.0,
+      "maxy": 4700000.0,
+      "units": "meters"
+    }
+  },
+  "attributes": {
+    "feature_count": 35437,
+    "fields": [
+      {
+        "name": "osm_id",
+        "type": "Integer64",
+        "description": "OpenStreetMap feature ID"
+      },
+      {
+        "name": "name",
+        "type": "String",
+        "description": "Waterway name"
+      },
+      {
+        "name": "waterway",
+        "type": "String",
+        "description": "Waterway type (river, stream, canal, etc.)"
+      },
+      {
+        "name": "width_m",
+        "type": "Real",
+        "description": "Width in meters (measured or estimated)",
+        "units": "meters"
+      },
+      {
+        "name": "width_class",
+        "type": "String",
+        "description": "Width classification: small, medium, large, major"
+      },
+      {
+        "name": "crossing_cost_cat",
+        "type": "String",
+        "description": "Crossing cost category: low, medium, high, very_high"
+      }
+    ]
+  },
+  "processing": {
+    "original_crs": "EPSG:4326",
+    "reprojected": true,
+    "clipped_to_aoi": true,
+    "enhanced": true,
+    "enhancements": [
+      "Width estimation from waterway type",
+      "Width classification",
+      "Crossing cost categorization"
+    ]
+  },
+  "quality": {
+    "completeness": 95,
+    "accuracy": "Varies by region, generally high for Italy",
+    "temporal_coverage": "Current (updated daily)",
+    "issues": [
+      "Some rural streams may lack width tags"
+    ]
+  },
+  "file_info": {
+    "size_bytes": 23068672,
+    "size_human": "22 MB",
+    "layers": ["waterways_enhanced"]
+  },
+  "metadata_version": "1.0",
+  "last_updated": "2025-10-11T14:25:00Z"
+}
+```
+
+---
+
+### 3. Geoprocessing Requirements
+
+**ALL datasets must undergo the following processing steps before being considered project-ready:**
+
+#### A. Reprojection
+
+- **Requirement**: All datasets MUST be reprojected to the project CRS
+- **Method**: Use `gdalwarp` (rasters) or `ogr2ogr` (vectors)
+- **Resampling** (rasters):
+  - Continuous data (elevation, slope): `bilinear` or `cubic`
+  - Categorical data (land cover): `near` (nearest neighbor)
+- **Log**: Document original CRS, target CRS, and method in sidecar JSON
+
+**Example:**
+```bash
+# Original DEM in EPSG:4326, project CRS is EPSG:32633
+gdalwarp -t_srs EPSG:32633 -r bilinear \
+  data/raw/dem_original.tif \
+  data/rasters/dem_tinitaly.tif
+```
+
+#### B. Clipping
+
+- **Requirement**: All datasets MUST be clipped to the project AOI
+- **Method**: Use `-cutline` (rasters) or `-clipsrc` (vectors)
+- **Buffer**: Consider adding a buffer (e.g., 5-10 km) to AOI for edge effects
+- **Log**: Document clipping operation and buffer distance
+
+**Example:**
+```bash
+# Clip raster to AOI with 5km buffer
+gdalwarp -cutline aoi/aoi_buffered_5km.geojson -crop_to_cutline \
+  data/rasters/dem_full.tif \
+  data/rasters/dem_tinitaly.tif
+```
+
+#### C. Mosaicking
+
+- **Requirement**: If a dataset spans multiple tiles, it MUST be mosaicked into a single file
+- **Method**: Use `gdalbuildvrt` + `gdal_translate` (rasters) or `ogr2ogr` (vectors)
+- **Seamlines**: Ensure seamless transitions between tiles
+- **Log**: Document source tiles and mosaicking method
+
+**Example:**
+```bash
+# Mosaic multiple DEM tiles
+gdalbuildvrt temp_mosaic.vrt tile_*.tif
+gdal_translate -of COG -co COMPRESS=DEFLATE temp_mosaic.vrt data/rasters/dem_tinitaly.tif
+rm temp_mosaic.vrt
+```
+
+#### D. Validation
+
+- **Requirement**: All datasets MUST be validated before use
+- **Checks**:
+  - CRS matches project CRS
+  - Extent matches AOI (with buffer if applicable)
+  - No missing data (NoData values documented)
+  - Resolution/accuracy meets project requirements
+  - File format is correct (COG for rasters, GPKG for vectors preferred)
+  - Sidecar JSON is complete and accurate
+- **Log**: Document validation results and any issues found
+
+**Validation Script Example:**
+```bash
+# Validate raster CRS and extent
+gdalinfo data/rasters/dem_tinitaly.tif | grep -E "(PROJCS|Upper Left|Lower Right|Size|NoData)"
+```
+
+---
+
+## Logging Requirements
+
+### Log File Structure
+
+All operations MUST be logged in human-readable format with timestamps.
+
+**Log File Locations:**
+- `logs/project.log` - All project operations (master log)
+- `logs/fetch.log` - Data acquisition operations
+- `logs/processing.log` - Geoprocessing operations (reproject, clip, mosaic)
+
+### Log Entry Format
+
+```
+[TIMESTAMP] [OPERATION] [STATUS] Operation details
+[TIMESTAMP] [OPERATION] [STATUS] - Input: <input_file>
+[TIMESTAMP] [OPERATION] [STATUS] - Output: <output_file>
+[TIMESTAMP] [OPERATION] [STATUS] - Parameters: <key parameters>
+[TIMESTAMP] [OPERATION] [STATUS] - Result: <success/failure/warnings>
+```
+
+**Example Log Entries:**
+
+```
+[2025-10-11 15:30:00] [FETCH] [START] Fetching TINITALY DEM for AOI
+[2025-10-11 15:30:01] [FETCH] [INFO] - Tool: zeus tools tinitaly_fetch
+[2025-10-11 15:30:01] [FETCH] [INFO] - AOI: aoi/aoi.geojson
+[2025-10-11 15:30:01] [FETCH] [INFO] - Output: data/raw/dem_tinitaly_raw.tif
+[2025-10-11 15:35:22] [FETCH] [SUCCESS] TINITALY DEM downloaded (74 MB, 5m 22s)
+
+[2025-10-11 15:35:30] [REPROJECT] [START] Reprojecting DEM from EPSG:4326 to EPSG:32633
+[2025-10-11 15:35:31] [REPROJECT] [INFO] - Input: data/raw/dem_tinitaly_raw.tif
+[2025-10-11 15:35:31] [REPROJECT] [INFO] - Output: data/rasters/dem_tinitaly.tif
+[2025-10-11 15:35:31] [REPROJECT] [INFO] - Method: bilinear resampling
+[2025-10-11 15:36:45] [REPROJECT] [SUCCESS] Reprojection complete (1m 15s)
+
+[2025-10-11 15:36:50] [VALIDATE] [START] Validating dem_tinitaly.tif
+[2025-10-11 15:36:51] [VALIDATE] [INFO] - CRS: EPSG:32633 ✓
+[2025-10-11 15:36:51] [VALIDATE] [INFO] - Extent: 300000,4500000,500000,4700000 ✓
+[2025-10-11 15:36:51] [VALIDATE] [INFO] - Resolution: 10m ✓
+[2025-10-11 15:36:51] [VALIDATE] [INFO] - NoData: -9999 ✓
+[2025-10-11 15:36:51] [VALIDATE] [SUCCESS] Validation passed
+
+[2025-10-11 15:37:00] [SIDECAR] [START] Creating JSON sidecar for dem_tinitaly.tif
+[2025-10-11 15:37:01] [SIDECAR] [SUCCESS] Sidecar created: data/rasters/dem_tinitaly.json
+```
+
+### Perplexity Query Logging (MANDATORY)
+
+**All Perplexity AI searches MUST be logged** with unique IDs associated with the Project ID.
+
+**Log File Location:**
+- `logs/perplexity_queries.log` - Master log of all queries (summary)
+- `docs/perplexity_research/queries/<PROJECT_ID>_QUERY_<NUM>.json` - Individual query details
+
+**Master Log Format (`logs/perplexity_queries.log`):**
+
+```
+[TIMESTAMP] [PERPLEXITY] [QUERY_ID] Query type: <type> | Topic: <topic> | Status: <status>
+```
+
+**Example Master Log:**
+
+```
+[2025-10-11 14:00:00] [PERPLEXITY] [SAIPEM_QUERY_001] Query type: AOI Intelligence | Topic: terrain,climate,infrastructure | Status: SUCCESS
+[2025-10-11 14:05:30] [PERPLEXITY] [SAIPEM_QUERY_002] Query type: Regulatory Authorities | Topic: pipeline_regulations | Status: SUCCESS
+[2025-10-11 14:10:15] [PERPLEXITY] [SAIPEM_QUERY_003] Query type: Stakeholders | Topic: stakeholders,community | Status: SUCCESS
+[2025-10-11 14:15:45] [PERPLEXITY] [SAIPEM_QUERY_004] Query type: Permitting | Topic: permits,EIA | Status: SUCCESS
+[2025-10-11 14:20:30] [PERPLEXITY] [SAIPEM_QUERY_005] Query type: Environmental | Topic: protected_areas,endangered_species | Status: SUCCESS
+[2025-10-11 14:25:00] [PERPLEXITY] [SAIPEM_QUERY_006] Query type: Risk Assessment | Topic: seismic,flood,landslide | Status: SUCCESS
+[2025-10-12 09:30:00] [PERPLEXITY] [SAIPEM_QUERY_007] Query type: Coordinate Search | Location: 42.857,13.455 | Status: SUCCESS
+```
+
+**Individual Query Log Format (`docs/perplexity_research/queries/<PROJECT_ID>_QUERY_<NUM>.json`):**
+
+```json
+{
+  "query_id": "SAIPEM_QUERY_001",
+  "project_id": "SAIPEM_PIPELINE_DEMO",
+  "timestamp": "2025-10-11T14:00:00Z",
+  "query_type": "AOI Intelligence",
+  "parameters": {
+    "bbox": "13.454779,42.857057,13.938769,43.438886",
+    "place": "Central Italy, Lazio and Abruzzo",
+    "topic": "terrain,climate,geography,geology,infrastructure",
+    "location": null,
+    "query": null,
+    "model": "sonar",
+    "max_tokens": 4000,
+    "temperature": 0.2,
+    "recency": "month"
+  },
+  "response": {
+    "output_file": "docs/perplexity_research/aoi_intelligence.md",
+    "tokens_used": {
+      "prompt": 150,
+      "completion": 2500,
+      "total": 2650
+    },
+    "cost_usd": 0.00053,
+    "citations_count": 15,
+    "status": "SUCCESS"
+  },
+  "execution": {
+    "start_time": "2025-10-11T14:00:00Z",
+    "end_time": "2025-10-11T14:00:45Z",
+    "duration_seconds": 45
+  },
+  "metadata": {
+    "user": "radwan-el-gharbi",
+    "purpose": "Phase 2 mandatory AOI intelligence research",
+    "notes": "Initial research for project kickoff"
+  }
+}
+```
+
+**Query ID Format:**
+
+```
+<PROJECT_ID>_QUERY_<NUMBER>
+```
+
+**Examples:**
+- `SAIPEM_QUERY_001` - First query for SAIPEM project
+- `SAIPEM_QUERY_025` - 25th query for SAIPEM project
+- `TRANSCANADA_QUERY_001` - First query for TransCanada project
+
+**Logging Requirements:**
+
+1. **Every Perplexity search MUST be logged** before execution
+2. **Unique Query ID** must be generated for each search
+3. **All parameters** must be recorded
+4. **Response metadata** (tokens, cost, duration) must be logged
+5. **Output file location** must be recorded
+6. **Purpose and context** must be documented
+
+**Traceability:**
+
+This logging ensures:
+- Complete audit trail of all AI research
+- Cost tracking per project
+- Reproducibility of research
+- Compliance documentation
+- Quality assurance verification
+
+---
+
+## Project Lifecycle
+
+### Phase 1: Initialization (Day 0)
+
+1. Create project directory structure
+2. Define AOI (client-provided or digitized)
+3. Select and document project CRS
+4. Create `project_metadata.json` and `aoi/aoi_metadata.json`
+5. Initialize log files
+
+### Phase 2: Data Acquisition (Day 0-1)
+
+#### **Step 1: Dataset Coverage Assessment (MANDATORY)**
+
+**Immediately after AOI is acquired**, run the Fetch Tool Analyzer to determine dataset availability and identify gaps:
+
+```bash
+cd /opt/agrs/Projects/<PROJECT_NAME>
+
+# Assess overall pipeline routing readiness
+zeus tools analyze_fetch_tools --mode readiness
+
+# Check country-specific coverage for your AOI location
+zeus tools analyze_fetch_tools --mode country --country <COUNTRY_CODE>
+
+# Generate detailed coverage report
+zeus tools analyze_fetch_tools --mode all --output logs/coverage_assessment.json
+```
+
+**Purpose:**
+- Identify which datasets can be automatically fetched vs. require manual acquisition
+- Assess project feasibility based on available data
+- Prioritize data acquisition efforts
+- Document data gaps early in the project
+
+**Outputs:**
+- Coverage assessment saved to `logs/coverage_assessment.json`
+- Results documented in `docs/data_sources.md`
+- Identified gaps logged for manual acquisition
+
+**Action Items:**
+- For datasets with implemented fetch tools: Proceed with automated acquisition
+- For guidance-only datasets: Document manual acquisition requirements
+- For missing datasets: Escalate to GIS team or consider alternatives
+
+---
+
+#### **Step 2: Perplexity AI Intelligence Research (MANDATORY)**
+
+**After coverage assessment**, conduct comprehensive Perplexity AI research on the AOI. This is **REQUIRED** for all oil & gas pipeline projects.
+
+**Required Research Components:**
+
+1. **AOI Intelligence Report**
+   ```bash
+   zeus tools perplexity_search \
+     --bbox "<project_bbox>" \
+     --topic "terrain,climate,geography,geology,infrastructure" \
+     --output docs/perplexity_research/aoi_intelligence.md
+   ```
+   
+   Must include:
+   - Geographic and terrain characteristics
+   - Climate and weather patterns
+   - Existing infrastructure (roads, railways, pipelines, utilities)
+   - Population centers and demographics
+   - Economic activities in the region
+
+2. **Regulatory Authority Research**
+   ```bash
+   zeus tools perplexity_search \
+     --place "<region>, <country>" \
+     --topic "pipeline_regulations,oil_gas_regulations,regulatory_authorities,compliance_requirements" \
+     --output docs/perplexity_research/regulatory_authorities.md
+   ```
+   
+   Must include:
+   - **All regulatory authorities** (national, regional, local)
+   - Specific agencies responsible for pipeline permitting
+   - Filing requirements and procedures
+   - Compliance standards and codes
+   - Inspection and certification bodies
+   - Contact information for key authorities
+
+3. **Stakeholder Identification**
+   ```bash
+   zeus tools perplexity_search \
+     --place "<region>, <country>" \
+     --topic "pipeline_stakeholders,environmental_agencies,local_government,community_consultation" \
+     --output docs/perplexity_research/stakeholders.md
+   ```
+   
+   Must include:
+   - Government stakeholders (all levels)
+   - Environmental protection agencies
+   - Land management authorities
+   - Indigenous/local community representatives
+   - NGOs and advocacy groups
+   - Utility providers and infrastructure owners
+   - Contact information and consultation requirements
+
+4. **Permitting & Compliance Requirements**
+   ```bash
+   zeus tools perplexity_search \
+     --place "<region>, <country>" \
+     --topic "pipeline_permits,environmental_impact_assessment,right_of_way,land_acquisition" \
+     --output docs/perplexity_research/permitting.md
+   ```
+   
+   Must include:
+   - Complete list of required permits
+   - Environmental Impact Assessment (EIA) requirements
+   - Right-of-way acquisition processes
+   - Land use permissions
+   - Construction permits
+   - Operation and safety certifications
+   - Timeline estimates for each permit
+   - Costs and fees
+
+5. **Environmental & Protected Areas**
+   ```bash
+   zeus tools perplexity_search \
+     --bbox "<project_bbox>" \
+     --topic "protected_areas,national_parks,environmental_restrictions,endangered_species" \
+     --output docs/perplexity_research/environmental_constraints.md
+   ```
+   
+   Must include:
+   - Protected areas and national parks
+   - Environmental restrictions
+   - Endangered species and habitats
+   - Water resource protections
+   - Cultural and archaeological sites
+
+6. **Risk Assessment**
+   ```bash
+   zeus tools perplexity_search \
+     --bbox "<project_bbox>" \
+     --topic "seismic_risk,flood_risk,landslide_risk,natural_hazards,security_risks" \
+     --output docs/perplexity_research/risk_assessment.md
+   ```
+   
+   Must include:
+   - Natural hazards (seismic, flood, landslide)
+   - Climate risks
+   - Security and political risks
+   - Environmental risks
+   - Community and social risks
+
+**Research Directory Structure:**
+```
+docs/perplexity_research/
+├── aoi_intelligence.md
+├── regulatory_authorities.md
+├── stakeholders.md
+├── permitting.md
+├── environmental_constraints.md
+├── risk_assessment.md
+└── research_summary.md  # Executive summary of all findings
+```
+
+**Documentation Requirements:**
+
+All Perplexity research reports MUST include:
+- Full citations and sources
+- Date of research
+- Key contacts with phone/email (when available)
+- Action items and follow-ups
+- Confidence level of information
+
+The project creator must review all reports and have complete context for operations in the AOI before proceeding to data acquisition.
+
+#### Standard Data Acquisition
+
+After completing Perplexity research:
+
+1. Identify all required datasets
+2. Fetch all datasets using CLI tools
+3. Download any datasets requiring manual acquisition
+4. Store raw data in `data/raw/`
+5. Log all fetch operations
+
+### Phase 3: Data Processing (Day 1-2)
+
+1. Reproject all datasets to project CRS
+2. Clip all datasets to AOI (with buffer if needed)
+3. Mosaic multi-tile datasets
+4. Convert to optimized formats (COG, GPKG)
+5. Move processed data to `data/vectors/` or `data/rasters/`
+6. Log all processing operations
+
+### Phase 4: Metadata & Validation (Day 2)
+
+1. Create JSON sidecars for all datasets
+2. Validate all datasets (CRS, extent, resolution, completeness)
+3. Document any issues or limitations
+4. Create `docs/data_sources.md` summary
+5. Log validation results
+
+### Phase 5: Analysis & Deliverables (Day 3+)
+
+1. Perform terrain analysis, cost surface generation, etc.
+2. Run routing algorithms
+3. Generate outputs in `outputs/`
+4. Create reports and figures
+5. Log all analysis operations
+
+---
+
+## Quality Assurance Checklist
+
+Before a project is considered "ready for analysis", verify:
+
+### Phase 1: Initialization
+- [ ] Project directory structure is complete
+- [ ] `project_metadata.json` exists and is complete
+- [ ] `aoi/aoi_metadata.json` exists and is complete
+- [ ] AOI file exists in at least one format (GeoJSON preferred)
+- [ ] Project CRS is documented and appropriate (projected, not geographic)
+- [ ] Measurement units are documented (default: SI)
+
+### Phase 2: Data Acquisition
+
+#### Step 1: Coverage Assessment (MANDATORY)
+- [ ] Fetch Tool Analyzer executed for overall readiness
+- [ ] Country-specific coverage assessed
+- [ ] Coverage report generated (`logs/coverage_assessment.json`)
+- [ ] Data gaps documented in `docs/data_sources.md`
+- [ ] Manual acquisition requirements identified
+- [ ] Automated fetch tools list prepared
+
+#### Step 2: Perplexity Research (MANDATORY for oil & gas projects)
+- [ ] AOI intelligence report completed (`docs/perplexity_research/aoi_intelligence.md`)
+- [ ] Regulatory authorities identified (`docs/perplexity_research/regulatory_authorities.md`)
+- [ ] All stakeholders documented (`docs/perplexity_research/stakeholders.md`)
+- [ ] Permitting requirements researched (`docs/perplexity_research/permitting.md`)
+- [ ] Environmental constraints identified (`docs/perplexity_research/environmental_constraints.md`)
+- [ ] Risk assessment completed (`docs/perplexity_research/risk_assessment.md`)
+- [ ] Research summary created (`docs/perplexity_research/research_summary.md`)
+- [ ] All reports include citations and contact information
+- [ ] All Perplexity queries logged in `logs/perplexity_queries.log`
+- [ ] All query details saved in `docs/perplexity_research/queries/` with unique IDs
+- [ ] Project creator has reviewed all research reports
+
+#### Step 3: Dataset Fetching
+- [ ] All required datasets have been fetched
+- [ ] All datasets are reprojected to project CRS
+- [ ] All datasets are clipped to AOI
+- [ ] All multi-tile datasets are mosaicked
+- [ ] All datasets have JSON sidecar files with complete metadata
+- [ ] All datasets have been validated
+- [ ] All operations are logged in `logs/`
+- [ ] `docs/data_sources.md` exists and lists all datasets
+- [ ] No errors or unresolved issues in log files
+
+---
+
+## Benefits of This Standard
+
+1. **Reproducibility**: Any project can be reconstructed from logs and metadata
+2. **Quality Assurance**: Validation and documentation ensure data quality
+3. **Collaboration**: Standardized structure enables team collaboration
+4. **Efficiency**: Automated workflows reduce manual effort
+5. **Traceability**: Complete audit trail from data source to final output
+6. **Interoperability**: JSON sidecars enable integration with other systems
+7. **Scalability**: Structure supports projects of any size or complexity
+
+---
+
+## Advanced Tools: Coordinate-Based Intelligence
+
+### Perplexity Point/Area Search Tool
+
+For detailed investigation of specific locations or routes, use the coordinate-based Perplexity search tool. This tool accepts coordinates (points or areas) and returns relevant intelligence about those specific locations.
+
+#### Usage Scenarios
+
+1. **Single Point Investigation**
+   - Proposed pipeline start/end points
+   - Critical infrastructure locations
+   - Community centers
+   - Sensitive environmental sites
+
+2. **Route Segment Analysis**
+   - Detailed analysis along planned route
+   - Investigation of specific challenging sections
+   - Community impact assessment points
+
+3. **Batch Coordinate Analysis**
+   - Multiple waypoints along a corridor
+   - Grid-based survey points
+   - Infrastructure crossing locations
+
+#### Command Syntax
+
+**Single Coordinate:**
+```bash
+zeus tools perplexity_search \
+  --location "42.8°N, 13.5°E" \
+  --query "What are the environmental sensitivities, land ownership, and infrastructure at this location?" \
+  --output location_analysis.md
+```
+
+**Bounding Box (Area):**
+```bash
+zeus tools perplexity_search \
+  --bbox "13.45,42.86,13.94,43.44" \
+  --query "Analyze terrain conditions, existing infrastructure, and regulatory considerations for pipeline construction in this area" \
+  --output area_analysis.md
+```
+
+**Custom Question with Location:**
+```bash
+zeus tools perplexity_search \
+  --location "42.857°N, 13.455°E" \
+  --query "What are the seismic risk factors, soil conditions, and nearest emergency response facilities at this coordinate?" \
+  --output emergency_planning.md
+```
+
+#### Coordinate File Input (Future Enhancement)
+
+**Planned Feature**: Read coordinates from file
+```bash
+zeus tools perplexity_search \
+  --coordinate-file route_waypoints.csv \
+  --query "For each coordinate, identify land use, regulatory jurisdiction, and environmental constraints" \
+  --output batch_analysis/
+```
+
+**Expected File Format (CSV):**
+```csv
+id,latitude,longitude,description
+WP001,42.857,13.455,Pipeline start point
+WP002,42.920,13.520,River crossing location
+WP003,43.100,13.650,Mountain pass
+WP004,43.300,13.800,Urban area boundary
+```
+
+#### Best Practices
+
+1. **Be Specific in Questions**
+   - Include context about the pipeline project
+   - Specify what information is needed (permits, risks, contacts)
+   - Ask about specific constraints or concerns
+
+2. **Combine with Project Research**
+   - Use after broad AOI research for detailed investigation
+   - Focus on critical decision points
+   - Investigate flagged areas from initial analysis
+
+3. **Document All Queries**
+   - Save all coordinate-based research
+   - Reference in project documentation
+   - Include in decision-making records
+
+4. **Follow-Up Queries**
+   - Iterate based on initial findings
+   - Ask clarifying questions
+   - Drill down into specific issues
+
+#### Example Workflow
+
+**Step 1: Identify Critical Locations**
+```bash
+# Extract coordinates from proposed route
+ogrinfo -al route.gpkg | grep -E "POINT|LINESTRING"
+```
+
+**Step 2: Research Each Location**
+```bash
+# Start point
+zeus tools perplexity_search \
+  --location "42.857,13.455" \
+  --query "Pipeline construction feasibility, land ownership, environmental permits required at this location in Central Italy" \
+  --output docs/location_research/start_point.md
+
+# River crossing
+zeus tools perplexity_search \
+  --location "42.920,13.520" \
+  --query "River crossing regulations, hydrological considerations, and environmental protections for pipeline construction at this location" \
+  --output docs/location_research/river_crossing.md
+
+# Protected area boundary
+zeus tools perplexity_search \
+  --location "43.100,13.650" \
+  --query "Protected area regulations, buffer zone requirements, and alternative routing options near this coordinate" \
+  --output docs/location_research/protected_area.md
+```
+
+**Step 3: Compile Findings**
+```bash
+# Create summary report
+cat docs/location_research/*.md > docs/location_research/all_locations_summary.md
+```
+
+#### Integration with Routing Analysis
+
+Use coordinate-based intelligence to:
+- Validate routing decisions
+- Identify location-specific risks
+- Plan mitigation measures
+- Prepare stakeholder communications
+- Support regulatory submissions
+
+#### Output Management
+
+Store coordinate-based research in organized directories:
+```
+docs/location_research/
+├── waypoints/
+│   ├── WP001_start_point.md
+│   ├── WP002_river_crossing.md
+│   └── WP003_mountain_pass.md
+├── crossings/
+│   ├── road_crossing_km_12.md
+│   ├── railway_crossing_km_24.md
+│   └── river_crossing_km_35.md
+├── communities/
+│   ├── village_a_impact.md
+│   ├── town_b_consultation.md
+│   └── city_c_permits.md
+└── location_research_index.md
+```
+
+---
+
+## Enforcement
+
+This standard is **MANDATORY** for all new AGRS projects starting October 11, 2025.
+
+Non-compliance may result in:
+- Project rejection during QA review
+- Rework required before analysis can proceed
+- Inability to reproduce or verify results
+
+---
+
+## Revision History
+
+| Version | Date | Author | Changes |
+|---------|------|--------|---------|
+| 1.0 | 2025-10-11 | Radwan El-Gharbi | Initial standard established |
+| 1.1 | 2025-10-11 | Radwan El-Gharbi | Added mandatory Perplexity AI research requirements for Phase 2; Added coordinate-based intelligence tool documentation |
+| 1.2 | 2025-10-12 | Radwan El-Gharbi | Added mandatory Perplexity query logging with unique IDs; Updated directory structure and QA checklist |
+| 1.3 | 2025-10-17 | Radwan El-Gharbi | Added mandatory Fetch Tool Analyzer step in Phase 2 (Step 1); Restructured Phase 2 into 3 steps: Coverage Assessment, Perplexity Research, Dataset Fetching |
+
+---
+
+**Document Location:** `/opt/agrs/docs/Project Instructions`  
+**Status:** ACTIVE  
+**Next Review:** 2026-10-11
+

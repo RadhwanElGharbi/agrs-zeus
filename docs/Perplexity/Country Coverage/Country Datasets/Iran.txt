@@ -1,0 +1,831 @@
+# GIS Datasets for Oil & Gas Pipeline Routing in Iran
+
+## 1. ELEVATION/TERRAIN (DEM)
+
+### National Products
+
+**National Cartographic Center (NCC) DEM**
+- **Source:** National Cartographic Center of Iran (NCC)
+- **Resolution:** 1:25,000 and 1:250,000 scale topographic maps converted to DEM
+- **Temporal Coverage:** Current (project initiated 2001)
+- **Update Frequency:** Irregular updates
+- **Access:** Restricted/requires formal request from NCC
+- **API:** No public API
+- **URL:** https://ncc.gov.ir (main portal), https://sdi.mpo-es.ir/en (Iranian National Geoportal)
+- **Quality:** High accuracy for Iran; derived from national topographic database with GPS control, but availability is limited and requires government authorization[1][2][3]
+
+**Iranian Remote Sensing Center (IRSC) DEMs**
+- **Source:** Iranian Remote Sensing Center
+- **Resolution:** 1:25,000 scale (SPOT stereo pairs) for cities; 1:250,000 for country-wide coverage
+- **Temporal Coverage:** Generated from 1990s-2010s imagery
+- **Update Frequency:** Project-based, not continuously updated
+- **Access:** Restricted/requires request
+- **API:** No
+- **URL:** Contact IRSC directly (Tehran, Saadat Abad)
+- **Quality:** Moderate to high; derived from SPOT satellite stereo imagery and topographic maps with documented generation for major cities[4][3]
+
+### Global Products
+
+**Copernicus DEM (COP-DEM)**
+- **Source:** European Space Agency/Copernicus Programme
+- **Resolution:** 30m (GLO-30) and 90m (GLO-90)
+- **Temporal Coverage:** Based on 2011-2015 TanDEM-X data
+- **Update Frequency:** Static product (no regular updates)
+- **Access:** Open/free (registration required for GLO-30)
+- **API:** Yes - Copernicus Data Space Ecosystem API
+- **URL:** https://dataspace.copernicus.eu/explore-data/data-collections/copernicus-contributing-missions/collections-description/COP-DEM
+- **Quality:** Excellent for Iran; RMSE of 5.72m in Tehran, 2.19m in Jam - significantly better than SRTM; most accurate global DEM available[5][6][7]
+
+**SRTM (Shuttle Radar Topography Mission)**
+- **Source:** NASA/USGS
+- **Resolution:** 30m (SRTM-1) globally available since 2015
+- **Temporal Coverage:** February 2000 (single acquisition)
+- **Update Frequency:** Static (no updates)
+- **Access:** Open/free
+- **API:** Yes - USGS Earth Explorer API, Google Earth Engine
+- **URL:** https://earthexplorer.usgs.gov
+- **Quality:** Good but inferior to Copernicus DEM for Iran; RMSE 6.10m (Tehran), 3.95m (Jam); widely used baseline[8][5]
+
+**ASTER GDEM**
+- **Source:** NASA/METI (Japan)
+- **Resolution:** 30m
+- **Temporal Coverage:** Version 3 (2019) compiled from 2000-2013 images
+- **Update Frequency:** Periodic versions (v1: 2009, v2: 2011, v3: 2019)
+- **Access:** Open/free
+- **API:** Yes - NASA Earthdata API, Google Earth Engine
+- **URL:** https://earthdata.nasa.gov
+- **Quality:** Moderate; less accurate than SRTM and Copernicus DEM, particularly in arid regions; prone to artifacts[9][8]
+
+## 2. LAND COVER / LAND USE
+
+### National Products
+
+**Iran Land Cover Map (Sentinel-based)**
+- **Source:** Various Iranian research institutions/universities
+- **Resolution:** 10m (13-class system)
+- **Temporal Coverage:** 2017, with updated versions for 2020-2021
+- **Update Frequency:** Irregular (research-driven)
+- **Access:** Open (via Google Earth Engine and research publications)
+- **API:** Yes - Google Earth Engine API
+- **URL:** https://developers.google.com/earth-engine/datasets/tags/landcover (search "Iran")
+- **Quality:** Excellent; specifically calibrated for Iran using Sentinel-1 and Sentinel-2 data with 10m resolution and improved accuracy over global products[10][11]
+
+**NCC Land Cover Maps**
+- **Source:** National Cartographic Center of Iran
+- **Resolution:** 1:25,000 scale
+- **Temporal Coverage:** Current
+- **Update Frequency:** Irregular
+- **Access:** Restricted/requires request
+- **API:** No
+- **URL:** https://ncc.gov.ir
+- **Quality:** High accuracy where available; official national standard but limited public access[2][12]
+
+### Global Products
+
+**ESA WorldCover**
+- **Source:** European Space Agency WorldCover Consortium
+- **Resolution:** 10m (11 land cover classes)
+- **Temporal Coverage:** 2020 and 2021 versions
+- **Update Frequency:** Annual (2020, 2021 available)
+- **Access:** Open/free (CC-BY-4.0 license)
+- **API:** Yes - Google Earth Engine, WMS/WCS services
+- **URL:** https://esa-worldcover.org/en and https://developers.google.com/earth-engine/datasets/catalog/ESA_WorldCover_v200
+- **Quality:** Excellent; global validation shows high accuracy, derived from Sentinel-1 and Sentinel-2; good performance in arid regions like Iran[13][14]
+
+**Google Dynamic World**
+- **Source:** Google/World Resources Institute
+- **Resolution:** 10m (9 land cover classes)
+- **Temporal Coverage:** 2015-present (near real-time)
+- **Update Frequency:** Near real-time (every Sentinel-2 overpass)
+- **Access:** Open/free
+- **API:** Yes - Google Earth Engine API only
+- **URL:** https://dynamicworld.app
+- **Quality:** Very good; unique advantage of temporal tracking; continuous updates allow monitoring of land use changes along pipeline routes[15][16]
+
+**Sentinel-2 10m LULC (ESRI)**
+- **Source:** Esri/Impact Observatory
+- **Resolution:** 10m
+- **Temporal Coverage:** Annual 2017-2023
+- **Access:** Open/free
+- **API:** Yes - ArcGIS API, Google Earth Engine
+- **URL:** https://www.arcgis.com/home/item.html?id=cfcb7609de5f478eb7666240902d4d3d
+- **Quality:** Very good; annual time series allows change detection; competitive accuracy with ESA WorldCover[17]
+
+## 3. HYDROLOGY / WATER
+
+### National Products
+
+**Iran Ministry of Energy Water Resources Data**
+- **Source:** Ministry of Energy (Water Resources Organizations)
+- **Resolution:** Basin-scale (30 main hydrological basins)
+- **Temporal Coverage:** 1986-present with historical records
+- **Update Frequency:** Annual reports with monthly/seasonal data
+- **Access:** Partially open via Iran Open Data Center; detailed data requires request
+- **API:** No standardized API
+- **URL:** https://iranopendata.org/en (search "water" or "dam")
+- **Quality:** Official government data; comprehensive basin-level statistics on surface water, groundwater, and discharge; most authoritative for Iran[18][19][20]
+
+**Iran National Rivers/Wadis Database**
+- **Source:** Department of Environment (DOE) / Ministry of Energy
+- **Resolution:** Varies by basin (sub-basin level detail)
+- **Temporal Coverage:** Current
+- **Update Frequency:** Irregular
+- **Access:** Restricted/requires formal request
+- **API:** No
+- **URL:** Contact Ministry of Energy or DOE directly
+- **Quality:** High for major water bodies; comprehensive coverage of 30 main basins including seasonal wadis important for pipeline routing[18]
+
+### Global Products
+
+**HydroSHEDS / HydroBASINS**
+- **Source:** WWF/USGS/McGill University
+- **Resolution:** 15 arc-second (~450m) base resolution; HydroBASINS at multiple scales
+- **Temporal Coverage:** Based on 2000 SRTM data
+- **Update Frequency:** Static (occasional version updates)
+- **Access:** Open/free
+- **API:** Limited (downloadable datasets)
+- **URL:** https://www.hydrosheds.org
+- **Quality:** Very good for Iran; standardized global hydrographic network with nested sub-basin hierarchy; excellent for catchment analysis[21][22][23]
+
+**Global Surface Water Explorer (Copernicus)**
+- **Source:** European Commission Joint Research Centre
+- **Resolution:** 30m
+- **Temporal Coverage:** 1984-present (Landsat archive)
+- **Update Frequency:** Annual updates
+- **Access:** Open/free
+- **API:** Yes - Google Earth Engine API
+- **URL:** https://global-surface-water.appspot.com
+- **Quality:** Excellent; shows water occurrence, seasonality, and change over 35+ years; critical for understanding ephemeral water bodies in Iran[24]
+
+**Hydrography90m**
+- **Source:** IGB Berlin/Yale University
+- **Resolution:** 90m globally consistent
+- **Temporal Coverage:** Based on MERIT DEM (2017)
+- **Update Frequency:** Static
+- **Access:** Open/free
+- **API:** Limited
+- **URL:** Via HydroSHEDS portal
+- **Quality:** Very good; higher resolution than original HydroSHEDS with improved stream network delineation[25]
+
+## 4. INFRASTRUCTURE - ROADS
+
+### National Products
+
+**Ministry of Roads and Urban Development Road Network**
+- **Source:** Iran Ministry of Roads and Urban Development
+- **Resolution:** Complete national road network
+- **Temporal Coverage:** Current
+- **Update Frequency:** Irregular
+- **Access:** Restricted/requires formal request
+- **API:** No
+- **URL:** Contact ministry directly or via Iranian National Geoportal
+- **Quality:** Most authoritative and complete for Iran but difficult to access publicly[1]
+
+### Commercial Products
+
+**HERE Technologies**
+- **Source:** HERE Technologies
+- **Resolution:** Street-level detail with attributes
+- **Temporal Coverage:** Current
+- **Update Frequency:** Quarterly updates
+- **Access:** Commercial/purchase required
+- **API:** Yes - HERE Maps API
+- **URL:** https://www.here.com
+- **Quality:** Very good; comprehensive coverage of Iran with road classification, attributes, and routing information[26]
+
+**TomTom**
+- **Source:** TomTom
+- **Resolution:** Street-level with attributes
+- **Temporal Coverage:** Current
+- **Update Frequency:** Quarterly updates
+- **Access:** Commercial/purchase required
+- **API:** Yes - TomTom Maps API
+- **URL:** https://www.tomtom.com
+- **Quality:** Very good; comparable to HERE with good coverage of major routes in Iran[26]
+
+### Open Data
+
+**OpenStreetMap (OSM) Iran**
+- **Source:** OpenStreetMap community
+- **Resolution:** Variable (street-level where mapped)
+- **Temporal Coverage:** Continuously updated
+- **Update Frequency:** Real-time community edits
+- **Access:** Open/free (ODbL license)
+- **API:** Yes - Overpass API, various OSM APIs
+- **URL:** https://www.openstreetmap.org
+- **Quality:** Moderate to good; Iran has better OSM coverage than many Middle Eastern countries but less complete than commercial providers; OSM globally >80% complete for major roads; quality assessment shows Iran road infrastructure rated 3.9/7.0[27][28][29]
+
+## 5. INFRASTRUCTURE - RAILWAYS
+
+### National Products
+
+**Iran Railways (RAI) Network Data**
+- **Source:** Islamic Republic of Iran Railways (RAI)
+- **Resolution:** Complete national rail network
+- **Temporal Coverage:** Current
+- **Update Frequency:** As infrastructure expands
+- **Access:** Restricted/requires formal request
+- **API:** No
+- **URL:** Contact RAI or Ministry of Roads and Urban Development
+- **Quality:** Official and most complete but restricted access[1]
+
+### Open Data
+
+**OpenStreetMap Railways - Iran**
+- **Source:** OpenStreetMap community
+- **Resolution:** Railway line and station level
+- **Temporal Coverage:** Continuously updated
+- **Update Frequency:** Real-time community edits
+- **Access:** Open/free (ODbL license)
+- **API:** Yes - Overpass API
+- **URL:** https://www.openstreetmap.org
+- **Quality:** Moderate; major rail lines generally well-mapped; less complete than roads; suitable for preliminary analysis but verify against official sources[29]
+
+## 6. INFRASTRUCTURE - UTILITIES (Power, Telecom)
+
+### National Products
+
+**Iran Power Transmission Network**
+- **Source:** Tavanir (Iran Power Generation, Transmission and Distribution Management Company)
+- **Resolution:** Transmission line and substation level
+- **Temporal Coverage:** Current
+- **Update Frequency:** As infrastructure develops
+- **Access:** Highly restricted/typically not publicly available
+- **API:** No
+- **URL:** Contact Tavanir directly
+- **Quality:** Most authoritative but very difficult to obtain due to security sensitivities[1]
+
+### Open Data
+
+**OpenInfraMap / OpenStreetMap Utilities**
+- **Source:** OpenStreetMap community
+- **Resolution:** Individual infrastructure features
+- **Temporal Coverage:** Continuously updated
+- **Update Frequency:** Real-time community edits
+- **Access:** Open/free
+- **API:** Yes - Overpass API
+- **URL:** https://openinframap.org
+- **Quality:** Poor to moderate for Iran; utilities infrastructure significantly under-mapped compared to Western countries; use only for preliminary assessment[29]
+
+## 7. INFRASTRUCTURE - PIPELINES
+
+### National Products
+
+**National Iranian Oil Company (NIOC) Pipeline Data**
+- **Source:** National Iranian Oil Company
+- **Resolution:** Complete oil and gas pipeline network
+- **Temporal Coverage:** Current
+- **Update Frequency:** As infrastructure develops
+- **Access:** Highly restricted/classified (national security)
+- **API:** No
+- **URL:** Not publicly accessible
+- **Quality:** Most complete and authoritative but effectively unavailable to external parties due to strategic sensitivity[1]
+
+**Ministry of Petroleum Pipeline Registry**
+- **Source:** Iran Ministry of Petroleum
+- **Resolution:** National pipeline network
+- **Temporal Coverage:** Current
+- **Update Frequency:** Ongoing
+- **Access:** Highly restricted/classified
+- **API:** No
+- **URL:** Not publicly accessible
+- **Quality:** Official registry but classified as strategic infrastructure[1]
+
+### Open Data
+
+**OpenStreetMap Pipelines - Iran**
+- **Source:** OpenStreetMap community
+- **Resolution:** Individual pipeline segments where mapped
+- **Temporal Coverage:** Continuously updated
+- **Update Frequency:** Real-time community edits
+- **Access:** Open/free
+- **API:** Yes - Overpass API
+- **URL:** https://www.openstreetmap.org
+- **Quality:** Very poor; highly incomplete as pipeline infrastructure is not publicly disclosed and is security-sensitive; not suitable for pipeline routing analysis[29]
+
+## 8. PROTECTED AREAS / ENVIRONMENTAL
+
+### National Products
+
+**Iran Department of Environment (DOE) Protected Areas**
+- **Source:** Department of Environment, Islamic Republic of Iran
+- **Resolution:** 1:50,000 scale mapping
+- **Temporal Coverage:** 2017 compilation
+- **Update Frequency:** Periodic updates
+- **Access:** Restricted/requires request from DOE
+- **API:** No
+- **URL:** Contact DOE directly
+- **Quality:** Most authoritative; includes national parks, wildlife refuges, protected areas, and wildlife parks; comprehensive three-tier protection system established since 1967[30][31]
+
+### Global Products
+
+**World Database on Protected Areas (WDPA)**
+- **Source:** UNEP-WCMC/IUCN
+- **Resolution:** Vector polygons of protected area boundaries
+- **Temporal Coverage:** Continuously updated (monthly releases)
+- **Update Frequency:** Monthly
+- **Access:** Open/free (non-commercial use)
+- **API:** Yes - Protected Planet API
+- **URL:** https://www.protectedplanet.net/en/country/IRN
+- **Quality:** Good; includes Iran's protected areas with international categorization; approximately 11% of Iran covered; derived from official sources but may lag national updates; essential for international-standard conservation constraints[32][33][30]
+
+**UNESCO World Heritage Sites**
+- **Source:** UNESCO World Heritage Centre
+- **Resolution:** Site boundaries (vector)
+- **Temporal Coverage:** Current (26 sites in Iran as of 2025)
+- **Update Frequency:** Annual World Heritage Committee meetings
+- **Access:** Open/free
+- **API:** Limited GIS data via UNESCO Sites Navigator
+- **URL:** https://whc.unesco.org/en/statesparties/ir
+- **Quality:** Authoritative for cultural heritage sites; includes Sassanid archaeological landscapes and other culturally sensitive areas requiring pipeline avoidance[34][35]
+
+## 9. GEOLOGY / SOIL
+
+### National Products
+
+**Geological Survey of Iran (GSIr) Maps**
+- **Source:** Geological Survey of Iran (founded 1958)
+- **Resolution:** 1:250,000 and 1:100,000 scale geological maps
+- **Temporal Coverage:** 1970s-present (ongoing coverage)
+- **Update Frequency:** Irregular; publication program resumed in 1990s
+- **Access:** Restricted/requires request; some maps available for purchase
+- **API:** No
+- **URL:** Contact GSIr directly (https://www.gsi.ir/en if available)
+- **Quality:** Excellent; most comprehensive geological mapping of Iran; 1:250,000 covers entire country with explanatory texts; 1:100,000 coverage extensive; includes aeromagnetic surveys; some sheets published, others completed but not released[36][1]
+
+**National Iranian Oil Company (NIOC) Geological Maps**
+- **Source:** National Iranian Oil Company Exploration Division
+- **Resolution:** 1:1,000,000 scale
+- **Temporal Coverage:** 1975-1978 for national coverage
+- **Update Frequency:** Historic (completed series)
+- **Access:** Restricted
+- **API:** No
+- **URL:** Not publicly accessible
+- **Quality:** High for regional geology; complete 1:1M coverage produced for oil exploration; magnetic intensity maps also available[36][1]
+
+**FAO/Iran Soil Maps**
+- **Source:** FAO with Iranian collaborators (Dewan & Famouri)
+- **Resolution:** Various scales (generalized national maps)
+- **Temporal Coverage:** 1970s-1980s compilation
+- **Update Frequency:** Static (historical legacy maps)
+- **Access:** Open via FAO Soil Portal
+- **API:** No standardized API
+- **URL:** https://www.fao.org/soils-portal/data-hub/soil-maps-and-databases/fao-soil-legacy-maps/en/
+- **Quality:** Moderate; dated but useful for regional soil classification; superseded by global products for most applications[37][38][39]
+
+### Global Products
+
+**FAO Harmonized World Soil Database (HWSD v2.0)**
+- **Source:** FAO/IIASA/ISRIC
+- **Resolution:** 1km raster
+- **Temporal Coverage:** Version 2.0 released 2023 (comprehensive update)
+- **Update Frequency:** Major versions (v1.0: 2008, v1.2: 2013, v2.0: 2023)
+- **Access:** Open/free (registration required)
+- **API:** No (download-based)
+- **URL:** https://www.fao.org/soils-portal/data-hub/soil-maps-and-databases/harmonized-world-soil-database-v20/en/
+- **Quality:** Very good; most comprehensive global soil database; v2.0 includes 7 soil layers with detailed morphology, chemistry, and physical characteristics; best global option for Iran[40][41]
+
+**OneGeology Portal**
+- **Source:** Global geological surveys consortium
+- **Resolution:** Variable (1:1M to 1:250,000 depending on country)
+- **Temporal Coverage:** Compilation of national surveys
+- **Update Frequency:** As national surveys contribute data
+- **Access:** Open/free (view and download)
+- **API:** Yes - WMS/WFS services
+- **URL:** http://portal.onegeology.org
+- **Quality:** Good; aggregates geological survey data globally; Iran coverage depends on GSIr contributions; useful for regional context[1]
+
+**USGS Surficial Geology of Iran**
+- **Source:** USGS (compiled from various sources)
+- **Resolution:** National-scale compilation
+- **Temporal Coverage:** Published 2021
+- **Update Frequency:** Static
+- **Access:** Open/free
+- **API:** Via USGS APIs
+- **URL:** https://data.usgs.gov/datacatalog/data/USGS:60ad3db2d34e4043c850f2a0
+- **Quality:** Good for general overview; includes arcs, polygons, and labels describing geologic age and bedrock types[42][43]
+
+## 10. CLIMATE / WEATHER
+
+### National Products
+
+**Iran Meteorological Organization (IRIMO)**
+- **Source:** Islamic Republic of Iran Meteorological Organization
+- **Resolution:** Station-based network (103+ synoptic stations)
+- **Temporal Coverage:** Historical records from 1950s-present; real-time observations
+- **Update Frequency:** Real-time (hourly/3-hourly observations); daily forecasts
+- **Access:** Partially open; detailed historical data requires request
+- **API:** No official public API
+- **URL:** https://www.irimo.ir/index.php?newlang=eng
+- **Quality:** Most authoritative for Iran; comprehensive network covering all 30 hydrological basins; includes temperature, precipitation, wind data; also provides agrometeorological information (TAHAK system)[44][45][46][47][18]
+
+### Global Products
+
+**ERA5 Climate Reanalysis**
+- **Source:** ECMWF/Copernicus Climate Change Service
+- **Resolution:** 31km (0.25° grid); hourly temporal resolution
+- **Temporal Coverage:** 1940-present (3-month lag for real-time)
+- **Update Frequency:** Daily updates (with lag)
+- **Access:** Open/free (registration required)
+- **API:** Yes - Climate Data Store (CDS) API
+- **URL:** https://cds.climate.copernicus.eu
+- **Quality:** Excellent; most comprehensive global reanalysis; provides temperature, precipitation, wind, pressure, humidity, solar radiation; 137 vertical levels; best global climate dataset for Iran; validated extensively[48][49][50][51][52][53]
+
+**WorldClim**
+- **Source:** WorldClim.org (University of California, Berkeley)
+- **Resolution:** 30 arc-second (~1km) to 30 arc-minute
+- **Temporal Coverage:** Historical climate 1970-2000; future projections to 2100
+- **Update Frequency:** Major versions (current: WorldClim 2.1)
+- **Access:** Open/free
+- **API:** No (direct download)
+- **URL:** https://www.worldclim.org
+- **Quality:** Very good; provides bioclimatic variables, monthly temperature/precipitation; widely used for ecological modeling; suitable for long-term climate characterization[44]
+
+## 11. ADMINISTRATIVE BOUNDARIES
+
+### National Products
+
+**National Cartographic Center Administrative Boundaries**
+- **Source:** National Cartographic Center of Iran
+- **Resolution:** Province, county (Shahrestan), district levels
+- **Temporal Coverage:** Current
+- **Update Frequency:** As administrative divisions change
+- **Access:** Restricted/requires request
+- **API:** No
+- **URL:** https://ncc.gov.ir or https://sdi.mpo-es.ir/en
+- **Quality:** Most authoritative; official government boundaries at all administrative levels[54][2]
+
+**Iran Statistical Center Boundaries**
+- **Source:** Statistical Center of Iran
+- **Resolution:** Multiple administrative levels
+- **Temporal Coverage:** Current (aligned with census)
+- **Update Frequency:** Census cycles (every 5-10 years)
+- **Access:** Restricted/requires request
+- **API:** No
+- **URL:** Contact Statistical Center directly
+- **Quality:** Official census boundaries; authoritative for demographic analysis[2]
+
+### Global Products
+
+**GADM (Global Administrative Areas)**
+- **Source:** University of California, Berkeley
+- **Resolution:** 5 administrative levels for Iran (country to district)
+- **Temporal Coverage:** Version 4.1 (2022)
+- **Update Frequency:** Periodic major versions
+- **Access:** Open/free (non-commercial use)
+- **API:** No (download-based with R package)
+- **URL:** https://gadm.org/download_country.html (select Iran)
+- **Quality:** Very good; most widely used global administrative boundaries; high spatial accuracy; suitable for most applications where official boundaries aren't accessible[55]
+
+**Humanitarian Data Exchange (HDX) - Iran Boundaries**
+- **Source:** OCHA/Humanitarian partners
+- **Resolution:** Multiple administrative levels
+- **Temporal Coverage:** Current
+- **Update Frequency:** As needed for humanitarian operations
+- **Access:** Open/free
+- **API:** Yes - HDX API
+- **URL:** https://data.humdata.org
+- **Quality:** Good; derived from authoritative sources for humanitarian purposes; regularly validated[55]
+
+## 12. POPULATION / DEMOGRAPHICS
+
+### National Products
+
+**Statistical Center of Iran Census Data**
+- **Source:** Statistical Center of Iran
+- **Resolution:** Administrative unit level (province, county, district)
+- **Temporal Coverage:** Census years (most recent available: 2016)
+- **Update Frequency:** ~10-year census cycles
+- **Access:** Restricted/requires request; some aggregate data published
+- **API:** No
+- **URL:** Contact Statistical Center of Iran
+- **Quality:** Most authoritative; official population counts by administrative unit; detailed demographic characteristics[56]
+
+### Global Products
+
+**WorldPop**
+- **Source:** University of Southampton/WorldPop Project
+- **Resolution:** 100m (3 arc-second) resolution
+- **Temporal Coverage:** 2000-2020 (annual)
+- **Update Frequency:** Annual releases
+- **Access:** Open/free (CC-BY 4.0)
+- **API:** No (FTP download)
+- **URL:** https://hub.worldpop.org/geodata/summary?id=41767 (Iran specific)
+- **Quality:** Excellent; high-resolution population density using Random Forest dasymetric redistribution; widely validated; best openly available gridded population for Iran; units are persons per square kilometer[57][58][59]
+
+**LandScan Global**
+- **Source:** Oak Ridge National Laboratory (ORNL)
+- **Resolution:** 1km (30 arc-second)
+- **Temporal Coverage:** Annual products (2000-present)
+- **Update Frequency:** Annual
+- **Access:** Free registration required; some restrictions on redistribution
+- **API:** No
+- **URL:** https://landscan.ornl.gov
+- **Quality:** Very good; ambient population distribution (24-hour average); incorporates infrastructure, terrain, land cover; complementary to WorldPop; widely used by US government and international organizations[55]
+
+**GPWv4 (Gridded Population of the World)**
+- **Source:** CIESIN, Columbia University
+- **Resolution:** 30 arc-second (~1km)
+- **Temporal Coverage:** 2000-2020 (5-year intervals)
+- **Update Frequency:** Major versions every 5-10 years
+- **Access:** Open/free
+- **API:** Limited (download-based)
+- **URL:** https://sedac.ciesin.columbia.edu/data/collection/gpw-v4
+- **Quality:** Good; simpler redistribution method than WorldPop but based on official census data; provides growth rates and projection datasets[56]
+
+## 13. SATELLITE IMAGERY (COMMERCIAL)
+
+### High-Resolution Commercial
+
+**Maxar (WorldView, GeoEye)**
+- **Source:** Maxar Technologies
+- **Resolution:** 30cm (WorldView-3, WorldView Legion), 50cm (WorldView-2, GeoEye-1)
+- **Temporal Coverage:** Archive from 2007-present; tasking for new acquisitions
+- **Update Frequency:** On-demand tasking (up to 15 revisits/day for some locations)
+- **Access:** Commercial/purchase required
+- **API:** Yes - Maxar Platform API; available via UP42 platform
+- **URL:** https://www.maxar.com or https://up42.com/marketplace/data/tasking/maxar-tasking
+- **Quality:** Excellent; highest resolution commercial imagery; 8-band multispectral (VNIR+SWIR on WV-3); stereo capability for 3D modeling; most comprehensive archive; suitable for detailed infrastructure analysis[60][61][62][63]
+
+**Airbus Defence & Space (Pléiades, SPOT)**
+- **Source:** Airbus Defence and Space
+- **Resolution:** 30cm (Pléiades Neo), 50cm (Pléiades-1), 1.5m (SPOT)
+- **Temporal Coverage:** Archive from 1980s (SPOT) to present; tasking available
+- **Update Frequency:** On-demand tasking; daily revisit capability
+- **Access:** Commercial/purchase required
+- **API:** Yes - OneAtlas API
+- **URL:** https://www.intelligence-airbusds.com
+- **Quality:** Excellent; Pléiades Neo provides 6-band VNIR at 30cm; comprehensive archive; competitive with Maxar; good coverage of Middle East[62][64]
+
+**Planet Labs**
+- **Source:** Planet Labs
+- **Resolution:** 3-5m (PlanetScope), 50cm (SkySat)
+- **Temporal Coverage:** Daily global coverage (PlanetScope) from 2016-present
+- **Update Frequency:** Daily (PlanetScope), on-demand (SkySat)
+- **Access:** Commercial/subscription or purchase
+- **API:** Yes - Planet API
+- **URL:** https://www.planet.com
+- **Quality:** Very good; unique advantage is daily revisit for monitoring; SkySat provides sub-meter resolution; ideal for change detection along pipeline routes[61][62]
+
+**Capella Space (SAR)**
+- **Source:** Capella Space
+- **Resolution:** 25cm X-band SAR
+- **Temporal Coverage:** 2020-present
+- **Update Frequency:** On-demand tasking
+- **Access:** Commercial/purchase required
+- **API:** Yes - Capella API
+- **URL:** https://www.capellaspace.com
+- **Quality:** Good; all-weather/night capability; valuable for monitoring in cloudy regions or security-sensitive areas; penetrates cloud cover unlike optical sensors[62]
+
+### Free Baseline Imagery
+
+**Sentinel-2**
+- **Source:** European Space Agency/Copernicus Programme
+- **Resolution:** 10m (visible/NIR), 20m (red edge/SWIR), 60m (coastal/atmospheric)
+- **Temporal Coverage:** 2015-present
+- **Update Frequency:** 5-day revisit (2 satellites)
+- **Access:** Open/free
+- **API:** Yes - Copernicus Open Access Hub API, Google Earth Engine, AWS Open Data
+- **URL:** https://scihub.copernicus.eu or https://dataspace.copernicus.eu
+- **Quality:** Excellent for free data; 13 spectral bands; systematic global coverage; sufficient for most land cover and change detection applications; essential free baseline for Iran[65][13][10]
+
+**Landsat 8/9**
+- **Source:** NASA/USGS
+- **Resolution:** 30m (multispectral), 15m (panchromatic), 100m (thermal)
+- **Temporal Coverage:** Landsat archive from 1972-present (Landsat 8: 2013-, Landsat 9: 2021-)
+- **Update Frequency:** 16-day revisit (combined 8-day with both satellites)
+- **Access:** Open/free
+- **API:** Yes - USGS Earth Explorer API, Google Earth Engine, AWS Open Data
+- **URL:** https://earthexplorer.usgs.gov
+- **Quality:** Very good; longest-running Earth observation program; thermal bands valuable for infrastructure monitoring; excellent for historical analysis[66][4]
+
+## 14. SPECIAL DATASETS FOR IRAN
+
+### Seismic Hazard
+
+**Iranian Seismic Hazard Zoning Map (Standard 2800)**
+- **Source:** Building and Housing Research Center (BHRC) / Iranian code authority
+- **Resolution:** National map with 4 hazard zones (0.35g, 0.30g, 0.25g, 0.20g)
+- **Temporal Coverage:** Updated 2012-2014 (4th edition)
+- **Update Frequency:** Irregular (as seismic code updates)
+- **Access:** Included in Standard 2800; available through BHRC
+- **API:** No
+- **URL:** https://www.dlubal.com/en/load-zones-for-snow-wind-earthquake/seismic-ir-2800.html (visualization)
+- **Quality:** Excellent; official seismic design standard for Iran; includes GIS layers of faults, epicenters, strong motion records; critical for pipeline routing in one of world's most seismically active regions; ~70% of Iran in high hazard zone[67][68][69]
+
+**Iran Seismotectonic Province Maps**
+- **Source:** Various Iranian research institutions / IIEES
+- **Resolution:** 19 seismotectonic provinces with detailed parameters
+- **Temporal Coverage:** Current seismic characterization
+- **Update Frequency:** Research-driven updates
+- **Access:** Via scientific publications and IIEES
+- **API:** No
+- **URL:** https://www.iiees.ac.ir/en/
+- **Quality:** Very good; includes b-values, Mmax, seismogenic depth, Moho depth for each province; essential for probabilistic seismic hazard assessment[70][71][67]
+
+**Updated Fault Map of Iran**
+- **Source:** International Institute of Earthquake Engineering and Seismology (IIEES)
+- **Resolution:** National coverage with digitized active faults
+- **Temporal Coverage:** Updated 2011
+- **Update Frequency:** Periodic updates
+- **Access:** Available from IIEES
+- **API:** No
+- **URL:** https://www.iiees.ac.ir/en/updated-fault-map-of-iran/
+- **Quality:** Excellent; most comprehensive active fault database for Iran with digital files; essential for pipeline route avoidance of active faults[72]
+
+### Archaeological/Cultural Heritage
+
+**Iran Cultural Heritage Organization Sites Database**
+- **Source:** Iranian Cultural Heritage, Handicrafts and Tourism Organization (ICHTO)
+- **Resolution:** Individual site locations
+- **Temporal Coverage:** Current
+- **Update Frequency:** Ongoing as sites discovered/registered
+- **Access:** Restricted; some data via UNESCO for World Heritage Sites
+- **API:** No
+- **URL:** Contact ICHTO directly
+- **Quality:** Most authoritative for Iran; includes registered archaeological sites, historical monuments, and culturally sensitive areas requiring avoidance[73][34]
+
+**NextGIS Cultural Heritage Dataset - Iran**
+- **Source:** Wikimedia Foundation/OpenStreetMap compilation
+- **Resolution:** Point locations
+- **Temporal Coverage:** Current
+- **Update Frequency:** Community-driven
+- **Access:** Open/free
+- **API:** Limited
+- **URL:** https://data.nextgis.com/en/region/IR/heritage/
+- **Quality:** Moderate; useful for preliminary screening but incomplete compared to official ICHTO database; suitable for identifying major known sites[74]
+
+**Archaeological Predictive Models**
+- **Source:** Various research institutions
+- **Resolution:** Site-specific or regional studies
+- **Temporal Coverage:** Research-driven
+- **Update Frequency:** As studies published
+- **Access:** Via scientific publications
+- **API:** No
+- **URL:** Research databases
+- **Quality:** Variable; GIS-based predictive modeling of archaeological site locations (e.g., northeastern Iran studies); useful for identifying high-probability areas requiring field survey[75][73]
+
+### Landslide/Geohazard
+
+**Iran Landslide Inventory**
+- **Source:** Geological Survey of Iran / research institutions
+- **Resolution:** Individual landslide mapping at various scales
+- **Temporal Coverage:** Compilation of historical landslides
+- **Update Frequency:** Event-driven updates
+- **Access:** Restricted/requires request from GSIr
+- **API:** No
+- **URL:** Contact GSIr
+- **Quality:** Good where available; important for mountainous regions (Zagros, Alborz); essential for pipeline route risk assessment[67]
+
+### Military/Restricted Zones
+
+**Iran Military/Security Zones**
+- **Source:** Various government agencies (classified)
+- **Resolution:** Zone boundaries
+- **Temporal Coverage:** Current
+- **Update Frequency:** As designations change
+- **Access:** Not publicly available (classified)
+- **API:** No
+- **URL:** Not accessible
+- **Quality:** Authoritative but unavailable; must be obtained through official channels during formal project approvals; critical constraint for pipeline routing[1]
+
+### Drought/Climate Risk
+
+**Iran Drought Monitoring System**
+- **Source:** IRIMO/Iran Water Resources Management Company
+- **Resolution:** Basin-scale monitoring
+- **Temporal Coverage:** Ongoing monitoring (historical records available)
+- **Update Frequency:** Seasonal/monthly updates
+- **Access:** Partially available via IRIMO
+- **API:** No
+- **URL:** Via IRIMO portal
+- **Quality:** Good; critical for understanding water stress and environmental constraints; Iran faces severe drought conditions affecting ~70% of territory[47][18]
+
+***
+
+## IMPORTANT NOTES FOR IRAN:
+
+**Access Challenges:** Iran faces significant data access restrictions due to:
+- International sanctions affecting commercial satellite imagery access
+- National security concerns around infrastructure data
+- Limited public data sharing culture in government agencies
+- Geopolitical sensitivities
+
+**Recommendations:**
+1. **Prioritize global open datasets** (Copernicus DEM, ESA WorldCover, ERA5, WDPA, WorldPop) which provide excellent coverage without access restrictions
+2. **Commercial imagery** from Maxar and Airbus is available but may require careful compliance review
+3. **National datasets** from NCC, GSIr, IRIMO, and DOE provide highest accuracy but require formal requests through Iranian government channels
+4. **OpenStreetMap quality** is moderate - suitable for preliminary work but requires verification
+5. **Critical infrastructure data** (pipelines, power, military zones) is effectively unavailable publicly due to security classification
+6. For **seismic hazard assessment**, prioritize Iranian Standard 2800 maps and IIEES fault databases - these are essential given Iran's high seismicity
+7. The **Iranian National Geoportal** (sdi.mpo-es.ir/en) is the primary access point for requesting national datasets
+
+**API Access Summary:** Best API availability through:
+- Copernicus services (DEM, Sentinel-2, ERA5)
+- Google Earth Engine (multiple global datasets)
+- NASA Earthdata
+- Protected Planet (WDPA)
+- Limited or no API for Iranian national datasets
+
+This comprehensive assessment reflects data availability as of October 2025, with emphasis on openly accessible global datasets supplemented by information about restricted national sources that require formal access procedures.
+
+[1](https://geospatial.com/country_profiles/iran/)
+[2](https://www.fig.net/resources/proceedings/fig_proceedings/morocco/proceedings/TS2/TS2_6_baktash.pdf)
+[3](https://unstats.un.org/unsd/geoinfo/rcc/docs/rccap19/crp/E_Conf.102_CRP2_Iranian%20NationalReport_Final.pdf)
+[4](https://geospatialworld.net/article/dem-and-dsm-generation-of-iran/)
+[5](https://d-nb.info/1278558632/34)
+[6](https://isprs-annals.copernicus.org/articles/X-4-W1-2022/209/2023/)
+[7](https://documentation.dataspace.copernicus.eu/APIs/SentinelHub/Data/DEM.html)
+[8](https://www.earthdata.nasa.gov/news/blog/global-digital-elevation-models-now-available-aster-gdem-srtm)
+[9](https://www.sciencedirect.com/science/article/pii/S2405844024172246)
+[10](https://www.sciencedirect.com/science/article/abs/pii/S0924271620302008)
+[11](https://developers.google.com/earth-engine/datasets/tags/landcover)
+[12](https://unstats.un.org/unsd/geoinfo/ungegn/docs/26th-gegn-docs/WP/WP12_Streets%20Names%20Standardization_En_.pdf)
+[13](https://developers.google.com/earth-engine/datasets/catalog/ESA_WorldCover_v200)
+[14](https://esa-worldcover.org/en)
+[15](https://www.sciencedirect.com/science/article/pii/S111098232500016X)
+[16](https://dynamicworld.app)
+[17](https://www.arcgis.com/home/item.html?id=cfcb7609de5f478eb7666240902d4d3d)
+[18](https://www.nature.com/articles/s41598-020-64089-y)
+[19](https://iranopendata.org/en/dataset/)
+[20](https://iranopendata.org/en/dataset/?groups=environment&tags=dam)
+[21](https://www.hydrosheds.org/products/hydrobasins)
+[22](https://www.hydrosheds.org)
+[23](https://www.hydrosheds.org/products)
+[24](https://essd.copernicus.org/articles/11/189/2019/)
+[25](https://essd.copernicus.org/articles/14/4525/2022/)
+[26](https://landinfo.com/country/iran-topographic-map-data-satellite-imagery/)
+[27](https://asiantransportobservatory.org/documents/254/Tehran_transport_sector_profile.pdf)
+[28](https://www.theglobaleconomy.com/Iran/roads_quality/)
+[29](https://pure.iiasa.ac.at/id/eprint/18085/1/1-s2.0-S0921800922001732-mmc1.pdf)
+[30](https://www.iranicaonline.org/articles/national-parks-iran/)
+[31](https://pmc.ncbi.nlm.nih.gov/articles/PMC10584875/)
+[32](https://www.protectedplanet.net/en/country/IRN)
+[33](https://www.protectedplanet.net/en/thematic-areas/wdpa)
+[34](https://whc.unesco.org/en/list/1568/)
+[35](https://whc.unesco.org/en/statesparties/ir)
+[36](https://www.arcgis.com/home/item.html?id=1a17008833664d97b725b60545ba2d30)
+[37](https://repository.soilwise-he.eu/cat/collections/metadata:main/items/5874c9ab135e3a12f5256fd0ca5c2da5)
+[38](https://www.fao.org/soils-portal/data-hub/soil-maps-and-databases/fao-soil-legacy-maps/en/)
+[39](https://repository.soilwise-he.eu/cat/collections/metadata:main/items/96d5c694-80b7-4e00-ba33-d2a392406a9e)
+[40](https://www.fao.org/soils-portal/data-hub/soil-maps-and-databases/harmonized-world-soil-database-v20/en/)
+[41](https://www.isric.org/sites/default/files/4_Cookbook0614.pdf)
+[42](https://catalog.data.gov/dataset/?tags=iran)
+[43](https://data.usgs.gov/datacatalog/data/USGS:60ad3db2d34e4043c850f2a0)
+[44](https://www.sciencedirect.com/science/article/abs/pii/S0022169421011045)
+[45](https://www.irimo.ir/index.php?newlang=eng)
+[46](https://en.wikipedia.org/wiki/Iran_Meteorological_Organization)
+[47](https://ds.data.jma.go.jp/tcc/RaiiInfoshare/member/iran.html)
+[48](https://cds.climate.copernicus.eu/datasets/reanalysis-era5-single-levels)
+[49](https://cds.climate.copernicus.eu)
+[50](https://cds.climate.copernicus.eu/datasets/reanalysis-era5-complete)
+[51](https://www.ecmwf.int/en/forecasts/dataset/ecmwf-reanalysis-v5)
+[52](https://developers.google.com/earth-engine/datasets/catalog/ECMWF_ERA5_DAILY)
+[53](https://cds.climate.copernicus.eu/how-to-api)
+[54](https://eco.int/wp-content/uploads/2021/10/National_Report_IRAN_ECO.pdf)
+[55](https://data.humdata.org/m/dataset/?vocab_Topics=geodata&groups=irn)
+[56](https://hub.worldpop.org/resources/docs/national_boundaries/global-input-population-data-summary.xlsx)
+[57](https://hub.worldpop.org/geodata/summary?id=41767)
+[58](https://worldpop-public-data.soton.ac.uk/GIS/Population/Global_2000_2020/2017/IRN/irn_ppp_2017_metadata.html)
+[59](https://hub.worldpop.org/geodata/summary?id=26855)
+[60](https://up42.com/blog/up42-partners-with-maxar)
+[61](https://www.npr.org/2023/11/16/1212889717/satellite-images-us-israel-gaza)
+[62](https://pacgeo.com/products)
+[63](https://payloadspace.com/private-eyes-in-space-add-context-to-us-strikes-in-iran/)
+[64](https://space-solutions.airbus.com/resources/satellite-image-gallery/various/world-dem-sistan-province-iran/)
+[65](https://essd.copernicus.org/preprints/essd-2025-73/essd-2025-73.pdf)
+[66](https://www.mcgill.ca/bioeng/files/bioeng/land_use_and_land_cover_classification_over_a_large_area_in_iran_based_on_single_date_analysis_of_satellite_imagery.pdf)
+[67](http://www.scielo.org.co/scielo.php?script=sci_arttext&pid=S1794-61902015000100002)
+[68](https://www.iitk.ac.in/nicee/wcee/article/WCEE2012_1480.pdf)
+[69](https://www.dlubal.com/en/load-zones-for-snow-wind-earthquake/seismic-ir-2800.html)
+[70](https://www.iitk.ac.in/nicee/wcee/article/WCEE2012_3018.pdf)
+[71](http://static.seismo.ethz.ch/gshap/iran/report.html)
+[72](https://www.iiees.ac.ir/en/updated-fault-map-of-iran/)
+[73](https://www.sciencedirect.com/science/article/abs/pii/S2352409X21004417)
+[74](https://data.nextgis.com/en/region/IR/heritage/)
+[75](https://onlinelibrary.wiley.com/doi/full/10.1002/arp.1818)
+[76](https://sdi.mpo-es.ir/en)
+[77](https://certmapper.cr.usgs.gov/data/apps/world-maps/)
+[78](https://catalog.data.gov/organization/143529f7-2eef-4a07-b227-93ac9e84fad8?_vocab_category_all_limit=0&capacity=public&tags=u-s-geological-survey)
+[79](https://water.fanack.com/iran/water-resources-in-iran/)
+[80](https://freegisdata.rtwilson.com)
+[81](https://dataspace.copernicus.eu/explore-data/data-collections/copernicus-contributing-missions/collections-description/COP-DEM)
+[82](https://opentopography.org/id/OTLAS.122009.32611.1&minX=-118.28057687588213&minY=37.06759770166735&maxX=-118.2539788299186&maxY=37.08364255871278)
+[83](https://www.sciencedirect.com/science/article/pii/S0924271625000784)
+[84](https://pure.iiasa.ac.at/id/eprint/19901/1/1-s2.0-S0034425724003341-main.pdf)
+[85](https://www.itto.org/iran/attractions/category/63)
+[86](https://www.sciencedirect.com/science/article/abs/pii/S0006320723000022)
+[87](https://www.atlanticcouncil.org/in-depth-research-reports/issue-brief/environmental-and-wildlife-degradation-in-iran-2/)
+[88](https://www.ancientportsantiques.com/wp-content/uploads/Documents/PLACES/IndOc-Gulf/Gulf-Naderi2024.pdf)
+[89](https://www.sciencedirect.com/science/article/pii/S2211714825000408)
+[90](https://worldweather.wmo.int/en/country.html?countryCode=IRN)
+[91](https://2015.index.okfn.org/dataset/weather/)
+[92](https://www.meteosource.com/current-weather-api-tehran)
+[93](https://www.oceanexpert.org/institution/12624)
+[94](https://www.kaggle.com/datasets/mehrdat/irans-weather-data-2014-2024tehran-by-meteostat)
+[95](https://severeweather.wmo.int)
+[96](https://wwrp-nowcastingcapabilities.com/about-us/)
+[97](https://confluence.ecmwf.int/display/CKB/How+to+download+ERA5)
+[98](https://www.youtube.com/watch?v=AXG97K6NYD8)
+[99](https://github.com/gmanatole/API-ERA5)
+[100](https://www.hydrosheds.org/products/glwd)

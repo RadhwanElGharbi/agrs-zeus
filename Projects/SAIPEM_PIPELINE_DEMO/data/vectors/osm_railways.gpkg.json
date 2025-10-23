@@ -1,0 +1,38 @@
+{
+  "attributes": {
+    "electrified": "Electrification status",
+    "gauge": "Track gauge (mm)",
+    "name": "Railway/station name",
+    "operator": "Railway operator",
+    "osm_id": "OpenStreetMap way ID",
+    "railway": "Railway type",
+    "service": "Service type",
+    "usage": "Usage type"
+  },
+  "features": {
+    "crs": "EPSG:4326",
+    "geometry": "LineString",
+    "types": [
+      "rail",
+      "light_rail",
+      "subway",
+      "tram",
+      "monorail",
+      "narrow_gauge",
+      "funicular"
+    ]
+  },
+  "query": {
+    "aoi_file": "",
+    "bbox": "13.454779,42.857057,13.938769,43.438886"
+  },
+  "source": {
+    "api": "Overpass API",
+    "attribution": "© OpenStreetMap contributors",
+    "endpoint": "https://overpass-api.de/api/interpreter",
+    "license": "ODbL 1.0",
+    "provider": "OpenStreetMap"
+  },
+  "timestamp": "2025-10-12T08:28:07Z",
+  "tool": "osm_railways_fetch"
+}

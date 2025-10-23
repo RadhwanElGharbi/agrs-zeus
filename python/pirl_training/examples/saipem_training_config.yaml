@@ -1,0 +1,121 @@
+# SAIPEM Pipeline Training Configuration
+# This configuration trains PIRL models specifically for SAIPEM pipeline routing
+
+# ============================================================================
+# TRAINING PARAMETERS
+# ============================================================================
+
+# Use PPO for stable training
+algorithm: "PPO"
+
+# Total training timesteps (adjust based on available compute)
+total_timesteps: 2000000
+
+# Number of parallel environments
+num_envs: 8
+
+# Evaluation frequency (timesteps)
+eval_freq: 25000
+
+# Model saving frequency (timesteps)
+save_freq: 100000
+
+# ============================================================================
+# ALGORITHM-SPECIFIC PARAMETERS (PPO)
+# ============================================================================
+
+algorithm_params:
+  # Learning rate (lower for stability)
+  learning_rate: 0.0003
+  
+  # Batch size
+  batch_size: 256
+  
+  # PPO-specific parameters
+  n_epochs: 10
+  clip_range: 0.2
+  
+  # Training frequency
+  train_freq: 4
+  
+  # Gradient steps per update
+  gradient_steps: 1
+  
+  # Discount factor
+  gamma: 0.99
+  
+  # Value function coefficient
+  vf_coef: 0.5
+  
+  # Entropy coefficient for exploration
+  ent_coef: 0.01
+  
+  # Maximum gradient norm
+  max_grad_norm: 0.5
+  
+  # Verbosity level
+  verbose: 1
+
+# ============================================================================
+# ENVIRONMENT CONFIGURATIONS
+# ============================================================================
+
+# SAIPEM project configuration
+env_configs:
+  - "/opt/agrs/Projects/SAIPEM_PIPELINE_DEMO/config/pirl_config.yaml"
+
+# ============================================================================
+# OUTPUT CONFIGURATION
+# ============================================================================
+
+# Output directory for training artifacts
+output_dir: "./saipem_training_output"
+
+# Model name
+model_name: "saipem_pirl_model"
+
+# ============================================================================
+# SAIPEM-SPECIFIC SETTINGS
+# ============================================================================
+
+# Stop training when good performance is reached
+reward_threshold: 500.0
+
+# Curriculum learning for progressive difficulty
+curriculum:
+  enabled: true
+  stages:
+    - name: "basic_routing"
+      difficulty: 0.3
+      timesteps: 500000
+      description: "Learn basic navigation without complex constraints"
+    
+    - name: "constraint_aware"
+      difficulty: 0.6
+      timesteps: 750000
+      description: "Add environmental and infrastructure constraints"
+    
+    - name: "cost_optimization"
+      difficulty: 1.0
+      timesteps: 750000
+      description: "Full SAIPEM criteria and cost optimization"
+
+# ============================================================================
+# MONITORING AND LOGGING
+# ============================================================================
+
+# TensorBoard logging
+tensorboard_log: true
+
+# ============================================================================
+# NOTES FOR SAIPEM TRAINING
+# ============================================================================
+
+# 1. This configuration is optimized for SAIPEM's 12 routing criteria
+# 2. Curriculum learning helps the model learn progressively complex scenarios
+# 3. PPO provides stable training suitable for production deployment
+# 4. Monitor training progress with: tensorboard --logdir ./saipem_training_output/logs
+# 5. Expected training time: 4-8 hours on modern hardware
+# 6. Model should achieve >80% success rate on SAIPEM scenarios
+
+

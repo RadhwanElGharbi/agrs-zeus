@@ -1,0 +1,646 @@
+# GIS Datasets for Oil & Gas Pipeline Routing in Russia
+
+## 1. ELEVATION/TERRAIN (DEM)
+
+### National Sources
+**Rosreestr Unified Digital Basemap (UDB)**
+- **Source/Provider:** Federal Service for State Registration, Cadastre and Cartography (Rosreestr)[1][2]
+- **Resolution/Scale:** 1:10,000 to 1:200,000 (varies by region; 1:25,000 for high population density areas)[2]
+- **Temporal Coverage:** Current (continuously updated)[2]
+- **Update Frequency:** Continuous updates through State Information System[2]
+- **Access Type:** Restricted/requires request through official channels[3][1]
+- **API Availability:** Yes - OGC-compliant cartographic services available[2]
+- **Official URL:** https://rosreestr.gov.ru / http://geoportal.rosreestr.ru/[1]
+- **Quality Assessment:** High resolution for developed areas, comprehensive national coverage with legal significance as state cartographic basis[2]
+
+### Global DEMs (Best for Russia)
+
+**Copernicus DEM (Recommended)**
+- **Source/Provider:** European Space Agency / Copernicus Programme[4]
+- **Resolution/Scale:** 30m (GLO-30) and 90m (GLO-90) resolution[5][4]
+- **Temporal Coverage:** Based on 2011-2015 data[4]
+- **Update Frequency:** Static baseline[4]
+- **Access Type:** Open/free[4]
+- **API Availability:** Yes - available through Copernicus Data Space Ecosystem[4]
+- **Official URL:** https://dataspace.copernicus.eu/
+- **Quality Assessment:** Superior accuracy to SRTM (RMSE 2.19-5.72m vs 3.95-6.10m for SRTM); more consistent globally with virtually seamless source[6][7][5]
+
+**SRTM (Shuttle Radar Topography Mission)**
+- **Source/Provider:** USGS / NASA[8]
+- **Resolution/Scale:** 30m (1 arc-second) and 90m (3 arc-second)[9][8]
+- **Temporal Coverage:** February 2000[9]
+- **Update Frequency:** Static[8]
+- **Access Type:** Open/free[8]
+- **API Availability:** Yes - through USGS EarthExplorer API[8]
+- **Official URL:** https://earthexplorer.usgs.gov
+- **Quality Assessment:** Good baseline coverage for Russia; some voids filled by alternative sources; less accurate than Copernicus DEM[10][9]
+
+**ASTER GDEM**
+- **Source/Provider:** USGS / Japan METI[8]
+- **Resolution/Scale:** 30m (1 arc-second)[8]
+- **Temporal Coverage:** 2000-2013[8]
+- **Update Frequency:** Static (version 3 released)[8]
+- **Access Type:** Open/free[8]
+- **API Availability:** Yes - through AppEEARS[8]
+- **Official URL:** https://appeears.earthdatacloud.nasa.gov/
+- **Quality Assessment:** Generally less accurate than Copernicus DEM and SRTM for Russia; useful as supplementary data[10]
+
+## 2. LAND COVER / LAND USE
+
+### National Sources
+**Russian Land Cover/Land Use Maps**
+- **Source/Provider:** Moscow State University Faculty of Geography / INTAS[11][12]
+- **Resolution/Scale:** Variable (coarse to high resolution)[11]
+- **Temporal Coverage:** Historical baselines available[11]
+- **Update Frequency:** Project-based[11]
+- **Access Type:** Restricted/academic access[11]
+- **API Availability:** No[11]
+- **Official URL:** Contact Moscow State University Geography Faculty
+- **Quality Assessment:** Comprehensive but dated; combines remote sensing with statistical data[12][11]
+
+### Global Sources (Best for Russia)
+
+**ESA WorldCover (Recommended)**
+- **Source/Provider:** European Space Agency WorldCover Consortium[13][14]
+- **Resolution/Scale:** 10m resolution[14][13]
+- **Temporal Coverage:** 2020 and 2021 products available[15][13]
+- **Update Frequency:** Annual updates planned[14]
+- **Access Type:** Open/free (CC-BY-4.0)[13][14]
+- **API Availability:** Yes - Google Earth Engine[16][13]
+- **Official URL:** https://esa-worldcover.org
+- **Quality Assessment:** Excellent resolution and accuracy; 11 distinct land cover classes based on Sentinel-1 and Sentinel-2[13][14]
+
+**Google Dynamic World**
+- **Source/Provider:** Google / World Resources Institute[17][18]
+- **Resolution/Scale:** 10m resolution[18][17]
+- **Temporal Coverage:** 2015-present (near real-time)[17]
+- **Update Frequency:** Every 2-5 days[19][17]
+- **Access Type:** Open/free[18][17]
+- **API Availability:** Yes - Google Earth Engine[17][18]
+- **Official URL:** https://dynamicworld.app
+- **Quality Assessment:** Near real-time updates with per-pixel probabilities across 9 land cover classes; based on Sentinel-2[18][17]
+
+## 3. HYDROLOGY / WATER
+
+### Global Sources (Primary for Russia)
+
+**HydroSHEDS / HydroATLAS**
+- **Source/Provider:** WWF / McGill University[20][21]
+- **Resolution/Scale:** 15 arc-seconds (~500m)[22][21]
+- **Temporal Coverage:** Multi-temporal compilation[21]
+- **Update Frequency:** Periodic updates[20]
+- **Access Type:** Open/free (CC-BY 4.0)[23]
+- **API Availability:** Yes - available through Google Earth Engine[24]
+- **Official URL:** https://www.hydrosheds.org
+- **Quality Assessment:** Comprehensive global hydrographic database with 56 variables across 281 attributes; includes river networks, sub-basins, and catchment characteristics[21]
+
+**HydroLAKES**
+- **Source/Provider:** McGill University / HydroSHEDS project[23][24]
+- **Resolution/Scale:** Lakes ≥10 ha surface area[23]
+- **Temporal Coverage:** Global compilation[23]
+- **Update Frequency:** Version 1.1 available[22]
+- **Access Type:** Open/free (CC-BY 4.0)[23]
+- **API Availability:** Yes - Google Earth Engine[24]
+- **Official URL:** https://www.hydrosheds.org/products/hydrolakes
+- **Quality Assessment:** 1.4 million lakes globally with geometric attributes; fully integrated with HydroATLAS[25][23]
+
+**Global Surface Water Explorer**
+- **Source/Provider:** European Commission Joint Research Centre[26]
+- **Resolution/Scale:** 30m resolution[26]
+- **Temporal Coverage:** 1984-present[26]
+- **Update Frequency:** Annual updates[26]
+- **Access Type:** Open/free[26]
+- **API Availability:** Yes - Google Earth Engine
+- **Official URL:** https://global-surface-water.appspot.com
+- **Quality Assessment:** Long-term surface water occurrence and change detection; excellent for understanding water dynamics[26]
+
+## 4. INFRASTRUCTURE - ROADS
+
+### National Sources
+**Rosreestr Road Network Data**
+- **Source/Provider:** Rosreestr (Federal Cadastre and Cartography Service)[1][2]
+- **Resolution/Scale:** 1:10,000 to 1:100,000[1][2]
+- **Temporal Coverage:** Current[2]
+- **Update Frequency:** Continuous[2]
+- **Access Type:** Restricted/requires formal request[3][1]
+- **API Availability:** Yes - OGC standards through geoportal[2]
+- **Official URL:** http://geoportal.rosreestr.ru/
+- **Quality Assessment:** Official state mapping; most authoritative source but access restricted[1][2]
+
+### Open Source
+
+**OpenStreetMap Russia**
+- **Source/Provider:** OpenStreetMap Community[27][28]
+- **Resolution/Scale:** Variable (depends on contributor mapping)[28]
+- **Temporal Coverage:** Current (continuously updated)[28]
+- **Update Frequency:** Real-time community updates[28]
+- **Access Type:** Open/free (ODbL license)[29]
+- **API Availability:** Yes - Overpass API[29]
+- **Official URL:** https://www.openstreetmap.org
+- **Quality Assessment:** Highly variable quality across Russia; significantly lower network density than Western cities; underdeveloped street network in many regions[27][28]
+
+## 5. INFRASTRUCTURE - RAILWAYS
+
+### National Sources
+**Rosreestr Railway Network**
+- **Source/Provider:** Rosreestr / Russian Railways (RZD)[1][2]
+- **Resolution/Scale:** 1:25,000 to 1:100,000[1][2]
+- **Temporal Coverage:** Current[2]
+- **Update Frequency:** Continuous[2]
+- **Access Type:** Restricted/requires request[1]
+- **API Availability:** Yes - through geoportal services[2]
+- **Official URL:** http://geoportal.rosreestr.ru/
+- **Quality Assessment:** Official state railway mapping; comprehensive but access restricted[1][2]
+
+**OpenStreetMap Railways**
+- **Source/Provider:** OpenStreetMap Community[29]
+- **Resolution/Scale:** Variable[28]
+- **Temporal Coverage:** Current[28]
+- **Update Frequency:** Community-driven[28]
+- **Access Type:** Open/free[29]
+- **API Availability:** Yes - Overpass API[29]
+- **Official URL:** https://www.openstreetmap.org
+- **Quality Assessment:** Major railway lines generally well-mapped; smaller branch lines may be incomplete[28]
+
+## 6. INFRASTRUCTURE - UTILITIES
+
+### Open Source
+
+**OpenInfraMap / OpenStreetMap Utilities**
+- **Source/Provider:** OpenStreetMap Community[30]
+- **Resolution/Scale:** Variable[30]
+- **Temporal Coverage:** Current[30]
+- **Update Frequency:** Community updates[30]
+- **Access Type:** Open/free[30]
+- **API Availability:** Yes - Overpass API[30]
+- **Official URL:** https://openinframap.org
+- **Quality Assessment:** Incomplete for Russia; electricity transmission networks partially mapped but significant gaps exist[30]
+
+## 7. INFRASTRUCTURE - PIPELINES
+
+### National/Commercial Sources
+
+**Gazprom Pipeline GIS Data**
+- **Source/Provider:** Gazprom (Russia's state gas company)[31][32]
+- **Resolution/Scale:** High precision operational data[31]
+- **Temporal Coverage:** Current operational network[32][31]
+- **Update Frequency:** Operational updates[31]
+- **Access Type:** Commercial/highly restricted proprietary data[30]
+- **API Availability:** No public access[30]
+- **Official URL:** Contact Gazprom directly
+- **Quality Assessment:** Highest quality for gas pipelines but extremely difficult to access; considered confidential infrastructure data[30]
+
+**Transneft Pipeline Data**
+- **Source/Provider:** Transneft (Russia's state oil pipeline company)[33]
+- **Resolution/Scale:** Operational precision[33]
+- **Temporal Coverage:** Current[33]
+- **Update Frequency:** Operational[33]
+- **Access Type:** Commercial/restricted proprietary data[34][30]
+- **API Availability:** No public access[30]
+- **Official URL:** Contact Transneft directly
+- **Quality Assessment:** Highest quality for oil pipelines but access extremely restricted[34][30]
+
+### Open/Global Sources
+
+**Global Energy Monitor Russia Pipelines**
+- **Source/Provider:** Global Energy Monitor[33][30]
+- **Resolution/Scale:** Country-scale mapping[33][30]
+- **Temporal Coverage:** Existing and proposed pipelines[33]
+- **Update Frequency:** Periodic project updates[30]
+- **Access Type:** Open/free (in WKT format)[30]
+- **API Availability:** No[30]
+- **Official URL:** https://globalenergymonitor.org
+- **Quality Assessment:** Good for strategic-level planning; includes major trunk lines but lacks detailed gathering systems[30]
+
+**OpenStreetMap Pipelines**
+- **Source/Provider:** OpenStreetMap Community[30]
+- **Resolution/Scale:** Variable[30]
+- **Temporal Coverage:** Current[30]
+- **Update Frequency:** Community updates[30]
+- **Access Type:** Open/free[30]
+- **API Availability:** Yes - Overpass API[30]
+- **Official URL:** https://www.openstreetmap.org
+- **Quality Assessment:** Highly incomplete for Russia; major pipelines partially mapped but significant gaps; not suitable as primary source[30]
+
+## 8. PROTECTED AREAS / ENVIRONMENTAL
+
+### National Sources
+
+**Russian Protected Areas Database**
+- **Source/Provider:** Russian Ministry of Natural Resources / Federal agencies[35][36]
+- **Resolution/Scale:** High precision boundaries for 11,800+ protected areas[36][35]
+- **Temporal Coverage:** Current (110 state nature reserves, 64 national parks)[37][35][36]
+- **Update Frequency:** Periodic updates[36]
+- **Access Type:** Mixed - some data publicly available, detailed boundaries may require request[36]
+- **API Availability:** Limited[36]
+- **Official URL:** Contact Ministry of Natural Resources
+- **Quality Assessment:** Comprehensive coverage of 13.9% of Russia's territory (2.37 million km²); includes zapovedniks, national parks, natural sanctuaries[35][36]
+
+### Global Sources
+
+**World Database on Protected Areas (WDPA)**
+- **Source/Provider:** UNEP-WCMC / IUCN[38][39]
+- **Resolution/Scale:** Variable by protected area[39]
+- **Temporal Coverage:** Current (continuously updated)[39]
+- **Update Frequency:** Monthly updates[39]
+- **Access Type:** Open/free[39]
+- **API Availability:** Yes - Protected Planet API[39]
+- **Official URL:** https://www.protectedplanet.net
+- **Quality Assessment:** Most comprehensive global database; good coverage for Russia but may lack some recent designations[38][39]
+
+## 9. GEOLOGY / SOIL
+
+### National Sources
+
+**Rosgeolfond (Russian Geological Fund)**
+- **Source/Provider:** Federal Agency for Subsoil Use (Rosnedra)[40][8]
+- **Resolution/Scale:** 1:200,000 to 1:1,000,000 (State Geological Map)[40]
+- **Temporal Coverage:** Historical compilation[40]
+- **Update Frequency:** Ongoing geological surveys[40]
+- **Access Type:** Restricted/requires formal request and fees[40][8]
+- **API Availability:** No public API[40]
+- **Official URL:** Contact Rosnedra/Rosgeolfond
+- **Quality Assessment:** Most comprehensive geological data for Russia; includes subsurface information critical for pipeline routing but difficult to access[40]
+
+**Soil Map of Russia (1:2,500,000)**
+- **Source/Provider:** Russian Academy of Sciences / International Institute for Applied Systems Analysis[41][42]
+- **Resolution/Scale:** 1:2,500,000[42][43][41]
+- **Temporal Coverage:** Based on 1988 compilation with 2002 updates[41]
+- **Update Frequency:** Static[41]
+- **Access Type:** Open/free through NSIDC[41]
+- **API Availability:** No[41]
+- **Official URL:** https://nsidc.org/data/ggd601
+- **Quality Assessment:** Comprehensive soil characteristics including permafrost mapping; outdated but most complete national soil dataset publicly available[42][41]
+
+### Global Sources
+
+**FAO Harmonized World Soil Database (HWSD v2.0)**
+- **Source/Provider:** FAO / IIASA[44]
+- **Resolution/Scale:** 1km (30 arc-second) global grid[44]
+- **Temporal Coverage:** Global compilation (updated 2023)[44]
+- **Update Frequency:** Periodic major versions[44]
+- **Access Type:** Open/free[44]
+- **API Availability:** No direct API; downloadable datasets[44]
+- **Official URL:** https://www.fao.org/soils-portal/data-hub/
+- **Quality Assessment:** Good baseline for Russia but lower detail than national sources; includes soil morphology, chemistry, and physical characteristics[44]
+
+**OneGeology**
+- **Source/Provider:** International geological survey consortium[40]
+- **Resolution/Scale:** Variable by country contribution[40]
+- **Temporal Coverage:** Multi-source compilation[40]
+- **Update Frequency:** Depends on national survey contributions[40]
+- **Access Type:** Open/free[40]
+- **API Availability:** Yes - WMS/WFS services
+- **Official URL:** http://www.onegeology.org
+- **Quality Assessment:** Variable coverage for Russia; depends on Russian contributions through Rosgeolfond[40]
+
+## 10. CLIMATE / WEATHER
+
+### National Sources
+
+**Roshydromet (Russian Federal Service for Hydrometeorology)**
+- **Source/Provider:** Russian Federal Service for Hydrometeorology and Environmental Monitoring[45][46]
+- **Resolution/Scale:** Network of ~1,600 weather stations across Russia[45]
+- **Temporal Coverage:** Historical records from 1940s-present[47][46]
+- **Update Frequency:** Real-time observations, daily forecasts[45]
+- **Access Type:** Mixed - some data public, detailed historical data requires request[46]
+- **API Availability:** Limited public API access[45]
+- **Official URL:** Contact Roshydromet
+- **Quality Assessment:** Most authoritative source for Russian meteorological data; contributes to WMO Global Telecommunication System[46][45]
+
+### Global Sources
+
+**ERA5 Climate Reanalysis (Recommended)**
+- **Source/Provider:** European Centre for Medium-Range Weather Forecasts (ECMWF)[48][49][47]
+- **Resolution/Scale:** 0.25° × 0.25° (~25-31km)[49][47]
+- **Temporal Coverage:** 1940-present[48][49]
+- **Update Frequency:** Continuous updates (5-day lag)[49][48]
+- **Access Type:** Open/free[47][48]
+- **API Availability:** Yes - Climate Data Store API[48]
+- **Official URL:** https://cds.climate.copernicus.eu
+- **Quality Assessment:** Excellent quality incorporating Russian station data; hourly estimates of atmospheric, land, and oceanic variables; validated against independent datasets[47][49][45]
+
+**WorldClim**
+- **Source/Provider:** University of California/International collaboration
+- **Resolution/Scale:** 30 arc-seconds (~1km) to 2.5 arc-minutes
+- **Temporal Coverage:** Historical climate normals (1970-2000, 1960-1990)
+- **Update Frequency:** Decadal updates
+- **Access Type:** Open/free
+- **API Availability:** No - downloadable datasets
+- **Official URL:** https://www.worldclim.org
+- **Quality Assessment:** Excellent for climate baseline data; interpolated from weather station data including Russian stations; lower temporal resolution than ERA5
+
+## 11. ADMINISTRATIVE BOUNDARIES
+
+### National Sources
+
+**Rosstat Official Boundaries**
+- **Source/Provider:** Federal State Statistics Service (Rosstat)[50][51][52]
+- **Resolution/Scale:** All administrative levels (federal districts, regions, municipalities)[52]
+- **Temporal Coverage:** Current (85 federal subjects)[52]
+- **Update Frequency:** Updated as administrative changes occur[51][50]
+- **Access Type:** Mixed - statistical data public, GIS boundaries may require request[50][51]
+- **API Availability:** Limited[51]
+- **Official URL:** https://eng.rosstat.gov.ru
+- **Quality Assessment:** Most authoritative and legally definitive administrative boundaries; essential for regulatory compliance[50][51][52]
+
+### Global Sources
+
+**GADM (Database of Global Administrative Areas)**
+- **Source/Provider:** University of California Berkeley[53][54][55]
+- **Resolution/Scale:** Administrative levels 0-2 for Russia[55][53]
+- **Temporal Coverage:** Current (updated 2022)[53]
+- **Update Frequency:** Periodic updates[53]
+- **Access Type:** Open/free for non-commercial use[53]
+- **API Availability:** No - downloadable shapefiles/geodatabases[53]
+- **Official URL:** https://gadm.org
+- **Quality Assessment:** Good quality global boundaries; widely used but may not reflect most recent administrative changes; verify against Rosstat for legal accuracy[54][55][53]
+
+## 12. POPULATION / DEMOGRAPHICS
+
+### National Sources
+
+**Russian Census Data (Rosstat)**
+- **Source/Provider:** Federal State Statistics Service (Rosstat)[56][57][50]
+- **Resolution/Scale:** Administrative unit level (federal subjects, municipalities)[52][50]
+- **Temporal Coverage:** 2021 census (most recent); historical censuses available[56][50]
+- **Update Frequency:** Decadal census; annual estimates[57][50]
+- **Access Type:** Open/free (statistical tables)[51][50]
+- **API Availability:** Limited[51]
+- **Official URL:** https://eng.rosstat.gov.ru
+- **Quality Assessment:** Official demographic data; 146.0 million population (2025); essential for accurate population statistics but limited spatial resolution[56][50][51]
+
+### Global Sources
+
+**WorldPop**
+- **Source/Provider:** WorldPop / University of Southampton[58][59][60]
+- **Resolution/Scale:** 100m (~3 arc-second) resolution[59][58]
+- **Temporal Coverage:** 2000-2020 (annual)[58][59]
+- **Update Frequency:** Annual datasets[60][58]
+- **Access Type:** Open/free (CC-BY 4.0)[60][58]
+- **API Availability:** Yes - through WorldPop Hub[58][60]
+- **Official URL:** https://www.worldpop.org
+- **Quality Assessment:** High-resolution population density grids based on 2020 Russian census data; UN-adjusted versions available; excellent for spatial analysis[59][60][58]
+
+**LandScan**
+- **Source/Provider:** Oak Ridge National Laboratory (US DOE)
+- **Resolution/Scale:** ~1km resolution
+- **Temporal Coverage:** Annual datasets (2000-present)
+- **Update Frequency:** Annual
+- **Access Type:** Restricted/requires registration
+- **API Availability:** No
+- **Official URL:** https://landscan.ornl.gov
+- **Quality Assessment:** Ambient population estimates accounting for daily movement patterns; complementary to WorldPop; access requires US government approval for some versions
+
+## 13. SATELLITE IMAGERY
+
+### Commercial High-Resolution
+
+**Maxar Technologies**
+- **Source/Provider:** Maxar Technologies (formerly DigitalGlobe)[61][62][63]
+- **Resolution/Scale:** 30cm multispectral; 15cm pan-sharpened processing[62][63]
+- **Temporal Coverage:** Historical archive + new acquisitions[63][62]
+- **Update Frequency:** On-demand tasking available[62]
+- **Access Type:** Commercial purchase/license[64][62]
+- **API Availability:** Yes - SecureWatch API for subscribers[62]
+- **Official URL:** https://www.maxar.com
+- **Quality Assessment:** Industry-leading resolution; extensive coverage including Russia; used extensively for conflict monitoring; requires commercial license[61][63][62]
+
+**Airbus Defence and Space**
+- **Source/Provider:** Airbus Defence and Space[65][61][62]
+- **Resolution/Scale:** 30cm multispectral; 15cm pan-sharpened[65][62]
+- **Temporal Coverage:** Historical archive + tasking[65][62]
+- **Update Frequency:** On-demand tasking[62][65]
+- **Access Type:** Commercial purchase/license[64][62]
+- **API Availability:** Yes - OneAtlas API[65]
+- **Official URL:** https://www.intelligence-airbusds.com
+- **Quality Assessment:** Excellent quality comparable to Maxar; Pléiades constellation provides 50cm resolution; commercial licensing required[61][62][65]
+
+**Planet Labs**
+- **Source/Provider:** Planet Labs[66][61]
+- **Resolution/Scale:** 3-5m (PlanetScope); 50cm (SkySat)[66][61]
+- **Temporal Coverage:** Daily global coverage (PlanetScope); archive from 2009+[61]
+- **Update Frequency:** Daily imaging capability[61]
+- **Access Type:** Commercial subscription[61]
+- **API Availability:** Yes - Planet API[61]
+- **Official URL:** https://www.planet.com
+- **Quality Assessment:** Unique daily revisit capability; lower resolution than Maxar/Airbus for PlanetScope but higher temporal frequency; SkySat offers sub-meter resolution[61]
+
+### Free/Open Access
+
+**Sentinel-2 (Recommended)**
+- **Source/Provider:** European Space Agency / Copernicus Programme[17][13]
+- **Resolution/Scale:** 10m (visible/NIR), 20m (red edge/SWIR), 60m (atmospheric)[13][17]
+- **Temporal Coverage:** 2015-present[17]
+- **Update Frequency:** 5-day global revisit (2 satellites)[17]
+- **Access Type:** Open/free[13]
+- **API Availability:** Yes - Copernicus Data Space, Google Earth Engine[13]
+- **Official URL:** https://dataspace.copernicus.eu
+- **Quality Assessment:** Excellent free baseline imagery; 10m multispectral resolution suitable for many pipeline routing applications; widely used for land cover mapping[16][17][13]
+
+## 14. SPECIAL DATASETS FOR RUSSIA
+
+### Permafrost and Ground Conditions
+
+**Russian Permafrost Mapping**
+- **Source/Provider:** Russian Academy of Sciences[67][68][31]
+- **Resolution/Scale:** Regional to national scale[69][67]
+- **Temporal Coverage:** Current extent mapping[68][67]
+- **Update Frequency:** Research-based updates[67]
+- **Access Type:** Mixed - some research data available, comprehensive datasets may require request[67][31]
+- **API Availability:** No[67]
+- **Official URL:** Contact Russian Academy of Sciences institutes
+- **Quality Assessment:** Critical for pipeline routing - 65% of Russia underlain by permafrost; includes continuous, discontinuous, and sporadic permafrost zones; essential for foundation design and geotechnical planning[68][69][67]
+
+**Permafrost Characteristics Database**
+- **Source/Provider:** International permafrost research community[69][67]
+- **Resolution/Scale:** Point measurements and regional interpolations[69]
+- **Temporal Coverage:** Historical to present[69][67]
+- **Update Frequency:** Research updates[67]
+- **Access Type:** Mixed access[69]
+- **API Availability:** No[69]
+- **Official URL:** Various research institutions
+- **Quality Assessment:** Essential for understanding active layer depth, ground ice content, and thermal conditions affecting pipeline stability; 60% of buildings in permafrost cities show deformations[67][69]
+
+### Seismic Hazard Zones
+
+**Russian Building Codes (SNiP) Seismic Zonation**
+- **Source/Provider:** Russian Construction Norms (Stroitelnie Normi i Pravila)[67]
+- **Resolution/Scale:** Regional seismic zoning maps[67]
+- **Temporal Coverage:** Updated periodically (approximately decadal)[67]
+- **Update Frequency:** ~10 years[67]
+- **Access Type:** Publicly available through construction standards
+- **API Availability:** No
+- **Official URL:** Available through Russian standards organizations
+- **Quality Assessment:** Legally required for construction projects; includes seismic risk zones particularly important for eastern Russia and Caucasus regions[67]
+
+### Military and Restricted Zones
+
+**Russian Military Exclusion Zones**
+- **Source/Provider:** Russian Ministry of Defense / restricted information
+- **Resolution/Scale:** Variable
+- **Temporal Coverage:** Current
+- **Update Frequency:** As designated
+- **Access Type:** Highly restricted/classified
+- **API Availability:** No
+- **Official URL:** Not publicly available
+- **Quality Assessment:** Critical for pipeline routing to avoid restricted military areas, testing ranges, and strategic installations; extremely difficult to obtain; consultation with authorities essential
+
+### Archaeological Heritage Sites
+
+**Archaeological Sites Registry**
+- **Source/Provider:** Russian Ministry of Culture / regional heritage agencies
+- **Resolution/Scale:** Point and polygon features
+- **Temporal Coverage:** Current registry
+- **Update Frequency:** Ongoing registrations
+- **Access Type:** Restricted/requires official request
+- **API Availability:** No
+- **Official URL:** Contact Ministry of Culture
+- **Quality Assessment:** Important for cultural heritage protection; required for environmental impact assessments; accessibility varies by region
+
+### Indigenous Lands and Traditional Use Areas
+
+**Indigenous Peoples' Traditional Territories**
+- **Source/Provider:** Russian Association of Indigenous Peoples of the North (RAIPON) / federal agencies
+- **Resolution/Scale:** Variable
+- **Temporal Coverage:** Current designations
+- **Update Frequency:** As designated
+- **Access Type:** Mixed - some public information, detailed boundaries restricted
+- **API Availability:** No
+- **Official URL:** Requires consultation with indigenous organizations
+- **Quality Assessment:** Essential for legal compliance and social impact assessment, particularly in Arctic and Siberian regions with 40+ indigenous groups
+
+### Arctic-Specific Data
+
+**Northern Sea Route Infrastructure**
+- **Source/Provider:** Rosatom / Russian shipping authorities[70][31]
+- **Resolution/Scale:** Port locations and route corridors[70][31]
+- **Temporal Coverage:** Current operational routes[70][31]
+- **Update Frequency:** Operational updates[31]
+- **Access Type:** Mixed - route information publicly available, detailed infrastructure data restricted[31]
+- **API Availability:** No[31]
+- **Official URL:** Various Russian Arctic authorities
+- **Quality Assessment:** Important for Arctic pipeline projects connecting to export terminals; includes ice extent data critical for offshore infrastructure[70][31]
+
+**Sea Ice Extent Data**
+- **Source/Provider:** National Snow & Ice Data Center[31]
+- **Resolution/Scale:** 25km resolution
+- **Temporal Coverage:** 1979-present
+- **Update Frequency:** Daily
+- **Access Type:** Open/free
+- **API Availability:** Yes - NSIDC API
+- **Official URL:** https://nsidc.org
+- **Quality Assessment:** Essential for Arctic offshore pipeline planning; shows seasonal and long-term ice patterns[31]
+
+---
+
+## Key Recommendations for Russia:
+
+1. **Prioritize Copernicus DEM over SRTM** for elevation data due to superior accuracy[6][5]
+2. **ESA WorldCover and Dynamic World** provide best free land cover at 10m resolution[14][18][13]
+3. **Rosreestr datasets** are most authoritative but require formal access procedures and possibly fees[3][1][2]
+4. **Permafrost mapping is critical** - 65% of Russia affected; essential for pipeline foundation design[68][67]
+5. **Pipeline infrastructure data** from Gazprom/Transneft is highly restricted; Global Energy Monitor provides strategic-level alternative[34][30]
+6. **OpenStreetMap quality is poor** for Russia compared to Western countries; use cautiously and validate against official sources[27][28]
+7. **ERA5 climate data** incorporates Russian meteorological stations and provides excellent spatial-temporal coverage[49][47][45]
+8. **Commercial satellite imagery** requires licenses but offers 30cm resolution from Maxar/Airbus; Sentinel-2 provides excellent free 10m alternative[63][62][61]
+
+[1](https://www.fig.net/pub/fig2012/ppt/ts01d/TS01D_Sapelnikov_Sergey_6159_ppt.pdf)
+[2](https://icaci.org/files/documents/national_reports/2019-2023/Russia-2023.pdf)
+[3](https://rosreestr.gov.ru/en/)
+[4](https://dataspace.copernicus.eu/explore-data/data-collections/copernicus-contributing-missions/collections-description/COP-DEM)
+[5](https://isprs-annals.copernicus.org/articles/X-4-W1-2022/209/2023/)
+[6](https://www.usgs.gov/publications/evaluation-copernicus-dem-and-comparison-dem-used-landsat-collection-2-processing)
+[7](https://d-nb.info/1278558632/34)
+[8](https://www.usgs.gov/faqs/where-can-i-get-global-elevation-data)
+[9](https://viewfinderpanoramas.org/dem3.html)
+[10](https://www.frontiersin.org/journals/earth-science/articles/10.3389/feart.2023.1218823/full)
+[11](https://www.academia.edu/102068822/Land_use_cover_change_in_Russia_mapping_and_GIS)
+[12](https://www.nature.com/articles/sdata201856)
+[13](https://developers.google.com/earth-engine/datasets/catalog/ESA_WorldCover_v100)
+[14](https://esa-worldcover.org/en)
+[15](https://developers.google.com/earth-engine/datasets/catalog/ESA_WorldCover_v200)
+[16](https://www.youtube.com/watch?v=snctv2AApVQ)
+[17](https://dynamicworld.app/about/)
+[18](https://dynamicworld.app)
+[19](https://sustainability.google/research/tools/dynamic-world/)
+[20](https://www.hydrosheds.org)
+[21](https://pmc.ncbi.nlm.nih.gov/articles/PMC6901482/)
+[22](https://www.nature.com/articles/s41597-024-03752-9)
+[23](https://www.hydrosheds.org/products/hydrolakes)
+[24](https://gee-community-catalog.org/projects/hydrolakes/)
+[25](https://www.nature.com/articles/s41597-022-01425-z)
+[26](https://pmc.ncbi.nlm.nih.gov/articles/PMC9526744/)
+[27](https://isocarp.org/app/uploads/2021/06/ISOCARP_2020_Saveleva_433-1.pdf)
+[28](https://www.sciencedirect.com/science/article/abs/pii/S0143622818312839)
+[29](https://wiki.openstreetmap.org/wiki/Key:highway)
+[30](https://www.reddit.com/r/gis/comments/xyrhhd/arcgis_pro_lines_data_for_russias_gas_pipelines/)
+[31](https://www.thearcticinstitute.org/mapping-russia-arctic-hydrocarbon-development-scheme/)
+[32](https://www.gisreportsonline.com/r/gazprom-russia-europe-eu-gas/)
+[33](https://www.arcgis.com/home/item.html?id=ad58050c47814c9e99e0ef8d7e0a5c4c&sublayer=0)
+[34](https://www.rogtecmagazine.com/gis-gps-in-the-oil-gas-industry-for-russia/)
+[35](https://pmc.ncbi.nlm.nih.gov/articles/PMC7292980/)
+[36](https://wilderness-society.org/wp-content/uploads/2022/02/WWF-Protected-Natural-Areas-of-the-Russian-Federation-and-Their-Categories.pdf)
+[37](https://en.wikipedia.org/wiki/National_parks_of_Russia)
+[38](https://www.protectedplanet.net/country/RUS)
+[39](https://www.protectedplanet.net/en/thematic-areas/wdpa)
+[40](https://vniio.ru/en/about/science_dept/geologo_geophisic/geomapp_dep_en/)
+[41](https://nsidc.org/data/ggd601/versions/1)
+[42](https://pure.iiasa.ac.at/id/eprint/5611/1/IR-98-037.pdf)
+[43](https://nsidc.org/sites/default/files/documents/technical-reference/russiansoils_.pdf)
+[44](https://www.fao.org/soils-portal/data-hub/soil-maps-and-databases/harmonized-world-soil-database-v20/en/)
+[45](https://x.com/i/grok/share/HhPvoFKnUQ03khJinHQJVFKTd)
+[46](https://www.dni.gov/files/documents/climate2030_russia.pdf)
+[47](https://climateknowledgeportal.worldbank.org/country/russian-federation/era5-historical)
+[48](https://cds.climate.copernicus.eu/datasets/reanalysis-era5-single-levels)
+[49](https://www.ecmwf.int/en/forecasts/dataset/ecmwf-reanalysis-v5)
+[50](https://eng.rosstat.gov.ru/folder/76215)
+[51](https://eng.rosstat.gov.ru)
+[52](https://eng.rosstat.gov.ru/storage/mediabank/SGD_2022_ENG.pdf)
+[53](https://data.humdata.org/dataset/cod-ab-rus)
+[54](https://openknowledge.worldbank.org/bitstreams/493b7726-d9fd-4348-86de-2ea39730616a/download)
+[55](https://data.apps.fao.org/map/catalog/static/search?format=shapefile)
+[56](https://en.wikipedia.org/wiki/Demographics_of_Russia)
+[57](https://www.ceicdata.com/en/russia/population-forecast-rosstat-annual)
+[58](https://hub.worldpop.org/geodata/summary?id=50086)
+[59](https://data.humdata.org/dataset/worldpop-population-density-for-russian-federation)
+[60](https://www.worldpop.org)
+[61](https://learn.planet.com/Snapshots-06-02-22.html)
+[62](https://interactive.satellitetoday.com/via/november-2022/how-satellite-imagery-magnified-ukraine-to-the-world)
+[63](https://blog.maxar.com/earth-intelligence/2023/the-game-changing-role-of-commercial-satellite-imagery-and-analytics-in-ukraine)
+[64](https://gijn.org/resource/resources-for-finding-and-using-satellite-images/)
+[65](https://space-solutions.airbus.com/resources/satellite-image-gallery/)
+[66](https://www.reddit.com/r/space/comments/tayv7e/commercial_satellites_push_the_bounds_of_the/)
+[67](https://pmc.ncbi.nlm.nih.gov/articles/PMC10247633/)
+[68](https://www.frontiersin.org/journals/earth-science/articles/10.3389/feart.2022.910078/full)
+[69](https://geocryology.com/wp-content/uploads/2013/05/climate-change-and-permafrost.pdf)
+[70](https://storymaps.arcgis.com/stories/06809e2074a149c78e962918fa3b079f)
+[71](https://gis-lab.info/docs/russian-topo.pdf)
+[72](https://data.usgs.gov/datacatalog/data/USGS:77ae0551-c61e-4979-aedd-d797abdcde0e)
+[73](https://portal.opentopography.org/datasets?minX=-72.9052734375&minY=-34.644506677932334&maxX=-28.8720703125&maxY=4.770783772016472)
+[74](https://www.ngdc.noaa.gov/mgg/topo/isprsdem.html)
+[75](https://freegisdata.rtwilson.com)
+[76](https://geospatial.com/country_profiles/russia/)
+[77](https://ggim.un.org/country-reports/documents/Country_report_Russian_Federation_en.pdf)
+[78](https://www.sciencedirect.com/science/article/pii/S1110982317302120)
+[79](https://www.maptrove.ca/info/reference/mapping-agencies-in-russia)
+[80](https://catalog.data.gov/dataset/russian-river-integrated-hydrologic-model-rrihm-watershed-vegetation-cover)
+[81](https://data.nextgis.com/en/region/RU-SA/rnlic/?country=RU)
+[82](https://unece.org/sites/default/files/2021-05/1.NSDI_ENG%2011.05.21.pdf)
+[83](https://revues.imist.ma/index.php/AJLP-GS/article/download/49875/26858/144428)
+[84](https://www.bohrium.com/paper-details/evaluation-of-copernicus-dem-and-comparison-to-the-dem-used-for-landsat-collection-2-processing/863739379649085441-3949)
+[85](https://www.sciencedirect.com/science/article/pii/S2352340924003561)
+[86](https://www.frontiersin.org/journals/big-data/articles/10.3389/fdata.2025.1657320/full)
+[87](https://wellbeing.research.mcgill.ca/publications/Barrington-Leigh-Millard-Ball-PLOS2017.pdf)
+[88](https://www.hydrosheds.org/glwd-details)
+[89](https://data.hydrosheds.org/file/technical-documentation/HydroLAKES_TechDoc_v10.pdf)
+[90](https://essd.copernicus.org/preprints/essd-2023-216/essd-2023-216.pdf)
+[91](https://pure.iiasa.ac.at/5648/1/RR-99-10.pdf)
+[92](https://climateknowledgeportal.worldbank.org/country/russian-federation/trends-variability-historical)
+[93](https://www.gisreportsonline.com/r/russian-gas/)
+[94](https://data.humdata.org/dataset/353b8210-3808-449b-a696-6a57c586055e/resource/bc5da077-1e7e-41c1-99a9-4b4ba7451d5b)
+[95](https://www.kaggle.com/datasets/kapral42/russia-geo-data)
+[96](https://pubs.usgs.gov/wsp/1792/report.pdf)
+[97](https://www.climatechangepost.com/countries/russia/permafrost/)
+[98](https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2022EF002904)
+[99](http://www.poi.dvo.ru/sites/default/files/Documents/public/2024/j_marine_sci_engineer_12(12)2209(2024).pdf)

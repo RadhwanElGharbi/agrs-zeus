@@ -1,0 +1,157 @@
+For existing pipeline data in Northeastern Italy (Veneto and Friuli Venezia Giulia regions), here are the primary sources:
+
+## National/Commercial Sources
+
+**Snam Atlas and Network Data**
+Snam (Italy's national gas transmission operator) manages the primary gas pipeline network in Northeastern Italy, including the strategic Tarvisio entry point which historically was Italy's main entry for Russian gas. Access their data at:
+- **Snam Atlas**: http://www.snamatlas.it - Interactive global gas infrastructure map with Italy coverage
+- **Snam Network Statement**: https://www.snam.it/en/transportation/business-information/national-gas-pipeline-network.html - Geographic representation of the national network
+- **Access**: Public viewing available online; detailed GIS datasets require formal request to Snam
+- **Coverage**: Includes major transmission pipelines like Bordano-Istrana (120 km DN1400), Zimella-Cervignano (170 km), and Collalto storage field connections
+
+**SINFI - Italian Underground Utilities Cadastre**
+Italy's official underground infrastructure cadastre includes gas networks, but has limited public GIS access:
+- **Coverage**: Gas pipelines, electric networks, water supply, telecommunications
+- **Access**: Restricted - Started data collection in 2017, still building completeness
+- **Status**: Public viewing in development; detailed data requires authorization from relevant authorities
+- **Relevance**: Includes Friuli Venezia Giulia region gas networks under regional law LR 3/2011
+
+## European/International Open Sources
+
+**ENTSOG Transparency Platform**
+European Network of Transmission System Operators for Gas provides operational data:
+- **URL**: https://transparency.entsog.eu
+- **Content**: Entry/exit points, operational flows, capacity data for Italy including Tarvisio
+- **Access**: Open/Free with API available
+- **Format**: Operational data rather than detailed spatial GIS; System Capacity Maps show pipeline routes graphically
+- **Map Downloads**: https://www.entsog.eu/maps (System Capacity Map 2025 available)
+
+**SciGRID_gas - European Gas Network Model**
+Open-source gas transmission network model covering Europe including Italy:
+- **URL**: https://zenodo.org/search?q=SciGRID_gas
+- **Dataset**: IGGINL version contains ~206,000 km of European pipelines including Italy
+- **Format**: GeoJSON and CSV files with pipeline geometry, diameter, capacity estimates
+- **Access**: Open/Free - Creative Commons CC-BY-4.0 license
+- **Quality**: Good coverage but parameters estimated from multiple sources; resolution suitable for regional analysis but may lack detailed local segments
+- **Download**: Direct from Zenodo repository
+
+**Global Energy Monitor - Global Gas Infrastructure Tracker**
+Comprehensive global pipeline database:
+- **URL**: https://globalenergymonitor.org/projects/global-gas-infrastructure-tracker/
+- **Coverage**: Major Italian pipelines including TAP Interconnection, Trans-Mediterranean pipeline segments
+- **Access**: Open/Free - Download requires form submission at https://globalenergymonitor.org/projects/global-gas-infrastructure-tracker/download-data/
+- **Format**: Includes GIS shapefile format for pipeline routes
+- **Quality**: Focuses on major transmission pipelines; may not include all regional distribution networks
+
+## Regional Geoportals
+
+**Veneto Region Geoportal**
+- **URL**: https://idt2.regione.veneto.it
+- **Content**: Regional infrastructure data including utilities
+- **Download**: https://idt2.regione.veneto.it/idt/downloader/download
+- **Access**: Open/Free for most datasets
+- **Limitation**: Detailed utility infrastructure data may be restricted for security reasons
+
+**Friuli Venezia Giulia IRDAT**
+- **URL**: https://irdat.regione.fvg.it and https://eaglefvg.regione.fvg.it/eagle/main.aspx
+- **Content**: Environmental and territorial data catalogue
+- **Access**: Open access for many datasets; some require registration
+- **Limitation**: Pipeline data specifically may not be fully public
+
+**National Geoportal (Geoportale Nazionale)**
+- **URL**: https://geodati.gov.it/geoportale/
+- **Content**: National spatial data catalogue following INSPIRE directive
+- **Access**: Discovery and viewing; download varies by dataset
+- **Limitation**: Infrastructure data availability varies; security-sensitive data restricted
+
+## OpenStreetMap (Limited Utility)
+
+**OSM Pipeline Data**
+- **URL**: https://www.openstreetmap.org
+- **Access**: Open/Free via Overpass API
+- **Quality Assessment**: Very incomplete for Italy's pipeline network - not recommended as primary source
+- **Use**: Supplement only; security-sensitive infrastructure is poorly documented in OSM
+
+## Recommended Approach for Northeastern Italy
+
+1. **Start with ENTSOG System Capacity Map 2025** for overview of major transmission corridors
+2. **Download SciGRID_gas IGGINL dataset** for open-source GIS-ready pipeline network
+3. **Request detailed data from Snam** for authoritative national transmission network (requires formal business justification)
+4. **Check Global Energy Monitor** for major project-level detail with documentation
+5. **Consult regional geoportals** for supplementary infrastructure context
+6. **Contact SINFI administrators** if detailed local distribution networks needed (requires authorization)
+
+**Critical Note**: Detailed pipeline infrastructure data is security-sensitive in Italy. While overview maps and operational statistics are publicly available, high-resolution GIS datasets with precise locations often require formal requests demonstrating legitimate business need, particularly for active oil and gas transmission infrastructure. For pipeline routing projects, establishing relationships with Snam and relevant regional authorities will be essential for accessing comprehensive data.
+
+[1](https://www.snam.it/en/we-snam/about-us/our-infrastructure/the-transportation-network.html)
+[2](http://www.snamatlas.it)
+[3](https://www.snam.it/en/our-businesses/transportation/business-information/national-gas-pipeline-network.html)
+[4](https://www.eni.com/en-IT/media/press-release/2023/01/eni-snam-partnership-for-gas-pipelines-between-algeria-and-italy-finalised.html)
+[5](https://www.gem.wiki/TAP_Interconnection_Gas_Pipeline)
+[6](https://www.snam.it/content/dam/snam/pages-attachments/en/i-nostri-business/trasporto/documents/2020/capacity-and-development-plans/Piano_capacita_potenziamento_2010_2011_ENG_05_05_2011.pdf)
+[7](https://www.gem.wiki/Hungary-Slovenia-Italy_Interconnector_Gas_Pipeline)
+[8](https://www.enerdata.net/publications/daily-energy-news/eni-and-snam-will-jointly-manage-gas-pipelines-connecting-italy-algeria.html)
+[9](https://www.snam.it/content/dam/snam/pages-attachments/en/i-nostri-business/trasporto/documents/2020/capacity-and-development-plans/Capacity_and_development_Plan_2011_2012.pdf)
+[10](https://www.entsog.eu/sites/default/files/2024-02/ENTSOG_GIE_SYSCAP_2024_Update%20Feb.pdf)
+[11](https://pipexch.com/nation-plans-development-of-its-gas-pipelines-network/)
+[12](https://programme2014-20.interreg-central.eu/Content.Node/PROSPECT2030/Energy-report-Friuli-Venezia-Giulia--Italy.pdf)
+[13](https://www.entsog.eu/sites/default/files/2025-01/ENTSOG_GIE_SYSCAP_2025_1600x1200_FULL_114_FLAT.pdf)
+[14](https://www.tap-ag.com/about-tap/the-big-picture/the-southern-gas-corridor)
+[15](https://energy.ec.europa.eu/system/files/2020-02/it_final_necp_main_en_0.pdf)
+[16](https://www.gie.eu/publications/maps/system-capacity-map/)
+[17](http://www.snamatlas.it/world_of_gas)
+[18](https://www.agenzianova.com/en/news/energia-ecco-la-nuova-mappa-dei-flussi-del-gas-in-italia/)
+[19](https://globalenergymonitor.org/wp-content/uploads/2024/02/GEM_Europe_Gas_Tracker_2024.pdf)
+[20](https://www.spglobal.com/platts/plattscontent/_assets/_files/en/specialreports/naturalgas/turning-on-tap-a-shift-in-the-european-gas-landscape.pdf)
+[21](https://transparency.entsog.eu)
+[22](http://www.entsog.eu/maps)
+[23](https://ec.europa.eu/energy/infrastructure/transparency_platform/map-viewer/main.html)
+[24](https://www.gie.eu/press/new-year-new-map-entsog-and-gie-publish-their-joint-system-capacity-map-2025/)
+[25](https://www.snam.it/content/dam/snam/pages-attachments-search/en/documenti/bilanci-annuali/2023/annual_report_2023.pdf)
+[26](https://arxiv.org/abs/2306.04752)
+[27](https://elib.dlr.de/139217/1/scigrid_gas_EMAP.pdf)
+[28](https://nicholasinstitute.duke.edu/energy-data-resources/global-natural-gas-atlas)
+[29](https://wiki.openstreetmap.org/wiki/Quality_assurance)
+[30](https://esriid-oilgas-tiger.opendata.arcgis.com/datasets/OSRL::data-catalog-europe)
+[31](https://cdn.arcgis.com/home/search.html?t=content&q=tags%3A%22snam%22)
+[32](https://ceur-ws.org/Vol-1392/paper-04.pdf)
+[33](https://publications.jrc.ec.europa.eu/repository/bitstream/JRC134242/JRC134242_01.pdf)
+[34](https://wiki.openstreetmap.org/wiki/They_are_using_OpenStreetMap)
+[35](https://eepublicdownloads.blob.core.windows.net/public-cdn-container/tyndp-documents/TYNDP2024/foropinion/Infrastructure_Gaps_Report.pdf)
+[36](https://www.tandfonline.com/doi/full/10.1080/19475683.2025.2457396?af=R)
+[37](https://transparency.entsoe.eu)
+[38](https://elib.dlr.de/187407/1/SciGRID_gas_Datamodel_of_the_European_Gas_Transport_Network.pdf)
+[39](https://zenodo.org/records/3985264/files/scigrid_gas-gie.pdf?download=1)
+[40](https://wiki.openmod-initiative.org/wiki/SciGRID_gas)
+[41](https://joint-research-centre.ec.europa.eu/system/files/2023-11/Data%20documentation%20EIGL%20v1_6.pdf)
+[42](https://memgraph.com/blog/gas-pipelines-in-europe)
+[43](https://errin.eu/system/files/2025-04/concept-noteeng0.pdf)
+[44](https://www.gem.wiki/Sealine_Tirrenica_Gas_Pipeline)
+[45](https://elib.dlr.de/138372/1/scigrid_lkd.pdf)
+[46](https://arts.units.it/retrieve/e2913fdd-2c4d-f688-e053-3705fe0a67e0/491-2525-1-PB.pdf)
+[47](https://globalenergymonitor.org/projects/global-gas-infrastructure-tracker/)
+[48](https://zenodo.org/records/4767098)
+[49](https://turizmi.gov.al/wp-content/uploads/2022/12/Strategic-Environmental-Assessment-SEA-Environmental-Report.pdf)
+[50](https://www.gem.wiki/Trans-Mediterranean_Gas_Pipeline)
+[51](https://www.helmholtz.de/en/research/research-fields/energy/energy-system-2050/heci/scigrid-gas/)
+[52](https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX%3A52022SC0195)
+[53](https://globalenergymonitor.org/projects/global-gas-infrastructure-tracker/download-data/)
+[54](https://wiki.openmod-initiative.org/wiki/Transmission_network_datasets)
+[55](https://www.sciencedirect.com/science/article/pii/S2666449625000040)
+[56](https://globalenergymonitor.org/projects/global-gas-infrastructure-tracker/ggit-pipelines-dashboard/)
+[57](https://mspmed.eu/wp-content/uploads/2022/11/D5-mspmed.pdf)
+[58](https://www.almaviva.it/en_GB/Digital-Change/Ecological-Transition/Case_study_Catasto)
+[59](https://isprs-archives.copernicus.org/articles/XL-4-W1/105/2013/isprsarchives-XL-4-W1-105-2013.pdf)
+[60](https://www.gp-radar.com/article/how-does-as-built-and-utility-locating-data-aid-oil-gas-companies)
+[61](https://www.cirgeo.unipd.it/didattica/GIS/01x_access_geodata.html)
+[62](https://www.geoportale.regione.lombardia.it/en/download-dati)
+[63](https://isprs-archives.copernicus.org/articles/XL-4-W1/105/2013/)
+[64](https://irdat.regione.fvg.it/consultatore-dati-ambientali-territoriali/istantSearch.do?metadataId=4441&identificationId=1688)
+[65](https://journals.sagepub.com/doi/full/10.1177/14759217211045912)
+[66](https://simplemaps.com/gis/country/it)
+[67](https://pipeline.gihub.org/search-by-country/italy/)
+[68](https://ica-abs.copernicus.org/articles/3/27/2021/)
+[69](https://geodati.gov.it/geoportale/eng/geodata)
+[70](https://geoportal-gizzy.opendata.arcgis.com/maps/a4dc51c6e1274ee284f73c08fb2cdb11)
+[71](https://inspire-geoportal.ec.europa.eu)
+[72](https://committee.iso.org/files/live/users/fh/aj/aj/tc211contributor@iso.org/files/Presentations/2019-06%20Maribor/08_MartinPuhar_Cross-Border_Data_Harmonization_1.pdf)

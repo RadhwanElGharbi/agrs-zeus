@@ -1,0 +1,618 @@
+# GIS Datasets for Oil & Gas Pipeline Routing in Iraq
+
+Based on comprehensive research, Iraq presents significant data challenges compared to other oil-producing nations due to limited open government datasets. The OGIM database assessment indicates Iraq has one of the lowest data quality scores globally for oil and gas infrastructure (<0.3), with most data from non-government sources. Here are the best available datasets:[1][2]
+
+## 1. ELEVATION/TERRAIN (DEM)
+
+### **Copernicus DEM GLO-30** (HIGHEST QUALITY)
+- **Resolution/Scale:** 30m
+- **Temporal Coverage:** 2011-2015 (TanDEM-X mission)
+- **Update Frequency:** Static (maintained until 2026)
+- **Access Type:** Free/Open
+- **API:** Yes - Copernicus Data Space Ecosystem API
+- **URL:** https://dataspace.copernicus.eu/ and https://portal.opentopography.org/raster?opentopoID=OTSDEM.032021.4326.3
+- **Quality Assessment:** RMSE of 1.3m in Iraq - 2.6x more accurate than SRTM and 5.2x more accurate than ASTER GDEM. Best global DEM for Iraq[3][4][5]
+
+### **NASA SRTM (30m and 90m)**
+- **Resolution/Scale:** 30m (SRTM-1), 90m (SRTM-3)
+- **Temporal Coverage:** February 2000
+- **Update Frequency:** Static
+- **Access Type:** Free/Open
+- **API:** Yes - USGS Earth Explorer API
+- **URL:** https://earthexplorer.usgs.gov
+- **Quality Assessment:** Vertical accuracy ±8-10m for Iraq region. Widely used baseline but inferior to Copernicus DEM[6][3]
+
+### **ASTER GDEM v3**
+- **Resolution/Scale:** 30m
+- **Temporal Coverage:** 2000-2013
+- **Update Frequency:** Static (v3 released 2019)
+- **Access Type:** Free/Open
+- **API:** Yes - via EarthData API
+- **URL:** https://earthexplorer.usgs.gov
+- **Quality Assessment:** Lowest accuracy among major DEMs for Iraq (RMSE ~6.8m), contains artifacts in flat areas[7][3]
+
+### **ALOS World 3D (AW3D30)**
+- **Resolution/Scale:** 30m
+- **Temporal Coverage:** 2006-2011
+- **Update Frequency:** Static
+- **Access Type:** Free/Open (registration required)
+- **API:** No
+- **URL:** https://www.eorc.jaxa.jp/ALOS/en/aw3d30/
+- **Quality Assessment:** Good accuracy, better than ASTER but slightly inferior to Copernicus DEM for Middle East[3][7]
+
+**National Datasets:** Directorate General of Geological Surveys and Mineral Investigation (DGGSMI) maintains geological maps, but no publicly accessible national LiDAR or high-resolution DEM datasets were identified.[8][9]
+
+## 2. LAND COVER / LAND USE
+
+### **Kurdistan Region Land Cover Map 2024**
+- **Source:** Kurdistan Region Statistics Office (KRSO) with World Food Programme support
+- **Resolution/Scale:** Based on Sentinel-2 (10m), produced at higher resolution using machine learning
+- **Temporal Coverage:** 2023-2024
+- **Update Frequency:** Annual (planned)
+- **Access Type:** Restricted/Request (government agency)
+- **API:** No
+- **URL:** Contact KRSO directly
+- **Quality Assessment:** High-quality supervised classification for Kurdistan Region only. Field-verified. First such work in Iraq. Federal government requested national extension[10]
+
+### **ESA WorldCover 10m**
+- **Resolution/Scale:** 10m
+- **Temporal Coverage:** 2020, 2021 (annual updates)
+- **Update Frequency:** Annual
+- **Access Type:** Free/Open
+- **API:** Yes - via Copernicus API
+- **URL:** https://viewer.esa-worldcover.org/
+- **Quality Assessment:** Global validation accuracy 74.4%. Best global land cover product for Iraq. Excellent for identifying vegetation, cropland, built-up areas, bare ground[10]
+
+### **Google Dynamic World**
+- **Resolution/Scale:** 10m (Sentinel-2 based)
+- **Temporal Coverage:** 2015-present
+- **Update Frequency:** Near real-time (every 2-5 days)
+- **Access Type:** Free/Open
+- **API:** Yes - Google Earth Engine
+- **URL:** https://www.dynamicworld.app/
+- **Quality Assessment:** Near real-time capability valuable for monitoring land use changes. 8 land cover classes[10]
+
+### **Sentinel-2 Land Cover Classification**
+- **Resolution/Scale:** 10m-20m
+- **Temporal Coverage:** 2015-present
+- **Update Frequency:** Continuous (5-day revisit)
+- **Access Type:** Free/Open
+- **API:** Yes - Copernicus Open Access Hub API
+- **URL:** https://scihub.copernicus.eu/
+- **Quality Assessment:** Raw imagery requires processing but provides most current data[10]
+
+**National Datasets:** No comprehensive national land use database publicly available from Iraqi ministries.
+
+## 3. HYDROLOGY / WATER
+
+### **Iraq Ministry of Water Resources Database**
+- **Source:** Ministry of Water Resources of Republic of Iraq
+- **Resolution/Scale:** Variable
+- **Temporal Coverage:** Historical to current
+- **Access Type:** Restricted/Request
+- **API:** No
+- **URL:** Contact ministry directly
+- **Quality Assessment:** Most authoritative for Iraq but access severely limited. Contains hydrological, climatic, water quality data[11][12][13]
+
+### **HydroSHEDS (Hydrological data and maps based on SHuttle Elevation Derivatives at multiple Scales)**
+- **Resolution/Scale:** 15 arc-seconds (~500m at equator)
+- **Temporal Coverage:** Based on SRTM 2000
+- **Update Frequency:** Static
+- **Access Type:** Free/Open
+- **API:** No
+- **URL:** https://www.hydrosheds.org/
+- **Quality Assessment:** Good for river network delineation, watershed boundaries. Based on older SRTM data[11]
+
+### **Global Surface Water Explorer (Copernicus/JRC)**
+- **Resolution/Scale:** 30m
+- **Temporal Coverage:** 1984-2022
+- **Update Frequency:** Annual
+- **Access Type:** Free/Open
+- **API:** Yes - Google Earth Engine
+- **URL:** https://global-surface-water.appspot.com/
+- **Quality Assessment:** Excellent for identifying permanent/seasonal water bodies, wetlands. Critical for Iraq's marshlands and wadis[11]
+
+### **OpenStreetMap Water Features**
+- **Resolution/Scale:** Variable
+- **Temporal Coverage:** Current
+- **Update Frequency:** Continuous (crowdsourced)
+- **Access Type:** Free/Open
+- **API:** Yes - Overpass API
+- **URL:** https://www.openstreetmap.org/
+- **Quality Assessment:** Incomplete for Iraq. Tigris and Euphrates rivers mapped but many wadis and smaller features missing[14][11]
+
+**Quality Note:** Iraq has complex hydrogeology with 7 hydrogeological zones, extensive karst aquifers in northeast, and shared transboundary aquifer systems.[11]
+
+## 4. INFRASTRUCTURE - ROADS
+
+### **OpenStreetMap Iraq Roads**
+- **Source:** Humanitarian OpenStreetMap Team (HOT)
+- **Resolution/Scale:** Variable, typically 1-5m accuracy
+- **Temporal Coverage:** Current (continuously updated)
+- **Update Frequency:** Real-time (crowdsourced)
+- **Access Type:** Free/Open
+- **API:** Yes - Overpass API
+- **URL:** https://data.humdata.org/dataset/hotosm_irq_roads
+- **Quality Assessment:** Moderate quality. Studies show substantial horizontal positional discrepancies (RMSE ~6m) compared to official Baghdad data. Better coverage in urban areas. Kurdistan Region has better coverage than southern Iraq[15][16][17][14]
+
+### **Iraq Ministry of Transport Road Network**
+- **Source:** Ministry of Transport / Mayoralty of Baghdad (for Baghdad)
+- **Access Type:** Restricted/Not publicly available
+- **API:** No
+- **Quality Assessment:** Most accurate for Iraq but not openly accessible[15]
+
+### **HERE Technologies**
+- **Resolution/Scale:** Sub-meter to 5m accuracy
+- **Temporal Coverage:** Current
+- **Update Frequency:** Quarterly
+- **Access Type:** Commercial/Purchase
+- **API:** Yes - HERE Location Services API
+- **URL:** https://www.here.com/
+- **Quality Assessment:** High accuracy, includes attributes (road class, surface type, speed limits). Iraq coverage available but expensive[15]
+
+### **TomTom**
+- **Resolution/Scale:** Sub-meter to 5m accuracy
+- **Temporal Coverage:** Current
+- **Update Frequency:** Quarterly
+- **Access Type:** Commercial/Purchase
+- **API:** Yes - TomTom Maps API
+- **URL:** https://www.tomtom.com/
+- **Quality Assessment:** Similar quality to HERE. Includes traffic data. Commercial license required[15]
+
+## 5. INFRASTRUCTURE - RAILWAYS
+
+### **OpenStreetMap Railways Iraq**
+- **Source:** OpenStreetMap contributors
+- **Resolution/Scale:** Variable
+- **Temporal Coverage:** Current
+- **Update Frequency:** Continuous
+- **Access Type:** Free/Open
+- **API:** Yes - Overpass API
+- **URL:** https://www.openstreetmap.org/ and https://data.humdata.org/
+- **Quality Assessment:** Incomplete. Major rail lines between Baghdad, Basra, and Mosul mapped but many secondary lines and railway facilities missing[18][14]
+
+### **Iraq National Railway Authority Database**
+- **Access Type:** Not publicly available
+- **Quality Assessment:** Official data exists but not accessible to public[14]
+
+## 6. INFRASTRUCTURE - UTILITIES (Power, Telecom)
+
+### **OpenInfraMap / OpenStreetMap Utilities**
+- **Source:** OpenStreetMap
+- **Resolution/Scale:** Variable
+- **Temporal Coverage:** Current
+- **Update Frequency:** Continuous
+- **Access Type:** Free/Open
+- **API:** Yes - Overpass API
+- **URL:** https://openinframap.org/
+- **Quality Assessment:** Very incomplete for Iraq. Major power transmission lines partially mapped but distribution networks largely absent. Telecom infrastructure mostly unmapped[18][14]
+
+### **Iraq Ministry of Electricity Data**
+- **Access Type:** Not publicly available
+- **Quality Assessment:** Official transmission network data exists but restricted access
+
+## 7. INFRASTRUCTURE - PIPELINES
+
+### **OGIM Database (Oil and Gas Infrastructure Mapping)**
+- **Source:** Environmental Defense Fund / Stanford University
+- **Resolution/Scale:** Point and line features
+- **Temporal Coverage:** Compiled through 2022
+- **Update Frequency:** Irregular updates
+- **Access Type:** Free/Open
+- **API:** No
+- **URL:** https://doi.org/10.5281/zenodo.7466757
+- **Quality Assessment:** Iraq has very limited data in OGIM (data quality score <0.3). Mostly non-government sources. Incomplete coverage. Better than nothing but significant gaps[2][1]
+
+### **Global Oil Infrastructure Tracker (Global Energy Monitor)**
+- **Source:** Global Energy Monitor
+- **Resolution/Scale:** Line features for pipelines
+- **Temporal Coverage:** Current
+- **Update Frequency:** Quarterly
+- **Access Type:** Free/Open (registration may be required)
+- **API:** No
+- **URL:** https://globalenergymonitor.org/projects/global-oil-infrastructure-tracker/
+- **Quality Assessment:** Limited coverage for Iraq. Focuses on major transmission pipelines[19]
+
+### **OpenStreetMap Pipelines**
+- **Source:** OpenStreetMap
+- **Resolution/Scale:** Variable
+- **Temporal Coverage:** Current
+- **Update Frequency:** Continuous
+- **Access Type:** Free/Open
+- **API:** Yes - Overpass API
+- **URL:** https://www.openstreetmap.org/
+- **Quality Assessment:** Very incomplete for Iraq. Security sensitivities limit public mapping[14][18]
+
+### **Iraq National Oil Companies (SOC, NOC, KRG Ministry)**
+- **Access Type:** Highly restricted/Not publicly available
+- **Quality Assessment:** South Oil Company, North Oil Company, and Kurdistan Regional Government Ministry of Natural Resources maintain detailed GIS databases but these are confidential for security and commercial reasons[1][2]
+
+### **Commercial Providers (Bayphase, IHS Markit)**
+- **Source:** Bayphase Data, IHS Markit, Wood Mackenzie
+- **Access Type:** Commercial/Purchase (expensive)
+- **API:** Varies by provider
+- **URL:** https://www.bayphasedata.com/
+- **Quality Assessment:** Most comprehensive pipeline data for Iraq available commercially. Includes field locations, well data, pipeline routes, facilities. Very expensive licensing[20]
+
+## 8. PROTECTED AREAS / ENVIRONMENTAL
+
+### **World Database on Protected Areas (WDPA)**
+- **Source:** UNEP-WCMC
+- **Resolution/Scale:** Polygon and point features
+- **Temporal Coverage:** Current (as of May 2021, 23 PAs; updated September 2025)
+- **Update Frequency:** Monthly
+- **Access Type:** Free/Open
+- **API:** Yes - via Protected Planet API
+- **URL:** https://www.protectedplanet.net/country/IRQ
+- **Quality Assessment:** Iraq has 23 protected areas (1.5% terrestrial coverage, 6,713.7 km²). 16 additional proposed PAs not included. Coverage includes Central Marshes (Ramsar site, UNESCO World Heritage), Al-Hammar Marsh, Hawizeh Marsh, Sawa Lake. Data quality good but limited spatial extent[21][22][23][24]
+
+### **Iraq Key Biodiversity Areas**
+- **Source:** Nature Iraq (2017 report)
+- **Resolution/Scale:** Site-specific polygons
+- **Temporal Coverage:** 2017
+- **Update Frequency:** Static
+- **Access Type:** Report-based/Request from Nature Iraq
+- **API:** No
+- **Quality Assessment:** 82 Key Biodiversity Areas identified covering 6.5% of country (28,388 km²). Includes habitat maps and conservation recommendations. Valuable supplement to WDPA[21]
+
+### **Iraq Ministry of Environment / State Board of Antiquities and Heritage**
+- **Access Type:** Restricted/Request
+- **Quality Assessment:** Iraq government notes 5 sites formally designated, 18 in ratification process. Direct contact required for official boundaries[21]
+
+## 9. GEOLOGY / SOIL
+
+### **Directorate General of Geological Surveys and Mineral Investigation (DGGSMI)**
+- **Source:** Iraqi government
+- **Resolution/Scale:** 1:1,000,000 scale geological map
+- **Temporal Coverage:** Historical
+- **Update Frequency:** Irregular
+- **Access Type:** Restricted/Request
+- **API:** No
+- **Quality Assessment:** Most authoritative for Iraq. Small-scale geological mapping exists but digital access limited. Paper maps being digitized[9][25][8]
+
+### **USGS Iraq Geologic/Petroleum Provinces**
+- **Source:** U.S. Geological Survey
+- **Resolution/Scale:** 1:5,000,000 regional scale
+- **Temporal Coverage:** Based on multiple sources
+- **Update Frequency:** Static
+- **Access Type:** Free/Open
+- **API:** No
+- **URL:** https://catalog.data.gov/dataset/?tags=republic-of-iraq
+- **Quality Assessment:** Regional overview quality. Useful for petroleum provinces but too coarse for detailed pipeline routing[26][27]
+
+### **OneGeology - Iraq**
+- **Source:** OneGeology portal
+- **Resolution/Scale:** 1:1,000,000
+- **Temporal Coverage:** Various
+- **Update Frequency:** Static
+- **Access Type:** Free/Open
+- **API:** Yes - WMS/WFS services
+- **URL:** http://www.onegeology.org/
+- **Quality Assessment:** Provides access to Iraqi geological data through international portal but coverage is limited[25]
+
+### **FAO Harmonized World Soil Database (HWSD) v2.0**
+- **Source:** FAO, IIASA, ISRIC
+- **Resolution/Scale:** 30 arc-seconds (~1km)
+- **Temporal Coverage:** Composite (various dates)
+- **Update Frequency:** Major updates (v2.0 released 2023)
+- **Access Type:** Free/Open
+- **API:** Yes - available through Google Earth Engine
+- **URL:** https://www.fao.org/soils-portal/data-hub/ and https://gee-community-catalog.org/projects/hwsd/
+- **Quality Assessment:** Global coverage including Iraq. Includes soil organic carbon, pH, water storage capacity, soil depth, texture. Best available global soil dataset. Seven depth layers in v2.0[28][29][30]
+
+### **FAO-UNESCO Soil Map of the World**
+- **Resolution/Scale:** 1:5,000,000
+- **Temporal Coverage:** 1961-1981
+- **Update Frequency:** Static (historical)
+- **Access Type:** Free/Open
+- **API:** No
+- **URL:** https://www.fao.org/soils-portal/data-hub/soil-maps-and-databases/faounesco-soil-map-of-the-world/en/
+- **Quality Assessment:** Historical baseline but coarse resolution. Iraq included in South Asia volume[31][32]
+
+### **JRC Soil Resources - Mediterranean Countries**
+- **Source:** European Commission Joint Research Centre
+- **Resolution/Scale:** Variable
+- **Temporal Coverage:** 2013
+- **Update Frequency:** Static
+- **Access Type:** Free/Open
+- **API:** No
+- **URL:** https://publications.jrc.ec.europa.eu/
+- **Quality Assessment:** Includes Iraq in Mediterranean/Caucasus assessment. Digital database of soil and environmental data[33]
+
+## 10. CLIMATE / WEATHER
+
+### **ERA5 Reanalysis (ECMWF)**
+- **Source:** European Centre for Medium-Range Weather Forecasts / Copernicus Climate Change Service
+- **Resolution/Scale:** 0.25° x 0.25° (~31km)
+- **Temporal Coverage:** 1940-present (hourly data)
+- **Update Frequency:** Daily (5-day delay)
+- **Access Type:** Free/Open
+- **API:** Yes - CDS API
+- **URL:** https://cds.climate.copernicus.eu/datasets/reanalysis-era5-single-levels
+- **Quality Assessment:** Best global reanalysis dataset for Iraq. Hourly estimates of temperature, precipitation, wind, pressure, humidity. 137 vertical levels. Used extensively in Iraq climate studies[34][35][36][37][38]
+
+### **World Bank Climate Change Knowledge Portal - Iraq**
+- **Source:** World Bank (uses ERA5 data)
+- **Resolution/Scale:** 25km (ERA5-based)
+- **Temporal Coverage:** 1950-2023 historical; projections to 2100
+- **Update Frequency:** Annual
+- **Access Type:** Free/Open
+- **API:** Yes - data download available
+- **URL:** https://climateknowledgeportal.worldbank.org/country/iraq/
+- **Quality Assessment:** User-friendly interface for Iraq-specific climate data. Pre-processed ERA5 data with climate indicators. Excellent for baseline climatology[39][34]
+
+### **WorldClim v2.1**
+- **Resolution/Scale:** 30 arc-seconds (~1km) to 10 arc-minutes
+- **Temporal Coverage:** 1970-2000 (historical), future projections available
+- **Update Frequency:** Major updates every few years
+- **Access Type:** Free/Open
+- **API:** No (direct download)
+- **URL:** https://www.worldclim.org/
+- **Quality Assessment:** High-resolution interpolated climate surfaces (temperature, precipitation, bioclimatic variables). Widely used for spatial modeling[40]
+
+### **Iraq Meteorological Organization and Seismology (IMOS)**
+- **Source:** Iraqi government
+- **Access Type:** Restricted/Request
+- **API:** No
+- **Quality Assessment:** National meteorological service operates weather stations across Iraq. Historical and real-time data available but access requires official request. Most authoritative for ground station data[38][40]
+
+## 11. ADMINISTRATIVE BOUNDARIES
+
+### **Iraq Common Operational Dataset - Administrative Boundaries (COD-AB)**
+- **Source:** Iraq Central Statistics Office / OCHA / HDX
+- **Resolution/Scale:** Levels 0-3 (Country, Governorate, District, Sub-district)
+- **Temporal Coverage:** Current (reviewed December 2024)
+- **Update Frequency:** Annual review
+- **Access Type:** Free/Open
+- **API:** Yes - ArcGIS REST Services (geoservices)
+- **URL:** https://data.humdata.org/dataset/cod-ab-irq
+- **Quality Assessment:** HIGHEST QUALITY for Iraq. Official boundaries from Iraq Central Statistics Office. 18 governorates (admin 1), 101 districts (admin 2), 294 sub-districts (admin 3). Geoservices available. Most authoritative administrative boundaries[41][42]
+
+**Geoservices:**
+- https://codgis.itos.uga.edu/arcgis/rest/services/COD_External/IRQ_EN (MapServer)
+- https://codgis.itos.uga.edu/arcgis/rest/services/COD_External/IRQ_pcode (FeatureServer)
+
+### **GADM (Database of Global Administrative Areas)**
+- **Source:** GADM project
+- **Resolution/Scale:** Levels 0-3
+- **Temporal Coverage:** Version 4.1 (updated 2022)
+- **Update Frequency:** Irregular updates
+- **Access Type:** Free/Open (non-commercial)
+- **API:** No (direct download)
+- **URL:** https://gadm.org/
+- **Quality Assessment:** Good alternative but HDX COD-AB is more current and official for Iraq. GADM widely used in research[43][44][45][46]
+
+## 12. POPULATION / DEMOGRAPHICS
+
+### **WorldPop Iraq**
+- **Source:** WorldPop / University of Southampton
+- **Resolution/Scale:** 100m (~3 arc-seconds)
+- **Temporal Coverage:** 2000-2020 (annual)
+- **Update Frequency:** Annual updates
+- **Access Type:** Free/Open
+- **API:** Yes - via FTP and Google Earth Engine
+- **URL:** https://hub.worldpop.org/geodata/listing?id=29 (Iraq-specific)
+- **Quality Assessment:** HIGHEST QUALITY population dataset for Iraq. Provides population counts and density adjusted to UNPD estimates. UN-backed. Both top-down (census-based) and bottom-up (building/settlement) approaches[47][48][49][50][51]
+
+### **LandScan**
+- **Source:** Oak Ridge National Laboratory (ORNL)
+- **Resolution/Scale:** 1km (~30 arc-seconds)
+- **Temporal Coverage:** Annual (2000-present)
+- **Update Frequency:** Annual
+- **Access Type:** Free for research (registration required)
+- **API:** No
+- **URL:** https://landscan.ornl.gov/
+- **Quality Assessment:** Ambient population (24-hour average). Different methodology than WorldPop. Good for infrastructure planning. Iraq coverage available[51]
+
+### **Iraq Central Statistics Office Census Data**
+- **Source:** Iraq Central Statistics Office
+- **Access Type:** Some data free, detailed data restricted
+- **URL:** Contact COSIT directly
+- **Quality Assessment:** Most authoritative but spatial data access limited. Latest census data from 2018 MICS (Multiple Indicator Cluster Survey)[41][43]
+
+## 13. SATELLITE IMAGERY (COMMERCIAL)
+
+### **Maxar (WorldView-3, WorldView-2, GeoEye-1)**
+- **Resolution/Scale:** 30-50cm (panchromatic), 1.24m (multispectral)
+- **Temporal Coverage:** Archive from 2000s + new acquisitions
+- **Update Frequency:** On-demand tasking
+- **Access Type:** Commercial/Purchase
+- **API:** Yes - Maxar Geospatial Platform API
+- **URL:** https://resources.maxar.com/ and https://www.maxar.com/
+- **Quality Assessment:** Highest commercial resolution. Excellent for detailed infrastructure mapping. Iraq fully accessible. Maxar Open Data Program provides free imagery for disasters[52][53][54]
+
+### **Airbus Defence and Space (Pléiades Neo, Pléiades 1A/1B, SPOT)**
+- **Resolution/Scale:** 30cm (Pléiades Neo), 50cm (Pléiades), 1.5m (SPOT)
+- **Temporal Coverage:** Archive + new acquisitions
+- **Update Frequency:** On-demand tasking
+- **Access Type:** Commercial/Purchase
+- **API:** Yes - OneAtlas API
+- **URL:** https://www.airbus.com/en/products-services/space/earth-observation
+- **Quality Assessment:** Excellent quality, competitive with Maxar. Daily revisit capability with constellation. Iraq coverage available[55][56][57]
+
+### **Planet Labs (SkySat, PlanetScope)**
+- **Resolution/Scale:** 50cm (SkySat), 3m (PlanetScope)
+- **Temporal Coverage:** Daily coverage (PlanetScope)
+- **Update Frequency:** Daily
+- **Access Type:** Commercial/Purchase
+- **API:** Yes - Planet API
+- **URL:** https://www.planet.com/
+- **Quality Assessment:** Daily global coverage unique advantage. Lower resolution than Maxar/Airbus but frequent revisit valuable for monitoring. Iraq coverage available[56][52]
+
+### **Sentinel-2 (ESA/Copernicus)**
+- **Resolution/Scale:** 10m (visible/NIR), 20m (red edge/SWIR)
+- **Temporal Coverage:** 2015-present
+- **Update Frequency:** 5-day revisit (both satellites)
+- **Access Type:** Free/Open
+- **API:** Yes - Copernicus Open Access Hub API
+- **URL:** https://scihub.copernicus.eu/
+- **Quality Assessment:** Best free multispectral imagery. Excellent for baseline mapping, change detection, vegetation analysis. 13 spectral bands. Essential free resource[10]
+
+## 14. SPECIAL DATASETS FOR IRAQ
+
+### **Archaeological Sites**
+
+**QADIS Survey Archaeological Database**
+- **Source:** University of Bologna / State Board of Antiquities and Heritage (SBAH)
+- **Resolution/Scale:** Site-level (558 sites in southern Iraq)
+- **Temporal Coverage:** 2016-2019 survey
+- **Update Frequency:** Static (project completed)
+- **Access Type:** Academic/Research request
+- **API:** No
+- **Quality Assessment:** Most comprehensive recent archaeological risk assessment for southern Iraq. Remote sensing + ground control. Documents site locations, damage, threats. Critical for pipeline routing to avoid cultural heritage[58][59]
+
+**UNESCO World Heritage Sites**
+- **Source:** UNESCO / UNOSAT
+- **Coverage:** Multiple sites including Mesopotamian Marshes, Ashur, Hatra, Erbil Citadel, Samarra
+- **Access Type:** Free/Open
+- **URL:** https://whc.unesco.org/
+- **Quality Assessment:** Official boundaries for World Heritage Sites. Damage assessments available[60][21]
+
+### **Geological Hazards**
+
+**Iraq Geological Hazards Classification Map**
+- **Source:** Iraqi geoscientists (Sissakian et al. 2011)
+- **Coverage:** 15 types of geological hazards documented and zoned
+- **Temporal Coverage:** 2011
+- **Access Type:** Academic literature
+- **Quality Assessment:** Comprehensive hazard classification including landslides, sinkholes, subsidence, earthquakes, flooding. Maps zones by time and intensity[61]
+
+**World Bank Iraq Seismic Hazard Assessment**
+- **Source:** World Bank
+- **Coverage:** Probabilistic Seismic Hazard Assessment (PSHA) maps for Iraq
+- **Access Type:** World Bank documents (free)
+- **URL:** https://documents.worldbank.org/
+- **Quality Assessment:** Includes seismic hazard zones and landslide hazard maps for Iraq. Important for pipeline routing in seismically active areas (Kurdistan, Zagros Mountains)[62]
+
+### **Conflict/Security Data**
+
+**ACLED (Armed Conflict Location & Event Data Project)**
+- **Source:** ACLED
+- **Resolution/Scale:** Event locations
+- **Temporal Coverage:** 1997-present (updated weekly)
+- **Update Frequency:** Weekly
+- **Access Type:** Free (registration required) / Commercial for bulk access
+- **API:** Yes - ACLED API
+- **URL:** https://acleddata.com/
+- **Quality Assessment:** Comprehensive conflict event database. Critical for security assessment along pipeline routes. Shows incident locations, types, dates[44][45]
+
+### **Military Zones / Restricted Areas**
+- **Access Type:** Not publicly available
+- **Quality Assessment:** Official military zone boundaries not published for security reasons. Local consultation required
+
+### **Tribal/Indigenous Lands**
+- **Access Type:** Limited documentation
+- **Quality Assessment:** Traditional tribal boundaries not formally mapped in open GIS databases. Local stakeholder engagement essential
+
+---
+
+## KEY RECOMMENDATIONS FOR IRAQ PIPELINE ROUTING:
+
+**CRITICAL DATA GAPS:**
+1. **Oil & gas infrastructure:** Iraq has one of the lowest data quality scores globally (<0.3). National oil company data is confidential. Commercial providers (Bayphase, IHS Markit) offer best data but at high cost.[1]
+
+2. **Road/rail networks:** Official government datasets not publicly available. Rely on OpenStreetMap with quality verification.
+
+3. **Utilities:** Power transmission and telecom infrastructure poorly documented in open data.
+
+4. **Hydrology:** Ministry of Water Resources data requires formal request.
+
+**BEST OPEN DATA STRATEGY:**
+- **Elevation:** Copernicus DEM GLO-30 (best)
+- **Land cover:** ESA WorldCover 10m
+- **Imagery:** Sentinel-2 (free baseline), commercial for detailed analysis
+- **Boundaries:** HDX COD-AB (official)
+- **Population:** WorldPop 100m
+- **Climate:** ERA5 reanalysis
+- **Soil:** FAO HWSD v2.0
+- **Protected areas:** WDPA + contact Nature Iraq for KBA data
+
+**PRIORITY ACTIONS:**
+1. Budget for commercial datasets (pipeline infrastructure, high-res imagery, road networks)
+2. Establish formal data sharing agreements with Iraqi government ministries
+3. Conduct field surveys to verify OpenStreetMap data quality in project area
+4. Engage local stakeholders for tribal lands, archaeological sites, security information
+5. Use archaeological site buffers from QADIS survey and UNESCO data
+6. Account for seismic/landslide hazards in northern Iraq (Zagros Mountains region)
+
+Iraq's data landscape is challenging but workable with combination of global open datasets, commercial data investment, and local partnerships.[2][1]
+
+[1](https://essd.copernicus.org/articles/15/3761/2023/)
+[2](https://essd.copernicus.org/articles/15/3761/2023/essd-15-3761-2023.pdf)
+[3](https://www.frontiersin.org/journals/earth-science/articles/10.3389/feart.2023.1218823/full)
+[4](https://dataspace.copernicus.eu/explore-data/data-collections/copernicus-contributing-missions/collections-description/COP-DEM)
+[5](https://portal.opentopography.org/raster?opentopoID=OTSDEM.032021.4326.3)
+[6](https://earthexplorer.usgs.gov)
+[7](https://isprs-archives.copernicus.org/articles/XLVIII-4-W6-2022/355/2023/)
+[8](https://geospatial.com/country_profiles/iraq/)
+[9](https://iasj.rdd.edu.iq/journals/uploads/2025/01/19/9e7d11913c2d4d30727ec7377c78c1fb.pdf)
+[10](https://reliefweb.int/report/iraq/remote-sensing-machine-learning-based-high-resolution-land-use-land-cover-classification-map-iraq-step-towards-improved-land-and-water-management-food-security)
+[11](https://water.fanack.com/iraq/water-resources-in-iraq/)
+[12](https://rsis.ramsar.org/RISapp/files/33255141/documents/IQ2242_lit1509.pdf)
+[13](https://info.undp.org/docs/pdc/Documents/IRQ/Final%20DSS%20Report-%2013%20July-PMSU-December%2012%202014-SS.pdf)
+[14](https://data.humdata.org/dataset/hotosm_irq_roads)
+[15](https://www.iieta.org/download/file/fid/114453)
+[16](https://iasj.rdd.edu.iq/journals/uploads/2024/12/05/238ee15b20d345fd5b29d2b9226939fe.pdf)
+[17](https://data.humdata.org/dataset/iraq-road-surface-data)
+[18](https://data.nextgis.com/en/region/IQ/base/)
+[19](https://globalenergymonitor.org/projects/global-oil-infrastructure-tracker/global-oil-infrastructure-tracker-dashboard/)
+[20](https://www.bayphasedata.com/reports/16/)
+[21](https://www.cbd.int/pa/doc/dossiers/iraq-abt11-country-dossier2021.pdf)
+[22](https://www.protectedplanet.net/country/IRQ)
+[23](https://www.protectedplanet.net/en/thematic-areas/wdpa)
+[24](https://www.arcgis.com/home/item.html?id=ae78aeb913a343d69e950b53e29076f7)
+[25](https://www.academia.edu/125933137/Lithological_Map_of_Iraq_Compiled_Using_Gis_Techniques)
+[26](https://catalog.data.gov/dataset/?tags=republic-of-iraq)
+[27](https://www.usgs.gov/media/images/world-geologic-maps-data-downloads)
+[28](https://gee-community-catalog.org/projects/hwsd/)
+[29](https://www.isric.org/soil-geographic-databases-world)
+[30](https://agriculture.africageoportal.com/datasets/af37c984900c48618b158352fb41da4d)
+[31](https://www.fao.org/4/as352e/as352e.pdf)
+[32](https://www.fao.org/soils-portal/data-hub/soil-maps-and-databases/faounesco-soil-map-of-the-world/en/)
+[33](https://publications.jrc.ec.europa.eu/repository/bitstream/JRC80174/lb-na-25-988-en-n.pdf)
+[34](https://climateknowledgeportal.worldbank.org/country/iraq/era5-historical)
+[35](https://cds.climate.copernicus.eu/datasets/reanalysis-era5-single-levels)
+[36](https://www.ecmwf.int/en/forecasts/dataset/ecmwf-reanalysis-v5)
+[37](https://rmets.onlinelibrary.wiley.com/doi/10.1002/qj.4803)
+[38](https://jcoagri.uobaghdad.edu.iq/index.php/intro/article/view/1959/1445)
+[39](https://climateknowledgeportal.worldbank.org/country/iraq/climate-data-historical)
+[40](https://iieta.org/journals/ijdne/paper/10.18280/ijdne.200519)
+[41](https://geo.btaa.org/catalog/488bb3cd-3ce9-49d3-862a-3ce7975c63e1)
+[42](https://data.humdata.org/dataset/cod-ab-irq)
+[43](https://ophi.org.uk/media/45139/download)
+[44](https://www.ecoi.net/en/file/local/2129201/2025q2Iraq_en.pdf)
+[45](https://www.ecoi.net/en/file/local/2121571/2024yIraq_en.pdf)
+[46](https://plos.figshare.com/articles/figure/Map_of_Northern_Iraq_/4987295)
+[47](https://hub.worldpop.org/geodata/summary?id=49994)
+[48](https://data.worldpop.org/GIS/Population/Individual_countries/IRQ/Iraq_100m_Population/IRQ_metadata.html)
+[49](https://hub.worldpop.org/geodata/summary?id=46808)
+[50](https://hub.worldpop.org/doi/10.5258/SOTON/WP00117)
+[51](https://energydata.info/dataset/iraq--population-density-2015)
+[52](https://xrtechgroup.com/top-free-satellite-imagery-source-and-free-satellite-data/)
+[53](https://resources.maxar.com/product-samples)
+[54](https://gijn.org/resource/resources-for-finding-and-using-satellite-images/)
+[55](https://www.airbus.com/en/products-services/space/earth-observation/satellite-imagery)
+[56](https://xrtechgroup.com/top-satellite-imagery-providers/)
+[57](https://space-solutions.airbus.com/resources/satellite-image-gallery/)
+[58](https://site.unibo.it/eduu/en/work-package-1-archaeological-cultural-and-environmental-research/results/zaina_cons_man_arch_sites.pdf)
+[59](https://onlinelibrary.wiley.com/doi/full/10.1002/arp.1818)
+[60](https://unesdoc.unesco.org/ark:/48223/pf0000380797)
+[61](https://ibgm-iq.org/ibgm/index.php/ibgm/article/download/137/136)
+[62](https://documents1.worldbank.org/curated/en/099091824082519913/pdf/P171165-3c9c0300-a9c5-4f59-9c1c-3739ad9e56bc.pdf)
+[63](https://hub.arcgis.com/datasets/ef2d703fcf43426ba4a6108001974570_19?uiVersion=content-views)
+[64](http://eprints.utm.my/99663/1/MurtadhaAryanMenekherMFABU2022.pdf)
+[65](https://catalog.data.gov/dataset/?tags=iraq)
+[66](https://www.sciencedirect.com/science/article/abs/pii/S0140196318311637)
+[67](https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2023JG007672)
+[68](https://www.sciencedirect.com/science/article/pii/S2772737824000324)
+[69](https://www.arcgis.com/home/item.html?id=23210a03a41c4c2e9129fdc6c2226245)
+[70](https://www.gsn-online.com/map/iraq-oil-and-gas-infrastructure-and-governorate-demographics)
+[71](https://www.gsn-online.com/map/iraq-oil-and-gas-infrastructure)
+[72](https://unstats.un.org/unsd/envstats/Questionnaires/2022/Tables/Terrestrial%20protected%20areas.xlsx)
+[73](https://www.grandviewresearch.com/industry-analysis/middle-east-gas-pipeline-infrastructure-market-report)
+[74](https://geo2day.com/asia/iraq.html)
+[75](https://www.worldometers.info/world-population/iraq-population/)
+[76](https://www.sciencedirect.com/science/article/abs/pii/S0377026525000156)
+[77](https://www.academia.edu/98055693/Soil_maps_of_the_world)
+[78](https://data.humdata.org/search?q=Uganda+-+Admin+Level+6+Boundaries&dataseries_name=COD+-+Subnational+Administrative+Boundaries)
+[79](https://repository.lboro.ac.uk/ndownloader/files/17081765/1)

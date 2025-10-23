@@ -1,0 +1,10 @@
+BasedOnStyle: Google
+IndentWidth: 2
+ColumnLimit: 120
+UseTab: Never
+DerivePointerAlignment: false
+PointerAlignment: Left
+SpacesInAngles: false
+AllowShortFunctionsOnASingleLine: Empty
+SortIncludes: true
+SpaceBeforeParens: ControlStatements

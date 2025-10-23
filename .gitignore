@@ -1,0 +1,83 @@
+# Build directories
+build/
+build-*/
+cmake-build-*/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Compiled files
+*.o
+*.so
+*.a
+*.exe
+zeus
+zeus_gui
+
+# Qt MOC/UI files (generated)
+moc_*.cpp
+ui_*.h
+qrc_*.cpp
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# R files
+.Rhistory
+.RData
+
+# Virtual environments
+.venv_*/
+venv/
+env/
+
+# Data files (too large for Git)
+Projects/*/data/rasters/*.tif
+Projects/*/data/rasters/*.tiff
+Projects/*/data/vectors/*.gpkg
+Projects/*/data/vectors/*.shp
+Projects/*/data/vectors/*.geojson
+
+# Keep directory structure but not large files
+!Projects/*/data/rasters/.gitkeep
+!Projects/*/data/vectors/.gitkeep
+
+# Large dataset inventories (optional)
+# data/*_datasets_inventory.csv
+
+# Temporary files
+*.tmp
+*.bak
+*.log
+*.swp
+nohup.out
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Credentials (CRITICAL!)
+*.pem
+*.key
+config/credentials.json
+*_api_key.txt
+.copernicus_credentials
+.perplexity_credentials
+.env
+
+# Large test files
+lake_como_*.tif
+lake_como_*.tif.json
+
+# Test scripts
+test_*.sh
+temp_*.py
+
+# Backups
+backups/

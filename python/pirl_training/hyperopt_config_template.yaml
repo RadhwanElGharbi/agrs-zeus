@@ -1,0 +1,165 @@
+# PIRL Hyperparameter Optimization Configuration Template
+# This file configures hyperparameter optimization for PIRL models
+
+# ============================================================================
+# OPTIMIZATION PARAMETERS
+# ============================================================================
+
+# Number of optimization trials
+n_trials: 50
+
+# Timeout in seconds (optional, None for no timeout)
+timeout: 3600  # 1 hour
+
+# Optimization direction: "maximize" or "minimize"
+direction: "maximize"
+
+# ============================================================================
+# TRAINING PARAMETERS
+# ============================================================================
+
+# Algorithm to optimize: "PPO" or "SAC"
+algorithm: "PPO"
+
+# Training timesteps per trial (keep low for faster optimization)
+total_timesteps: 100000
+
+# Number of parallel environments per trial
+num_envs: 4
+
+# ============================================================================
+# ENVIRONMENT CONFIGURATION
+# ============================================================================
+
+# Path to project configuration file for training
+env_config: "/opt/agrs/Projects/SAIPEM_PIPELINE_DEMO/config/pirl_config.yaml"
+
+# ============================================================================
+# OUTPUT CONFIGURATION
+# ============================================================================
+
+# Output directory for optimization results
+output_dir: "./pirl_hyperopt_output"
+
+# ============================================================================
+# HYPERPARAMETER SEARCH SPACE
+# ============================================================================
+
+hyperparams:
+  # Learning rate (log scale)
+  learning_rate:
+    type: "float"
+    low: 1e-5
+    high: 1e-2
+    log: true
+  
+  # Batch size
+  batch_size:
+    type: "int"
+    low: 64
+    high: 512
+  
+  # Discount factor
+  gamma:
+    type: "float"
+    low: 0.9
+    high: 0.999
+  
+  # For PPO-specific parameters
+  n_epochs:
+    type: "int"
+    low: 3
+    high: 20
+  
+  clip_range:
+    type: "float"
+    low: 0.1
+    high: 0.4
+  
+  # For SAC-specific parameters
+  tau:
+    type: "float"
+    low: 0.001
+    high: 0.02
+  
+  target_update_interval:
+    type: "int"
+    low: 1
+    high: 10
+  
+  # Network architecture (categorical choices)
+  policy_kwargs:
+    type: "categorical"
+    choices:
+      - {"net_arch": [64, 64]}
+      - {"net_arch": [128, 128]}
+      - {"net_arch": [256, 256]}
+      - {"net_arch": [64, 64, 64]}
+      - {"net_arch": [128, 128, 128]}
+      - {"net_arch": [256, 256, 256]}
+
+# ============================================================================
+# EXAMPLE CONFIGURATIONS FOR DIFFERENT ALGORITHMS
+# ============================================================================
+
+# Example for PPO optimization:
+# algorithm: "PPO"
+# hyperparams:
+#   learning_rate:
+#     type: "float"
+#     low: 1e-5
+#     high: 1e-2
+#     log: true
+#   batch_size:
+#     type: "int"
+#     low: 64
+#     high: 512
+#   n_epochs:
+#     type: "int"
+#     low: 3
+#     high: 20
+#   clip_range:
+#     type: "float"
+#     low: 0.1
+#     high: 0.4
+#   gamma:
+#     type: "float"
+#     low: 0.9
+#     high: 0.999
+
+# Example for SAC optimization:
+# algorithm: "SAC"
+# hyperparams:
+#   learning_rate:
+#     type: "float"
+#     low: 1e-5
+#     high: 1e-2
+#     log: true
+#   batch_size:
+#     type: "int"
+#     low: 64
+#     high: 512
+#   tau:
+#     type: "float"
+#     low: 0.001
+#     high: 0.02
+#   gamma:
+#     type: "float"
+#     low: 0.9
+#     high: 0.999
+#   target_update_interval:
+#     type: "int"
+#     low: 1
+#     high: 10
+
+# ============================================================================
+# NOTES
+# ============================================================================
+
+# 1. Keep total_timesteps low during hyperopt for faster iteration
+# 2. Use log scale for learning_rate as it spans several orders of magnitude
+# 3. For categorical parameters, provide meaningful choices
+# 4. Consider using fewer trials with more timesteps vs more trials with fewer timesteps
+# 5. Monitor optimization progress with Optuna dashboard: optuna-dashboard sqlite:///hyperopt.db
+
+
