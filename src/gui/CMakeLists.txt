@@ -18,24 +18,36 @@ set(GUI_SOURCES
     main.cpp
     MainWindow.cpp
     MapWidget.cpp
+    Terrain3DWidget.cpp
     BackendInterface.cpp
     ProjectSetupWizard.cpp
     CRSSelectorDialog.cpp
     DatasetAvailabilityDialog.cpp
     CursorInterface.cpp
     TerminalWidget.cpp
+    ClipToAOIDialog.cpp
+    AttributeTableDialog.cpp
+    VectorStyleDialog.cpp
+    FeatureIdentifyDialog.cpp
+    PerplexityChatDialog.cpp
 )
 
 # GUI header files
 set(GUI_HEADERS
     ${CMAKE_SOURCE_DIR}/include/agrs_zeus/gui/MainWindow.h
     ${CMAKE_SOURCE_DIR}/include/agrs_zeus/gui/MapWidget.h
+    ${CMAKE_SOURCE_DIR}/include/agrs_zeus/gui/Terrain3DWidget.h
     ${CMAKE_SOURCE_DIR}/include/agrs_zeus/gui/BackendInterface.h
     ${CMAKE_SOURCE_DIR}/include/agrs_zeus/gui/ProjectSetupWizard.h
     ${CMAKE_SOURCE_DIR}/include/agrs_zeus/gui/CRSSelectorDialog.h
     ${CMAKE_SOURCE_DIR}/include/agrs_zeus/gui/DatasetAvailabilityDialog.h
     ${CMAKE_SOURCE_DIR}/include/agrs_zeus/gui/CursorInterface.h
     ${CMAKE_SOURCE_DIR}/include/agrs_zeus/gui/TerminalWidget.h
+    ${CMAKE_SOURCE_DIR}/include/agrs_zeus/gui/ClipToAOIDialog.h
+    ${CMAKE_SOURCE_DIR}/include/agrs_zeus/gui/AttributeTableDialog.h
+    ${CMAKE_SOURCE_DIR}/include/agrs_zeus/gui/VectorStyleDialog.h
+    ${CMAKE_SOURCE_DIR}/include/agrs_zeus/gui/FeatureIdentifyDialog.h
+    ${CMAKE_SOURCE_DIR}/include/agrs_zeus/gui/PerplexityChatDialog.h
 )
 
 # Create executable

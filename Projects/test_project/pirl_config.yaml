@@ -1,0 +1,575 @@
+# ============================================================================
+# PIRL Configuration for test_project
+# Central Italy Gas Pipeline (Marche to Umbria)
+# Generated: 2025-10-26
+# ============================================================================
+
+# ============================================================================
+# PROJECT IDENTIFICATION
+# ============================================================================
+project_name: "test_project"
+project_code: "ZEUS_TEST_ITALY_001"
+client_name: "Test Client - Central Italy Gas Pipeline"
+description: "Gas pipeline route optimization from Marche to Umbria regions"
+
+# ============================================================================
+# COORDINATE SYSTEM
+# ============================================================================
+epsg_code: 32633  # WGS 84 / UTM zone 33N
+measurement_units: "SI"  # Metric system
+
+# ============================================================================
+# ROUTE ENDPOINTS (UTM Zone 33N, EPSG:32633)
+# Original: Start: 43.388493°N, 13.514053°E | End: 42.898254°N, 13.877811°E
+# Converted using: gdaltransform -s_srs EPSG:4326 -t_srs EPSG:32633
+# ============================================================================
+start_point:
+  x: 379648.0    # UTM Easting (meters)
+  y: 4805030.0   # UTM Northing (meters)
+  crs: "EPSG:32633"
+  description: "Start point in Marche region"
+
+end_point:
+  x: 408381.0    # UTM Easting (meters)
+  y: 4750127.0   # UTM Northing (meters)
+  crs: "EPSG:32633"
+  description: "End point in Umbria region"
+
+# Approximate straight-line distance
+straight_line_distance_m: 55234  # ~55 km
+
+# ============================================================================
+# PIPELINE SPECIFICATIONS (from pipeline_specs.json)
+# ============================================================================
+pipeline:
+  type: "Gas"
+  material: "Carbon Steel"
+  diameter_mm: 660.4      # 26 inches
+  diameter_inches: 26
+  thickness_mm: 11.1
+  
+  # Pressure Specifications
+  mop_bar: 70            # Maximum Operating Pressure
+  dp_bar: 75             # Design Pressure
+  
+  # Burial Depth
+  depth_of_cover_m: 1.5  # Minimum burial depth (standard)
+  depth_of_cover_flood_m: 2.0  # Additional depth in flood zones
+  
+  # HDD Constraints
+  hdd_max_curvature_deg: 12  # Maximum curvature for Horizontal Directional Drilling
+  hdd_min_bend_radius_m: 83.3  # Calculated: (26 * 0.0254) / (2 * sin(12°/2))
+  
+  # Hot Bend Angles (fabrication limits)
+  hot_bend_angles_deg: [15, 30, 45, 60, 90]
+  max_field_bend_deg: 15  # Maximum angle for cold/field bends
+  
+  # Clearance Requirements
+  clearances:
+    house_min_distance_m: 13    # Minimum distance from residential structures
+    powerlines_min_distance_m: 6  # Minimum clearance under power lines
+    poles_min_distance_m: 6     # Minimum clearance around utility poles
+    railway_crossing_depth_m: 3.5  # Minimum depth below railways
+    road_crossing_depth_m: 2.5     # Minimum depth below roads
+  
+  # ROW Specifications
+  row_width_m: 40          # Right-of-way corridor width
+  construction_width_m: 30  # Construction workspace width
+
+# ============================================================================
+# COST WEIGHTS (normalized to sum = 1.0)
+# Adjusted for Italian regulatory complexity and Apennine terrain
+# ============================================================================
+cost_weights:
+  terrain_difficulty: 0.25       # High due to Apennine mountains
+  water_crossings: 0.15          # Metauro, Chiascio, Tiber rivers
+  infrastructure_crossings: 0.15 # Roads, railways, power lines (dense network)
+  environmental_impact: 0.20     # Protected areas (Natura 2000, national parks)
+  row_acquisition: 0.15          # Fragmented agricultural land, vineyard premiums
+  permitting_complexity: 0.10    # Dual-region approval, EIA required
+
+# ============================================================================
+# PHYSICS CONSTRAINTS (Engineering Limits)
+# Based on client criteria and Italian seismic regulations
+# ============================================================================
+constraints:
+  # Slope Limits
+  max_slope_percent: 58.0        # ~30 degrees (standard pipeline limit)
+  max_slope_deg: 30.0            # Equivalent in degrees
+  warning_slope_deg: 20.0        # Warning threshold for increased costs
+  
+  # Curvature Limits
+  max_curvature_rad_per_m: 0.01  # Minimum bend radius: 100m
+  hdd_max_curvature_deg: 12      # From pipeline_specs (HDD operations)
+  min_bend_radius_m: 100.0       # Standard for 26" pipe
+  
+  # Crossing Constraints
+  min_crossing_angle_deg: 45.0   # Minimum perpendicular crossing angle
+  preferred_crossing_angle_deg: 90.0  # Perpendicular preferred
+  
+  # Buffer Zones (spatial separation requirements)
+  buffer_protected_areas_m: 100.0     # Natura 2000, national parks
+  buffer_water_bodies_m: 50.0         # Rivers, streams, lakes
+  buffer_urban_areas_m: 50.0          # Built-up areas
+  buffer_power_lines_m: 6.0           # From pipeline_specs
+  buffer_houses_m: 13.0               # From pipeline_specs
+  buffer_archaeological_m: 200.0      # Cultural heritage sites
+  
+  # Flood Zones
+  flood_zone_depth_increase_m: 0.5    # Additional burial depth in floodplains
+  flood_zone_min_depth_m: 2.0         # Minimum depth in flood-prone areas
+  
+  # Seismic Zones (Italy-specific)
+  seismic_zone_1_special_design: true  # Flexible joints, advanced monitoring
+  seismic_zone_1_cost_multiplier: 1.15  # Additional cost for seismic design
+  
+  # Segment Length
+  max_segment_length_m: 100.0         # Maximum step size for PIRL routing
+  min_segment_length_m: 10.0          # Minimum segment for analysis
+
+# ============================================================================
+# NO-GO ZONES (Hard Constraints)
+# ============================================================================
+no_go_zones:
+  - type: "protected_areas"
+    enabled: true
+    source: "natura2000_sites.gpkg"  # 0 features in AOI
+    buffer_m: 0    # No buffer (boundary is hard limit)
+    note: "No Natura 2000 sites in AOI, but logic implemented for completeness"
+  
+  - type: "urban_dense"
+    enabled: true
+    source: "esa_worldcover"  # Class 50 (built-up)
+    buffer_m: 20
+    cost_if_unavoidable: 10.0  # 10x multiplier if must cross
+  
+  - type: "slope_extreme"
+    enabled: true
+    threshold_deg: 35
+    reason: "Prohibitive construction cost and safety risk"
+    cost_multiplier: 10.0
+  
+  - type: "unesco_buffer"
+    enabled: false  # Would require manual digitization
+    buffer_m: 500
+    note: "Gubbio historic center proximity - monitor manually"
+
+# ============================================================================
+# COST MODEL PARAMETERS (Italy-Specific)
+# Based on PIPELINE_CONSTRUCTION_COST_MATRIX.md + regional adjustments
+# ============================================================================
+cost_model:
+  # Base cost (flat terrain, open trench, per meter)
+  base_cost_usd_per_m: 750  # Italy: €650 ≈ $750 (higher than EU average)
+  
+  # Terrain Multipliers (slope-dependent)
+  terrain_multipliers:
+    slope_0_2_deg: 1.0      # Flat
+    slope_2_5_deg: 1.15     # Gentle
+    slope_5_10_deg: 1.35    # Moderate
+    slope_10_15_deg: 1.50   # Steep-low
+    slope_15_20_deg: 1.75   # Steep-high
+    slope_20_30_deg: 2.00   # Very steep
+    slope_30_plus_deg: 10.0 # Prohibitive (no-go)
+  
+  # Land Cover Multipliers (ESA WorldCover classes)
+  # Based on Perplexity research + Italy-specific adjustments
+  landcover_multipliers:
+    10_tree_cover: 3.0        # Forest clearing + environmental mitigation
+    20_shrubland: 1.8         # Clearing costs
+    30_grassland: 1.1         # Minimal vegetation
+    40_cropland: 1.5          # Agricultural compensation
+    50_built_up: 10.0         # Urban ROW (very expensive in Italy)
+    60_bare_ground: 1.0       # Baseline
+    80_permanent_water: 8.0   # Wetland mitigation
+    90_herbaceous_wetland: 8.0
+    95_mangroves: 10.0        # N/A for Italy but included
+    100_moss_lichen: 1.2
+  
+  # Water Crossing Costs (per meter of crossing)
+  water_crossing:
+    small_stream_lt_3m: 1000       # Open cut possible
+    medium_river_3_10m: 5000       # HDD preferred
+    large_river_gt_10m: 20000      # HDD required
+    hdd_multiplier: 3.0            # HDD vs open cut
+    environmental_sensitivity_multiplier: 1.5  # Ecologically sensitive areas
+  
+  # Road Crossing Costs (per crossing, Italy-specific)
+  road_crossing:
+    unpaved: 35000          # Dirt roads, tracks
+    tertiary: 75000         # Local roads (SP - Provinciali)
+    secondary: 150000       # Secondary roads (SS - Statali)
+    primary: 300000         # Primary roads (SR - Regionali)
+    motorway: 700000        # Autostrade (A-roads)
+    traffic_disruption_premium: 1.2  # Peak traffic areas
+  
+  # Railway Crossing Costs (Italy-specific)
+  railway_crossing:
+    light_rail: 100000      # Local trams
+    heavy_freight: 225000   # Trenitalia freight lines
+    high_speed: 400000      # Alta Velocità (TAV)
+    coordination_cost: 25000  # RFI coordination fees
+  
+  # Power Line Crossing Costs
+  power_crossing:
+    distribution_lt_100kv: 35000    # Local distribution (Enel)
+    transmission_100_400kv: 100000  # Terna transmission
+    uhv_gt_400kv: 225000            # Ultra-high voltage
+    terna_coordination_fee: 15000   # Grid operator fees
+  
+  # Environmental Costs
+  environmental:
+    protected_area_buffer_cost_per_m: 500   # Proximity costs
+    natura_2000_cost_per_m: 1000           # EU protected sites
+    unesco_buffer_cost_per_m: 2000         # Cultural heritage
+    archaeological_survey_cost_per_km: 50000  # Mandatory surveys
+  
+  # ============================================================================
+  # ROW ACQUISITION (Italy-Specific with Cadastre Workaround)
+  # Based on Perplexity research: proxy methodology using land cover
+  # ============================================================================
+  # METHODOLOGY: Without detailed cadastral data, ROW costs are estimated using:
+  # 1. Land cover classification (ESA WorldCover 10m) to identify land types
+  # 2. Administrative boundaries (GADM) to infer regulatory complexity
+  # 3. Terrain analysis (slope) to adjust for access difficulty
+  # 4. Regional multipliers based on province/region
+  #
+  # JUSTIFICATION (from Perplexity search):
+  # - Land cover multipliers reflect typical compensation rates by land type
+  # - Agricultural: 1.0x baseline (€2/m² capitalized)
+  # - Vineyards: 1.5-2.0x (crop value, replanting, seasonal restrictions)
+  # - Olive groves: 1.3-1.8x (mature trees, compensation, replanting)
+  # - Forests: 1.2-1.5x (environmental mitigation, access challenges)
+  # - Urban: 3.0-5.0x (multiple owners, infrastructure conflicts, legal fees)
+  # - Terrain complexity (slope >15%): +10-30% for access difficulty
+  #
+  # ACCURACY: Industry practice shows proxy methods achieve ±20-30% accuracy
+  # vs. detailed cadastral analysis. Adequate for early-stage route optimization.
+  # ============================================================================
+  row:
+    # Base rates (€/m² capitalized for perpetual easement)
+    agricultural_eur_per_m2: 2.0   # Baseline: €1.50-2.50/m²/year → €2/m²
+    forest_eur_per_m2: 1.0         # €0.80-1.20/m²/year → €1/m²
+    urban_fringe_eur_per_m2: 4.0   # €3.00-5.00/m²/year → €4/m²
+    
+    # Special case multipliers (applied to base rate)
+    vineyard_multiplier: 1.75      # Perplexity: 1.5-2.0x (avg 1.75x)
+    olive_grove_multiplier: 1.55   # Perplexity: 1.3-1.8x (avg 1.55x)
+    cropland_multiplier: 1.0       # Standard agricultural
+    grassland_multiplier: 0.8      # Lower value than cropland
+    shrubland_multiplier: 0.9      # Between grassland and forest
+    
+    # Terrain difficulty adjustment (added to base)
+    terrain_slope_0_15_deg: 0.0    # No adjustment
+    terrain_slope_15_25_deg: 0.15  # +15% for access difficulty
+    terrain_slope_25_plus_deg: 0.30  # +30% for steep access
+    
+    # Fragmentation complexity (proxy for parcel count)
+    fragmented_agricultural_multiplier: 1.25  # +25% for negotiation time
+    contiguous_public_multiplier: 0.80        # -20% for simplified process
+    
+    # ROW corridor dimensions
+    row_width_m: 40                # Standard corridor: ±20m from centerline
+    construction_width_m: 30       # Temporary construction workspace
+    
+    # Regional variations (by province/region)
+    marche_region_multiplier: 1.05  # Slightly above national average
+    umbria_region_multiplier: 1.10  # Higher due to tourism/heritage
+    
+    # Detection method (without cadastre)
+    detection_method: "land_cover_proxy"
+    proxy_datasets:
+      - "ESA WorldCover 10m (land type identification)"
+      - "GADM Admin Boundaries (regulatory complexity)"
+      - "DEM Slope Analysis (terrain access difficulty)"
+    estimated_accuracy: "±25% vs cadastral analysis"
+    justification: "Industry-standard proxy methodology for early-stage routing"
+  
+  # Regional Multiplier (Italy vs EU average)
+  regional_multiplier: 1.15        # Italy: 15% higher than EU average
+  
+  # Permitting Costs (Italy-specific, from AI project scope report)
+  permitting:
+    base_cost_per_municipality: 5000      # Municipal construction permit
+    regional_approval_cost: 25000         # Per region (Marche + Umbria = 2)
+    eia_cost: 150000                      # Environmental Impact Assessment (VIA)
+    cultural_heritage_cost: 50000         # Archaeological review (per instance)
+    hydrogeological_assessment: 75000     # Required for Apennine terrain
+    dual_region_coordination: 30000       # Marche + Umbria coordination overhead
+    snam_grid_integration_study: 40000    # Grid operator coordination
+    
+    # Timeline-based costs
+    permitting_timeline_months: 30        # 24-36 months (avg 30)
+    permitting_holding_cost_per_month: 8000  # Project overhead during permitting
+
+# ============================================================================
+# TRAINING PARAMETERS (for model training - future use)
+# ============================================================================
+training:
+  enabled: false  # No training for this run (use heuristic/greedy mode)
+  num_episodes: 10000
+  max_steps_per_episode: 5000
+  learning_rate: 0.0003
+  batch_size: 256
+  num_parallel_envs: 16
+  algorithm: "PPO"  # Proximal Policy Optimization
+  convergence_threshold: 0.95  # Success rate to consider trained
+
+# ============================================================================
+# ROUTING MODE
+# ============================================================================
+routing_mode: "heuristic_greedy"  # Options: "heuristic_greedy", "rl_trained", "a_star"
+# Note: "heuristic_greedy" uses cost-weighted A* without RL training
+
+# ============================================================================
+# PATHS (Project Directory Structure)
+# ============================================================================
+project_dir: "/opt/agrs/Projects/test_project"
+data_dir: "/opt/agrs/Projects/test_project/data"
+output_dir: "/opt/agrs/Projects/test_project/outputs/pirl"
+model_save_path: "/opt/agrs/Projects/test_project/models/pirl_model.zip"  # For future training
+
+# ============================================================================
+# DATASET PATHS (GISDataManager will load these)
+# All paths relative to project_dir
+# ============================================================================
+datasets:
+  # Rasters
+  dem: "data/rasters/tinitaly_10m_dem_clipped.tif"
+  slope: "data/rasters/slope_percent_clipped.tif"
+  landcover: "data/rasters/esa_worldcover_10m_clipped.tif"
+  soil: "data/rasters/soilgrids_properties_clipped.tif"
+  surface_water: "data/rasters/global_surface_water_clipped.tif"
+  
+  # Vectors
+  waterways: "data/vectors/osm_waterways_clipped.gpkg"
+  roads: "data/vectors/osm_roads_clipped.gpkg"
+  railways: "data/vectors/osm_railways_clipped.gpkg"
+  power_lines: "data/vectors/osm_power_clipped.gpkg"
+  faults: "data/vectors/ingv_faults_clipped.gpkg"
+  admin_boundaries: "data/vectors/gadm_admin_boundaries_clipped.gpkg"
+  
+  # Protected areas (0 features in AOI, but path specified for logic completeness)
+  protected_areas: "data/vectors/natura2000_sites.gpkg"
+
+# ============================================================================
+# OUTPUT SCHEMA CONFIGURATION
+# ============================================================================
+output:
+  format: "geojson"  # Primary output format
+  segment_detail_level: "full"  # Options: "full", "standard", "minimal"
+  
+  # Fields to include in segment output
+  include_fields:
+    - geometric_properties      # Length, azimuth, elevation, grade
+    - bends_curvature          # Bend angles, radii, fabrication methods
+    - terrain_construction     # Slope, excavation, equipment, methods
+    - crossings                # Roads, waterways, railways, power (full details)
+    - clearances_conflicts     # Houses, power lines, compliance checks
+    - cost_breakdown           # Material, labor, equipment, ROW, permits
+    - regulatory_compliance    # Municipalities, permits, environmental
+    - risk_assessment          # Seismic, landslide, flooding, corrosion
+    - stakeholder_row          # Landowners, compensation, negotiations
+    - construction_schedule    # Duration, equipment, critical path
+  
+  # Export formats
+  export_formats:
+    - geojson          # Primary (web/QGIS compatible)
+    - shapefile        # ArcGIS compatible
+    - geopackage       # Modern GIS format
+    - csv_stats        # Tabular statistics
+    - kml              # Google Earth
+    - dxf              # AutoCAD
+  
+  # Coordinate precision
+  coordinate_precision: 2  # Decimal places for UTM coordinates (±1cm)
+  cost_precision: 0        # Integer USD
+  distance_precision: 1    # ±10cm
+
+# ============================================================================
+# VALIDATION & QUALITY CONTROL
+# ============================================================================
+validation:
+  check_constraint_violations: true
+  check_crossing_angles: true
+  check_clearances: true
+  check_cost_reasonableness: true
+  
+  # Cost reasonableness checks
+  min_cost_per_km_usd: 400000    # Sanity check lower bound
+  max_cost_per_km_usd: 1500000   # Sanity check upper bound
+  
+  # Baseline comparison
+  generate_baseline_route: true  # Straight-line route for comparison
+  target_savings_percent: 10     # Goal: 10%+ savings vs baseline
+
+# ============================================================================
+# LOGGING & DEBUGGING
+# ============================================================================
+logging:
+  level: "INFO"  # Options: DEBUG, INFO, WARNING, ERROR
+  log_file: "outputs/pirl/pirl_routing.log"
+  log_gis_operations: true
+  log_cost_calculations: true
+  log_constraint_violations: true
+  log_segment_details: true
+  
+  # Console output
+  verbose: true
+  progress_bar: true
+  print_statistics: true
+
+# ============================================================================
+# METADATA
+# ============================================================================
+metadata:
+  created_date: "2025-10-26"
+  created_by: "ZEUS PIRL Pre-Implementation Analysis"
+  configuration_version: "1.0"
+  pirl_version: "1.0.0"
+  notes: |
+    Configuration for test_project Central Italy gas pipeline.
+    
+    Key Features:
+    - No Natura 2000 sites in AOI (0 features)
+    - Cadastre workaround: Land cover proxy methodology
+    - Italy-specific cost model (15% regional multiplier)
+    - Seismic Zone 1 design requirements
+    - Dual-region regulatory complexity (Marche + Umbria)
+    
+    Data Quality:
+    - DEM: Excellent (TINITALY 10m)
+    - Slope: Excellent (derived 10m)
+    - Land Cover: Excellent (ESA WorldCover 10m)
+    - Infrastructure: Good (OSM 2025)
+    - Protected Areas: Present but 0 features in AOI
+    - Cadastre: NOT AVAILABLE (using proxy methodology)
+    
+    Expected Results:
+    - Route length: ~55-60 km
+    - Total cost: $27-32M
+    - Cost savings vs baseline: 10-15%
+    - Segments: ~550-1100
+    - Crossings: ~50-100 total
+
+
+# ============================================================================
+# PERFORMANCE TRACKING CONFIGURATION
+# Added: 2025-10-26 - Comprehensive model & system performance monitoring
+# ============================================================================
+performance_tracking:
+  enabled: true
+  
+  # Output directories
+  output_dir: "outputs/pirl/performance"
+  live_dir: "outputs/pirl/performance/live"
+  post_run_dir: "outputs/pirl/performance/post_run"
+  logs_dir: "outputs/pirl/performance/logs"
+  
+  # Live tracking (real-time updates)
+  live_tracking:
+    enabled: true
+    progress_update_interval_seconds: 10
+    resource_update_interval_seconds: 30
+    segment_update: true  # Update after each segment
+    
+    metrics:
+      - progress_percent
+      - segments_completed
+      - estimated_time_remaining
+      - cpu_utilization
+      - memory_usage
+      - current_cost
+      - current_savings
+      - constraint_violations
+      - warnings
+  
+  # Model performance metrics
+  model_performance:
+    enabled: true
+    
+    cost_optimization: true
+    constraint_satisfaction: true
+    crossing_analysis: true
+    terrain_analysis: true
+    route_quality: true
+    
+    comparative_analysis:
+      vs_baseline: true
+      vs_target: true
+      vs_previous_runs: false  # No previous runs yet
+  
+  # Computational performance metrics
+  system_performance:
+    enabled: true
+    
+    timing_metrics: true
+    cpu_metrics: true
+    memory_metrics: true
+    disk_io_metrics: true
+    gis_operations_metrics: true
+    
+    bottleneck_analysis: true
+    parallelization_efficiency: true
+  
+  # Data quality metrics
+  data_quality:
+    enabled: true
+    
+    dataset_coverage: true
+    resolution_analysis: true
+    gaps_identification: true
+    temporal_freshness: true
+  
+  # Learning performance (future training)
+  learning_performance:
+    enabled: true
+    
+    state_action_reward_logging: true
+    trajectory_export: true
+    export_format: "json"  # Options: json, hdf5, parquet
+    
+    # State-action-reward pairs for RL training
+    log_all_steps: true
+    log_frequency: 1  # Log every step
+  
+  # Warnings and alerts
+  warnings:
+    enabled: true
+    
+    near_limit_threshold_percent: 90  # Warn if within 90% of constraint limit
+    high_cost_threshold_usd_per_km: 700000
+    slow_performance_threshold_seconds_per_segment: 15
+    high_memory_threshold_percent: 80
+  
+  # Export formats
+  export:
+    json: true
+    csv: true
+    pdf_summary: true
+    
+    # For training data
+    training_data_export: true
+    training_data_format: "json"  # Will switch to HDF5/Parquet for large datasets
+
+# ============================================================================
+# RUN METADATA (Auto-populated at runtime)
+# ============================================================================
+run_metadata:
+  run_id: ""  # Auto-generated: pirl_YYYYMMDD_HHMMSS
+  run_date: ""  # Auto-populated
+  operator: "ZEUS PIRL System"
+  version: "1.0.0"
+  config_version: "1.0"
+  
+  hardware:
+    cpu_model: ""  # Auto-detected
+    cpu_cores: 0  # Auto-detected
+    cpu_threads: 0  # Auto-detected
+    memory_total_gb: 0  # Auto-detected
+    disk_type: ""  # Auto-detected
+  
+  environment:
+    os: ""  # Auto-detected
+    gdal_version: ""  # Auto-detected
+    python_version: ""  # If using Python components

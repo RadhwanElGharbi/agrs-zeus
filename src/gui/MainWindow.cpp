@@ -1,10 +1,17 @@
 #include "agrs_zeus/gui/MainWindow.h"
 #include "agrs_zeus/gui/MapWidget.h"
+#include "agrs_zeus/gui/Terrain3DWidget.h"
 #include "agrs_zeus/gui/BackendInterface.h"
 #include "agrs_zeus/gui/DatasetAvailabilityDialog.h"
+#include "agrs_zeus/gui/ClipToAOIDialog.h"
+#include "agrs_zeus/gui/AttributeTableDialog.h"
+#include "agrs_zeus/gui/VectorStyleDialog.h"
+#include "agrs_zeus/gui/FeatureIdentifyDialog.h"
+#include "agrs_zeus/gui/PerplexityChatDialog.h"
 #include "agrs_zeus/Tools.h"
 
 #include <QMenuBar>
+#include <QMenu>
 #include <QToolBar>
 #include <QStatusBar>
 #include <QDockWidget>
@@ -19,6 +26,7 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QDateTime>
+#include <QRandomGenerator>
 #include <QSettings>
 #include <QApplication>
 #include <QDir>
@@ -26,13 +34,22 @@
 #include <QtConcurrent>
 #include <QDialogButtonBox>
 #include <QInputDialog>
+#include <QStackedWidget>
+#include <QVBoxLayout>
+#include <QLineEdit>
+#include <QRegularExpression>
+#include <gdal/gdal_priv.h>
+#include <gdal/ogrsf_frmts.h>
+#include <algorithm>
 
 namespace agrs {
 namespace gui {
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
-    , m_osgWidget(nullptr)
+    , m_viewStack(nullptr)
+    , m_mapWidget(nullptr)
+    , m_terrain3DWidget(nullptr)
     , m_layersDock(nullptr)
     , m_propertiesDock(nullptr)
     , m_consoleDock(nullptr)
@@ -43,9 +60,24 @@ MainWindow::MainWindow(QWidget* parent)
     setUnifiedTitleAndToolBarOnMac(true);
     resize(1600, 1000);
     
-    // Create central map widget
-    m_osgWidget = new MapWidget(this);
-    setCentralWidget(m_osgWidget);
+    // Create stacked widget for 2D/3D views
+    m_viewStack = new QStackedWidget(this);
+    
+    // Create 2D map widget
+    m_mapWidget = new MapWidget(this);
+    m_viewStack->addWidget(m_mapWidget);
+    
+    // Connect feature click signal (coordinatesChanged is connected in setupConnections())
+    connect(m_mapWidget, &MapWidget::featureClicked, this, &MainWindow::onFeatureClicked);
+    
+    // Create 3D terrain widget
+    m_terrain3DWidget = new Terrain3DWidget(this);
+    m_viewStack->addWidget(m_terrain3DWidget);
+    
+    // Start in 2D mode
+    m_viewStack->setCurrentWidget(m_mapWidget);
+    
+    setCentralWidget(m_viewStack);
     
     // Create backend interface
     m_backend = new BackendInterface(this);
@@ -109,16 +141,48 @@ void MainWindow::createToolbars() {
     m_dataToolbar->setObjectName("DataToolbar");
     m_dataToolbar->setIconSize(QSize(18, 18));
     m_dataToolbar->addAction(tr("Data"), this, &MainWindow::onDataAvailability);
+    m_dataToolbar->addAction(tr("Clip Layer to AOI"), this, &MainWindow::onClipToAOI);
+    
+    // View toolbar - 2D/3D toggle
+    m_viewToolbar = addToolBar(tr("View"));
+    m_viewToolbar->setObjectName("ViewToolbar");
+    m_viewToolbar->setIconSize(QSize(18, 18));
+    QAction* toggle3D = m_viewToolbar->addAction(tr("2D/3D"), this, &MainWindow::onToggle2D3D);
+    toggle3D->setToolTip(tr("Toggle between 2D map and 3D terrain views"));
 }
 
 void MainWindow::createDockWidgets() {
-    // Layers panel
+    // Layers panel with toolbar
     m_layersDock = new QDockWidget(tr("Layers"), this);
     m_layersDock->setObjectName("LayersDock");
     m_layersDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetClosable);
+    
+    // Create container widget for layers panel
+    QWidget* layersContainer = new QWidget();
+    QVBoxLayout* layersLayout = new QVBoxLayout(layersContainer);
+    layersLayout->setContentsMargins(0, 0, 0, 0);
+    layersLayout->setSpacing(0);
+    
+    // Add toolbar with "New Folder" button
+    QToolBar* layersToolbar = new QToolBar();
+    layersToolbar->setIconSize(QSize(16, 16));
+    layersToolbar->setToolButtonStyle(Qt::ToolButtonIconOnly);
+    
+    QAction* newFolderAction = layersToolbar->addAction(style()->standardIcon(QStyle::SP_FileDialogNewFolder), tr("New Folder"));
+    newFolderAction->setToolTip(tr("Create a new folder in project data directory"));
+    connect(newFolderAction, &QAction::triggered, this, &MainWindow::onNewFolder);
+    
+    layersLayout->addWidget(layersToolbar);
+    
+    // Add tree widget
     m_layersTree = new QTreeWidget();
     m_layersTree->setHeaderLabel(tr("Dataset Layers"));
-    m_layersDock->setWidget(m_layersTree);
+    m_layersTree->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(m_layersTree, &QTreeWidget::customContextMenuRequested, 
+            this, &MainWindow::onLayerTreeContextMenu);
+    layersLayout->addWidget(m_layersTree);
+    
+    m_layersDock->setWidget(layersContainer);
     addDockWidget(Qt::LeftDockWidgetArea, m_layersDock);
     
     // Properties panel
@@ -161,10 +225,11 @@ void MainWindow::createStatusBar() {
 
 void MainWindow::setupConnections() {
     // Map widget signals
-    MapWidget* mapWidget = qobject_cast<MapWidget*>(m_osgWidget);
-    if (mapWidget) {
-        connect(mapWidget, &MapWidget::coordinatesChanged,
+    if (m_mapWidget) {
+        connect(m_mapWidget, &MapWidget::coordinatesChanged,
                 this, &MainWindow::onCoordinatesChanged);
+        connect(m_mapWidget, &MapWidget::moreInfoRequested,
+                this, &MainWindow::onMoreInfoRequested);
     }
     
     // Backend signals
@@ -182,12 +247,11 @@ void MainWindow::setupConnections() {
                  Qt::CheckState state = item->checkState(0);
                  bool visible = (state == Qt::Checked);
                  
-                 MapWidget* mapWidget = qobject_cast<MapWidget*>(m_osgWidget);
-                 if (!mapWidget) return;
+                 if (!m_mapWidget) return;
                  
                  // Handle basemap layer
                  if (layerPath == "__BASEMAP__") {
-                     mapWidget->setBasemapVisible(visible);
+                     m_mapWidget->setBasemapVisible(visible);
                      m_consoleText->append(tr("[Layers] Basemap %1").arg(visible ? "visible" : "hidden"));
                      return;
                  }
@@ -203,7 +267,7 @@ void MainWindow::setupConnections() {
                  
                  // Handle individual layer visibility
                  if (!layerPath.isEmpty() && layerPath != "__BASEMAP__") {
-                     mapWidget->setLayerVisible(layerPath, visible);
+                     m_mapWidget->setLayerVisible(layerPath, visible);
                      m_consoleText->append(tr("[Layers] %1: %2")
                          .arg(item->text(0))
                          .arg(visible ? "visible" : "hidden"));
@@ -213,8 +277,7 @@ void MainWindow::setupConnections() {
 
 // Slot implementations
 void MainWindow::onNewProject() {
-    MapWidget* mapWidget = qobject_cast<MapWidget*>(m_osgWidget);
-    ProjectSetupWizard dialog(mapWidget, this);
+    ProjectSetupWizard dialog(m_mapWidget, this);
     
     if (dialog.exec() == QDialog::Accepted) {
         ProjectSetupData proj = dialog.data();
@@ -388,7 +451,7 @@ void MainWindow::onNewProject() {
         m_terminalWidget->setWorkingDirectory(fullPath);
         
         // After creation, run intelligent dataset availability analysis
-        DatasetAvailabilityDialog avail(qobject_cast<MapWidget*>(m_osgWidget), aoiDest, fullPath, this, m_terminalWidget);
+        DatasetAvailabilityDialog avail(m_mapWidget, aoiDest, fullPath, this, m_terminalWidget);
         avail.analyzeAndDisplay();
         avail.exec();
         
@@ -468,17 +531,125 @@ void MainWindow::onDataAvailability() {
         QMessageBox::warning(this, tr("Missing AOI"), tr("No AOI file found under %1/aoi").arg(m_currentProject));
         return;
     }
-    DatasetAvailabilityDialog dlg(qobject_cast<MapWidget*>(m_osgWidget), aoiPath, m_currentProject, this, m_terminalWidget);
+    DatasetAvailabilityDialog dlg(m_mapWidget, aoiPath, m_currentProject, this, m_terminalWidget);
     dlg.analyzeAndDisplay();
     dlg.exec();
 }
 
+void MainWindow::onClipToAOI() {
+    if (m_currentProject.isEmpty()) {
+        QMessageBox::warning(this, tr("No Project"), tr("Open or create a project first."));
+        return;
+    }
+    
+    QString aoiPath = findAOIFileInProject(m_currentProject);
+    if (aoiPath.isEmpty()) {
+        QMessageBox::warning(this, tr("Missing AOI"), 
+            tr("No AOI file found in %1/aoi/\n\n"
+               "Please ensure your project has an AOI file before clipping layers.")
+            .arg(m_currentProject));
+        return;
+    }
+    
+    m_consoleText->append(tr("[Clip] Opening Clip to AOI dialog..."));
+    
+    ClipToAOIDialog dlg(m_currentProject, aoiPath, this);
+    if (dlg.exec() == QDialog::Accepted) {
+        // Reload project layers to show newly clipped layers
+        m_consoleText->append(tr("[Clip] Reloading project layers..."));
+        loadProjectLayers(m_currentProject);
+        m_consoleText->append(tr("[Clip] Clipped layers have been added to the project."));
+    }
+}
+
+void MainWindow::onNewFolder() {
+    if (m_currentProject.isEmpty()) {
+        QMessageBox::warning(this, tr("No Project"), 
+            tr("Please open or create a project first."));
+        return;
+    }
+    
+    // Prompt user for folder name
+    bool ok;
+    QString folderName = QInputDialog::getText(this, tr("Create New Folder"),
+        tr("Enter folder name:"), QLineEdit::Normal,
+        tr("new_folder"), &ok);
+    
+    if (!ok || folderName.isEmpty()) {
+        return;  // User cancelled or entered empty name
+    }
+    
+    // Validate folder name (remove invalid characters)
+    folderName = folderName.trimmed();
+    folderName.replace(QRegularExpression("[<>:\"/\\\\|?*]"), "_");
+    
+    if (folderName.isEmpty()) {
+        QMessageBox::warning(this, tr("Invalid Name"),
+            tr("Folder name cannot be empty or contain only special characters."));
+        return;
+    }
+    
+    // Ask user where to create the folder (under rasters or vectors)
+    QStringList options;
+    options << "data/rasters" << "data/vectors" << "data";
+    
+    QString location = QInputDialog::getItem(this, tr("Select Location"),
+        tr("Create folder under:"), options, 0, false, &ok);
+    
+    if (!ok) {
+        return;  // User cancelled
+    }
+    
+    // Create the full path
+    QString fullPath = m_currentProject + "/" + location + "/" + folderName;
+    
+    QDir dir;
+    if (dir.exists(fullPath)) {
+        QMessageBox::warning(this, tr("Folder Exists"),
+            tr("A folder with this name already exists:\n%1").arg(fullPath));
+        return;
+    }
+    
+    if (dir.mkpath(fullPath)) {
+        m_consoleText->append(tr("[Folder] Created: %1/%2").arg(location).arg(folderName));
+        QMessageBox::information(this, tr("Folder Created"),
+            tr("Successfully created folder:\n%1/%2").arg(location).arg(folderName));
+        
+        // Reload layers to show new folder
+        loadProjectLayers(m_currentProject);
+    } else {
+        m_consoleText->append(tr("[Folder] Failed to create: %1/%2").arg(location).arg(folderName));
+        QMessageBox::critical(this, tr("Error"),
+            tr("Failed to create folder:\n%1/%2").arg(location).arg(folderName));
+    }
+}
+
 void MainWindow::onResetView() {
-    MapWidget* mapWidget = qobject_cast<MapWidget*>(m_osgWidget);
-    if (mapWidget) {
-        mapWidget->setCenter(40.7128, -74.0060);  // New York
-        mapWidget->setZoom(3);
+    if (m_mapWidget) {
+        m_mapWidget->setCenter(40.7128, -74.0060);  // New York
+        m_mapWidget->setZoom(3);
         m_consoleText->append(tr("[View] Map reset to default view."));
+    }
+}
+
+void MainWindow::onToggle2D3D() {
+    m_is3DMode = !m_is3DMode;
+    
+    if (m_is3DMode) {
+        // Switch to 3D view
+        m_viewStack->setCurrentWidget(m_terrain3DWidget);
+        m_statusLabel->setText(tr("Mode: 3D Terrain"));
+        m_consoleText->append(tr("[View] Switched to 3D terrain view"));
+        
+        // Load DEM if project is open
+        if (!m_currentProject.isEmpty()) {
+            load3DTerrain(m_currentProject);
+        }
+    } else {
+        // Switch to 2D view
+        m_viewStack->setCurrentWidget(m_mapWidget);
+        m_statusLabel->setText(tr("Mode: 2D Map"));
+        m_consoleText->append(tr("[View] Switched to 2D map view"));
     }
 }
 
@@ -500,13 +671,97 @@ void MainWindow::loadProjectLayers(const QString& projectDir) {
     // Clear existing layers
     m_layersTree->clear();
     
-    // Get map widget for layer loading
-    MapWidget* mapWidget = qobject_cast<MapWidget*>(m_osgWidget);
-    if (mapWidget) {
-        mapWidget->clearOverlays();
+    // Clear overlays from map widget
+    if (m_mapWidget) {
+        m_mapWidget->clearOverlays();
     }
     
-    // Add basemap layer (always first)
+    // Add AOI layer (Area of Interest - red outline)
+    QString aoiPath = findAOIFileInProject(projectDir);
+    if (!aoiPath.isEmpty() && QFile::exists(aoiPath)) {
+        QTreeWidgetItem* aoiItem = new QTreeWidgetItem(m_layersTree);
+        QFileInfo aoiInfo(aoiPath);
+        aoiItem->setText(0, "AOI (Area of Interest)");
+        aoiItem->setIcon(0, style()->standardIcon(QStyle::SP_DialogYesButton));
+        aoiItem->setCheckState(0, Qt::Checked);
+        aoiItem->setData(0, Qt::UserRole, aoiPath);
+        aoiItem->setToolTip(0, aoiInfo.absoluteFilePath());
+        
+        // Load AOI into map widget with special styling
+        if (m_mapWidget) {
+            if (m_mapWidget->addAOILayer(aoiPath)) {
+                m_consoleText->append(tr("[Layers] Loaded AOI: %1").arg(aoiInfo.fileName()));
+            } else {
+                m_consoleText->append(tr("[Layers] Failed to load AOI: %1").arg(aoiInfo.fileName()));
+            }
+        }
+    }
+    
+    // Load start and end point markers from project_aoi.json
+    QString aoiMetaPath = projectDir + "/aoi/project_aoi.json";
+    if (QFile::exists(aoiMetaPath)) {
+        QFile metaFile(aoiMetaPath);
+        if (metaFile.open(QIODevice::ReadOnly)) {
+            QJsonDocument doc = QJsonDocument::fromJson(metaFile.readAll());
+            metaFile.close();
+            
+            if (!doc.isNull() && doc.isObject()) {
+                QJsonObject obj = doc.object();
+                
+                // Load start point
+                if (obj.contains("start_point") && obj["start_point"].isObject()) {
+                    QJsonObject startPt = obj["start_point"].toObject();
+                    double startLat = startPt["latitude"].toDouble();
+                    double startLon = startPt["longitude"].toDouble();
+                    
+                    if (startLat != 0.0 || startLon != 0.0) {  // Valid coordinates
+                        QTreeWidgetItem* startItem = new QTreeWidgetItem(m_layersTree);
+                        startItem->setText(0, QString("Start Point (%1°, %2°)")
+                            .arg(startLat, 0, 'f', 4).arg(startLon, 0, 'f', 4));
+                        startItem->setIcon(0, style()->standardIcon(QStyle::SP_DialogApplyButton));
+                        startItem->setCheckState(0, Qt::Checked);
+                        startItem->setData(0, Qt::UserRole, "__START_POINT__");
+                        startItem->setToolTip(0, tr("Start Point: %1°N, %2°E")
+                            .arg(startLat, 0, 'f', 6).arg(startLon, 0, 'f', 6));
+                        
+                        if (m_mapWidget) {
+                            if (m_mapWidget->addStartPointMarker("__START_POINT__", startLat, startLon)) {
+                                m_consoleText->append(tr("[Layers] Loaded Start Point: %1°, %2°")
+                                    .arg(startLat, 0, 'f', 4).arg(startLon, 0, 'f', 4));
+                            }
+                        }
+                    }
+                }
+                
+                // Load end point
+                if (obj.contains("end_point") && obj["end_point"].isObject()) {
+                    QJsonObject endPt = obj["end_point"].toObject();
+                    double endLat = endPt["latitude"].toDouble();
+                    double endLon = endPt["longitude"].toDouble();
+                    
+                    if (endLat != 0.0 || endLon != 0.0) {  // Valid coordinates
+                        QTreeWidgetItem* endItem = new QTreeWidgetItem(m_layersTree);
+                        endItem->setText(0, QString("End Point (%1°, %2°)")
+                            .arg(endLat, 0, 'f', 4).arg(endLon, 0, 'f', 4));
+                        endItem->setIcon(0, style()->standardIcon(QStyle::SP_DialogCancelButton));
+                        endItem->setCheckState(0, Qt::Checked);
+                        endItem->setData(0, Qt::UserRole, "__END_POINT__");
+                        endItem->setToolTip(0, tr("End Point: %1°N, %2°E")
+                            .arg(endLat, 0, 'f', 6).arg(endLon, 0, 'f', 6));
+                        
+                        if (m_mapWidget) {
+                            if (m_mapWidget->addEndPointMarker("__END_POINT__", endLat, endLon)) {
+                                m_consoleText->append(tr("[Layers] Loaded End Point: %1°, %2°")
+                                    .arg(endLat, 0, 'f', 4).arg(endLon, 0, 'f', 4));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // Add basemap layer (always after AOI)
     QTreeWidgetItem* basemapItem = new QTreeWidgetItem(m_layersTree);
     basemapItem->setText(0, "Basemap (ESRI World Imagery)");
     basemapItem->setIcon(0, style()->standardIcon(QStyle::SP_DesktopIcon));
@@ -551,8 +806,8 @@ void MainWindow::loadProjectLayers(const QString& projectDir) {
             rasterCount++;
             
             // Load raster into map widget
-            if (mapWidget) {
-                if (mapWidget->addRasterLayer(fileInfo.absoluteFilePath())) {
+            if (m_mapWidget) {
+                if (m_mapWidget->addRasterLayer(fileInfo.absoluteFilePath())) {
                     m_consoleText->append(tr("[Layers] Loaded raster: %1").arg(fileInfo.fileName()));
                 } else {
                     m_consoleText->append(tr("[Layers] Failed to load raster: %1").arg(fileInfo.fileName()));
@@ -582,8 +837,8 @@ void MainWindow::loadProjectLayers(const QString& projectDir) {
                     rasterCount++;
                     
                     // Load raster into map widget
-                    if (mapWidget) {
-                        if (mapWidget->addRasterLayer(fileInfo.absoluteFilePath())) {
+                    if (m_mapWidget) {
+                        if (m_mapWidget->addRasterLayer(fileInfo.absoluteFilePath())) {
                             m_consoleText->append(tr("[Layers] Loaded raster: %1/%2").arg(dirInfo.fileName()).arg(fileInfo.fileName()));
                         } else {
                             m_consoleText->append(tr("[Layers] Failed to load raster: %1/%2").arg(dirInfo.fileName()).arg(fileInfo.fileName()));
@@ -616,9 +871,26 @@ void MainWindow::loadProjectLayers(const QString& projectDir) {
             vectorCount++;
             
             // Load vector into map widget
-            if (mapWidget) {
-                if (mapWidget->addVectorLayer(fileInfo.absoluteFilePath())) {
+            if (m_mapWidget) {
+                if (m_mapWidget->addVectorLayer(fileInfo.absoluteFilePath())) {
                     m_consoleText->append(tr("[Layers] Loaded vector: %1").arg(fileInfo.fileName()));
+                    
+                    // Try to load style from JSON sidecar
+                    QString jsonPath = fileInfo.absoluteFilePath() + ".json";
+                    QFile jsonFile(jsonPath);
+                    if (jsonFile.exists() && jsonFile.open(QIODevice::ReadOnly)) {
+                        QJsonDocument doc = QJsonDocument::fromJson(jsonFile.readAll());
+                        jsonFile.close();
+                        
+                        if (!doc.isNull() && doc.isObject()) {
+                            QJsonObject metadata = doc.object();
+                            if (metadata.contains("style") && metadata["style"].isObject()) {
+                                VectorStyle style = VectorStyle::fromJson(metadata["style"].toObject());
+                                m_mapWidget->setLayerStyle(fileInfo.absoluteFilePath(), style);
+                                m_consoleText->append(tr("[Style] Loaded custom style for: %1").arg(fileInfo.fileName()));
+                            }
+                        }
+                    }
                 } else {
                     m_consoleText->append(tr("[Layers] Failed to load vector: %1").arg(fileInfo.fileName()));
                 }
@@ -636,6 +908,510 @@ void MainWindow::loadProjectLayers(const QString& projectDir) {
     if (rasterCount + vectorCount == 0) {
         m_consoleText->append(tr("[Layers] No geospatial data files found in project"));
     }
+}
+
+void MainWindow::load3DTerrain(const QString& projectDir) {
+    if (!m_terrain3DWidget) return;
+    
+    m_consoleText->append(tr("[3D] Loading terrain from project DEM..."));
+    
+    // Look for DEM files in rasters directory
+    QDir rastersDir(projectDir + "/data/rasters");
+    if (!rastersDir.exists()) {
+        m_consoleText->append(tr("[3D] No rasters directory found"));
+        return;
+    }
+    
+    // Search for DEM files (common DEM naming patterns)
+    QStringList demFilters;
+    demFilters << "*dem*.tif" << "*dem*.tiff" << "*elevation*.tif" << "*dtm*.tif" << "*dsm*.tif" << "*tinitaly*.tif";
+    QFileInfoList demFiles = rastersDir.entryInfoList(demFilters, QDir::Files);
+    
+    if (demFiles.isEmpty()) {
+        m_consoleText->append(tr("[3D] No DEM files found. Looking in subdirectories..."));
+        
+        // Check subdirectories
+        QFileInfoList subDirs = rastersDir.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot);
+        for (const QFileInfo& dirInfo : subDirs) {
+            QDir subDir(dirInfo.absoluteFilePath());
+            QFileInfoList subDemFiles = subDir.entryInfoList(demFilters, QDir::Files);
+            if (!subDemFiles.isEmpty()) {
+                demFiles = subDemFiles;
+                break;
+            }
+        }
+    }
+    
+    if (demFiles.isEmpty()) {
+        m_consoleText->append(tr("[3D] No DEM files found in project. 3D view will be empty."));
+        return;
+    }
+    
+    // Load the first DEM found
+    QString demPath = demFiles.first().absoluteFilePath();
+    m_consoleText->append(tr("[3D] Loading DEM: %1").arg(demFiles.first().fileName()));
+    
+    if (m_terrain3DWidget->loadDEM(demPath)) {
+        m_consoleText->append(tr("[3D] Terrain loaded successfully"));
+        
+        // Load basemap texture by default
+        m_terrain3DWidget->loadBasemapTexture("");
+        m_consoleText->append(tr("[3D] Basemap texture loaded"));
+        
+        // Try to load imagery/raster textures from project
+        QStringList imageryFilters;
+        imageryFilters << "*.tif" << "*.tiff" << "*.jpg" << "*.jpeg" << "*.png";
+        QFileInfoList imageryFiles = rastersDir.entryInfoList(imageryFilters, QDir::Files);
+        
+        // Load first non-DEM imagery file as texture
+        for (const QFileInfo& imgFile : imageryFiles) {
+            QString imgPath = imgFile.absoluteFilePath();
+            // Skip if it's the DEM we already loaded
+            if (imgPath != demPath && !imgFile.fileName().contains("dem", Qt::CaseInsensitive) &&
+                !imgFile.fileName().contains("elevation", Qt::CaseInsensitive)) {
+                m_consoleText->append(tr("[3D] Loading imagery texture: %1").arg(imgFile.fileName()));
+                if (m_terrain3DWidget->loadImageryTexture(imgPath)) {
+                    m_consoleText->append(tr("[3D] Imagery texture loaded successfully"));
+                    break; // Only load one imagery for now
+                }
+            }
+        }
+    } else {
+        m_consoleText->append(tr("[3D] Failed to load terrain"));
+    }
+}
+
+void MainWindow::onLayerTreeContextMenu(const QPoint& pos) {
+    // Get the item at the clicked position
+    QTreeWidgetItem* item = m_layersTree->itemAt(pos);
+    if (!item) {
+        return;  // No item at this position
+    }
+    
+    // Get the layer path from the item's user data
+    QString layerPath = item->data(0, Qt::UserRole).toString();
+    
+    // Skip if this is a special layer (basemap, AOI, start/end points, or folder)
+    if (layerPath.isEmpty() || 
+        layerPath == "__BASEMAP__" || 
+        layerPath == "__START_POINT__" || 
+        layerPath == "__END_POINT__" ||
+        !QFile::exists(layerPath)) {
+        return;
+    }
+    
+    // Check if this is a vector file
+    QStringList vectorExtensions;
+    vectorExtensions << "gpkg" << "shp" << "geojson" << "kml" << "kmz" << "gml";
+    
+    QFileInfo fileInfo(layerPath);
+    QString ext = fileInfo.suffix().toLower();
+    
+    if (!vectorExtensions.contains(ext)) {
+        return;  // Not a vector file
+    }
+    
+    // Create context menu
+    QMenu contextMenu(this);
+    
+    QAction* openAttrTableAction = contextMenu.addAction(
+        style()->standardIcon(QStyle::SP_FileDialogDetailedView),
+        tr("Open Attribute Table"));
+    
+    QAction* customizeStyleAction = contextMenu.addAction(
+        style()->standardIcon(QStyle::SP_DialogResetButton),
+        tr("Customize Style"));
+    
+    // Execute context menu at the global position
+    QAction* selectedAction = contextMenu.exec(m_layersTree->mapToGlobal(pos));
+    
+    if (selectedAction == openAttrTableAction) {
+        QString layerName = item->text(0);
+        onOpenAttributeTable(layerPath, layerName);
+    } else if (selectedAction == customizeStyleAction) {
+        QString layerName = item->text(0);
+        onCustomizeStyle(layerPath, layerName);
+    }
+}
+
+void MainWindow::onOpenAttributeTable(const QString& layerPath, const QString& layerName) {
+    m_consoleText->append(tr("[Attributes] Opening attribute table for: %1").arg(layerName));
+    
+    // Create and show the attribute table dialog
+    AttributeTableDialog* dialog = new AttributeTableDialog(layerPath, layerName, this);
+    dialog->setAttribute(Qt::WA_DeleteOnClose);  // Auto-delete when closed
+    
+    // Connect zoom to feature signal
+    connect(dialog, &AttributeTableDialog::zoomToFeature, this, &MainWindow::onZoomToFeature);
+    
+    dialog->show();  // Use show() instead of exec() to make it non-modal
+    
+    m_consoleText->append(tr("[Attributes] Attribute table opened for: %1").arg(layerName));
+}
+
+void MainWindow::onZoomToFeature(const QString& layerPath, int fid) {
+    m_consoleText->append(tr("[Zoom] Zooming to feature FID %1 in layer: %2").arg(fid).arg(QFileInfo(layerPath).fileName()));
+    
+    // Open the vector dataset
+    GDALDataset* ds = (GDALDataset*)GDALOpenEx(layerPath.toUtf8().constData(),
+        GDAL_OF_VECTOR | GDAL_OF_READONLY, nullptr, nullptr, nullptr);
+    
+    if (!ds) {
+        m_consoleText->append(tr("[Zoom] Error: Failed to open layer"));
+        return;
+    }
+    
+    // Get the first layer
+    OGRLayer* layer = ds->GetLayer(0);
+    if (!layer) {
+        m_consoleText->append(tr("[Zoom] Error: No layers found"));
+        GDALClose(ds);
+        return;
+    }
+    
+    // Get the feature by FID
+    OGRFeature* feat = layer->GetFeature(fid);
+    if (!feat) {
+        m_consoleText->append(tr("[Zoom] Error: Feature FID %1 not found").arg(fid));
+        GDALClose(ds);
+        return;
+    }
+    
+    // Get the geometry
+    OGRGeometry* geom = feat->GetGeometryRef();
+    if (!geom) {
+        m_consoleText->append(tr("[Zoom] Error: Feature has no geometry"));
+        OGRFeature::DestroyFeature(feat);
+        GDALClose(ds);
+        return;
+    }
+    
+    // Get the envelope (bounding box) of the geometry
+    OGREnvelope envelope;
+    geom->getEnvelope(&envelope);
+    
+    // Transform to WGS84 if needed
+    OGRSpatialReference* sourceSRS = layer->GetSpatialRef();
+    if (sourceSRS) {
+        OGRSpatialReference wgs84;
+        wgs84.SetWellKnownGeogCS("WGS84");
+        wgs84.SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
+        
+        if (!sourceSRS->IsSame(&wgs84)) {
+            OGRCoordinateTransformation* coordTrans = OGRCreateCoordinateTransformation(sourceSRS, &wgs84);
+            if (coordTrans) {
+                // Transform the envelope corners
+                double minX = envelope.MinX, minY = envelope.MinY;
+                double maxX = envelope.MaxX, maxY = envelope.MaxY;
+                
+                if (coordTrans->Transform(1, &minX, &minY) && 
+                    coordTrans->Transform(1, &maxX, &maxY)) {
+                    envelope.MinX = minX;
+                    envelope.MinY = minY;
+                    envelope.MaxX = maxX;
+                    envelope.MaxY = maxY;
+                }
+                
+                OCTDestroyCoordinateTransformation(coordTrans);
+            }
+        }
+    }
+    
+    // Calculate center and zoom level
+    double centerLat = (envelope.MinY + envelope.MaxY) / 2.0;
+    double centerLon = (envelope.MinX + envelope.MaxX) / 2.0;
+    
+    // Calculate appropriate zoom level based on extent
+    double latExtent = envelope.MaxY - envelope.MinY;
+    double lonExtent = envelope.MaxX - envelope.MinX;
+    double maxExtent = std::max(latExtent, lonExtent);
+    
+    // Determine zoom level (simplified calculation)
+    // Zoom levels: smaller extent = higher zoom
+    int zoomLevel = 15; // Default for small features
+    if (maxExtent > 10.0) {
+        zoomLevel = 4;  // Continental scale
+    } else if (maxExtent > 1.0) {
+        zoomLevel = 8;  // Regional scale
+    } else if (maxExtent > 0.1) {
+        zoomLevel = 11; // City scale
+    } else if (maxExtent > 0.01) {
+        zoomLevel = 13; // Neighborhood scale
+    } else if (maxExtent > 0.001) {
+        zoomLevel = 15; // Street scale
+    } else {
+        zoomLevel = 17; // Building scale
+    }
+    
+    // Apply zoom to map widget (only in 2D mode)
+    if (m_mapWidget && !m_is3DMode) {
+        m_mapWidget->setCenter(centerLat, centerLon);
+        m_mapWidget->setZoom(zoomLevel);
+        
+        // Highlight the feature in cyan
+        m_mapWidget->highlightFeature(layerPath, fid);
+        
+        m_consoleText->append(tr("[Zoom] Zoomed to feature at (%.6f, %.6f), zoom level %3")
+            .arg(centerLat).arg(centerLon).arg(zoomLevel));
+    } else if (m_is3DMode) {
+        m_consoleText->append(tr("[Zoom] Note: Zoom to feature only works in 2D mode. Switch to 2D view first."));
+    }
+    
+    // Clean up
+    OGRFeature::DestroyFeature(feat);
+    GDALClose(ds);
+}
+
+void MainWindow::onCustomizeStyle(const QString& layerPath, const QString& layerName) {
+    m_consoleText->append(tr("[Style] Opening style customization for: %1").arg(layerName));
+    
+    // Determine geometry type
+    QString geometryType = "Unknown";
+    GDALDataset* ds = (GDALDataset*)GDALOpenEx(layerPath.toUtf8().constData(),
+        GDAL_OF_VECTOR | GDAL_OF_READONLY, nullptr, nullptr, nullptr);
+    
+    if (ds) {
+        OGRLayer* layer = ds->GetLayer(0);
+        if (layer) {
+            OGRFeatureDefn* layerDefn = layer->GetLayerDefn();
+            OGRwkbGeometryType geomType = layerDefn->GetGeomType();
+            OGRwkbGeometryType flatType = wkbFlatten(geomType);
+            
+            switch (flatType) {
+                case wkbPoint:
+                case wkbMultiPoint:
+                    geometryType = "Point";
+                    break;
+                case wkbLineString:
+                case wkbMultiLineString:
+                    geometryType = "LineString";
+                    break;
+                case wkbPolygon:
+                case wkbMultiPolygon:
+                    geometryType = "Polygon";
+                    break;
+                default:
+                    geometryType = "Mixed";
+                    break;
+            }
+        }
+        GDALClose(ds);
+    }
+    
+    // Get current style or create default
+    VectorStyle currentStyle;
+    if (m_mapWidget && m_mapWidget->hasCustomStyle(layerPath)) {
+        currentStyle = m_mapWidget->getLayerStyle(layerPath);
+    }
+    
+    // Open style dialog
+    VectorStyleDialog* dialog = new VectorStyleDialog(layerName, geometryType, currentStyle, this);
+    
+    if (dialog->exec() == QDialog::Accepted) {
+        VectorStyle newStyle = dialog->getStyle();
+        
+        // Apply style to map widget
+        if (m_mapWidget) {
+            m_mapWidget->setLayerStyle(layerPath, newStyle);
+        }
+        
+        // Save style to vector's JSON sidecar
+        QString jsonPath = layerPath + ".json";
+        QFile jsonFile(jsonPath);
+        
+        QJsonObject metadata;
+        
+        // Load existing metadata if file exists
+        if (jsonFile.exists() && jsonFile.open(QIODevice::ReadOnly)) {
+            QJsonDocument doc = QJsonDocument::fromJson(jsonFile.readAll());
+            if (!doc.isNull() && doc.isObject()) {
+                metadata = doc.object();
+            }
+            jsonFile.close();
+        }
+        
+        // Add/update style section
+        metadata["style"] = newStyle.toJson();
+        
+        // Write back to file
+        if (jsonFile.open(QIODevice::WriteOnly)) {
+            QJsonDocument doc(metadata);
+            jsonFile.write(doc.toJson(QJsonDocument::Indented));
+            jsonFile.close();
+            m_consoleText->append(tr("[Style] Style saved to: %1").arg(QFileInfo(jsonPath).fileName()));
+        } else {
+            m_consoleText->append(tr("[Style] Warning: Could not save style to JSON sidecar"));
+        }
+        
+        m_consoleText->append(tr("[Style] Custom style applied to: %1").arg(layerName));
+    } else {
+        m_consoleText->append(tr("[Style] Style customization cancelled for: %1").arg(layerName));
+    }
+    
+    delete dialog;
+}
+
+void MainWindow::onFeatureClicked(double lat, double lon) {
+    std::cout << "[MainWindow] Feature clicked at: " << lat << ", " << lon << "\n";
+    
+    if (!m_mapWidget) return;
+    
+    // Query vector features at clicked point
+    QVector<MapWidget::VectorFeature> vectorFeatures = m_mapWidget->queryVectorsAtPoint(lat, lon, 10.0);
+    
+    if (vectorFeatures.isEmpty()) {
+        std::cout << "[MainWindow] No features found at click location\n";
+        return;
+    }
+    
+    // Convert MapWidget::VectorFeature to IdentifiedFeature for dialog
+    QList<IdentifiedFeature> identifiedFeatures;
+    
+    for (const auto& vf : vectorFeatures) {
+        IdentifiedFeature feature;
+        feature.layerName = vf.layerName;
+        feature.layerPath = vf.filePath;
+        feature.fid = vf.featureId;
+        feature.geometryType = vf.geometryType;
+        
+        // Add basic geometry info
+        feature.geometryInfo["CRS"] = vf.crs;
+        
+        // Convert attributes to QVariantMap
+        for (auto it = vf.attributes.begin(); it != vf.attributes.end(); ++it) {
+            feature.attributes[it.key()] = QVariant(it.value());
+        }
+        
+        // Maintain field order (FID first, then alphabetical)
+        feature.fieldOrder.append("FID");
+        feature.attributes["FID"] = QString::number(vf.featureId);
+        
+        QStringList fieldNames = vf.attributes.keys();
+        fieldNames.sort();
+        for (const QString& fieldName : fieldNames) {
+            feature.fieldOrder.append(fieldName);
+        }
+        
+        // Add geometry-specific calculations
+        // TODO: Calculate area/length/coordinates using GDAL
+        
+        identifiedFeatures.append(feature);
+    }
+    
+    // Create and show feature identify dialog
+    FeatureIdentifyDialog* dialog = new FeatureIdentifyDialog(this);
+    dialog->setFeatures(identifiedFeatures);
+    
+    // Connect dialog signals
+    connect(dialog, &FeatureIdentifyDialog::zoomToFeature, this, &MainWindow::onZoomToFeature);
+    connect(dialog, &FeatureIdentifyDialog::flashFeature, this, &MainWindow::onFlashFeature);
+    
+    dialog->show();
+    
+    m_consoleText->append(tr("[Info] Identified %1 feature(s) at clicked location").arg(identifiedFeatures.size()));
+}
+
+void MainWindow::onFlashFeature(const QString& layerPath, int fid) {
+    std::cout << "[MainWindow] Flashing feature: " << layerPath.toStdString() << " FID=" << fid << "\n";
+    
+    if (!m_mapWidget) return;
+    
+    // Highlight the feature briefly
+    m_mapWidget->highlightFeature(layerPath, fid);
+    
+    // Clear highlight after 2 seconds
+    QTimer::singleShot(2000, this, [this]() {
+        if (m_mapWidget) {
+            m_mapWidget->clearHighlight();
+        }
+    });
+    
+    m_consoleText->append(tr("[Map] Flashing feature (FID: %1)").arg(fid));
+}
+
+void MainWindow::onMoreInfoRequested(double lat, double lon) {
+    std::cout << "[MainWindow] More Info requested for: " << lat << ", " << lon << "\n";
+    m_consoleText->append(tr("[AI] Researching location: %1°N, %2°E...").arg(lat, 0, 'f', 4).arg(lon, 0, 'f', 4));
+    
+    // Create a temporary output file for the Perplexity search result
+    QString tempOutputPath = QDir::temp().filePath(QString("perplexity_search_%1_%2.md")
+                                                       .arg(QDateTime::currentMSecsSinceEpoch())
+                                                       .arg(QRandomGenerator::global()->bounded(10000)));
+    
+    // Construct query for geographic intelligence about this location
+    QString query = QString("Provide detailed geographic intelligence about the location at coordinates %1°N, %2°E. "
+                           "Include information about: "
+                           "1) What is this place (city, region, landmark)? "
+                           "2) Notable geographic features, terrain, or topography "
+                           "3) Climate and environmental characteristics "
+                           "4) Economic activities and land use in this area "
+                           "5) Any significant infrastructure, resources, or points of interest "
+                           "6) Demographic and cultural context if applicable. "
+                           "Be specific and factual.")
+                       .arg(lat, 0, 'f', 6).arg(lon, 0, 'f', 6);
+    
+    // Build parameters for perplexity_search tool
+    QVariantMap params;
+    params["query"] = query;
+    params["location"] = QString("%1,%2").arg(lat, 0, 'f', 6).arg(lon, 0, 'f', 6);
+    params["model"] = "sonar-reasoning";  // Use the most advanced Perplexity model
+    params["max_tokens"] = 4000;
+    params["temperature"] = 0.2;
+    params["recency"] = "month";
+    params["format"] = "markdown";
+    params["output"] = tempOutputPath;
+    params["no_citations"] = false;
+    
+    // Connect to operationCompleted signal to handle the result
+    connect(m_backend, &BackendInterface::operationCompleted, this,
+            [this, lat, lon, tempOutputPath](const QString& toolName, const QString& message) {
+        if (toolName == "perplexity_search") {
+            // Read the output file
+            QFile resultFile(tempOutputPath);
+            QString content;
+            if (resultFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                QTextStream in(&resultFile);
+                content = in.readAll();
+                resultFile.close();
+            } else {
+                content = "Error: Could not read Perplexity search results.";
+            }
+            
+            // Create and show the chat dialog with initial content
+            PerplexityChatDialog* chatDialog = new PerplexityChatDialog(
+                m_backend, lat, lon, content, this
+            );
+            chatDialog->setAttribute(Qt::WA_DeleteOnClose);
+            chatDialog->show();
+            
+            m_consoleText->append(tr("[AI] Research complete. Chat dialog opened."));
+            
+            // Clean up temp file
+            QFile::remove(tempOutputPath);
+            
+            // Disconnect this specific lambda
+            disconnect(m_backend, &BackendInterface::operationCompleted, this, nullptr);
+        }
+    }, Qt::UniqueConnection);
+    
+    // Connect to operationFailed signal
+    connect(m_backend, &BackendInterface::operationFailed, this,
+            [this, tempOutputPath](const QString& toolName, const QString& error) {
+        if (toolName == "perplexity_search") {
+            QMessageBox::warning(this, tr("AI Research Failed"),
+                               tr("Failed to fetch AI research:\n%1").arg(error));
+            m_consoleText->append(tr("[AI] Research failed: %1").arg(error));
+            
+            // Clean up temp file
+            QFile::remove(tempOutputPath);
+            
+            // Disconnect this specific lambda
+            disconnect(m_backend, &BackendInterface::operationFailed, this, nullptr);
+        }
+    }, Qt::UniqueConnection);
+    
+    // Run the Perplexity search in background
+    m_backend->runTool("perplexity_search", params);
 }
 
 } // namespace gui

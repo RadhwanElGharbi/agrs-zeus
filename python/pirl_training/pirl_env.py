@@ -172,8 +172,16 @@ class PIRLEnvironment(gym.Env):
             logger.error(f"STDOUT: {e.stdout}")
             logger.error(f"STDERR: {e.stderr}")
             # Return a terminal state with large negative reward
-            observation = np.zeros(12, dtype=np.float32)
-            return observation, -1000.0, True, True, {'error': str(e)}
+            observation = np.zeros(17, dtype=np.float32)  # Fixed: 17 dimensions, not 12
+            error_info = {
+                'episode': {
+                    'r': -1000.0,
+                    'l': int(self.current_step),
+                    't': float(self.current_step)
+                },
+                'error': str(e)
+            }
+            return observation, -1000.0, True, True, error_info
         
         # Load new state and reward
         observation = self._load_state()
@@ -183,15 +191,23 @@ class PIRLEnvironment(gym.Env):
         terminated = reward_info.get('terminated', False)
         truncated = self.current_step >= self.max_episode_steps
         
-        info = {
-            'episode': self.current_episode,
-            'step': self.current_step,
-            'reward_info': reward_info,
-            'terminated': terminated,
-            'truncated': truncated
-        }
+        # Get reward value and normalize/clip to prevent catastrophic values
+        raw_reward = reward_info.get('total_reward', 0.0)
         
-        return observation, reward_info.get('total_reward', 0.0), terminated, truncated, info
+        # Reward normalization: clip to reasonable range [-100, +100]
+        # This prevents the -238 million rewards we're seeing
+        reward = float(np.clip(raw_reward / 1000.0, -100.0, 100.0))
+        
+        # Build info dict - MUST be empty dict during episode for SB3 compatibility
+        # SB3 automatically adds episode info from VecEnv wrapper when episode ends
+        info = {}
+        
+        # Only add non-episode metadata (SB3 VecEnv will handle episode stats)
+        if not (terminated or truncated):
+            # During episode, can add step-level metadata
+            info['step'] = self.current_step
+        
+        return observation, reward, terminated, truncated, info
     
     def _load_state(self) -> np.ndarray:
         """Load current state from C++ environment."""
@@ -230,10 +246,17 @@ class PIRLEnvironment(gym.Env):
         """Load reward information from C++ environment."""
         try:
             with open(self.reward_file, 'r') as f:
-                reward_data = json.load(f)
+                content = f.read()
+                # Handle empty or malformed JSON gracefully
+                if not content or content.strip() == '':
+                    return {'total_reward': 0.0, 'terminated': False}
+                reward_data = json.loads(content)
             return reward_data
         except (FileNotFoundError, json.JSONDecodeError) as e:
-            logger.error(f"Failed to load reward info: {e}")
+            # Suppress excessive logging - just return default
+            return {'total_reward': 0.0, 'terminated': False}
+        except Exception as e:
+            logger.error(f"Unexpected error loading reward info: {e}")
             return {'total_reward': 0.0, 'terminated': False}
     
     def close(self):

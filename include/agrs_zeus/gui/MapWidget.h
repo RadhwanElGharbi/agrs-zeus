@@ -13,9 +13,13 @@
 #include <QImage>
 #include <QVector>
 #include <QContextMenuEvent>
+#include <QMap>
 
 namespace agrs {
 namespace gui {
+
+// Forward declaration
+struct VectorStyle;
 
 /**
  * @brief Interactive 2D map widget with tile-based rendering
@@ -60,12 +64,24 @@ public:
     // Overlay layers (basic rendering)
     bool addRasterLayer(const QString& filePath);
     bool addVectorLayer(const QString& filePath);
+    bool addAOILayer(const QString& filePath);  // AOI with special red styling
+    bool addStartPointMarker(const QString& filePath, double lat, double lon);  // Start point marker
+    bool addEndPointMarker(const QString& filePath, double lat, double lon);    // End point marker
     void clearOverlays();
     
     // Layer visibility and ordering
     void setLayerVisible(const QString& layerPath, bool visible);
     void setLayerOrder(const QStringList& orderedPaths);
     int getLayerCount() const { return m_rasterOverlays.size() + m_vectorOverlays.size(); }
+    
+    // Feature highlighting
+    void highlightFeature(const QString& layerPath, int fid);
+    void clearHighlight();
+    
+    // Custom styling
+    void setLayerStyle(const QString& layerPath, const VectorStyle& style);
+    VectorStyle getLayerStyle(const QString& layerPath) const;
+    bool hasCustomStyle(const QString& layerPath) const;
     
     // Feature inspection structures
     struct RasterSample {
@@ -103,8 +119,9 @@ signals:
     void coordinatesChanged(double lat, double lon);
     void zoomChanged(int zoom);
     void mapMoved();
-    void moreInfoRequested(double lat, double lon);
+    void moreInfoRequested(double lat, double lon);  // Right-click "More Info Here"
     void featureIdentifyRequested(double lat, double lon); // Shift+Click for feature inspection
+    void featureClicked(double lat, double lon);  // Regular click for feature popup
     
 protected:
     void paintEvent(QPaintEvent* event) override;
@@ -156,13 +173,24 @@ private:
         QString path;
         QVector<QVector<QPointF>> lines;    // list of line strings (lat,lon)
         QVector<QVector<QPointF>> polygons; // outline rings (lat,lon)
+        QVector<QPointF> points;            // individual points (lat,lon)
         bool valid{false};
         bool visible{true}; // visibility toggle
+        bool isAOI{false};  // special styling for Area of Interest
+        bool isStartPoint{false};  // special styling for start point marker
+        bool isEndPoint{false};    // special styling for end point marker
     };
     QVector<RasterOverlay> m_rasterOverlays;
     QVector<VectorOverlay> m_vectorOverlays;
     // Unified rendering order (bottom to top). Contains file paths.
     QStringList m_layerOrder;
+    
+    // Highlighted feature (for zoom-to-feature visualization)
+    VectorOverlay m_highlightedFeature;
+    bool m_hasHighlight{false};
+    
+    // Custom styles per layer
+    QMap<QString, VectorStyle> m_layerStyles;
     
     // Tile cache
     QHash<TileKey, QPixmap> m_tileCache;
@@ -173,6 +201,8 @@ private:
     // Mouse interaction
     bool m_panning;
     QPoint m_lastMousePos;
+    QPoint m_lastPanPos;
+    QPoint m_clickPos;  // Store click position to detect drag vs click
     QPoint m_panOffset;
     
     // Update timer

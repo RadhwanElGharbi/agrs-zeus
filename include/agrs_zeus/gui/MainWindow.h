@@ -16,10 +16,13 @@
 #include "agrs_zeus/gui/ProjectSetupWizard.h"
 #include "agrs_zeus/gui/TerminalWidget.h"
 
+class QStackedWidget;
+
 namespace agrs {
 namespace gui {
 
 class MapWidget;
+class Terrain3DWidget;
 class BackendInterface;
 
 /**
@@ -49,17 +52,29 @@ private slots:
     // Project menu
     void onProjectSettings();
     void onDataAvailability();
+    void onClipToAOI();
+    void onNewFolder();
     
     // All geospatial operations handled by Cursor CLI
     
     // View menu
     void onResetView();
+    void onToggle2D3D();
     
     // Help menu
     void onAbout();
     
     // Map viewer signals
     void onCoordinatesChanged(double lat, double lon);
+    void onFeatureClicked(double lat, double lon);
+    void onMoreInfoRequested(double lat, double lon);
+    
+    // Layer tree context menu
+    void onLayerTreeContextMenu(const QPoint& pos);
+    void onOpenAttributeTable(const QString& layerPath, const QString& layerName);
+    void onCustomizeStyle(const QString& layerPath, const QString& layerName);
+    void onZoomToFeature(const QString& layerPath, int fid);
+    void onFlashFeature(const QString& layerPath, int fid);
     
 private:
     void createActions();
@@ -71,9 +86,13 @@ private:
     bool copyDirectoryRecursively(const QString& srcPath, const QString& dstPath);
     QString findAOIFileInProject(const QString& projectDir) const;
     void loadProjectLayers(const QString& projectDir);
+    void load3DTerrain(const QString& projectDir);
     
-    // Central widget (using QWidget* for flexibility)
-    QWidget* m_osgWidget;
+    // Central widget - stacked 2D/3D views
+    QStackedWidget* m_viewStack;
+    MapWidget* m_mapWidget;
+    Terrain3DWidget* m_terrain3DWidget;
+    bool m_is3DMode{false};
     
     // Dockable panels
     QDockWidget* m_layersDock;
@@ -94,6 +113,7 @@ private:
     // Toolbars
     QToolBar* m_fileToolbar;
     QToolBar* m_dataToolbar;
+    QToolBar* m_viewToolbar;
     
     // Status bar
     QLabel* m_coordsLabel;

@@ -1,0 +1,22 @@
+{
+  "country": "ITA",
+  "crs": "EPSG:4326",
+  "data_type": "constrained",
+  "description": "Census-adjusted population counts",
+  "nodata": -99999,
+  "note": "To convert to density (persons/km²), multiply by 100",
+  "pixel_area": "0.01 km² (100m x 100m)",
+  "resolution_meters": 100,
+  "source": {
+    "attribution": "WorldPop (www.worldpop.org - School of Geography and Environmental Science, University of Southampton)",
+    "download_url": "https://data.worldpop.org/GIS/Population/Global_2000_2020/2020/ITA/ita_ppp_2020.tif",
+    "license": "CC-BY-4.0",
+    "name": "WorldPop",
+    "provider": "University of Southampton",
+    "url": "https://hub.worldpop.org"
+  },
+  "timestamp": "2025-10-26T21:09:50Z",
+  "tool": "worldpop_fetch",
+  "unit": "persons/pixel",
+  "year": 2020
+}

@@ -80,4 +80,4 @@ test_*.sh
 temp_*.py
 
 # Backups
-backups/
+backups/python/pirl_venv/

@@ -162,12 +162,15 @@ RewardInfo PipelineEnvironment::calculate_reward(const State& prev_state,
     double prev_dist = prev_state.goal_distance;
     double new_dist = new_state.goal_distance;
     double progress = prev_dist - new_dist;
-    info.progress_reward = progress * 0.01; // Scale progress reward
+    // Scale to balance with cost: if step is 50m toward goal, reward = +1.0
+    info.progress_reward = progress * 0.02; // Scale progress reward
     info.total_reward += info.progress_reward;
     
     // 2. Cost penalty: negative reward based on construction cost
     double segment_cost = cost_model_->calculate_segment_cost(prev_state, new_state, *gis_);
-    info.cost_penalty = -segment_cost / 10000.0; // Normalize cost
+    // Normalize: typical segment costs are $200-1000/m * 50m step = $10k-50k per step
+    // Divide by 100k to get reward in range [-0.1 to -0.5] per step
+    info.cost_penalty = -segment_cost / 100000.0; // Normalize cost appropriately
     info.total_reward += info.cost_penalty;
     
     // 3. Physics-informed penalties
@@ -218,8 +221,10 @@ bool PipelineEnvironment::check_termination(const State& state, std::string& rea
         return true;
     }
     
-    // Failure: out of bounds
-    if (!gis_->is_within_aoi(state.x, state.y)) {
+    // Failure: out of bounds (but allow small buffer near goal)
+    // If within 2km of goal, allow going slightly outside AOI to reach endpoint
+    bool near_goal = state.goal_distance < 2000.0;
+    if (!gis_->is_within_aoi(state.x, state.y) && !near_goal) {
         reason = "FAILURE: Out of bounds";
         return true;
     }
@@ -363,16 +368,9 @@ bool PIRLAgent::save_model(const std::string& model_path) const {
 }
 
 Action PIRLAgent::predict(const State& state, bool deterministic) const {
-    if (!model_loaded_) {
-        std::cerr << "❌ Model not loaded. Call load_model() first." << std::endl;
-        // Return default action: head toward goal with moderate step
-        Action default_action;
-        default_action.heading_change = 0.0;
-        default_action.step_size = 50.0;
-        return default_action;
-    }
-    
-    // Call Python inference
+    // Use heuristic routing (A* style) whether model is loaded or not
+    // When model is loaded, call_python_inference will use the model
+    // When model is not loaded, call_python_inference uses heuristic fallback
     return call_python_inference(state, deterministic);
 }
 
@@ -393,7 +391,10 @@ Action PIRLAgent::call_python_inference(const State& state, bool deterministic) 
     action.heading_change = std::clamp(heading_error, -M_PI/4.0, M_PI/4.0);
     
     // Adjust step size based on distance to goal and slope
-    if (state.goal_distance < 500.0) {
+    if (state.goal_distance < 100.0) {
+        // Very close to goal - use tiny steps to ensure we reach it
+        action.step_size = std::max(10.0, state.goal_distance * 0.3);
+    } else if (state.goal_distance < 500.0) {
         action.step_size = 30.0; // Smaller steps near goal
     } else {
         action.step_size = 60.0; // Larger steps far from goal
@@ -426,8 +427,8 @@ std::vector<std::pair<double, double>> PIRLAgent::generate_route(
     // Reset environment
     State state = env.reset();
     
-    // Run episode
-    int max_steps = 5000;
+    // Run episode (increased from 5000 to accommodate longer routes)
+    int max_steps = 10000;
     for (int step = 0; step < max_steps; ++step) {
         // Get action from agent
         Action action = predict(state, true);

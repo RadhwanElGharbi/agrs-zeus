@@ -369,15 +369,52 @@ double GISDataManager::distance_to_geometry(OGRGeometry* geom, double x, double 
 double GISDataManager::sample_raster(GDALDataset* dataset, double x, double y) const {
     if (!dataset) return 0.0;
     
+    // Get raster's spatial reference
+    const OGRSpatialReference* rasterSRS = dataset->GetSpatialRef();
+    if (!rasterSRS) {
+        std::cerr << "⚠️  Raster has no spatial reference" << std::endl;
+        return 0.0;
+    }
+    
+    // Create project spatial reference (UTM)
+    OGRSpatialReference projectSRS;
+    projectSRS.importFromEPSG(epsg_code_);
+    
+    // Check if coordinate transformation is needed
+    bool needsTransform = !rasterSRS->IsSame(&projectSRS);
+    
+    double sample_x = x;
+    double sample_y = y;
+    
+    if (needsTransform) {
+        // Create coordinate transformation
+        OGRCoordinateTransformation* transform = 
+            OGRCreateCoordinateTransformation(&projectSRS, rasterSRS);
+        
+        if (!transform) {
+            std::cerr << "⚠️  Failed to create coordinate transformation" << std::endl;
+            return 0.0;
+        }
+        
+        // Transform coordinates from project CRS to raster CRS
+        if (!transform->Transform(1, &sample_x, &sample_y)) {
+            std::cerr << "⚠️  Coordinate transformation failed" << std::endl;
+            delete transform;
+            return 0.0;
+        }
+        
+        delete transform;
+    }
+    
     // Get geotransform
     double geotransform[6];
     if (dataset->GetGeoTransform(geotransform) != CE_None) {
         return 0.0;
     }
     
-    // Convert coordinates to pixel/line
-    double pixel = (x - geotransform[0]) / geotransform[1];
-    double line = (y - geotransform[3]) / geotransform[5];
+    // Convert coordinates to pixel/line using transformed coordinates
+    double pixel = (sample_x - geotransform[0]) / geotransform[1];
+    double line = (sample_y - geotransform[3]) / geotransform[5];
     
     int px = static_cast<int>(pixel);
     int py = static_cast<int>(line);

@@ -14680,6 +14680,8 @@ int tools_pirl_reset_episode(const std::string& config_path,
             return 1;
         }
         
+        // Use fixed-point notation to avoid scientific notation issues
+        state_out << std::fixed << std::setprecision(6);
         state_out << "{\n";
         state_out << "  \"x\": " << initial_state.x << ",\n";
         state_out << "  \"y\": " << initial_state.y << ",\n";
@@ -14808,6 +14810,8 @@ int tools_pirl_step(const std::string& config_path,
             return 1;
         }
         
+        // Use fixed-point notation to avoid scientific notation issues
+        state_out << std::fixed << std::setprecision(6);
         state_out << "{\n";
         state_out << "  \"x\": " << new_state.x << ",\n";
         state_out << "  \"y\": " << new_state.y << ",\n";
@@ -14837,16 +14841,26 @@ int tools_pirl_step(const std::string& config_path,
             return 1;
         }
         
+        // Use fixed-point notation and clamp extreme values
+        reward_out << std::fixed << std::setprecision(6);
+        
+        // Clamp extreme small values to 0.0 to avoid JSON parsing issues
+        auto clamp_value = [](double val) -> double {
+            if (std::abs(val) < 1e-100) return 0.0;
+            if (!std::isfinite(val)) return 0.0;
+            return val;
+        };
+        
         reward_out << "{\n";
-        reward_out << "  \"total_reward\": " << reward_info.total_reward << ",\n";
-        reward_out << "  \"progress_reward\": " << reward_info.progress_reward << ",\n";
-        reward_out << "  \"cost_penalty\": " << reward_info.cost_penalty << ",\n";
-        reward_out << "  \"constraint_penalty\": " << reward_info.constraint_penalty << ",\n";
-        reward_out << "  \"curvature_penalty\": " << reward_info.curvature_penalty << ",\n";
-        reward_out << "  \"goal_bonus\": " << reward_info.goal_bonus << ",\n";
-        reward_out << "  \"slope_violation\": " << reward_info.slope_violation << ",\n";
-        reward_out << "  \"no_go_violation\": " << reward_info.no_go_violation << ",\n";
-        reward_out << "  \"crossing_violation\": " << reward_info.crossing_violation << ",\n";
+        reward_out << "  \"total_reward\": " << clamp_value(reward_info.total_reward) << ",\n";
+        reward_out << "  \"progress_reward\": " << clamp_value(reward_info.progress_reward) << ",\n";
+        reward_out << "  \"cost_penalty\": " << clamp_value(reward_info.cost_penalty) << ",\n";
+        reward_out << "  \"constraint_penalty\": " << clamp_value(reward_info.constraint_penalty) << ",\n";
+        reward_out << "  \"curvature_penalty\": " << clamp_value(reward_info.curvature_penalty) << ",\n";
+        reward_out << "  \"goal_bonus\": " << clamp_value(reward_info.goal_bonus) << ",\n";
+        reward_out << "  \"slope_violation\": " << clamp_value(reward_info.slope_violation) << ",\n";
+        reward_out << "  \"no_go_violation\": " << clamp_value(reward_info.no_go_violation) << ",\n";
+        reward_out << "  \"crossing_violation\": " << clamp_value(reward_info.crossing_violation) << ",\n";
         reward_out << "  \"termination_reason\": \"" << reward_info.termination_reason << "\"\n";
         reward_out << "}\n";
         reward_out.close();

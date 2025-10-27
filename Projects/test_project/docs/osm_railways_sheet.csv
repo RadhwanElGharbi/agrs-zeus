@@ -1,0 +1,440 @@
+FID,osm_id,name,railway,operator,gauge,electrified,usage,service
+1,14692060,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+2,14692061,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+3,22604000,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+4,22604001,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+5,22739987,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+6,22740002,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+7,22740007,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+8,22740014,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+9,22740017,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+10,23116329,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+11,23116345,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+12,23257787,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+13,23257791,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+14,23395070,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+15,23397937,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+16,23397938,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+17,29176565,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+18,29176573,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+19,31669689,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+20,31669690,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+21,34335107,Ferrovia San Benedetto del Tronto – Ascoli Piceno,rail,RFI,1435,contact_line,branch,
+22,34335109,Ferrovia San Benedetto del Tronto – Ascoli Piceno,rail,RFI,1435,contact_line,branch,
+23,36851616,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+24,42820772,,rail,RFI,1435,no,,siding
+25,43858524,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+26,43858525,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+27,47384460,Ferrovia San Benedetto del Tronto – Ascoli Piceno,rail,RFI,1435,contact_line,branch,
+28,47384462,Ferrovia San Benedetto del Tronto – Ascoli Piceno,rail,RFI,1435,contact_line,branch,
+29,53799948,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+30,53799949,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+31,53800089,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+32,53800090,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+33,53825345,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+34,53825349,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+35,53825785,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+36,53825848,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+37,54253244,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+38,54253256,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+39,54579335,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+40,54579337,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+41,54579342,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+42,55410246,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+43,55410247,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+44,58357906,Ferrovia San Benedetto del Tronto – Ascoli Piceno,rail,RFI,1435,contact_line,branch,
+45,58357909,Ferrovia San Benedetto del Tronto – Ascoli Piceno,rail,RFI,1435,contact_line,branch,
+46,58357916,Ferrovia San Benedetto del Tronto – Ascoli Piceno,rail,RFI,1435,contact_line,branch,
+47,58357921,Ferrovia San Benedetto del Tronto – Ascoli Piceno,rail,RFI,1435,contact_line,branch,
+48,59990734,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+49,60008711,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+50,60008713,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+51,60008718,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+52,60008721,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+53,60008726,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+54,81139224,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+55,81139236,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+56,81249943,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+57,81249949,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+58,98599808,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+59,98599816,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+60,98602394,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+61,98602398,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+62,111506151,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+63,111506157,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+64,111506162,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+65,111506171,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+66,111506174,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+67,111506184,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+68,111507566,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+69,111507569,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+70,111557182,,rail,RFI,1435,no,,siding
+71,114285139,,rail,RFI,1435,no,,yard
+72,114285144,,rail,RFI,1435,no,,siding
+73,116043167,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+74,116043187,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+75,120486814,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+76,120486815,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+77,121189046,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+78,121189048,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+79,121189049,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+80,121189050,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+81,121303173,Ferrovia San Benedetto del Tronto – Ascoli Piceno,rail,RFI,1435,contact_line,branch,
+82,121303174,Ferrovia San Benedetto del Tronto – Ascoli Piceno,rail,RFI,1435,contact_line,branch,
+83,121303175,Ferrovia San Benedetto del Tronto – Ascoli Piceno,rail,RFI,1435,contact_line,branch,
+84,121303177,Ferrovia San Benedetto del Tronto – Ascoli Piceno,rail,RFI,1435,contact_line,branch,
+85,121303178,Ferrovia San Benedetto del Tronto – Ascoli Piceno,rail,RFI,1435,contact_line,branch,
+86,121303180,Ferrovia San Benedetto del Tronto – Ascoli Piceno,rail,RFI,1435,contact_line,branch,
+87,122963584,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+88,122963585,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+89,123040415,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+90,125433532,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+91,125433534,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+92,125433535,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+93,125433545,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+94,127286245,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+95,127286246,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+96,127286248,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+97,127286249,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+98,127286250,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+99,127286251,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+100,127286254,Ferrovia San Benedetto del Tronto – Ascoli Piceno,rail,RFI,1435,contact_line,branch,
+101,129264955,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+102,129264956,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+103,131414956,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+104,131414957,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+105,131753613,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+106,131753614,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+107,148010701,Ferrovia San Benedetto del Tronto – Ascoli Piceno,rail,RFI,1435,contact_line,branch,
+108,149117254,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+109,149117258,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+110,149520017,,rail,RFI,1435,no,,yard
+111,149520019,,rail,RFI,1435,no,,siding
+112,154418474,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+113,154418475,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+114,155528280,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+115,155528283,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+116,155528284,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+117,155528285,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+118,157199295,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+119,157199296,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+120,169936494,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+121,169941298,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+122,169941306,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+123,169942975,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+124,169942980,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+125,169942981,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+126,169942982,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+127,169945234,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+128,169945235,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+129,169947269,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+130,169947270,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+131,169947564,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+132,169947565,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+133,169947566,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+134,169947567,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+135,169947845,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+136,169947847,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+137,169948276,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+138,169949679,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+139,169949681,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+140,169949686,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+141,169949689,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+142,169949832,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+143,169950086,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+144,169950087,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+145,169950330,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+146,169950331,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+147,169950529,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+148,169950530,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+149,169950531,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+150,169950532,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+151,169950962,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+152,169950963,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+153,169950966,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+154,169950967,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+155,169951191,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+156,169951192,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+157,169951544,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+158,169951545,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+159,169951546,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+160,169951621,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+161,169951937,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+162,169951943,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+163,169952777,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+164,169952778,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+165,169952877,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+166,169952878,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+167,169952879,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+168,169952880,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+169,170067230,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+170,170067299,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+171,170067300,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+172,170067437,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+173,170067438,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+174,170067441,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+175,170067446,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+176,170068122,Ferrovia San Benedetto del Tronto – Ascoli Piceno,rail,RFI,1435,contact_line,branch,
+177,170068494,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+178,170068495,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+179,170068496,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+180,170068497,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+181,170068498,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+182,170068499,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+183,170068500,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+184,170068501,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+185,170068502,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+186,170068503,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+187,170068504,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+188,170068505,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+189,170068507,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+190,170068508,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+191,170068510,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+192,170068511,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+193,170068512,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+194,170068513,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+195,170068514,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+196,170068515,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+197,170068516,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+198,170068517,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+199,170068541,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+200,170068542,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+201,170069153,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+202,170069155,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+203,170069159,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+204,178240592,,rail,,,yes,,siding
+205,178461880,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+206,178465846,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+207,178465847,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+208,178465861,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+209,178465864,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+210,178465869,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+211,178465870,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+212,178465871,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+213,178465883,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+214,178465887,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+215,178465897,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+216,178465901,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+217,181174371,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+218,181174372,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+219,183852199,,rail,RFI,1435,no,,yard
+220,183970715,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+221,183970717,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+222,186756584,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+223,191504296,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+224,191504297,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+225,222579274,Ferrovia San Benedetto del Tronto – Ascoli Piceno,rail,RFI,1435,contact_line,branch,
+226,222579275,Ferrovia San Benedetto del Tronto – Ascoli Piceno,rail,RFI,1435,contact_line,branch,
+227,222579276,Ferrovia San Benedetto del Tronto – Ascoli Piceno,rail,RFI,1435,contact_line,branch,
+228,222579277,Ferrovia San Benedetto del Tronto – Ascoli Piceno,rail,RFI,1435,contact_line,branch,
+229,222579278,Ferrovia San Benedetto del Tronto – Ascoli Piceno,rail,RFI,1435,contact_line,branch,
+230,222579279,Ferrovia San Benedetto del Tronto – Ascoli Piceno,rail,RFI,1435,contact_line,branch,
+231,222579281,,rail,RFI,1435,,,yard
+232,222579282,,rail,RFI,1435,contact_line,,yard
+233,222579283,,rail,RFI,1435,,,yard
+234,222579284,,rail,RFI,1435,,,yard
+235,222579286,,rail,RFI,1435,contact_line,,siding
+236,222579287,,rail,RFI,1435,contact_line,,siding
+237,222579288,,rail,RFI,1435,,,yard
+238,222579289,,rail,RFI,1435,contact_line,,siding
+239,222579291,,rail,RFI,1435,,,yard
+240,222579292,,rail,RFI,1435,no,,yard
+241,222579293,,rail,RFI,1435,contact_line,,crossover
+242,222579294,,rail,RFI,1435,contact_line,,crossover
+243,222579295,,rail,RFI,1435,contact_line,,crossover
+244,222579296,,rail,RFI,1435,contact_line,,siding
+245,222579297,,rail,,,,,
+246,222579300,,rail,RFI,1435,,,yard
+247,222579301,,rail,RFI,1435,,,yard
+248,222579302,,rail,RFI,1435,no,,yard
+249,222579303,,rail,RFI,1435,,,yard
+250,222579306,,rail,RFI,1435,no,,yard
+251,222579309,,rail,RFI,1435,no,,yard
+252,222579310,,rail,RFI,1435,,,yard
+253,222579311,,rail,RFI,1435,,,yard
+254,231547832,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+255,231547833,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+256,231547834,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+257,231547835,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+258,251448108,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+259,251448109,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+260,251448110,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+261,297298575,Ferrovia San Benedetto del Tronto – Ascoli Piceno,rail,RFI,1435,contact_line,branch,
+262,297298576,Ferrovia San Benedetto del Tronto – Ascoli Piceno,rail,RFI,1435,contact_line,branch,
+263,338993797,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+264,347715422,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+265,347715423,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+266,409317697,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+267,409317698,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+268,409317699,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+269,409317700,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+270,409317703,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+271,409317704,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+272,409317705,,rail,RFI,1435,,,yard
+273,409317707,,rail,RFI,1435,contact_line,,siding
+274,409317709,,rail,RFI,1435,contact_line,,siding
+275,409317710,,rail,RFI,1435,contact_line,,siding
+276,409630995,,rail,RFI,1435,,,yard
+277,409630996,,rail,RFI,1435,,,yard
+278,409998807,,rail,RFI,1435,contact_line,,siding
+279,409998808,,rail,RFI,1435,contact_line,,siding
+280,428006628,,rail,RFI,1435,contact_line,,siding
+281,428006629,,rail,RFI,1435,,,siding
+282,428006630,,rail,RFI,1435,contact_line,,crossover
+283,428018263,,rail,,,,,
+284,439082168,Ferrovia San Benedetto del Tronto – Ascoli Piceno,rail,RFI,1435,contact_line,branch,
+285,439082169,Ferrovia San Benedetto del Tronto – Ascoli Piceno,rail,RFI,1435,contact_line,branch,
+286,550008618,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+287,550008619,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+288,550008620,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+289,550008621,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+290,616810652,Ferrovia San Benedetto del Tronto – Ascoli Piceno,rail,RFI,1435,contact_line,branch,
+291,616810653,Ferrovia San Benedetto del Tronto – Ascoli Piceno,rail,RFI,1435,contact_line,branch,
+292,621632781,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+293,621632782,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+294,621632783,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+295,621632784,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+296,678686219,,rail,RFI,1435,no,,yard
+297,739765603,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+298,739765604,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+299,739770672,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+300,739770673,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+301,742893416,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+302,742893417,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+303,742893418,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+304,742893419,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+305,758542390,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+306,758542391,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+307,776644712,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+308,776644713,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+309,776644714,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+310,776644715,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+311,797382200,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+312,797382201,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+313,797386328,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+314,797386329,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+315,797665386,Ferrovia San Benedetto del Tronto – Ascoli Piceno,rail,RFI,1435,contact_line,branch,
+316,797665387,Ferrovia San Benedetto del Tronto – Ascoli Piceno,rail,RFI,1435,contact_line,branch,
+317,797665388,Ferrovia San Benedetto del Tronto – Ascoli Piceno,rail,RFI,1435,contact_line,branch,
+318,798870697,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+319,798870698,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+320,798870699,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+321,798870700,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+322,813707133,,rail,RFI,1435,contact_line,,siding
+323,924969269,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+324,924969270,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+325,999029836,,rail,RFI,1435,no,,yard
+326,999029837,,rail,RFI,1435,no,,yard
+327,999029838,,rail,RFI,1435,no,,yard
+328,999029839,,rail,RFI,1435,no,,yard
+329,999029840,,rail,RFI,1435,no,,yard
+330,999037945,,rail,RFI,1435,contact_line,,crossover
+331,1026802180,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+332,1026802181,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+333,1073513146,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+334,1073513147,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+335,1082088293,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+336,1087231945,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+337,1087231946,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+338,1090425982,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+339,1090425983,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+340,1090425984,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+341,1090425985,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+342,1090701894,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+343,1090701895,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+344,1090701896,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+345,1090701897,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+346,1090701900,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+347,1090701901,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+348,1090701902,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+349,1090701903,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+350,1090701910,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+351,1090701911,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+352,1090701912,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+353,1090701913,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+354,1090701917,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+355,1090701918,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+356,1090701919,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+357,1090701920,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+358,1090701923,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+359,1090701924,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+360,1090701925,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+361,1090701926,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+362,1090701928,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+363,1090701929,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+364,1090701930,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+365,1090701931,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+366,1090701938,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+367,1090701939,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+368,1090701940,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+369,1090701941,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+370,1104401664,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+371,1161501754,,rail,RFI,1435,contact_line,siding,siding
+372,1161501755,,rail,RFI,1435,contact_line,siding,siding
+373,1161501756,,rail,RFI,1435,contact_line,siding,siding
+374,1161501757,,rail,RFI,1435,contact_line,siding,siding
+375,1161501758,,rail,RFI,1435,contact_line,siding,siding
+376,1161501759,,rail,,1435,contact_line,siding,siding
+377,1161501760,,rail,RFI,1435,contact_line,siding,siding
+378,1161501761,,rail,RFI,1435,contact_line,siding,crossover
+379,1161501762,,rail,RFI,1435,contact_line,siding,crossover
+380,1161501763,,rail,RFI,1435,contact_line,siding,crossover
+381,1161501764,,rail,RFI,1435,contact_line,siding,crossover
+382,1161501765,,rail,RFI,1435,no,siding,siding
+383,1161501766,,rail,,1435,no,siding,siding
+384,1161501767,,rail,,1435,no,siding,siding
+385,1161501768,,rail,RFI,1435,no,siding,siding
+386,1161501769,,rail,RFI,1435,no,siding,siding
+387,1161501770,,rail,RFI,1435,no,siding,siding
+388,1161501771,,rail,RFI,1435,no,siding,siding
+389,1161544107,,rail,RFI,1435,no,yard,yard
+390,1161544108,,rail,RFI,1435,contact_line,siding,siding
+391,1161544109,,rail,RFI,1435,contact_line,siding,siding
+392,1161544110,,rail,RFI,1435,no,yard,yard
+393,1161544111,,rail,RFI,1435,no,yard,yard
+394,1161544112,,rail,RFI,1435,no,yard,yard
+395,1161544113,,rail,RFI,1435,no,yard,yard
+396,1172775885,,rail,,1435,no,,yard
+397,1172775886,,rail,,1435,no,,yard
+398,1172775887,,rail,,1435,no,,yard
+399,1172775888,,rail,,1435,no,,yard
+400,1172775889,,rail,,1435,no,,yard
+401,1172775890,,rail,,1435,no,,yard
+402,1245842718,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+403,1245842719,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+404,1245842720,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+405,1245842721,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+406,1254915389,,rail,RFI,1435,contact_line,,siding
+407,1264829274,,rail,,,,,siding
+408,1264829275,,rail,,,,,siding
+409,1264829276,,rail,,,,,siding
+410,1264829280,,rail,,,,,siding
+411,1264829281,,rail,,,,,siding
+412,1284742655,Ferrovia San Benedetto del Tronto – Ascoli Piceno,rail,RFI,1435,contact_line,branch,
+413,1284742656,Ferrovia San Benedetto del Tronto – Ascoli Piceno,rail,RFI,1435,contact_line,branch,
+414,1296361552,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+415,1296361553,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+416,1296361554,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+417,1296361555,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+418,1342376664,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+419,1342376665,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+420,1342389247,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+421,1342389248,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+422,1348029353,,rail,,1435,contact_line,,siding
+423,1348029354,,rail,,1435,contact_line,,siding
+424,1348029355,,rail,,1435,contact_line,,siding
+425,1348029356,,rail,RFI,1435,contact_line,,siding
+426,1348029357,,rail,RFI,1435,contact_line,,siding
+427,1354478039,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+428,1354478040,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+429,1354478046,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+430,1354478047,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+431,1392543976,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+432,1392543977,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+433,1392543996,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+434,1392543997,Ferrovia Civitanova Marche – Fabriano,rail,RFI,1435,no,branch,
+435,1423924847,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+436,1423924848,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+437,1423924849,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+438,1423924850,Ferrovia Adriatica,rail,RFI,1435,contact_line,main,
+439,1444290131,,rail,RFI,1435,contact_line,,crossover

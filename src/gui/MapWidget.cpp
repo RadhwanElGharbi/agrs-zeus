@@ -1,8 +1,10 @@
 #include "agrs_zeus/gui/MapWidget.h"
+#include "agrs_zeus/gui/VectorStyleDialog.h"
 #include <QPainter>
 #include <QMouseEvent>
 #include <QWheelEvent>
 #include <QKeyEvent>
+#include <QContextMenuEvent>
 #include <QNetworkRequest>
 #include <QUrl>
 #include <QtMath>
@@ -273,6 +275,248 @@ void MapWidget::drawOverlays(QPainter& painter) {
         // Calculate scale-dependent pen width (wider lines at higher zoom)
         double penWidth = std::max(2.0, m_zoom / 3.0);
         
+        // Special styling for AOI (Area of Interest) - bright red outline, no fill
+        if (vo.isAOI) {
+            // AOI polygons: bright red outline only (NO FILL!)
+            painter.setBrush(Qt::NoBrush);  // Explicitly disable fill
+            
+            for (const auto& ring : vo.polygons) {
+                QPainterPath path;
+                bool first = true;
+                for (const QPointF& ll : ring) {
+                    QPoint p = geoToScreen(ll.x(), ll.y());
+                    if (first) { path.moveTo(p); first = false; }
+                    else { path.lineTo(p); }
+                }
+                path.closeSubpath();
+                
+                // White outline halo for contrast
+                painter.setPen(QPen(QColor(255, 255, 255, 200), penWidth + 2));
+                painter.drawPath(path);
+                
+                // Bright red outline on top
+                painter.setPen(QPen(QColor(255, 0, 0, 255), penWidth + 1));  // Bright red, thicker
+                painter.drawPath(path);
+            }
+            return;  // Skip regular styling for AOI
+        }
+        
+        // Special styling for Start Point Marker - green circle with "S"
+        // ONLY draw points, never draw lines or polygons for markers
+        if (vo.isStartPoint) {
+            if (debug) {
+                std::cout << "[MapWidget] Drawing START point marker: " << vo.points.size() << " points, "
+                          << vo.lines.size() << " lines, " << vo.polygons.size() << " polygons (should be 0)\n";
+            }
+            
+            // Draw ONLY points (ignore any lines or polygons that shouldn't be there)
+            for (const QPointF& ll : vo.points) {
+                QPoint p = geoToScreen(ll.x(), ll.y());
+                
+                // Draw outer circle (white halo)
+                painter.setPen(QPen(QColor(255, 255, 255, 220), 3));
+                painter.setBrush(QColor(0, 200, 0, 255));  // Bright green
+                painter.drawEllipse(p, 12, 12);
+                
+                // Draw inner circle
+                painter.setPen(QPen(QColor(0, 150, 0, 255), 2));
+                painter.drawEllipse(p, 10, 10);
+                
+                // Draw "S" label
+                painter.setPen(QPen(QColor(255, 255, 255, 255), 2));
+                QFont font = painter.font();
+                font.setBold(true);
+                font.setPixelSize(12);
+                painter.setFont(font);
+                painter.drawText(QRect(p.x() - 10, p.y() - 10, 20, 20), 
+                                Qt::AlignCenter, "S");
+            }
+            
+            // Reset brush to prevent affecting subsequent drawings
+            painter.setBrush(Qt::NoBrush);
+            return;  // Don't draw any other geometry
+        }
+        
+        // Special styling for End Point Marker - red circle with "E"
+        // ONLY draw points, never draw lines or polygons for markers
+        if (vo.isEndPoint) {
+            if (debug) {
+                std::cout << "[MapWidget] Drawing END point marker: " << vo.points.size() << " points, "
+                          << vo.lines.size() << " lines, " << vo.polygons.size() << " polygons (should be 0)\n";
+            }
+            
+            // Draw ONLY points (ignore any lines or polygons that shouldn't be there)
+            for (const QPointF& ll : vo.points) {
+                QPoint p = geoToScreen(ll.x(), ll.y());
+                
+                // Draw outer circle (white halo)
+                painter.setPen(QPen(QColor(255, 255, 255, 220), 3));
+                painter.setBrush(QColor(200, 0, 0, 255));  // Bright red
+                painter.drawEllipse(p, 12, 12);
+                
+                // Draw inner circle
+                painter.setPen(QPen(QColor(150, 0, 0, 255), 2));
+                painter.drawEllipse(p, 10, 10);
+                
+                // Draw "E" label
+                painter.setPen(QPen(QColor(255, 255, 255, 255), 2));
+                QFont font = painter.font();
+                font.setBold(true);
+                font.setPixelSize(12);
+                painter.setFont(font);
+                painter.drawText(QRect(p.x() - 10, p.y() - 10, 20, 20), 
+                                Qt::AlignCenter, "E");
+            }
+            
+            // Reset brush to prevent affecting subsequent drawings
+            painter.setBrush(Qt::NoBrush);
+            return;  // Don't draw any other geometry
+        }
+        
+        // Check for custom style
+        if (m_layerStyles.contains(vo.path)) {
+            const VectorStyle& style = m_layerStyles[vo.path];
+            
+            // Draw points with custom symbol
+            for (const QPointF& ll : vo.points) {
+                QPoint p = geoToScreen(ll.x(), ll.y());
+                int size = style.pointSize;
+                
+                painter.setPen(QPen(style.color, 2));
+                painter.setBrush(QBrush(style.color));
+                
+                switch (style.pointSymbol) {
+                    case VectorStyle::PointSymbol::Circle:
+                        painter.drawEllipse(p, size, size);
+                        break;
+                    case VectorStyle::PointSymbol::Square:
+                        painter.drawRect(p.x() - size, p.y() - size, size * 2, size * 2);
+                        break;
+                    case VectorStyle::PointSymbol::Triangle: {
+                        QPolygon tri;
+                        tri << QPoint(p.x(), p.y() - size)
+                            << QPoint(p.x() - size, p.y() + size)
+                            << QPoint(p.x() + size, p.y() + size);
+                        painter.drawPolygon(tri);
+                        break;
+                    }
+                    case VectorStyle::PointSymbol::Diamond: {
+                        QPolygon dia;
+                        dia << QPoint(p.x(), p.y() - size)
+                            << QPoint(p.x() + size, p.y())
+                            << QPoint(p.x(), p.y() + size)
+                            << QPoint(p.x() - size, p.y());
+                        painter.drawPolygon(dia);
+                        break;
+                    }
+                    case VectorStyle::PointSymbol::Cross:
+                        painter.drawLine(p.x(), p.y() - size, p.x(), p.y() + size);
+                        painter.drawLine(p.x() - size, p.y(), p.x() + size, p.y());
+                        break;
+                    case VectorStyle::PointSymbol::X: {
+                        int offset = size * 0.707;
+                        painter.drawLine(p.x() - offset, p.y() - offset, p.x() + offset, p.y() + offset);
+                        painter.drawLine(p.x() - offset, p.y() + offset, p.x() + offset, p.y() - offset);
+                        break;
+                    }
+                    case VectorStyle::PointSymbol::Star: {
+                        QPainterPath star;
+                        double angle = -M_PI / 2;
+                        double angleStep = 2 * M_PI / 5;
+                        for (int i = 0; i < 5; ++i) {
+                            double x = p.x() + size * std::cos(angle);
+                            double y = p.y() + size * std::sin(angle);
+                            if (i == 0) star.moveTo(x, y);
+                            else star.lineTo(x, y);
+                            angle += angleStep * 2;
+                            if (angle > 2 * M_PI) angle -= 2 * M_PI;
+                        }
+                        star.closeSubpath();
+                        painter.drawPath(star);
+                        break;
+                    }
+                    case VectorStyle::PointSymbol::Pentagon: {
+                        QPolygon pent;
+                        double angle = -M_PI / 2;
+                        double angleStep = 2 * M_PI / 5;
+                        for (int i = 0; i < 5; ++i) {
+                            pent << QPoint(p.x() + size * std::cos(angle),
+                                          p.y() + size * std::sin(angle));
+                            angle += angleStep;
+                        }
+                        painter.drawPolygon(pent);
+                        break;
+                    }
+                    case VectorStyle::PointSymbol::Hexagon: {
+                        QPolygon hex;
+                        double angle = 0;
+                        double angleStep = M_PI / 3;
+                        for (int i = 0; i < 6; ++i) {
+                            hex << QPoint(p.x() + size * std::cos(angle),
+                                         p.y() + size * std::sin(angle));
+                            angle += angleStep;
+                        }
+                        painter.drawPolygon(hex);
+                        break;
+                    }
+                    case VectorStyle::PointSymbol::CustomIcon:
+                        if (!style.customIconPath.isEmpty() && QFile::exists(style.customIconPath)) {
+                            QPixmap icon(style.customIconPath);
+                            QPixmap scaled = icon.scaled(size * 2, size * 2, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+                            painter.drawPixmap(p.x() - scaled.width() / 2,
+                                              p.y() - scaled.height() / 2,
+                                              scaled);
+                        }
+                        break;
+                }
+            }
+            
+            // Draw lines with custom style
+            QPen linePen;
+            style.applyToPen(linePen);
+            painter.setPen(linePen);
+            painter.setBrush(Qt::NoBrush);
+            
+            for (const auto& line : vo.lines) {
+                QPainterPath path;
+                bool first = true;
+                for (const QPointF& ll : line) {
+                    QPoint p = geoToScreen(ll.x(), ll.y());
+                    if (first) { path.moveTo(p); first = false; }
+                    else { path.lineTo(p); }
+                }
+                painter.drawPath(path);
+            }
+            
+            // Draw polygons with custom style
+            QBrush fillBrush;
+            style.applyToBrush(fillBrush);
+            painter.setBrush(fillBrush);
+            
+            if (style.outlineEnabled) {
+                QPen outlinePen(style.outlineColor, style.outlineWidth);
+                outlinePen.setStyle(style.outlineStyle);
+                painter.setPen(outlinePen);
+            } else {
+                painter.setPen(Qt::NoPen);
+            }
+            
+            for (const auto& ring : vo.polygons) {
+                QPainterPath path;
+                bool first = true;
+                for (const QPointF& ll : ring) {
+                    QPoint p = geoToScreen(ll.x(), ll.y());
+                    if (first) { path.moveTo(p); first = false; }
+                    else { path.lineTo(p); }
+                }
+                path.closeSubpath();
+                painter.drawPath(path);
+            }
+            
+            return;  // Skip default rendering
+        }
+        
+        // Regular vector styling (non-AOI)
         // Lines: Use bright colors with high contrast over satellite imagery
         // Color scheme: Magenta with white outline (halo) for maximum visibility
         painter.setPen(QPen(QColor(255, 255, 255, 180), penWidth + 2));  // White halo
@@ -343,6 +587,75 @@ void MapWidget::drawOverlays(QPainter& painter) {
     // Draw any remaining vectors not in the order list
     for (const VectorOverlay& vo : m_vectorOverlays) {
         if (!m_layerOrder.contains(vo.path)) drawVector(vo);
+    }
+    
+    // Draw highlighted feature on top of everything (cyan color)
+    if (m_hasHighlight) {
+        painter.setRenderHint(QPainter::Antialiasing, true);
+        
+        // Cyan color for highlight
+        QColor highlightColor = QColor(0, 255, 255, 255);  // Cyan
+        QColor outlineColor = QColor(255, 255, 255, 200);   // White for halo
+        int penWidth = 4;
+        
+        // Draw points (larger cyan circles)
+        for (const QPointF& ll : m_highlightedFeature.points) {
+            QPoint p = geoToScreen(ll.x(), ll.y());
+            
+            // White halo
+            painter.setPen(QPen(outlineColor, penWidth + 2));
+            painter.setBrush(Qt::NoBrush);
+            painter.drawEllipse(p, 10, 10);
+            
+            // Cyan fill
+            painter.setPen(QPen(highlightColor, penWidth));
+            painter.setBrush(highlightColor);
+            painter.drawEllipse(p, 8, 8);
+        }
+        
+        // Draw lines (thick cyan lines)
+        for (const QVector<QPointF>& line : m_highlightedFeature.lines) {
+            if (line.size() < 2) continue;
+            
+            QVector<QPoint> screenLine;
+            for (const QPointF& ll : line) {
+                screenLine.append(geoToScreen(ll.x(), ll.y()));
+            }
+            
+            // White halo
+            painter.setPen(QPen(outlineColor, penWidth + 4, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+            painter.setBrush(Qt::NoBrush);
+            for (int i = 0; i < screenLine.size() - 1; ++i) {
+                painter.drawLine(screenLine[i], screenLine[i+1]);
+            }
+            
+            // Cyan line
+            painter.setPen(QPen(highlightColor, penWidth, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+            for (int i = 0; i < screenLine.size() - 1; ++i) {
+                painter.drawLine(screenLine[i], screenLine[i+1]);
+            }
+        }
+        
+        // Draw polygons (cyan outline, no fill)
+        for (const QVector<QPointF>& ring : m_highlightedFeature.polygons) {
+            if (ring.size() < 3) continue;
+            
+            QPolygonF screenPoly;
+            for (const QPointF& ll : ring) {
+                QPoint p = geoToScreen(ll.x(), ll.y());
+                screenPoly << QPointF(p);
+            }
+            
+            // White halo
+            painter.setPen(QPen(outlineColor, penWidth + 4, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+            painter.setBrush(Qt::NoBrush);
+            painter.drawPolygon(screenPoly);
+            
+            // Cyan outline
+            painter.setPen(QPen(highlightColor, penWidth, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+            painter.setBrush(Qt::NoBrush);
+            painter.drawPolygon(screenPoly);
+        }
     }
 }
 
@@ -501,16 +814,23 @@ bool MapWidget::addVectorLayer(const QString& filePath) {
     
     OGRSpatialReference wgs84;
     wgs84.SetWellKnownGeogCS("WGS84");
+    wgs84.SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);  // Force lon, lat order (X=lon, Y=lat)
     
     // Process all layers in the dataset
     for (int iLayer = 0; iLayer < ds->GetLayerCount(); ++iLayer) {
         OGRLayer* layer = ds->GetLayer(iLayer);
         if (!layer) continue;
         
+        std::cout << "[MapWidget] Processing layer " << iLayer << ": " << layer->GetName() 
+                  << ", feature count: " << layer->GetFeatureCount(TRUE) << "\n";
+        
         OGRSpatialReference* srcSRS = layer->GetSpatialRef();
         OGRCoordinateTransformation* coordTrans = nullptr;
         if (srcSRS && !srcSRS->IsSame(&wgs84)) {
             coordTrans = OGRCreateCoordinateTransformation(srcSRS, &wgs84);
+            std::cout << "[MapWidget] Created coordinate transform for layer " << layer->GetName() << "\n";
+        } else {
+            std::cout << "[MapWidget] No coordinate transform needed (already WGS84 or no SRS)\n";
         }
         
         layer->ResetReading();
@@ -525,7 +845,14 @@ bool MapWidget::addVectorLayer(const QString& filePath) {
             // Clone and transform geometry if needed
             OGRGeometry* geomWGS84 = geom->clone();
             if (coordTrans) {
-                geomWGS84->transform(coordTrans);
+                OGRErr err = geomWGS84->transform(coordTrans);
+                if (err != OGRERR_NONE) {
+                    std::cerr << "[MapWidget] WARNING: Coordinate transformation failed for feature (error " 
+                              << err << "), skipping\n";
+                    delete geomWGS84;
+                    OGRFeature::DestroyFeature(feat);
+                    continue;
+                }
             }
             
             // Extract coordinates based on geometry type
@@ -534,14 +861,21 @@ bool MapWidget::addVectorLayer(const QString& filePath) {
             if (geomType == wkbPoint) {
                 OGRPoint* pt = (OGRPoint*)geomWGS84;
                 QVector<QPointF> line;
-                line.append(QPointF(pt->getY(), pt->getX())); // lat, lon
+                // In WGS84: X=longitude, Y=latitude
+                // Store as QPointF(lat, lon) for geoToScreen(lat, lon)
+                double lon = pt->getX();
+                double lat = pt->getY();
+                line.append(QPointF(lat, lon));
                 overlay.lines.append(line);
             }
             else if (geomType == wkbLineString) {
                 OGRLineString* ls = (OGRLineString*)geomWGS84;
                 QVector<QPointF> line;
                 for (int i = 0; i < ls->getNumPoints(); ++i) {
-                    line.append(QPointF(ls->getY(i), ls->getX(i))); // lat, lon
+                    // In WGS84: X=longitude, Y=latitude
+                    double lon = ls->getX(i);
+                    double lat = ls->getY(i);
+                    line.append(QPointF(lat, lon));
                 }
                 overlay.lines.append(line);
             }
@@ -551,7 +885,10 @@ bool MapWidget::addVectorLayer(const QString& filePath) {
                 if (ring) {
                     QVector<QPointF> polyRing;
                     for (int i = 0; i < ring->getNumPoints(); ++i) {
-                        polyRing.append(QPointF(ring->getY(i), ring->getX(i))); // lat, lon
+                        // In WGS84: X=longitude, Y=latitude
+                        double lon = ring->getX(i);
+                        double lat = ring->getY(i);
+                        polyRing.append(QPointF(lat, lon));
                     }
                     overlay.polygons.append(polyRing);
                 }
@@ -567,7 +904,9 @@ bool MapWidget::addVectorLayer(const QString& filePath) {
                         OGRLineString* ls = (OGRLineString*)subGeom;
                         QVector<QPointF> line;
                         for (int j = 0; j < ls->getNumPoints(); ++j) {
-                            line.append(QPointF(ls->getY(j), ls->getX(j)));
+                            double lon = ls->getX(j);
+                            double lat = ls->getY(j);
+                            line.append(QPointF(lat, lon));
                         }
                         overlay.lines.append(line);
                     }
@@ -577,7 +916,9 @@ bool MapWidget::addVectorLayer(const QString& filePath) {
                         if (ring) {
                             QVector<QPointF> polyRing;
                             for (int j = 0; j < ring->getNumPoints(); ++j) {
-                                polyRing.append(QPointF(ring->getY(j), ring->getX(j)));
+                                double lon = ring->getX(j);
+                                double lat = ring->getY(j);
+                                polyRing.append(QPointF(lat, lon));
                             }
                             overlay.polygons.append(polyRing);
                         }
@@ -628,6 +969,187 @@ bool MapWidget::addVectorLayer(const QString& filePath) {
               << " (" << overlay.lines.size() << " lines, " << overlay.polygons.size() << " polygons)"
               << " bounds: (" << minLat << "," << minLon << ") to (" << maxLat << "," << maxLon << ")\n";
     
+    // Debug: Print first few coordinates
+    if (!overlay.lines.empty() && !overlay.lines.first().empty()) {
+        std::cout << "[MapWidget] First line first point (stored as QPointF): "
+                  << "x()=" << overlay.lines.first().first().x() 
+                  << ", y()=" << overlay.lines.first().first().y() << "\n";
+    }
+    if (!overlay.polygons.empty() && !overlay.polygons.first().empty()) {
+        std::cout << "[MapWidget] First polygon first point (stored as QPointF): "
+                  << "x()=" << overlay.polygons.first().first().x() 
+                  << ", y()=" << overlay.polygons.first().first().y() << "\n";
+    }
+    
+    update();
+    return true;
+}
+
+bool MapWidget::addAOILayer(const QString& filePath) {
+    // Load AOI like a vector, but with special red styling
+    GDALAllRegister();
+    GDALDataset* ds = (GDALDataset*)GDALOpenEx(filePath.toStdString().c_str(), 
+                                                GDAL_OF_VECTOR, nullptr, nullptr, nullptr);
+    if (!ds) {
+        std::cerr << "[MapWidget] Failed to open AOI: " << filePath.toStdString() << "\n";
+        return false;
+    }
+    
+    VectorOverlay overlay;
+    overlay.path = filePath;
+    overlay.isAOI = true;  // Mark as AOI for special styling
+    
+    OGRSpatialReference wgs84;
+    wgs84.SetWellKnownGeogCS("WGS84");
+    wgs84.SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
+    
+    // Process all layers
+    for (int iLayer = 0; iLayer < ds->GetLayerCount(); ++iLayer) {
+        OGRLayer* layer = ds->GetLayer(iLayer);
+        if (!layer) continue;
+        
+        std::cout << "[MapWidget] Processing AOI layer " << iLayer << ": " << layer->GetName() 
+                  << ", feature count: " << layer->GetFeatureCount(TRUE) << "\n";
+        
+        OGRSpatialReference* srcSRS = layer->GetSpatialRef();
+        OGRCoordinateTransformation* coordTrans = nullptr;
+        if (srcSRS && !srcSRS->IsSame(&wgs84)) {
+            coordTrans = OGRCreateCoordinateTransformation(srcSRS, &wgs84);
+            std::cout << "[MapWidget] Created coordinate transform for AOI layer\n";
+        }
+        
+        layer->ResetReading();
+        OGRFeature* feat;
+        while ((feat = layer->GetNextFeature()) != nullptr) {
+            OGRGeometry* geom = feat->GetGeometryRef();
+            if (!geom) {
+                OGRFeature::DestroyFeature(feat);
+                continue;
+            }
+            
+            // Clone and transform geometry
+            OGRGeometry* geomWGS84 = geom->clone();
+            if (coordTrans) {
+                OGRErr err = geomWGS84->transform(coordTrans);
+                if (err != OGRERR_NONE) {
+                    std::cerr << "[MapWidget] AOI coordinate transformation failed\n";
+                    delete geomWGS84;
+                    OGRFeature::DestroyFeature(feat);
+                    continue;
+                }
+            }
+            
+            // Extract coordinates (AOI is typically polygons)
+            OGRwkbGeometryType geomType = wkbFlatten(geomWGS84->getGeometryType());
+            
+            if (geomType == wkbPolygon) {
+                OGRPolygon* poly = (OGRPolygon*)geomWGS84;
+                OGRLinearRing* ring = poly->getExteriorRing();
+                if (ring) {
+                    QVector<QPointF> polyRing;
+                    for (int i = 0; i < ring->getNumPoints(); ++i) {
+                        double lon = ring->getX(i);
+                        double lat = ring->getY(i);
+                        polyRing.append(QPointF(lat, lon));
+                    }
+                    overlay.polygons.append(polyRing);
+                }
+            }
+            else if (geomType == wkbMultiPolygon || geomType == wkbGeometryCollection) {
+                OGRGeometryCollection* gc = (OGRGeometryCollection*)geomWGS84;
+                for (int i = 0; i < gc->getNumGeometries(); ++i) {
+                    OGRGeometry* subGeom = gc->getGeometryRef(i);
+                    if (wkbFlatten(subGeom->getGeometryType()) == wkbPolygon) {
+                        OGRPolygon* poly = (OGRPolygon*)subGeom;
+                        OGRLinearRing* ring = poly->getExteriorRing();
+                        if (ring) {
+                            QVector<QPointF> polyRing;
+                            for (int j = 0; j < ring->getNumPoints(); ++j) {
+                                double lon = ring->getX(j);
+                                double lat = ring->getY(j);
+                                polyRing.append(QPointF(lat, lon));
+                            }
+                            overlay.polygons.append(polyRing);
+                        }
+                    }
+                }
+            }
+            
+            delete geomWGS84;
+            OGRFeature::DestroyFeature(feat);
+        }
+        
+        if (coordTrans) {
+            OCTDestroyCoordinateTransformation(coordTrans);
+        }
+    }
+    
+    overlay.valid = true;
+    overlay.visible = true;
+    m_vectorOverlays.append(overlay);
+    
+    // Add to layer order (first, so it's drawn on top)
+    if (!m_layerOrder.contains(filePath)) {
+        m_layerOrder.prepend(filePath);  // Add to front for top rendering
+    }
+    
+    GDALClose(ds);
+    
+    std::cout << "[MapWidget] Loaded AOI: " << filePath.toStdString() 
+              << " (" << overlay.polygons.size() << " polygons)\n";
+    
+    update();
+    return true;
+}
+
+bool MapWidget::addStartPointMarker(const QString& filePath, double lat, double lon) {
+    VectorOverlay overlay;
+    overlay.path = filePath;
+    overlay.isStartPoint = true;
+    
+    // Add the point coordinate ONLY (clear any other geometry)
+    overlay.points.clear();
+    overlay.lines.clear();
+    overlay.polygons.clear();
+    overlay.points.append(QPointF(lat, lon));
+    
+    overlay.valid = true;
+    overlay.visible = true;
+    m_vectorOverlays.append(overlay);
+    
+    // Add to layer order (prepend so it's drawn on top)
+    if (!m_layerOrder.contains(filePath)) {
+        m_layerOrder.prepend(filePath);
+    }
+    
+    std::cout << "[MapWidget] Added start point marker at: " << lat << ", " << lon << std::endl;
+    
+    update();
+    return true;
+}
+
+bool MapWidget::addEndPointMarker(const QString& filePath, double lat, double lon) {
+    VectorOverlay overlay;
+    overlay.path = filePath;
+    overlay.isEndPoint = true;
+    
+    // Add the point coordinate ONLY (clear any other geometry)
+    overlay.points.clear();
+    overlay.lines.clear();
+    overlay.polygons.clear();
+    overlay.points.append(QPointF(lat, lon));
+    
+    overlay.valid = true;
+    overlay.visible = true;
+    m_vectorOverlays.append(overlay);
+    
+    // Add to layer order (prepend so it's drawn on top)
+    if (!m_layerOrder.contains(filePath)) {
+        m_layerOrder.prepend(filePath);
+    }
+    
+    std::cout << "[MapWidget] Added end point marker at: " << lat << ", " << lon << std::endl;
+    
     update();
     return true;
 }
@@ -636,6 +1158,184 @@ void MapWidget::clearOverlays() {
     m_rasterOverlays.clear();
     m_vectorOverlays.clear();
     update();
+}
+
+void MapWidget::highlightFeature(const QString& layerPath, int fid) {
+    // Clear previous highlight
+    m_hasHighlight = false;
+    m_highlightedFeature = VectorOverlay();
+    
+    // Open the vector dataset
+    GDALDataset* ds = (GDALDataset*)GDALOpenEx(layerPath.toUtf8().constData(),
+        GDAL_OF_VECTOR | GDAL_OF_READONLY, nullptr, nullptr, nullptr);
+    
+    if (!ds) {
+        std::cout << "[MapWidget] Highlight: Failed to open layer" << std::endl;
+        return;
+    }
+    
+    // Get the first layer
+    OGRLayer* layer = ds->GetLayer(0);
+    if (!layer) {
+        std::cout << "[MapWidget] Highlight: No layers found" << std::endl;
+        GDALClose(ds);
+        return;
+    }
+    
+    // Get the feature by FID
+    OGRFeature* feat = layer->GetFeature(fid);
+    if (!feat) {
+        std::cout << "[MapWidget] Highlight: Feature FID " << fid << " not found" << std::endl;
+        GDALClose(ds);
+        return;
+    }
+    
+    // Get the geometry
+    OGRGeometry* geom = feat->GetGeometryRef();
+    if (!geom) {
+        std::cout << "[MapWidget] Highlight: Feature has no geometry" << std::endl;
+        OGRFeature::DestroyFeature(feat);
+        GDALClose(ds);
+        return;
+    }
+    
+    // Set up coordinate transformation to WGS84
+    OGRSpatialReference* sourceSRS = layer->GetSpatialRef();
+    OGRCoordinateTransformation* coordTrans = nullptr;
+    
+    if (sourceSRS) {
+        OGRSpatialReference wgs84;
+        wgs84.SetWellKnownGeogCS("WGS84");
+        wgs84.SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
+        
+        if (!sourceSRS->IsSame(&wgs84)) {
+            coordTrans = OGRCreateCoordinateTransformation(sourceSRS, &wgs84);
+        }
+    }
+    
+    // Create highlighted overlay
+    m_highlightedFeature.path = "__HIGHLIGHT__";
+    m_highlightedFeature.valid = true;
+    m_highlightedFeature.visible = true;
+    
+    // Extract geometry based on type
+    OGRwkbGeometryType geomType = wkbFlatten(geom->getGeometryType());
+    
+    // Transform geometry to WGS84
+    OGRGeometry* geomWGS84 = geom->clone();
+    if (coordTrans && geomWGS84) {
+        geomWGS84->transform(coordTrans);
+    }
+    
+    // Extract coordinates based on geometry type
+    if (geomType == wkbPoint) {
+        OGRPoint* pt = (OGRPoint*)geomWGS84;
+        double lat = pt->getY();
+        double lon = pt->getX();
+        m_highlightedFeature.points.append(QPointF(lat, lon));
+    }
+    else if (geomType == wkbLineString) {
+        OGRLineString* line = (OGRLineString*)geomWGS84;
+        QVector<QPointF> linePoints;
+        for (int i = 0; i < line->getNumPoints(); ++i) {
+            double lon = line->getX(i);
+            double lat = line->getY(i);
+            linePoints.append(QPointF(lat, lon));
+        }
+        m_highlightedFeature.lines.append(linePoints);
+    }
+    else if (geomType == wkbPolygon) {
+        OGRPolygon* poly = (OGRPolygon*)geomWGS84;
+        OGRLinearRing* ring = poly->getExteriorRing();
+        if (ring) {
+            QVector<QPointF> polyRing;
+            for (int i = 0; i < ring->getNumPoints(); ++i) {
+                double lon = ring->getX(i);
+                double lat = ring->getY(i);
+                polyRing.append(QPointF(lat, lon));
+            }
+            m_highlightedFeature.polygons.append(polyRing);
+        }
+    }
+    else if (geomType == wkbMultiPoint) {
+        OGRMultiPoint* mp = (OGRMultiPoint*)geomWGS84;
+        for (int i = 0; i < mp->getNumGeometries(); ++i) {
+            OGRPoint* pt = (OGRPoint*)mp->getGeometryRef(i);
+            double lat = pt->getY();
+            double lon = pt->getX();
+            m_highlightedFeature.points.append(QPointF(lat, lon));
+        }
+    }
+    else if (geomType == wkbMultiLineString) {
+        OGRMultiLineString* mls = (OGRMultiLineString*)geomWGS84;
+        for (int i = 0; i < mls->getNumGeometries(); ++i) {
+            OGRLineString* line = (OGRLineString*)mls->getGeometryRef(i);
+            QVector<QPointF> linePoints;
+            for (int j = 0; j < line->getNumPoints(); ++j) {
+                double lon = line->getX(j);
+                double lat = line->getY(j);
+                linePoints.append(QPointF(lat, lon));
+            }
+            m_highlightedFeature.lines.append(linePoints);
+        }
+    }
+    else if (geomType == wkbMultiPolygon || geomType == wkbGeometryCollection) {
+        OGRGeometryCollection* gc = (OGRGeometryCollection*)geomWGS84;
+        for (int i = 0; i < gc->getNumGeometries(); ++i) {
+            OGRGeometry* subGeom = gc->getGeometryRef(i);
+            if (wkbFlatten(subGeom->getGeometryType()) == wkbPolygon) {
+                OGRPolygon* poly = (OGRPolygon*)subGeom;
+                OGRLinearRing* ring = poly->getExteriorRing();
+                if (ring) {
+                    QVector<QPointF> polyRing;
+                    for (int j = 0; j < ring->getNumPoints(); ++j) {
+                        double lon = ring->getX(j);
+                        double lat = ring->getY(j);
+                        polyRing.append(QPointF(lat, lon));
+                    }
+                    m_highlightedFeature.polygons.append(polyRing);
+                }
+            }
+        }
+    }
+    
+    // Clean up
+    if (geomWGS84) delete geomWGS84;
+    if (coordTrans) OCTDestroyCoordinateTransformation(coordTrans);
+    OGRFeature::DestroyFeature(feat);
+    GDALClose(ds);
+    
+    m_hasHighlight = true;
+    update();
+    
+    std::cout << "[MapWidget] Highlighted feature FID " << fid << " (points: " 
+              << m_highlightedFeature.points.size() << ", lines: " 
+              << m_highlightedFeature.lines.size() << ", polygons: " 
+              << m_highlightedFeature.polygons.size() << ")" << std::endl;
+}
+
+void MapWidget::clearHighlight() {
+    m_hasHighlight = false;
+    m_highlightedFeature = VectorOverlay();
+    update();
+}
+
+void MapWidget::setLayerStyle(const QString& layerPath, const VectorStyle& style) {
+    m_layerStyles[layerPath] = style;
+    update();  // Trigger repaint with new style
+    std::cout << "[MapWidget] Custom style applied to layer: " << layerPath.toStdString() << std::endl;
+}
+
+VectorStyle MapWidget::getLayerStyle(const QString& layerPath) const {
+    if (m_layerStyles.contains(layerPath)) {
+        return m_layerStyles[layerPath];
+    }
+    // Return default style
+    return VectorStyle();
+}
+
+bool MapWidget::hasCustomStyle(const QString& layerPath) const {
+    return m_layerStyles.contains(layerPath);
 }
 
 void MapWidget::setLayerVisible(const QString& layerPath, bool visible) {
@@ -748,6 +1448,7 @@ void MapWidget::mousePressEvent(QMouseEvent* event) {
         } else {
             m_panning = true;
             m_lastMousePos = event->pos();
+            m_clickPos = event->pos();  // Store click position
             setCursor(Qt::ClosedHandCursor);
         }
     }
@@ -772,17 +1473,27 @@ void MapWidget::mouseReleaseEvent(QMouseEvent* event) {
         m_panning = false;
         setCursor(Qt::ArrowCursor);
         
-        // Update center based on pan offset
-        QPointF centerPixel = latLonToPixel(m_centerLat, m_centerLon, m_zoom);
-        centerPixel += QPointF(m_panOffset.x(), m_panOffset.y());
-        QPointF newCenter = pixelToLatLon(centerPixel.x(), centerPixel.y(), m_zoom);
+        // Check if this was a click (not a drag)
+        QPoint delta = event->pos() - m_clickPos;
+        int dragDistance = std::sqrt(delta.x() * delta.x() + delta.y() * delta.y());
         
-        m_centerLat = newCenter.x();
-        m_centerLon = newCenter.y();
-        m_panOffset = QPoint(0, 0);
-        
-        update();
-        emit mapMoved();
+        if (dragDistance < 5) {  // Tolerance for click detection (5 pixels)
+            // This was a click, not a drag - identify features at this location
+            QPointF geoPos = screenToGeo(event->pos());
+            emit featureClicked(geoPos.x(), geoPos.y());
+        } else {
+            // This was a drag - update center based on pan offset
+            QPointF centerPixel = latLonToPixel(m_centerLat, m_centerLon, m_zoom);
+            centerPixel += QPointF(m_panOffset.x(), m_panOffset.y());
+            QPointF newCenter = pixelToLatLon(centerPixel.x(), centerPixel.y(), m_zoom);
+            
+            m_centerLat = newCenter.x();
+            m_centerLon = newCenter.y();
+            m_panOffset = QPoint(0, 0);
+            
+            update();
+            emit mapMoved();
+        }
     }
 }
 

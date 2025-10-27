@@ -1,0 +1,20 @@
+{
+  "type": "Feature",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "EPSG:32633"
+    }
+  },
+  "properties": {
+    "route_type": "PIRL_optimized",
+    "num_points": 2
+  },
+  "geometry": {
+    "type": "LineString",
+    "coordinates": [
+      [0, 6.9529e-310],
+      [34.6766, -36.0213]
+    ]
+  }
+}
