@@ -78,6 +78,12 @@ class PIRLEnvironment(gym.Env):
         self.state_file = self.temp_dir / 'current_state.json'
         self.action_file = self.temp_dir / 'next_action.json'
         self.reward_file = self.temp_dir / 'reward_info.json'
+        self.route_file = self.temp_dir / 'route_trajectory.json'
+        self.session_file = self.temp_dir / 'session_id.txt'
+        
+        # Route tracking (now handled by C++ session)
+        self.route_points = []
+        self.session_id = None
         
         logger.info(f"PIRL Environment initialized with config: {config_path}")
         logger.info(f"Temp directory: {self.temp_dir}")
@@ -99,6 +105,7 @@ class PIRLEnvironment(gym.Env):
         # Reset episode tracking
         self.current_step = 0
         self.current_episode += 1
+        self.route_points = []  # Clear route for new episode
         
         # Create a temporary config for this episode
         episode_config = self.temp_dir / f'episode_{self.current_episode}_config.yaml'
@@ -124,10 +131,21 @@ class PIRLEnvironment(gym.Env):
         # Load initial state
         observation = self._load_state()
         
+        # Load session ID from C++ (FIX FOR INFERENCE BUG!)
+        if self.session_file.exists():
+            with open(self.session_file, 'r') as f:
+                self.session_id = f.read().strip()
+            logger.debug(f"Session ID: {self.session_id}")
+        
+        # Track initial position
+        if len(observation) >= 2:
+            self.route_points.append([float(observation[0]), float(observation[1])])
+        
         info = {
             'episode': self.current_episode,
             'step': self.current_step,
-            'config_path': str(episode_config)
+            'config_path': str(episode_config),
+            'session_id': self.session_id
         }
         
         return observation, info
@@ -186,6 +204,10 @@ class PIRLEnvironment(gym.Env):
         # Load new state and reward
         observation = self._load_state()
         reward_info = self._load_reward_info()
+        
+        # Track route point (x, y coordinates)
+        if len(observation) >= 2:
+            self.route_points.append([float(observation[0]), float(observation[1])])
         
         # Check termination conditions
         terminated = reward_info.get('terminated', False)
@@ -269,6 +291,82 @@ class PIRLEnvironment(gym.Env):
     def render(self):
         """Render the environment (not implemented yet)."""
         logger.warning("Render method not implemented yet")
+    
+    def get_route(self) -> list:
+        """
+        Get the current route trajectory from C++ session.
+        
+        This now uses the FIX - extracts route from persistent C++ session!
+        
+        Returns:
+            List of [x, y] coordinate pairs
+        """
+        if not self.session_id:
+            logger.warning("No session ID - returning Python-tracked route")
+            return self.route_points
+        
+        # Extract route from C++ session using the new command!
+        route_file = self.temp_dir / 'session_route.geojson'
+        try:
+            result = subprocess.run([
+                'zeus', 'tools', 'pirl_get_route',
+                '--output-dir', str(self.temp_dir),
+                '--route-file', str(route_file)
+            ], capture_output=True, text=True, check=True)
+            
+            logger.info(f"Route extracted from C++ session: {route_file}")
+            
+            # Parse GeoJSON to get coordinates
+            with open(route_file, 'r') as f:
+                geojson = json.load(f)
+            
+            if 'features' in geojson and len(geojson['features']) > 0:
+                coords = geojson['features'][0]['geometry']['coordinates']
+                logger.info(f"Extracted {len(coords)} points from C++ session")
+                return coords
+            
+        except subprocess.CalledProcessError as e:
+            logger.error(f"Failed to extract route from session: {e}")
+            logger.error(f"STDOUT: {e.stdout}")
+            logger.error(f"STDERR: {e.stderr}")
+        except Exception as e:
+            logger.error(f"Error parsing route: {e}")
+        
+        # Fallback to Python-tracked route
+        logger.warning("Falling back to Python-tracked route")
+        return self.route_points
+    
+    def export_route_geojson(self, output_path: str, epsg_code: int = 32633) -> None:
+        """
+        Export the current route to GeoJSON format.
+        
+        Args:
+            output_path: Path to save GeoJSON file
+            epsg_code: EPSG code for coordinate system
+        """
+        geojson = {
+            "type": "Feature",
+            "crs": {
+                "type": "name",
+                "properties": {
+                    "name": f"EPSG:{epsg_code}"
+                }
+            },
+            "properties": {
+                "route_type": "PIRL_trained_model",
+                "num_points": len(self.route_points),
+                "episode": self.current_episode
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": self.route_points
+            }
+        }
+        
+        with open(output_path, 'w') as f:
+            json.dump(geojson, f, indent=2)
+        
+        logger.info(f"Route exported to: {output_path}")
         pass
 
 

@@ -1,0 +1,15 @@
+{
+  "training_completed": "2025-10-27T07:59:47.645427",
+  "total_timesteps": 294912,
+  "final_metrics": {
+    "mean_reward": -477000.0,
+    "explained_variance": 0.634,
+    "value_loss": 6.9e-05,
+    "policy_gradient_loss": -0.00094,
+    "clip_fraction": 0.0127
+  },
+  "best_reward": -477000.0,
+  "reward_improvement": 0.0,
+  "average_fps": 10.344827586206897,
+  "estimated_training_hours": 7.918933333333333
+}

@@ -312,3 +312,4 @@ For a typical $40M pipeline project: **$4.8M - $6M saved**
 **Model:** PIRL v1.0 (Physics-Informed Reinforcement Learning)  
 **Research Method:** Perplexity AI sonar-reasoning model with industry validation
 
+

@@ -56,6 +56,9 @@ add_library(agrs_zeus_core
   src/pirl/PIRL_Environment.cpp
   src/pirl/PIRL_Utils.cpp)
 
+# Enable position-independent code for use in shared libraries (Python bindings)
+set_target_properties(agrs_zeus_core PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
 target_include_directories(agrs_zeus_core PUBLIC
   ${PROJECT_SOURCE_DIR}/include
   ${PROJECT_BINARY_DIR}/_deps/cli11-src/include)
@@ -125,6 +128,58 @@ option(AGRS_ZEUS_BUILD_GUI "Build GUI application" ON)
 if(AGRS_ZEUS_BUILD_GUI)
   message(STATUS "GUI build enabled")
   add_subdirectory(src/gui)
+endif()
+
+# Python bindings for PIRL (pybind11)
+option(AGRS_ZEUS_BUILD_PYTHON_BINDINGS "Build Python bindings for PIRL" ON)
+if(AGRS_ZEUS_BUILD_PYTHON_BINDINGS)
+  message(STATUS "Python bindings enabled")
+  
+  # Find Python and pybind11
+  find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
+  
+  # Try to find pybind11 via pip-installed pybind11
+  execute_process(
+    COMMAND ${Python3_EXECUTABLE} -m pybind11 --cmakedir
+    OUTPUT_VARIABLE pybind11_DIR
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_QUIET
+  )
+  
+  if(pybind11_DIR)
+    message(STATUS "Found pybind11: ${pybind11_DIR}")
+    find_package(pybind11 CONFIG REQUIRED)
+  else()
+    message(STATUS "pybind11 not found via pip, fetching from GitHub")
+    FetchContent_Declare(
+      pybind11
+      GIT_REPOSITORY https://github.com/pybind/pybind11.git
+      GIT_TAG v2.11.1
+    )
+    FetchContent_MakeAvailable(pybind11)
+  endif()
+  
+  # Create the Python module
+  pybind11_add_module(pirl_native 
+    python/pirl_training/pirl_native_bindings.cpp
+  )
+  
+  target_link_libraries(pirl_native PRIVATE 
+    agrs_zeus_core
+    ${GDAL_LIBRARIES}
+  )
+  
+  target_include_directories(pirl_native PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${GDAL_INCLUDE_DIRS}
+  )
+  
+  # Install the Python module to the pirl_training directory
+  install(TARGETS pirl_native
+    LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/python/pirl_training
+  )
+  
+  message(STATUS "Python bindings will be built: pirl_native module")
 endif()
 
 include(CPack)

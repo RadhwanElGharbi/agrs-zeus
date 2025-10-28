@@ -1,0 +1,21 @@
+{
+  "attribution": "K. Johnson, M. Villani, et al. (2023). GEM Seismic Hazard Map v2023.1",
+  "bands": {
+    "1": "Peak Ground Acceleration (PGA) in %g"
+  },
+  "crs": "EPSG:4326",
+  "data_source": "GEM Global Seismic Hazard Map v2023.1",
+  "doi": "10.5281/zenodo.8409647",
+  "download_url": "https://zenodo.org/records/8409647",
+  "ground_conditions": "Reference rock (Vs30 = 760-800 m/s)",
+  "license": "CC BY-NC-SA 4.0 (Non-commercial use)",
+  "product": "pga",
+  "provider": "Global Earthquake Model (GEM) Foundation",
+  "query_bbox": "13.454779,42.857057,13.938769,43.438886",
+  "release_date": "June 2023",
+  "resolution": "~6 km (point spacing with IDW interpolation)",
+  "return_period": "475 years (10% probability in 50 years)",
+  "timestamp_utc": "2025-10-28T09:44:41Z",
+  "tool": "seismic_hazard_fetch",
+  "version": "2023.1"
+}

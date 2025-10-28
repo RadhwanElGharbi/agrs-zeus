@@ -81,3 +81,7 @@ temp_*.py
 
 # Backups
 backups/python/pirl_venv/
+python/pirl_venv/
+*.tif
+*.zip
+*.pkl

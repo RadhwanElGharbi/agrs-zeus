@@ -29,6 +29,7 @@ logger = logging.getLogger(__name__)
 # Add PIRL training directory to path
 sys.path.append('/opt/agrs/python/pirl_training')
 from pirl_env import PIRLEnvironment
+from validate_training_data import validate as validate_training_data
 
 def main():
     """Main training function."""
@@ -82,6 +83,19 @@ def main():
     logger.info(f"  Model save path: {model_save_path}")
     logger.info("")
     
+    # Pre-training data validation (fail-fast)
+    logger.info("Running pre-training data validation...")
+    report = validate_training_data(config_path)
+    validation_dir = Path(config.get('output_dir', './outputs/pirl_training'))
+    validation_dir.mkdir(parents=True, exist_ok=True)
+    with open(validation_dir / 'data_validation_report.json', 'w') as vf:
+        import json
+        json.dump(report, vf, indent=2)
+    if report.get('status') != 'ok':
+        logger.error("Pre-training validation failed. See data_validation_report.json.")
+        sys.exit(1)
+    logger.info("✅ Data validation passed.")
+
     # Create environment
     logger.info("Creating PIRL environment...")
     

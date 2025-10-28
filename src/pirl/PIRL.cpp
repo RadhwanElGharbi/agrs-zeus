@@ -347,6 +347,72 @@ void GISDataManager::load_all_data() {
         }
     }
     
+    // Load power lines (transmission lines)
+    std::string power_path = project_dir_ + "/data/vectors/power_lines.gpkg";
+    if (!fs::exists(power_path)) {
+        power_path = project_dir_ + "/data/vectors/power_lines.shp";
+    }
+    if (fs::exists(power_path)) {
+        GDALDataset* power_ds = static_cast<GDALDataset*>(
+            GDALOpenEx(power_path.c_str(), GDAL_OF_VECTOR, nullptr, nullptr, nullptr));
+        if (power_ds && power_ds->GetLayerCount() > 0) {
+            OGRLayer* layer = power_ds->GetLayer(0);
+            OGRGeometryCollection* collection = new OGRGeometryCollection();
+            OGRFeature* feature;
+            int count = 0;
+            while ((feature = layer->GetNextFeature()) != nullptr) {
+                OGRGeometry* geom = feature->GetGeometryRef();
+                if (geom) {
+                    collection->addGeometry(geom);
+                    count++;
+                }
+                OGRFeature::DestroyFeature(feature);
+            }
+            if (count > 0) {
+                power_lines_.reset(collection);
+                std::cout << "    ✅ Power lines loaded (" << count << " features)" << std::endl;
+            } else {
+                delete collection;
+            }
+            GDALClose(power_ds);
+        }
+    } else {
+        std::cerr << "    ❌ Power lines not found (REQUIRED)" << std::endl;
+    }
+    
+    // Load existing pipelines
+    std::string pipelines_path = project_dir_ + "/data/vectors/pipelines.gpkg";
+    if (!fs::exists(pipelines_path)) {
+        pipelines_path = project_dir_ + "/data/vectors/pipelines.shp";
+    }
+    if (fs::exists(pipelines_path)) {
+        GDALDataset* pipe_ds = static_cast<GDALDataset*>(
+            GDALOpenEx(pipelines_path.c_str(), GDAL_OF_VECTOR, nullptr, nullptr, nullptr));
+        if (pipe_ds && pipe_ds->GetLayerCount() > 0) {
+            OGRLayer* layer = pipe_ds->GetLayer(0);
+            OGRGeometryCollection* collection = new OGRGeometryCollection();
+            OGRFeature* feature;
+            int count = 0;
+            while ((feature = layer->GetNextFeature()) != nullptr) {
+                OGRGeometry* geom = feature->GetGeometryRef();
+                if (geom) {
+                    collection->addGeometry(geom);
+                    count++;
+                }
+                OGRFeature::DestroyFeature(feature);
+            }
+            if (count > 0) {
+                pipelines_.reset(collection);
+                std::cout << "    ✅ Existing pipelines loaded (" << count << " features)" << std::endl;
+            } else {
+                delete collection;
+            }
+            GDALClose(pipe_ds);
+        }
+    } else {
+        std::cerr << "    ❌ Existing pipelines not found (REQUIRED)" << std::endl;
+    }
+    
     std::cout << "✅ GIS data loading complete" << std::endl;
 }
 
@@ -450,23 +516,43 @@ double GISDataManager::get_elevation(double x, double y) const {
 }
 
 double GISDataManager::get_slope(double x, double y) const {
-    if (slope_) {
-        return sample_raster(slope_.get(), x, y);
+    // Primary: derive slope percent from DEM using Horn 3x3 (ArcGIS/gdaldem default)
+    if (!dem_) {
+        // Fallback: use slope raster if DEM unavailable
+        if (slope_) {
+            return sample_raster(slope_.get(), x, y);
+        }
+        return 0.0;
     }
-    
-    // Calculate slope from DEM using finite differences
-    if (!dem_) return 0.0;
-    
-    double h = 10.0; // Sample spacing in meters
-    double z0 = get_elevation(x, y);
-    double zx = get_elevation(x + h, y);
-    double zy = get_elevation(x, y + h);
-    
-    double dzdx = (zx - z0) / h;
-    double dzdy = (zy - z0) / h;
-    
-    double slope_rad = std::atan(std::sqrt(dzdx*dzdx + dzdy*dzdy));
-    return slope_rad * 180.0 / M_PI; // Convert to degrees
+
+    double geotransform[6];
+    double dx = 10.0; // fallback
+    double dy = 10.0; // fallback
+    if (dem_->GetGeoTransform(geotransform) == CE_None) {
+        if (std::abs(geotransform[1]) > 0.0) dx = std::abs(geotransform[1]);
+        if (std::abs(geotransform[5]) > 0.0) dy = std::abs(geotransform[5]);
+    }
+
+    // Sample 3x3 neighborhood elevations
+    const double z1 = get_elevation(x - dx, y + dy);
+    const double z2 = get_elevation(x,      y + dy);
+    const double z3 = get_elevation(x + dx, y + dy);
+    const double z4 = get_elevation(x - dx, y);
+    const double z5 = get_elevation(x,      y);
+    const double z6 = get_elevation(x + dx, y);
+    const double z7 = get_elevation(x - dx, y - dy);
+    const double z8 = get_elevation(x,      y - dy);
+    const double z9 = get_elevation(x + dx, y - dy);
+
+    // Horn gradient (assumes square cells; if dx != dy, scale accordingly)
+    const double denom_x = 8.0 * dx;
+    const double denom_y = 8.0 * dy;
+    const double dzdx = denom_x > 0.0 ? ((z3 + 2.0 * z6 + z9) - (z1 + 2.0 * z4 + z7)) / denom_x : 0.0;
+    const double dzdy = denom_y > 0.0 ? ((z7 + 2.0 * z8 + z9) - (z1 + 2.0 * z2 + z3)) / denom_y : 0.0;
+
+    // Percent slope = 100 * sqrt((dz/dx)^2 + (dz/dy)^2)
+    const double gradient = std::sqrt(dzdx * dzdx + dzdy * dzdy);
+    return gradient * 100.0;
 }
 
 double GISDataManager::get_aspect(double x, double y) const {
@@ -539,6 +625,24 @@ double GISDataManager::distance_to_railway(double x, double y) const {
     }
     
     return distance_to_geometry(railways_.get(), x, y);
+}
+
+double GISDataManager::distance_to_power_line(double x, double y) const {
+    if (!power_lines_) {
+        // No power line data loaded, return normalized far distance
+        return 1.0;
+    }
+    
+    return distance_to_geometry(power_lines_.get(), x, y);
+}
+
+double GISDataManager::distance_to_pipeline(double x, double y) const {
+    if (!pipelines_) {
+        // No pipeline data loaded, return normalized far distance
+        return 1.0;
+    }
+    
+    return distance_to_geometry(pipelines_.get(), x, y);
 }
 
 int GISDataManager::get_land_cover_class(double x, double y) const {

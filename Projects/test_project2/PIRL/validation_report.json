@@ -1,0 +1,101 @@
+{
+  "status": "ok",
+  "messages": [
+    {
+      "level": "info",
+      "message": "No precomputed slope.tif found. Will derive slope from DEM on-the-fly (preferred)."
+    },
+    {
+      "level": "warning",
+      "message": "Vector layer missing: /opt/agrs/Projects/test_project2/data/vectors/protected_areas.gpkg"
+    }
+  ],
+  "datasets": {
+    "dem": {
+      "path": "/opt/agrs/Projects/test_project2/data/rasters/dem.tif",
+      "epsg": 32633,
+      "pixel_size": [
+        10.0,
+        10.0
+      ],
+      "stats": {
+        "min": 0.00059262500144541,
+        "max": 1101.0645751953,
+        "mean": 186.24616894037,
+        "std": 139.43947051768
+      }
+    },
+    "landcover": {
+      "path": "/opt/agrs/Projects/test_project2/data/rasters/landcover.tif",
+      "epsg": 32633,
+      "pixel_size": [
+        10.0,
+        10.0
+      ],
+      "stats": {
+        "min": 10.0,
+        "max": 90.0,
+        "mean": 39.917200338987,
+        "std": 23.772863115277
+      }
+    },
+    "geohazards": {
+      "path": "/opt/agrs/Projects/test_project2/data/rasters/geohazards.tif",
+      "epsg": 32633,
+      "pixel_size": [
+        1000.0,
+        1000.0
+      ],
+      "stats": {
+        "min": 0.15094590000126,
+        "max": 0.21975669934775,
+        "mean": 0.16983934047994,
+        "std": 0.015358184538162
+      }
+    },
+    "soil": {
+      "path": "/opt/agrs/Projects/test_project2/data/rasters/soil.tif",
+      "epsg": 32633,
+      "pixel_size": [
+        10.0,
+        10.0
+      ],
+      "stats": {
+        "min": 50.0,
+        "max": 50.0,
+        "mean": 50.0,
+        "std": 0.0
+      }
+    },
+    "population": {
+      "path": "/opt/agrs/Projects/test_project2/data/rasters/population.tif",
+      "epsg": 32633,
+      "pixel_size": [
+        100.0,
+        100.0
+      ],
+      "stats": {
+        "min": 0.0,
+        "max": 207.76385498047,
+        "mean": 2.3949800404977,
+        "std": 8.8744972956179
+      }
+    },
+    "aoi": {
+      "path": "/opt/agrs/Projects/test_project2/data/vectors/aoi.gpkg",
+      "layers": 1
+    },
+    "water_bodies": {
+      "path": "/opt/agrs/Projects/test_project2/data/vectors/water_bodies.gpkg",
+      "layers": 1
+    },
+    "roads": {
+      "path": "/opt/agrs/Projects/test_project2/data/vectors/roads.gpkg",
+      "layers": 1
+    },
+    "railways": {
+      "path": "/opt/agrs/Projects/test_project2/data/vectors/railways.gpkg",
+      "layers": 1
+    }
+  }
+}

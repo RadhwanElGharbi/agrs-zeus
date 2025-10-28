@@ -103,10 +103,10 @@ total_distance = 0.0
 step = 0
 done = False
 
-start_x = config['start_point']['x']
-start_y = config['start_point']['y']
-end_x = config['end_point']['x']
-end_y = config['end_point']['y']
+start_x = config.get('start_x', config.get('start_point', {}).get('x', 0))
+start_y = config.get('start_y', config.get('start_point', {}).get('y', 0))
+end_x = config.get('end_x', config.get('end_point', {}).get('x', 0))
+end_y = config.get('end_y', config.get('end_point', {}).get('y', 0))
 
 print(f"📍 Start Point: ({start_x}, {start_y})")
 print(f"🎯 End Point: ({end_x}, {end_y})")

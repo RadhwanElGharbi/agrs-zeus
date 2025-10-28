@@ -693,6 +693,7 @@ struct ToolsOptions {
 	CLI::App* cmdPirlCreateConfig{nullptr};
 	CLI::App* cmdPirlResetEpisode{nullptr};
 	CLI::App* cmdPirlStep{nullptr};
+	CLI::App* cmdPirlGetRoute{nullptr};
 	
 	// PIRL options
 	std::string pirlConfigPath;
@@ -703,6 +704,7 @@ struct ToolsOptions {
 	std::string pirlReportPath;
 	std::string pirlProjectName;
 	std::string pirlActionFile;
+	std::string pirlRouteFile;
 	int pirlNumEpisodes{10000};
 	int pirlNumCorridors{5};
 	bool pirlVisualize{false};
@@ -1199,6 +1201,10 @@ int tools_pirl_reset_episode(const std::string& config_path,
 int tools_pirl_step(const std::string& config_path,
                    const std::string& action_file,
                    const std::string& output_dir);
+
+// Get route from PIRL session (FIX FOR INFERENCE BUG)
+int tools_pirl_get_route(const std::string& output_dir,
+                        const std::string& route_output_file);
 
 // Terrain Analysis functions  
 int tools_terrain_slope(const std::string& inputDEM,

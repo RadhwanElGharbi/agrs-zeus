@@ -210,14 +210,14 @@ SetupInfoPage::SetupInfoPage(MapWidget* map, QWidget* parent)
         }
         
         if (!gdalSuccess) {
-            // Fallback to Cursor CLI if GDAL fails
-            m_statusLabel->setText(tr("⚠ GDAL failed, trying Cursor AI..."));
+            // Fallback to AI if GDAL fails
+            m_statusLabel->setText(tr("⚠ GDAL failed, trying AI..."));
             QApplication::processEvents();
             
             CursorInterface cursor;
             
             if (!CursorInterface::isCursorAgentAvailable() || !CursorInterface::isCursorAgentAuthenticated()) {
-                m_statusLabel->setText(tr("✗ Both GDAL and Cursor AI failed to analyze AOI"));
+                m_statusLabel->setText(tr("✗ Both GDAL and AI failed to analyze AOI"));
                 m_progress->setVisible(false);
                 return;
             }
@@ -234,17 +234,17 @@ SetupInfoPage::SetupInfoPage(MapWidget* map, QWidget* parent)
             QString response = cursor.executePrompt(prompt, CursorInterface::Model::Sonnet45, 30000);
             
             if (response.isEmpty()) {
-                m_statusLabel->setText(tr("✗ Cursor AI analysis failed"));
+                m_statusLabel->setText(tr("✗ AI analysis failed"));
                 m_progress->setVisible(false);
                 return;
             }
             
-            // Parse centroid from Cursor response
+            // Parse centroid from AI response
             QRegularExpression centroidRegex(R"(CENTROID:\s*([-+]?\d+\.?\d*)\s*,\s*([-+]?\d+\.?\d*))");
             QRegularExpressionMatch match = centroidRegex.match(response);
             
             if (!match.hasMatch()) {
-                m_statusLabel->setText(tr("✗ Could not parse coordinates from Cursor AI"));
+                m_statusLabel->setText(tr("✗ Could not parse coordinates from AI"));
                 m_progress->setVisible(false);
                 return;
             }
@@ -259,7 +259,7 @@ SetupInfoPage::SetupInfoPage(MapWidget* map, QWidget* parent)
             QString name = QString("WGS 84 / UTM zone %1%2").arg(zone).arg(north ? "N" : "S");
             
             m_crsRecommendation->setText(tr("Recommended: %1 (EPSG:%2)").arg(name).arg(epsg));
-            m_statusLabel->setText(tr("✓ AOI analyzed (Cursor AI) - Centroid: %.4f°N, %.4f°E").arg(cenLat).arg(cenLon));
+            m_statusLabel->setText(tr("✓ AOI analyzed (AI) - Centroid: %.4f°N, %.4f°E").arg(cenLat).arg(cenLon));
             m_progress->setVisible(false);
             m_useRecommendedBtn->setEnabled(true);
             
@@ -1126,10 +1126,10 @@ void SetupConfirmPage::onGenerateAISummary() {
 void SetupConfirmPage::runAISummaryInBackground() {
     // This runs in a background thread - use QMetaObject::invokeMethod for GUI updates
     
-    // Step 1: Check Cursor Agent availability
+    // Step 1: Check AI Agent availability
     if (!CursorInterface::isCursorAgentAvailable()) {
         QMetaObject::invokeMethod(this, [this]() {
-            m_status->setText(tr("⚠ Cursor Agent not available. Install with: curl https://cursor.com/install | bash"));
+            m_status->setText(tr("⚠ AI Agent not available. Please check installation."));
             m_generate->setEnabled(true);
         }, Qt::QueuedConnection);
         return;
@@ -1137,14 +1137,14 @@ void SetupConfirmPage::runAISummaryInBackground() {
     
     if (!CursorInterface::isCursorAgentAuthenticated()) {
         QMetaObject::invokeMethod(this, [this]() {
-            m_status->setText(tr("⚠ Cursor Agent not authenticated. Run: cursor-agent login"));
+            m_status->setText(tr("⚠ AI Agent not authenticated. Please configure credentials."));
             m_generate->setEnabled(true);
         }, Qt::QueuedConnection);
         return;
     }
     
     QMetaObject::invokeMethod(this, [this]() {
-        m_status->setText(tr("Analyzing project inputs with Cursor AI..."));
+        m_status->setText(tr("Analyzing project inputs with AI..."));
     }, Qt::QueuedConnection);
     
     // Step 2: Use Cursor Agent to analyze AOI and KMZ files
@@ -1234,15 +1234,15 @@ void SetupConfirmPage::runAISummaryInBackground() {
         if (errorMsg.isEmpty()) {
             errorMsg = "Unknown error - no output received";
         }
-        cursorOutput = "Cursor AI analysis could not be completed.\nError: " + errorMsg + 
+        cursorOutput = "AI analysis could not be completed.\nError: " + errorMsg + 
                       "\n\nProceeding with available coordinate data.";
         QMetaObject::invokeMethod(this, [this]() {
-            m_status->setText(tr("⚠ Cursor analysis incomplete - proceeding..."));
+            m_status->setText(tr("⚠ AI analysis incomplete - proceeding..."));
         }, Qt::QueuedConnection);
     }
     
     QMetaObject::invokeMethod(this, [this]() {
-        m_status->setText(tr("Generating comprehensive AI summary via Perplexity..."));
+        m_status->setText(tr("Generating comprehensive AI summary..."));
     }, Qt::QueuedConnection);
     
     // Collect additional file contexts
@@ -1374,7 +1374,7 @@ void SetupConfirmPage::runAISummaryInBackground() {
         }, Qt::QueuedConnection);
     } else {
         QMetaObject::invokeMethod(this, [this]() {
-            m_status->setText(tr("✗ AI summary generation failed. Check Perplexity API credentials."));
+            m_status->setText(tr("✗ AI summary generation failed. Check API credentials."));
             m_generate->setEnabled(true);
         }, Qt::QueuedConnection);
     }

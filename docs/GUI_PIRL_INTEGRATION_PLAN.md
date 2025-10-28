@@ -602,3 +602,4 @@ QChartView* createTrainingCurve(const QVector<double>& timesteps,
 
 **End of Integration Plan**
 
+

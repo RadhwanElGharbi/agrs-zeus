@@ -714,7 +714,7 @@ void DatasetAvailabilityDialog::onAutoRecommend() {
             // Update progress
             int numFiles = filesToAttach.size();
             QMetaObject::invokeMethod(this, [this, numFiles]() {
-                m_statusLabel->setText(tr("Step 2/5: Cursor CLI analyzing project context..."));
+                m_statusLabel->setText(tr("Step 2/5: AI analyzing project context..."));
                 m_progressBar->setValue(2);
                 if (m_analysisText) {
                     m_analysisText->append("[Step 2/5] Invoking Cursor CLI for intelligent analysis...");

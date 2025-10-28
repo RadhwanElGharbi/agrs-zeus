@@ -228,6 +228,8 @@ public:
     double distance_to_water(double x, double y) const;
     double distance_to_road(double x, double y) const;
     double distance_to_railway(double x, double y) const;
+    double distance_to_power_line(double x, double y) const;
+    double distance_to_pipeline(double x, double y) const;
     
     // Query land cover
     int get_land_cover_class(double x, double y) const;
@@ -264,6 +266,8 @@ private:
     std::unique_ptr<OGRGeometry> roads_;
     std::unique_ptr<OGRGeometry> railways_;
     std::unique_ptr<OGRGeometry> cadastre_complex_;  // Complex land parcels
+    std::unique_ptr<OGRGeometry> power_lines_;       // Power transmission lines
+    std::unique_ptr<OGRGeometry> pipelines_;         // Existing pipelines
     
     // Helper: sample raster at point
     double sample_raster(GDALDataset* dataset, double x, double y) const;

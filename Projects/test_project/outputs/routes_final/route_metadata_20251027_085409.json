@@ -1,0 +1,23 @@
+{
+  "model_path": "models/pirl_italy_v1_final.zip",
+  "config_path": "pirl_training_config.yaml",
+  "generated": "2025-10-27T08:54:09.863881",
+  "steps": 1,
+  "total_reward": -13091854.148446882,
+  "route_length_m": 100.00000000025375,
+  "route_cost_usd": 0.0,
+  "progress_pct": 0.15343237737682758,
+  "final_distance_m": 61872.06220051192,
+  "num_waypoints": 2,
+  "deterministic": true,
+  "saipem_compliant": true,
+  "route_stats": {
+    "total_length_m": 100.00000000025375,
+    "total_cost_usd": 0.0,
+    "avg_slope": 945005.9375,
+    "num_water_crossings": 2,
+    "num_road_crossings": 2,
+    "num_constraint_violations": 0,
+    "curvature_max": 0.0
+  }
+}

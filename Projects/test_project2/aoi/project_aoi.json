@@ -1,0 +1,15 @@
+{
+    "aoi_file": "/opt/agrs/Projects/test_project2/aoi/aoi.kmz",
+    "crs_epsg": 32633,
+    "crs_name": "WGS 84 / UTM zone 33N",
+    "end_point": {
+        "kmz_file": "/opt/agrs/Projects/test_project2/aoi/end_point.kmz",
+        "latitude": 42.898254,
+        "longitude": 13.877811
+    },
+    "start_point": {
+        "kmz_file": "/opt/agrs/Projects/test_project2/aoi/start_point.kmz",
+        "latitude": 43.388493,
+        "longitude": 13.514053
+    }
+}

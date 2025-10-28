@@ -59,7 +59,7 @@ TerminalWidget::TerminalWidget(QWidget* parent)
         "║              Read-Only Output Terminal (v1.0)                  ║\n"
         "╚════════════════════════════════════════════════════════════════╝\n\n"
         "This terminal displays streaming output from:\n"
-        "  • Cursor CLI (AI Agent) operations\n"
+        "  • AI Agent operations\n"
         "  • Background command execution\n"
         "  • Geospatial data processing\n"
         "  • System processes\n\n"

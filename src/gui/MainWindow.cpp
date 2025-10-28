@@ -116,7 +116,7 @@ void MainWindow::createMenus() {
     QMenu* projectMenu = menuBar()->addMenu(tr("&Project"));
     projectMenu->addAction(tr("Project &Settings..."), this, &MainWindow::onProjectSettings);
     
-    // All geospatial operations will be handled by Cursor CLI through intelligent project analysis
+    // All geospatial operations will be handled by AI through intelligent project analysis
     
     // View menu
     QMenu* viewMenu = menuBar()->addMenu(tr("&View"));
@@ -658,7 +658,7 @@ void MainWindow::onAbout() {
         tr("AGRS ZEUS - Pipeline Routing & Geospatial Analysis\n\n"
            "Artemis Global Research Solutions Inc.\n"
            "Version 0.1.0\n\n"
-           "All geospatial operations are handled by Cursor CLI."));
+           "All geospatial operations are handled by AI."));
 }
 
 void MainWindow::onCoordinatesChanged(double lat, double lon) {

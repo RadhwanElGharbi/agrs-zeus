@@ -1,0 +1,80 @@
+================================================================================
+PIRL POST-TRAINING QUICK START GUIDE
+================================================================================
+
+TRAINING STATUS: 95% Complete (~25 minutes remaining)
+
+================================================================================
+OPTION 1: AUTOMATED (RECOMMENDED) ⭐
+================================================================================
+
+Open a new terminal and run:
+
+    cd /opt/agrs/Projects/test_project
+    source /opt/agrs/python/pirl_venv/bin/activate
+    ./watch_and_launch.sh
+
+This will:
+  ✅ Monitor training automatically
+  ✅ Detect completion
+  ✅ Run all validation & analysis
+  ✅ Generate reports & routes
+  
+NO MANUAL INTERVENTION NEEDED!
+
+================================================================================
+OPTION 2: MANUAL
+================================================================================
+
+Wait for training to complete, then run:
+
+    cd /opt/agrs/Projects/test_project
+    source /opt/agrs/python/pirl_venv/bin/activate
+    ./post_training_workflow.sh
+
+================================================================================
+WHAT GETS GENERATED
+================================================================================
+
+Routes:
+  📍 outputs/validation/route_optimal.geojson        - Best route
+  📍 outputs/validation/route_baseline.geojson       - Comparison
+  
+Reports:
+  📊 outputs/analysis/TRAINING_ANALYSIS_REPORT.md    - Training metrics
+  📊 outputs/validation/validation_report.md         - Route validation
+  📊 outputs/analysis/training_curves.png            - Visual plots
+  
+Data:
+  💾 outputs/validation/cost_analysis.json           - Cost breakdown
+  💾 outputs/analysis/training_statistics.json      - Performance stats
+
+================================================================================
+EXPECTED RESULTS
+================================================================================
+
+✅ Route Length:        ~150-200 km (Italy AOI)
+✅ Total Cost:          $50-75M (optimized)
+✅ Cost Savings:        15-25% vs. baseline
+✅ SAIPEM Compliance:   100% (all 12 criteria)
+✅ Max Slope:           <30° (enforced)
+✅ No-Go Violations:    0 (protected areas avoided)
+
+================================================================================
+TROUBLESHOOTING
+================================================================================
+
+Check training status:
+    ps aux | grep train_pirl
+
+View live log:
+    tail -f outputs/pirl_training/training_fixed.log
+
+Check model exists:
+    ls -lh models/pirl_italy_v1_final.zip
+
+================================================================================
+TIME TO COMPLETION: ~25 MINUTES
+================================================================================
+
+

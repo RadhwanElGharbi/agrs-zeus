@@ -792,6 +792,11 @@ void register_tools_commands(CLI::App& cli, ToolsOptions& o) {
 	o.cmdPirlStep->add_option("--action-file,-a", o.pirlActionFile, "JSON file containing action to execute")->required();
 	o.cmdPirlStep->add_option("--output-dir,-o", o.pirlOutputDir, "Output directory for state files")->required();
 	o.cmdPirlStep->require_subcommand(0);
+	
+	o.cmdPirlGetRoute = o.cmdTools->add_subcommand("pirl_get_route", "Get route from PIRL session (Python interface)");
+	o.cmdPirlGetRoute->add_option("--output-dir,-o", o.pirlOutputDir, "Output directory containing session")->required();
+	o.cmdPirlGetRoute->add_option("--route-file,-r", o.pirlRouteFile, "Output route GeoJSON file")->required();
+	o.cmdPirlGetRoute->require_subcommand(0);
 }
 
 std::optional<int> handle_tools_commands(const ToolsOptions& o) {
@@ -1223,6 +1228,10 @@ std::optional<int> handle_tools_commands(const ToolsOptions& o) {
 	
 	if (o.cmdPirlStep && o.cmdPirlStep->parsed()) {
 		return tools_pirl_step(o.pirlConfigPath, o.pirlActionFile, o.pirlOutputDir);
+	}
+	
+	if (o.cmdPirlGetRoute && o.cmdPirlGetRoute->parsed()) {
+		return tools_pirl_get_route(o.pirlOutputDir, o.pirlRouteFile);
 	}
 	
 	return std::nullopt;
@@ -5530,8 +5539,13 @@ int tools_esa_worldcover_fetch(const std::string& bbox,
     
     // Calculate required tiles (3° x 3° grid)
     std::vector<std::string> tiles;
-    for (int lat = static_cast<int>(std::floor(minLat / 3.0)) * 3; lat <= static_cast<int>(std::floor(maxLat / 3.0)) * 3; lat += 3) {
-        for (int lon = static_cast<int>(std::floor(minLon / 3.0)) * 3; lon <= static_cast<int>(std::floor(maxLon / 3.0)) * 3; lon += 3) {
+    int minLatTile = static_cast<int>(std::floor(minLat / 3.0)) * 3;
+    int maxLatTile = static_cast<int>(std::floor(maxLat / 3.0)) * 3;
+    int minLonTile = static_cast<int>(std::floor(minLon / 3.0)) * 3;
+    int maxLonTile = static_cast<int>(std::floor(maxLon / 3.0)) * 3;
+    
+    for (int lat = minLatTile; lat <= maxLatTile; lat += 3) {
+        for (int lon = minLonTile; lon <= maxLonTile; lon += 3) {
             std::ostringstream tileName;
             tileName << (lat >= 0 ? "N" : "S") << std::setfill('0') << std::setw(2) << std::abs(lat)
                      << (lon >= 0 ? "E" : "W") << std::setfill('0') << std::setw(3) << std::abs(lon);
@@ -14647,7 +14661,32 @@ int tools_pirl_create_config(const std::string& project_name,
 }
 
 // ============================================================================
-// PIRL PYTHON TRAINING INTERFACE COMMANDS
+// PIRL SESSION MANAGEMENT (FIX FOR INFERENCE BUG)
+// ============================================================================
+
+// Global session storage
+struct PIRLSession {
+    std::unique_ptr<agrs::pirl::PipelineEnvironment> env;
+    agrs::pirl::ProjectConfig config;
+    std::string session_id;
+    
+    PIRLSession(const std::string& id, const agrs::pirl::ProjectConfig& cfg)
+        : config(cfg), session_id(id) {
+        env = std::make_unique<agrs::pirl::PipelineEnvironment>(config);
+    }
+};
+
+static std::map<std::string, std::unique_ptr<PIRLSession>> g_pirl_sessions;
+
+// Generate unique session ID
+static std::string generate_session_id() {
+    auto now = std::chrono::system_clock::now();
+    auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
+    return "pirl_session_" + std::to_string(ms);
+}
+
+// ============================================================================
+// PIRL PYTHON TRAINING INTERFACE COMMANDS (WITH SESSION MANAGEMENT)
 // ============================================================================
 
 /**
@@ -14655,6 +14694,7 @@ int tools_pirl_create_config(const std::string& project_name,
  * 
  * This command is called by the Python training environment to reset
  * the C++ PipelineEnvironment to initial state.
+ * NOW WITH SESSION MANAGEMENT TO FIX INFERENCE BUG!
  */
 int tools_pirl_reset_episode(const std::string& config_path,
                             const std::string& output_dir) {
@@ -14666,11 +14706,15 @@ int tools_pirl_reset_episode(const std::string& config_path,
         // Load project configuration
         agrs::pirl::ProjectConfig config = agrs::pirl::ProjectConfig::load_from_yaml(config_path);
         
-        // Create environment
-        agrs::pirl::PipelineEnvironment env(config);
+        // Create NEW SESSION with persistent environment
+        std::string session_id = generate_session_id();
+        auto session = std::make_unique<PIRLSession>(session_id, config);
         
-        // Reset to initial state
-        agrs::pirl::State initial_state = env.reset();
+        // Reset to initial state (using session's environment)
+        agrs::pirl::State initial_state = session->env->reset();
+        
+        // Store session for future step() calls
+        g_pirl_sessions[session_id] = std::move(session);
         
         // Save state to JSON for Python
         std::filesystem::path state_file = std::filesystem::path(output_dir) / "current_state.json";
@@ -14725,9 +14769,19 @@ int tools_pirl_reset_episode(const std::string& config_path,
         reward_out << "}\n";
         reward_out.close();
         
+        // Save session ID for Python to use in subsequent step() calls
+        std::filesystem::path session_file = std::filesystem::path(output_dir) / "session_id.txt";
+        std::ofstream session_out(session_file);
+        if (session_out.is_open()) {
+            session_out << session_id;
+            session_out.close();
+        }
+        
         std::cout << "✅ Episode reset complete" << std::endl;
+        std::cout << "   Session ID: " << session_id << std::endl;
         std::cout << "   State saved to: " << state_file << std::endl;
         std::cout << "   Reward info saved to: " << reward_file << std::endl;
+        std::cout << "   Session file: " << session_file << std::endl;
         
         return 0;
         
@@ -14751,11 +14805,28 @@ int tools_pirl_step(const std::string& config_path,
     std::cout << "════════════════════════════════════════════════════════\n";
     
     try {
-        // Load project configuration
-        agrs::pirl::ProjectConfig config = agrs::pirl::ProjectConfig::load_from_yaml(config_path);
+        // Load session ID from file
+        std::filesystem::path session_file = std::filesystem::path(output_dir) / "session_id.txt";
+        std::ifstream session_in(session_file);
+        if (!session_in.is_open()) {
+            std::cerr << "❌ Failed to open session file: " << session_file << std::endl;
+            std::cerr << "   Did you call pirl_reset_episode first?" << std::endl;
+            return 1;
+        }
         
-        // Create environment
-        agrs::pirl::PipelineEnvironment env(config);
+        std::string session_id;
+        std::getline(session_in, session_id);
+        session_in.close();
+        
+        // Get session from global map
+        auto it = g_pirl_sessions.find(session_id);
+        if (it == g_pirl_sessions.end()) {
+            std::cerr << "❌ Session not found: " << session_id << std::endl;
+            std::cerr << "   Session may have expired or was never created" << std::endl;
+            return 1;
+        }
+        
+        PIRLSession* session = it->second.get();
         
         // Load action from JSON
         std::ifstream action_in(action_file);
@@ -14799,8 +14870,8 @@ int tools_pirl_step(const std::string& config_path,
         action.heading_change = heading_change;
         action.step_size = step_size;
         
-        // Execute step
-        auto [new_state, reward_info] = env.step(action);
+        // Execute step using SESSION's persistent environment
+        auto [new_state, reward_info] = session->env->step(action);
         
         // Save new state to JSON
         std::filesystem::path state_file = std::filesystem::path(output_dir) / "current_state.json";
@@ -14874,6 +14945,87 @@ int tools_pirl_step(const std::string& config_path,
         
     } catch (const std::exception& e) {
         std::cerr << "❌ Error during step execution: " << e.what() << std::endl;
+        return 1;
+    }
+}
+
+/**
+ * @brief Get route from PIRL session
+ * 
+ * Extract the full route trajectory from a PIRL session.
+ * This is the KEY function that was missing - it allows us to extract
+ * the complete route after inference is complete!
+ */
+int tools_pirl_get_route(const std::string& output_dir, const std::string& route_output_file) {
+    
+    std::cout << "\n📍 PIRL Get Route (Extract Trajectory)" << std::endl;
+    std::cout << "════════════════════════════════════════════════════════\n";
+    
+    try {
+        // Load session ID
+        std::filesystem::path session_file = std::filesystem::path(output_dir) / "session_id.txt";
+        std::ifstream session_in(session_file);
+        if (!session_in.is_open()) {
+            std::cerr << "❌ Failed to open session file: " << session_file << std::endl;
+            return 1;
+        }
+        
+        std::string session_id;
+        std::getline(session_in, session_id);
+        session_in.close();
+        
+        // Get session
+        auto it = g_pirl_sessions.find(session_id);
+        if (it == g_pirl_sessions.end()) {
+            std::cerr << "❌ Session not found: " << session_id << std::endl;
+            return 1;
+        }
+        
+        PIRLSession* session = it->second.get();
+        
+        // Get route from environment
+        auto route = session->env->get_current_route();
+        
+        std::cout << "✅ Route extracted: " << route.size() << " points" << std::endl;
+        
+        // Save to JSON file
+        std::ofstream route_out(route_output_file);
+        if (!route_out.is_open()) {
+            std::cerr << "❌ Failed to create route file: " << route_output_file << std::endl;
+            return 1;
+        }
+        
+        route_out << std::fixed << std::setprecision(6);
+        route_out << "{\n";
+        route_out << "  \"type\": \"FeatureCollection\",\n";
+        route_out << "  \"features\": [{\n";
+        route_out << "    \"type\": \"Feature\",\n";
+        route_out << "    \"properties\": {\n";
+        route_out << "      \"session_id\": \"" << session_id << "\",\n";
+        route_out << "      \"num_points\": " << route.size() << "\n";
+        route_out << "    },\n";
+        route_out << "    \"geometry\": {\n";
+        route_out << "      \"type\": \"LineString\",\n";
+        route_out << "      \"coordinates\": [\n";
+        
+        for (size_t i = 0; i < route.size(); ++i) {
+            route_out << "        [" << route[i].first << ", " << route[i].second << "]";
+            if (i < route.size() - 1) route_out << ",";
+            route_out << "\n";
+        }
+        
+        route_out << "      ]\n";
+        route_out << "    }\n";
+        route_out << "  }]\n";
+        route_out << "}\n";
+        route_out.close();
+        
+        std::cout << "✅ Route saved to: " << route_output_file << std::endl;
+        
+        return 0;
+        
+    } catch (const std::exception& e) {
+        std::cerr << "❌ Error extracting route: " << e.what() << std::endl;
         return 1;
     }
 }
