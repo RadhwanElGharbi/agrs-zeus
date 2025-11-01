@@ -1,0 +1,16 @@
+{
+  "name": "osm_railways",
+  "type": "vector",
+  "source": "OSM Railways",
+  "provider": "OpenStreetMap",
+  "url": "https://www.openstreetmap.org/",
+  "crs": "EPSG:32633",
+  "date_acquired": "2025-10-28",
+  "fetch_tool": "osm_fetch",
+  "processing_steps": [
+    "reproject",
+    "clip",
+    "validate"
+  ],
+  "validation_status": "passed"
+}

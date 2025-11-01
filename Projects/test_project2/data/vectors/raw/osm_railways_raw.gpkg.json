@@ -23,8 +23,8 @@
     ]
   },
   "query": {
-    "aoi_file": "/opt/agrs/Projects/test_project2/aoi/aoi.kmz",
-    "bbox": "13.454779,42.857057,13.938769,43.438886"
+    "aoi_file": "",
+    "bbox": "13.514053,42.898254,13.877811,43.388493"
   },
   "source": {
     "api": "Overpass API",
@@ -33,6 +33,6 @@
     "license": "ODbL 1.0",
     "provider": "OpenStreetMap"
   },
-  "timestamp": "2025-10-27T22:32:26Z",
+  "timestamp": "2025-10-30T22:56:08Z",
   "tool": "osm_railways_fetch"
 }

@@ -1,0 +1,94 @@
+  warnings.warn(
+
+╔====================================================================╗
+║               PIRL PRE-TRAINING VALIDATION                         ║
+╚====================================================================╝
+
+======================================================================
+1. RASTER DATASETS (5 required)
+======================================================================
+  ✅ DEM: 104,958,306 bytes
+  ✅ Land Cover: 3,057,699 bytes
+  ✅ Geohazards: 1,188,562 bytes
+  ✅ Soil: 147,246 bytes
+  ✅ Population: 999,817 bytes
+
+======================================================================
+2. VECTOR DATASETS (7 required)
+======================================================================
+  ✅ AOI: 1 features
+  ✅ Water Bodies: 718 features
+  ✅ Roads: 28,638 features
+  ✅ Railways: 236 features
+  ✅ Power Lines: 221 features
+  ⚠️  Protected Areas: 0 features (acceptable for rural area)
+  ✅ Pipelines: 1 features
+
+  Total Features: 29,815
+
+======================================================================
+3. PIPELINE SPECIFICATIONS
+======================================================================
+  ✅ All required fields present
+  ✅ Type: Gas, Material: Carbon Steel
+  ✅ Diameter: 660.4mm, MOP: 70 bar
+  ✅ Max Slope: 20.0%
+  ✅ Operating Temp: 288.15K
+
+======================================================================
+4. PIRL TRAINING CONFIGURATION
+======================================================================
+  ✅ All required sections present
+  ✅ Cost weights sum: 1.00 (should be ~1.0)
+  ✅ Total timesteps: 500,000
+  ✅ Learning rate: 0.0003
+  ✅ Batch size: 2048
+
+======================================================================
+5. PYTHON ENVIRONMENT
+======================================================================
+  ✅ Python: 3.12.3
+  ✅ NumPy
+  ✅ Gymnasium (RL environment)
+  ✅ Stable-Baselines3 (PPO)
+  ✅ PyTorch
+  ✅ PIRL Native (C++ bindings)
+
+======================================================================
+6. C++ BACKEND
+======================================================================
+  ✅ pirl_native module loads
+  ✅ PipelineEnvironment class available
+  ✅ State struct available
+
+======================================================================
+7. PROJECT METADATA
+======================================================================
+  ✅ Project: test_project2
+  ✅ CRS: EPSG:32633
+
+======================================================================
+8. AREA OF INTEREST (AOI)
+======================================================================
+  ✅ Start: 43.388493°N, 13.514053°E
+  ✅ End: 42.898254°N, 13.877811°E
+  ✅ Straight-line distance: ~62.0 km
+
+======================================================================
+VALIDATION SUMMARY
+======================================================================
+  ✅ PASS  Raster Datasets
+  ✅ PASS  Vector Datasets
+  ✅ PASS  Pipeline Specifications
+  ✅ PASS  PIRL Configuration
+  ✅ PASS  Python Environment
+  ✅ PASS  C++ Backend
+  ✅ PASS  Project Metadata
+  ✅ PASS  AOI Definition
+
+  Result: 8/8 checks passed
+
+╔====================================================================╗
+║               ✅ ALL CHECKS PASSED - READY TO TRAIN!              ║
+╚====================================================================╝
+

@@ -19,7 +19,12 @@ namespace py = pybind11;
 // Helper to convert State to numpy array for Python
 py::array_t<float> state_to_numpy(const agrs::pirl::State& state) {
     std::vector<float> vec = state.to_vector();
-    return py::array_t<float>(vec.size(), vec.data());
+    // Create numpy array with a copy of the data (not a pointer to local variable!)
+    py::array_t<float> result(vec.size());
+    auto buf = result.request();
+    float* ptr = static_cast<float*>(buf.ptr);
+    std::copy(vec.begin(), vec.end(), ptr);
+    return result;
 }
 
 // Helper to convert numpy array to Action
@@ -88,7 +93,7 @@ PYBIND11_MODULE(pirl_native, m) {
         .def("to_numpy", &state_to_numpy,
              "Convert state to numpy array for neural network input")
         .def_static("dimension", &agrs::pirl::State::dimension,
-                    "Get state space dimension (17)");
+                    "Get state space dimension (21 with hydraulics)");
 
     // ========================================================================
     // Action binding
@@ -122,6 +127,14 @@ PYBIND11_MODULE(pirl_native, m) {
         .def_readwrite("slope_violation", &agrs::pirl::RewardInfo::slope_violation)
         .def_readwrite("no_go_violation", &agrs::pirl::RewardInfo::no_go_violation)
         .def_readwrite("crossing_violation", &agrs::pirl::RewardInfo::crossing_violation)
+        .def_readwrite("terrain_cost", &agrs::pirl::RewardInfo::terrain_cost)
+        .def_readwrite("water_crossing_cost", &agrs::pirl::RewardInfo::water_crossing_cost)
+        .def_readwrite("infrastructure_cost", &agrs::pirl::RewardInfo::infrastructure_cost)
+        .def_readwrite("environmental_cost", &agrs::pirl::RewardInfo::environmental_cost)
+        .def_readwrite("row_cost", &agrs::pirl::RewardInfo::row_cost)
+        .def_readwrite("permitting_cost", &agrs::pirl::RewardInfo::permitting_cost)
+        .def_readwrite("hydraulic_cost", &agrs::pirl::RewardInfo::hydraulic_cost)
+        .def_readwrite("regulatory_cost", &agrs::pirl::RewardInfo::regulatory_cost)
         .def_readwrite("termination_reason", &agrs::pirl::RewardInfo::termination_reason);
 
     // ========================================================================
@@ -136,6 +149,64 @@ PYBIND11_MODULE(pirl_native, m) {
         .def_readwrite("num_road_crossings", &agrs::pirl::PipelineEnvironment::RouteStats::num_road_crossings)
         .def_readwrite("num_constraint_violations", &agrs::pirl::PipelineEnvironment::RouteStats::num_constraint_violations)
         .def_readwrite("curvature_max", &agrs::pirl::PipelineEnvironment::RouteStats::curvature_max);
+
+    // ========================================================================
+    // RouteSegment binding
+    // ========================================================================
+    py::class_<agrs::pirl::RouteSegment>(m, "RouteSegment")
+        .def(py::init<>())
+        .def_readonly("start_x", &agrs::pirl::RouteSegment::start_x)
+        .def_readonly("start_y", &agrs::pirl::RouteSegment::start_y)
+        .def_readonly("end_x", &agrs::pirl::RouteSegment::end_x)
+        .def_readonly("end_y", &agrs::pirl::RouteSegment::end_y)
+        .def_readonly("length_m", &agrs::pirl::RouteSegment::length_m)
+        .def_readonly("segment_id", &agrs::pirl::RouteSegment::segment_id)
+        .def_readonly("elevation_start", &agrs::pirl::RouteSegment::elevation_start)
+        .def_readonly("elevation_end", &agrs::pirl::RouteSegment::elevation_end)
+        .def_readonly("slope_percent", &agrs::pirl::RouteSegment::slope_percent)
+        .def_readonly("aspect", &agrs::pirl::RouteSegment::aspect)
+        .def_readonly("curvature", &agrs::pirl::RouteSegment::curvature)
+        .def_readonly("total_cost", &agrs::pirl::RouteSegment::total_cost)
+        .def_readonly("terrain_cost", &agrs::pirl::RouteSegment::terrain_cost)
+        .def_readonly("water_crossing_cost", &agrs::pirl::RouteSegment::water_crossing_cost)
+        .def_readonly("infrastructure_cost", &agrs::pirl::RouteSegment::infrastructure_cost)
+        .def_readonly("environmental_cost", &agrs::pirl::RouteSegment::environmental_cost)
+        .def_readonly("row_cost", &agrs::pirl::RouteSegment::row_cost)
+        .def_readonly("permitting_cost", &agrs::pirl::RouteSegment::permitting_cost)
+        .def_readonly("hydraulic_cost", &agrs::pirl::RouteSegment::hydraulic_cost)
+        .def_readonly("regulatory_cost", &agrs::pirl::RouteSegment::regulatory_cost)
+        .def_readonly("cumulative_cost", &agrs::pirl::RouteSegment::cumulative_cost)
+        .def_readonly("cumulative_distance_m", &agrs::pirl::RouteSegment::cumulative_distance_m)
+        .def_readonly("land_cover_class", &agrs::pirl::RouteSegment::land_cover_class)
+        .def_readonly("land_cover_name", &agrs::pirl::RouteSegment::land_cover_name)
+        .def_readonly("geohazard_risk", &agrs::pirl::RouteSegment::geohazard_risk)
+        .def_readonly("soil_capacity", &agrs::pirl::RouteSegment::soil_capacity)
+        .def_readonly("population_density", &agrs::pirl::RouteSegment::population_density)
+        .def_readonly("water_proximity", &agrs::pirl::RouteSegment::water_proximity)
+        .def_readonly("road_proximity", &agrs::pirl::RouteSegment::road_proximity)
+        .def_readonly("railway_proximity", &agrs::pirl::RouteSegment::railway_proximity)
+        .def_readonly("powerline_proximity", &agrs::pirl::RouteSegment::powerline_proximity)
+        .def_readonly("pipeline_proximity", &agrs::pirl::RouteSegment::pipeline_proximity)
+        .def_readonly("pressure_drop_pa", &agrs::pirl::RouteSegment::pressure_drop_pa)
+        .def_readonly("cumulative_pressure_drop_pa", &agrs::pirl::RouteSegment::cumulative_pressure_drop_pa)
+        .def_readonly("flow_velocity_m_s", &agrs::pirl::RouteSegment::flow_velocity_m_s)
+        .def_readonly("reynolds_number", &agrs::pirl::RouteSegment::reynolds_number)
+        .def_readonly("requires_pumping_station", &agrs::pirl::RouteSegment::requires_pumping_station)
+        .def_readonly("step_number", &agrs::pirl::RouteSegment::step_number)
+        .def_readonly("reward", &agrs::pirl::RouteSegment::reward)
+        .def_readonly("total_reward", &agrs::pirl::RouteSegment::total_reward);
+
+    // ========================================================================
+    // RouteTrajectory binding
+    // ========================================================================
+    py::class_<agrs::pirl::RouteTrajectory>(m, "RouteTrajectory")
+        .def(py::init<>())
+        .def_readonly("segments", &agrs::pirl::RouteTrajectory::segments)
+        .def_readonly("pumping_stations", &agrs::pirl::RouteTrajectory::pumping_stations)
+        .def_readonly("success", &agrs::pirl::RouteTrajectory::success)
+        .def_readonly("total_cost", &agrs::pirl::RouteTrajectory::total_cost)
+        .def_readonly("total_length_m", &agrs::pirl::RouteTrajectory::total_length_m)
+        .def_readonly("termination_reason", &agrs::pirl::RouteTrajectory::termination_reason);
 
     // ========================================================================
     // PipelineEnvironment binding (THE MAIN CLASS!)
@@ -179,6 +250,12 @@ PYBIND11_MODULE(pirl_native, m) {
         .def("get_route_stats", &agrs::pirl::PipelineEnvironment::get_route_stats,
              "Get statistics about the current route (length, cost, violations, etc.)")
         
+        .def("get_route_trajectory", &agrs::pirl::PipelineEnvironment::get_route_trajectory,
+             "Get detailed route trajectory with all segment information")
+        
+        .def("get_current_position", &agrs::pirl::PipelineEnvironment::get_current_position,
+             "Get current position in actual UTM coordinates")
+        
         // Visualization
         .def("render", &agrs::pirl::PipelineEnvironment::render,
              py::arg("output_path"),
@@ -200,5 +277,6 @@ PYBIND11_MODULE(pirl_native, m) {
           py::arg("config_path"),
           "Convenience function to create environment from YAML path");
 }
+
 
 

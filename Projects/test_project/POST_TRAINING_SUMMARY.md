@@ -327,3 +327,4 @@ Then grab a coffee and let the automation work! ☕
 *Configuration: saipem_training_config.yaml*
 
 
+

@@ -6,6 +6,8 @@
 #include <memory>
 #include <optional>
 #include <functional>
+#include "agrs_zeus/PipelineSpecifications.h"
+#include "agrs_zeus/Hydraulics.h"
 
 // Forward declarations for GDAL
 class GDALDataset;
@@ -94,6 +96,13 @@ struct ProjectConfig {
     std::string output_dir;
     std::string model_save_path;
     
+    // Pipeline specifications (hard constraints)
+    PipelineSpecifications pipeline_specs;
+    bool has_pipeline_specs = false;
+    
+    // Load pipeline specifications from JSON
+    bool load_pipeline_specs_from_json(const std::string& json_path);
+    
     // Load from YAML file
     static ProjectConfig load_from_yaml(const std::string& yaml_path);
     
@@ -136,6 +145,12 @@ struct State {
     double population_density; // Population density (0-1)
     double railway_proximity;  // Distance to railways (normalized)
     
+    // Hydraulic features (NEW - Phase 2)
+    double cumulative_pressure_drop_pa;  // Total pressure loss so far
+    double segments_since_pump;          // Distance since last pump station
+    double flow_velocity_m_s;            // Current segment velocity
+    double reynolds_number;              // Flow regime indicator
+    
     // Previous action (for continuity)
     double prev_heading;
     double prev_step_size;
@@ -144,7 +159,7 @@ struct State {
     std::vector<float> to_vector() const;
     
     // State dimension (for NN architecture)
-    static constexpr int dimension() { return 17; }  // Expanded from 12 to 17
+    static constexpr int dimension() { return 21; }  // Expanded from 17 to 21 (Phase 2)
 };
 
 // ============================================================================
@@ -196,7 +211,94 @@ struct RewardInfo {
     double no_go_violation;        // Entering forbidden zones
     double crossing_violation;     // Bad crossing angles
     
+    // Cost breakdown (NEW - for detailed tracking)
+    double terrain_cost = 0.0;
+    double water_crossing_cost = 0.0;
+    double infrastructure_cost = 0.0;
+    double environmental_cost = 0.0;
+    double row_cost = 0.0;
+    double permitting_cost = 0.0;
+    double hydraulic_cost = 0.0;
+    double regulatory_cost = 0.0;
+    
     // Debug info
+    std::string termination_reason;
+};
+
+// ============================================================================
+// ROUTE TRAJECTORY STRUCTURES
+// ============================================================================
+
+/**
+ * @brief Detailed segment information for route export
+ */
+struct RouteSegment {
+    // Geometry (actual UTM coordinates, not normalized)
+    double start_x = 0.0, start_y = 0.0;
+    double end_x = 0.0, end_y = 0.0;
+    double length_m = 0.0;
+    int segment_id = 0;
+    
+    // Elevation
+    double elevation_start = 0.0;
+    double elevation_end = 0.0;
+    double slope_percent = 0.0;
+    double aspect = 0.0;
+    double curvature = 0.0;
+    
+    // Cost breakdown (USD)
+    double total_cost = 0.0;
+    double terrain_cost = 0.0;
+    double water_crossing_cost = 0.0;
+    double infrastructure_cost = 0.0;
+    double environmental_cost = 0.0;
+    double row_cost = 0.0;
+    double permitting_cost = 0.0;
+    double hydraulic_cost = 0.0;
+    double regulatory_cost = 0.0;
+    
+    // Cumulative
+    double cumulative_cost = 0.0;
+    double cumulative_distance_m = 0.0;
+    
+    // Land cover
+    int land_cover_class = 0;
+    std::string land_cover_name;
+    
+    // Environment
+    double geohazard_risk = 0.0;
+    double soil_capacity = 0.0;
+    double population_density = 0.0;
+    
+    // Infrastructure proximity (meters)
+    double water_proximity = 0.0;
+    double road_proximity = 0.0;
+    double railway_proximity = 0.0;
+    double powerline_proximity = 0.0;
+    double pipeline_proximity = 0.0;
+    
+    // Hydraulics
+    double pressure_drop_pa = 0.0;
+    double cumulative_pressure_drop_pa = 0.0;
+    double flow_velocity_m_s = 0.0;
+    double reynolds_number = 0.0;
+    bool requires_pumping_station = false;
+    
+    // RL metadata
+    int step_number = 0;
+    double reward = 0.0;
+    double total_reward = 0.0;
+};
+
+/**
+ * @brief Full route trajectory with metadata
+ */
+struct RouteTrajectory {
+    std::vector<RouteSegment> segments;
+    std::vector<std::pair<double, double>> pumping_stations;
+    bool success = false;
+    double total_cost = 0.0;
+    double total_length_m = 0.0;
     std::string termination_reason;
 };
 
@@ -233,6 +335,7 @@ public:
     
     // Query land cover
     int get_land_cover_class(double x, double y) const;
+    std::string get_land_cover_name(int land_cover_class) const;
     
     // Check if point is within AOI
     bool is_within_aoi(double x, double y) const;
@@ -292,7 +395,8 @@ public:
     // Calculate total cost for a segment
     double calculate_segment_cost(const State& from_state,
                                   const State& to_state,
-                                  const GISDataManager& gis) const;
+                                  const GISDataManager& gis,
+                                  RewardInfo* reward_info_out = nullptr) const;
     
     // Individual cost components ($/meter)
     double terrain_cost(double slope, int land_cover_class) const;
@@ -310,6 +414,10 @@ public:
     // Apply client-specific criteria adjustments
     double apply_client_criteria(double base_cost, 
                                  const std::map<std::string, double>& criteria_scores) const;
+    
+    // Hydraulic costs (NEW - Phase 2)
+    double hydraulic_cost(const HydraulicsCalculator::SegmentHydraulics& hydraulics,
+                         double segment_length_m) const;
     
 private:
     ProjectConfig config_;
@@ -336,7 +444,7 @@ class PhysicsConstraints {
 public:
     PhysicsConstraints(const ProjectConfig& config);
     
-    // Check if action is physically feasible
+    // Check if action is physically feasible (enhanced with hard constraints)
     bool is_action_feasible(const State& state, 
                            const Action& action,
                            const GISDataManager& gis) const;
@@ -347,6 +455,12 @@ public:
     bool check_crossing_angle(double angle, const std::string& feature_type) const;
     bool check_no_go_zones(double x, double y, const GISDataManager& gis) const;
     
+    // Pipeline specification hard constraints (NEW)
+    bool check_pipeline_clearances(double x, double y, const GISDataManager& gis) const;
+    bool check_pipeline_slope(double slope) const;
+    bool check_bend_angle(double angle_deg, bool is_hdd_section) const;
+    bool check_hot_bend_count(int current_count) const;
+    
     // Constraint penalties (for reward shaping)
     double slope_penalty(double slope) const;
     double curvature_penalty(double curvature) const;
@@ -354,6 +468,9 @@ public:
     
     // Maximum penalties
     static constexpr double MAX_PENALTY = -1000.0;
+    
+    // Violation reasons for debugging
+    mutable std::string last_violation_reason;
     
 private:
     ProjectConfig config_;
@@ -393,6 +510,12 @@ public:
     };
     RouteStats get_route_stats() const;
     
+    // Get detailed route trajectory (NEW)
+    RouteTrajectory get_route_trajectory() const;
+    
+    // Get current position (actual UTM coordinates)
+    std::pair<double, double> get_current_position() const;
+    
     // Render (for visualization)
     void render(const std::string& output_path) const;
     
@@ -401,6 +524,7 @@ private:
     std::unique_ptr<GISDataManager> gis_;
     std::unique_ptr<CostModel> cost_model_;
     std::unique_ptr<PhysicsConstraints> physics_;
+    std::unique_ptr<HydraulicsCalculator> hydraulics_;  // NEW: Hydraulics calculator
     
     // Current state
     State current_state_;
@@ -410,6 +534,25 @@ private:
     
     // Goal
     double goal_x_, goal_y_;
+    
+    // Hydraulic tracking (NEW - Phase 2)
+    double current_pressure_pa_;           // Current pressure in pipeline
+    double total_pressure_drop_pa_;        // Accumulated pressure drop
+    double distance_since_pump_m_;         // Distance since last pumping station
+    std::vector<std::pair<double, double>> pumping_stations_;  // Locations of pumping stations
+    
+    // Trajectory tracking (NEW - for detailed route export)
+    std::vector<RouteSegment> trajectory_;
+    double cumulative_cost_;
+    double cumulative_distance_;
+    State previous_state_;  // For segment start coordinates
+    double total_reward_accumulated_;  // Cumulative reward
+    
+    // Out-of-bounds tracking (NEW - for gradual termination)
+    int out_of_bounds_steps_;  // Consecutive steps out of bounds
+    
+    // Exploration tracking (NEW - for milestone bonuses)
+    double best_distance_to_goal_;  // Best distance achieved this episode
     
     // Helper: calculate reward
     RewardInfo calculate_reward(const State& prev_state,

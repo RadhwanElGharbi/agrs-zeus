@@ -1,0 +1,16 @@
+{
+  "name": "faults",
+  "type": "vector",
+  "source": "INGV Seismic Faults",
+  "provider": "INGV",
+  "url": "https://www.ingv.it/",
+  "crs": "EPSG:32633",
+  "date_acquired": "2025-10-28",
+  "fetch_tool": "manual",
+  "processing_steps": [
+    "reproject",
+    "clip",
+    "validate"
+  ],
+  "validation_status": "passed"
+}

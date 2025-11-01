@@ -54,7 +54,10 @@ add_library(agrs_zeus_core
   src/ai_operator/AIOperator.cpp
   src/pirl/PIRL.cpp
   src/pirl/PIRL_Environment.cpp
-  src/pirl/PIRL_Utils.cpp)
+  src/pirl/PIRL_Utils.cpp
+  src/pirl/PipelineSpecifications.cpp
+  src/pirl/Hydraulics.cpp
+  src/pirl/RegulatoryCompliance.cpp)
 
 # Enable position-independent code for use in shared libraries (Python bindings)
 set_target_properties(agrs_zeus_core PROPERTIES POSITION_INDEPENDENT_CODE ON)
@@ -118,8 +121,12 @@ install(DIRECTORY config/ DESTINATION share/agrs-zeus/config)
 if(AGRS_ZEUS_ENABLE_TESTS)
   add_executable(agrs_zeus_tests
     tests/test_logger.cpp
-    tests/test_dem_fetch.cpp)
+    tests/test_dem_fetch.cpp
+    tests/test_pipeline_specs.cpp
+    tests/test_hydraulics_simple.cpp
+    tests/test_regulatory_simple.cpp)
   target_link_libraries(agrs_zeus_tests PRIVATE agrs_zeus_core Catch2::Catch2WithMain)
+  target_include_directories(agrs_zeus_tests PRIVATE ${CMAKE_SOURCE_DIR})
   add_test(NAME agrs_zeus_tests COMMAND agrs_zeus_tests)
 endif()
 

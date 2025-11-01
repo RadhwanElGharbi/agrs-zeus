@@ -1,0 +1,24 @@
+{
+  "tool": "soilgrids_fetch",
+  "timestamp": "2025-10-28T13:14:59Z",
+  "source": {
+    "provider": "ISRIC World Soil Information",
+    "dataset": "SoilGrids v2.0",
+    "version": "2.0",
+    "resolution": "250m",
+    "license": "CC BY 4.0",
+    "url": "https://soilgrids.org"
+  },
+  "query": {
+    "bbox": "13.454779,42.857057,13.938769,43.438886",
+    "depth": "0-5cm",
+    "properties": "clay,sand,soc,bdod",
+    "method": "WCS GetCoverage with EPSG:152160 transformation"
+  },
+  "bands": [
+    {"band": 1, "property": "clay"},
+    {"band": 2, "property": "sand"},
+    {"band": 3, "property": "soc"},
+    {"band": 4, "property": "bdod"}
+  ]
+}

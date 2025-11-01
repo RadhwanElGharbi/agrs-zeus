@@ -19,14 +19,24 @@
   - Skip fetch if valid data already exists
   - Log skipped fetches with reason
 
-### 2. Raw Data Integrity
+### 2. Raw Data Integrity - **ZERO TOLERANCE FOR PLACEHOLDERS**
 - **Requirement:** All fetched data must remain in its original, unmodified form
+- **CRITICAL RULE:** 
+  - ❌ **ABSOLUTELY FORBIDDEN:** Placeholder data, synthetic data, or generated constant-value rasters
+  - ❌ **ABSOLUTELY FORBIDDEN:** Creating "fake" datasets to pass validation
+  - ✅ **MANDATORY:** Only real, authoritative source data from legitimate providers
+  - ✅ **MANDATORY:** If real data is unavailable, the dataset must be marked as missing, NOT faked
+  - **Rationale:** Placeholder data corrupts model training, produces unreliable routes, and violates scientific integrity. Routes generated with placeholder data are NOT suitable for engineering use.
+  
 - **Constraints:**
   - ✅ **ALLOWED:** Direct downloads from authoritative sources
   - ❌ **FORBIDDEN:** Reprojection during fetch
   - ❌ **FORBIDDEN:** Clipping during fetch
   - ❌ **FORBIDDEN:** Format conversion during fetch (except for transport/extraction)
   - ❌ **FORBIDDEN:** Derivative calculations (slope, aspect, etc.)
+  - ❌ **FORBIDDEN:** Creating placeholder/synthetic datasets
+  - ❌ **FORBIDDEN:** Using constant-value rasters as substitutes for real data
+  
 - **Storage:** Raw files must be preserved in organized subdirectories:
   - Rasters: `data/rasters/raw/`
   - Vectors: `data/vectors/raw/`

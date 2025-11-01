@@ -1,0 +1,24 @@
+{
+  "name": "landcover_esa_worldcover",
+  "type": "raster",
+  "source": "ESA WorldCover 10m",
+  "provider": "ESA",
+  "url": "https://worldcover2021.esa.int/",
+  "resolution_m": 10,
+  "crs": "EPSG:32633",
+  "extent": {
+    "minx": 373758.8446026653,
+    "miny": 4746099.428331343,
+    "maxx": 414118.73128331907,
+    "maxy": 4810101.112547567
+  },
+  "nodata_value": 0,
+  "date_acquired": "2025-10-28",
+  "fetch_tool": "esa_worldcover_fetch",
+  "processing_steps": [
+    "reproject",
+    "clip",
+    "validate"
+  ],
+  "validation_status": "passed"
+}

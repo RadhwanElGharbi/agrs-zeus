@@ -20,24 +20,38 @@ namespace pirl {
 // ============================================================================
 
 std::vector<float> State::to_vector() const {
+    // Normalize coordinates to reasonable range (divide by 100km to get ~0-10 range)
+    // This prevents NaN issues in VecNormalize with huge UTM coordinates
+    constexpr double coord_scale = 100000.0;  // 100km
+    
+    // Helper to safely clip values and prevent NaN/Inf
+    auto safe_float = [](double val, double min_val = -1000.0, double max_val = 1000.0) -> float {
+        if (std::isnan(val) || std::isinf(val)) return 0.0f;
+        return static_cast<float>(std::clamp(val, min_val, max_val));
+    };
+    
     return {
-        static_cast<float>(x),
-        static_cast<float>(y),
-        static_cast<float>(goal_distance),
-        static_cast<float>(goal_bearing),
-        static_cast<float>(elevation),
-        static_cast<float>(slope),
-        static_cast<float>(aspect),
-        static_cast<float>(curvature),
-        static_cast<float>(no_go_zone),
-        static_cast<float>(water_proximity),
-        static_cast<float>(road_proximity),
-        static_cast<float>(geohazard_risk),
-        static_cast<float>(soil_capacity),
-        static_cast<float>(cadastre_complex),
-        static_cast<float>(population_density),
-        static_cast<float>(railway_proximity),
-        static_cast<float>(prev_heading)
+        safe_float(x / coord_scale, 0.0, 10.0),                  // Normalize coordinates
+        safe_float(y / coord_scale, 0.0, 100.0),                 // Normalize coordinates  
+        safe_float(goal_distance / 100000.0, 0.0, 10.0),         // Normalize to ~100km
+        safe_float(goal_bearing, -3.15, 3.15),                   // Radians [-π, π]
+        safe_float(elevation / 1000.0, -1.0, 10.0),              // Normalize to km
+        safe_float(slope / 100.0, 0.0, 1.0),                     // Normalize slope (was degrees/percent)
+        safe_float(aspect, -3.15, 3.15),                         // Radians
+        safe_float(curvature, -1.0, 1.0),                        // Small values
+        safe_float(no_go_zone, 0.0, 1.0),                        // Binary 0/1
+        safe_float(water_proximity, 0.0, 1.0),                   // Normalized 0-1
+        safe_float(road_proximity, 0.0, 1.0),                    // Normalized 0-1
+        safe_float(geohazard_risk, 0.0, 1.0),                    // 0-1
+        safe_float(soil_capacity, 0.0, 1.0),                     // 0-1 (clamp bad values)
+        safe_float(cadastre_complex, 0.0, 1.0),                  // 0-1
+        safe_float(population_density / 1000.0, 0.0, 10.0),      // Normalize to thousands/km²
+        safe_float(railway_proximity, 0.0, 1.0),                 // Normalized 0-1
+        safe_float(cumulative_pressure_drop_pa / 1e6, 0.0, 100.0),  // Normalize to MPa
+        safe_float(segments_since_pump / 100000.0, 0.0, 10.0),   // Normalize to ~100km
+        safe_float(flow_velocity_m_s / 30.0, 0.0, 5.0),          // Normalize to max velocity
+        safe_float(reynolds_number / 1e6, 0.0, 100.0),           // Normalize to millions
+        safe_float(prev_heading, -3.15, 3.15)                    // Radians
     };
 }
 
@@ -652,6 +666,24 @@ int GISDataManager::get_land_cover_class(double x, double y) const {
     return 0; // Unknown
 }
 
+std::string GISDataManager::get_land_cover_name(int land_cover_class) const {
+    static std::map<int, std::string> landcover_map = {
+        {10, "tree_cover"},
+        {20, "shrubland"},
+        {30, "grassland"},
+        {40, "cropland"},
+        {50, "built_up"},
+        {60, "bare_vegetation"},
+        {70, "snow_ice"},
+        {80, "water_bodies"},
+        {90, "herbaceous_wetland"},
+        {95, "mangroves"},
+        {100, "moss_lichen"}
+    };
+    auto it = landcover_map.find(land_cover_class);
+    return (it != landcover_map.end()) ? it->second : "unknown";
+}
+
 bool GISDataManager::is_within_aoi(double x, double y) const {
     if (!aoi_geom_) {
         // No AOI geometry loaded, use DEM bounds instead
@@ -772,7 +804,8 @@ CostModel::CostModel(const ProjectConfig& config) : config_(config) {
 
 double CostModel::calculate_segment_cost(const State& from_state,
                                          const State& to_state,
-                                         const GISDataManager& gis) const {
+                                         const GISDataManager& gis,
+                                         RewardInfo* reward_info_out) const {
     // Calculate segment length
     double dx = to_state.x - from_state.x;
     double dy = to_state.y - from_state.y;
@@ -858,6 +891,21 @@ double CostModel::calculate_segment_cost(const State& from_state,
     // Apply regional multiplier
     total_cost *= regional_multiplier_;
     
+    // Store breakdown in RewardInfo if provided
+    if (reward_info_out) {
+        reward_info_out->terrain_cost = terrain_cost_val * length * regional_multiplier_;
+        reward_info_out->water_crossing_cost = (to_state.water_proximity < 0.02) ? 
+            water_crossing_cost(20.0, 2.0) * regional_multiplier_ : 0.0;
+        reward_info_out->infrastructure_cost = (to_state.road_proximity < 0.01) ? 
+            road_crossing_cost("major_road") * regional_multiplier_ : 0.0;
+        reward_info_out->environmental_cost = (env_cost_val * length + geohazard_cost * length) * regional_multiplier_;
+        reward_info_out->row_cost = cadastre_cost * length * regional_multiplier_;
+        reward_info_out->permitting_cost = social_cost * length * regional_multiplier_;
+        // Hydraulic and regulatory costs will be set separately in PipelineEnvironment
+        reward_info_out->hydraulic_cost = 0.0;
+        reward_info_out->regulatory_cost = 0.0;
+    }
+    
     // TODO: Apply client-specific cost weights if configured
     // This would allow different projects to prioritize different factors
     
@@ -908,6 +956,52 @@ double CostModel::railway_crossing_cost() const {
     return crossing_costs_.at("railway");
 }
 
+double CostModel::hydraulic_cost(const HydraulicsCalculator::SegmentHydraulics& hydraulics,
+                                 double segment_length_m) const {
+    double cost = 0.0;
+    
+    // Major cost: Pumping/compression station required
+    if (hydraulics.requires_pumping_station) {
+        // Typical cost range: $500k-$2M depending on capacity
+        // For gas pipeline with 26" diameter at 70 bar: ~$1M
+        cost += 1000000.0;
+    }
+    
+    // Penalty for suboptimal flow velocity
+    // Erosion risk (too fast)
+    if (hydraulics.erosion_risk) {
+        // High velocity causes erosion: $100-200/m for protective coatings/measures
+        cost += 150.0 * segment_length_m;
+    }
+    
+    // Corrosion/sedimentation risk (too slow) - mainly for liquids
+    if (hydraulics.corrosion_risk) {
+        // Low velocity allows sedimentation/corrosion: $50-100/m for enhanced monitoring
+        cost += 75.0 * segment_length_m;
+    }
+    
+    // Cavitation risk (liquids only)
+    if (hydraulics.cavitation_risk) {
+        // Risk of cavitation damage: $200-400/m for surge protection/thicker walls
+        cost += 300.0 * segment_length_m;
+    }
+    
+    // Penalty for high Mach number in gas flow (approaching sonic conditions)
+    if (hydraulics.mach_number > 0.3) {
+        // Approaching sonic flow requires special design
+        double mach_penalty = (hydraulics.mach_number - 0.3) * 500.0; // $/m
+        cost += mach_penalty * segment_length_m;
+    }
+    
+    // Slight penalty for non-optimal flow regimes
+    if (hydraulics.flow_regime == 1) {
+        // Transitional flow is less efficient
+        cost += 10.0 * segment_length_m;
+    }
+    
+    return cost;
+}
+
 double CostModel::environmental_cost(bool is_protected_area, 
                                     double buffer_distance) const {
     if (is_protected_area) {
@@ -953,18 +1047,33 @@ bool PhysicsConstraints::is_action_feasible(const State& state,
     
     // Check if within AOI
     if (!gis.is_within_aoi(new_x, new_y)) {
+        last_violation_reason = "Position outside AOI";
         return false;
     }
     
-    // Check slope limit
+    // Check slope limit (uses pipeline specs if available)
     double slope = gis.get_slope(new_x, new_y);
-    if (!check_slope_limit(slope)) {
+    if (!check_pipeline_slope(slope)) {
         return false;
     }
     
     // Check no-go zones
     if (!check_no_go_zones(new_x, new_y, gis)) {
+        last_violation_reason = "Position in no-go zone";
         return false;
+    }
+    
+    // Check pipeline clearances (hard constraints from specs)
+    if (!check_pipeline_clearances(new_x, new_y, gis)) {
+        return false;
+    }
+    
+    // Check bend angle if applicable
+    double angle_deg = std::abs(action.heading_change * 180.0 / M_PI);
+    if (angle_deg > 0.1) {  // Only check if there's a significant bend
+        if (!check_bend_angle(angle_deg, false)) {  // Assuming non-HDD for now
+            return false;
+        }
     }
     
     return true;
@@ -1011,6 +1120,102 @@ double PhysicsConstraints::crossing_angle_penalty(double angle) const {
     }
     double deficit = config_.constraints.min_crossing_angle_deg - angle;
     return -5.0 * deficit;
+}
+
+// ============================================================================
+// PIPELINE SPECIFICATION HARD CONSTRAINTS (NEW)
+// ============================================================================
+
+bool PhysicsConstraints::check_pipeline_clearances(double x, double y, const GISDataManager& gis) const {
+    if (!config_.has_pipeline_specs) {
+        return true;  // No specs loaded, skip check
+    }
+    
+    const auto& specs = config_.pipeline_specs;
+    
+    // Check clearance from power lines
+    double dist_to_powerline = gis.distance_to_power_line(x, y);
+    if (dist_to_powerline < specs.powerlines_min_distance_m) {
+        last_violation_reason = "Clearance violation: Too close to power lines (" + 
+                               std::to_string(dist_to_powerline) + "m < " + 
+                               std::to_string(specs.powerlines_min_distance_m) + "m)";
+        return false;
+    }
+    
+    // Check clearance from existing pipelines
+    double dist_to_pipeline = gis.distance_to_pipeline(x, y);
+    if (dist_to_pipeline < 5.0) {  // Minimum 5m from existing pipelines
+        last_violation_reason = "Clearance violation: Too close to existing pipeline (" + 
+                               std::to_string(dist_to_pipeline) + "m < 5.0m)";
+        return false;
+    }
+    
+    // TODO: Add house clearance check when building footprint data is available
+    
+    return true;
+}
+
+bool PhysicsConstraints::check_pipeline_slope(double slope) const {
+    if (!config_.has_pipeline_specs) {
+        return check_slope_limit(slope);  // Fall back to general constraint
+    }
+    
+    const auto& specs = config_.pipeline_specs;
+    if (!specs.validate_slope(slope)) {
+        last_violation_reason = "Slope violation: " + std::to_string(slope) + "% > " + 
+                               std::to_string(specs.max_slope_percent) + "%";
+        return false;
+    }
+    
+    return true;
+}
+
+bool PhysicsConstraints::check_bend_angle(double angle_deg, bool is_hdd_section) const {
+    if (!config_.has_pipeline_specs) {
+        return true;  // No specs, skip check
+    }
+    
+    const auto& specs = config_.pipeline_specs;
+    
+    // For HDD sections, use HDD radius constraint
+    // For regular sections, check if angle matches available hot bend angles
+    if (is_hdd_section) {
+        // Convert angle to radius (simplified - would need actual calculation)
+        // For now, just check if angle is reasonable for HDD
+        if (angle_deg > 45.0) {  // Sharp bends not allowed in HDD
+            last_violation_reason = "HDD bend angle too sharp: " + std::to_string(angle_deg) + "° > 45°";
+            return false;
+        }
+    } else {
+        // Check if field bend (< 5°) or hot bend (must match available angles)
+        if (angle_deg <= specs.field_bend_max_angle_deg) {
+            return true;  // Field bend is OK
+        }
+        
+        // Must be a hot bend - check if angle is available
+        if (!specs.validate_hot_bend_angle(angle_deg)) {
+            last_violation_reason = "Bend angle " + std::to_string(angle_deg) + 
+                                   "° does not match available hot bend angles";
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+bool PhysicsConstraints::check_hot_bend_count(int current_count) const {
+    if (!config_.has_pipeline_specs) {
+        return true;  // No limit if specs not loaded
+    }
+    
+    const auto& specs = config_.pipeline_specs;
+    if (!specs.validate_hot_bend_count(current_count)) {
+        last_violation_reason = "Hot bend count " + std::to_string(current_count) + 
+                               " exceeds maximum " + std::to_string(specs.hot_bend_max_count);
+        return false;
+    }
+    
+    return true;
 }
 
 // ============================================================================

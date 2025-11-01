@@ -79,6 +79,19 @@ ProjectConfig ProjectConfig::load_from_yaml(const std::string& yaml_path) {
     return config;
 }
 
+bool ProjectConfig::load_pipeline_specs_from_json(const std::string& json_path) {
+    try {
+        pipeline_specs = PipelineSpecifications::load_from_json(json_path);
+        has_pipeline_specs = true;
+        std::cout << "✅ Pipeline specifications loaded from: " << json_path << std::endl;
+        return true;
+    } catch (const std::exception& e) {
+        std::cerr << "❌ Failed to load pipeline specs: " << e.what() << std::endl;
+        has_pipeline_specs = false;
+        return false;
+    }
+}
+
 void ProjectConfig::save_to_yaml(const std::string& yaml_path) const {
     std::ofstream file(yaml_path);
     if (!file.is_open()) {

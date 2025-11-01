@@ -28,14 +28,27 @@ logger = logging.getLogger(__name__)
 
 # Add PIRL training directory to path
 sys.path.append('/opt/agrs/python/pirl_training')
-from pirl_env import PIRLEnvironment
+
+# Use native C++ environment for better performance and compatibility
+try:
+    from pirl_native_env import PIRLNativeEnvironment as PIRLEnvironment
+    logger.info("Using PIRLNativeEnvironment (C++ backend via pybind11)")
+except ImportError:
+    from pirl_env import PIRLEnvironment
+    logger.warning("pirl_native not available, using fallback PIRLEnvironment (CLI-based)")
+
 from validate_training_data import validate as validate_training_data
 
 def main():
     """Main training function."""
     
-    # Configuration
-    config_path = "/opt/agrs/Projects/test_project/pirl_training_config.yaml"
+    # Parse command-line arguments
+    import argparse
+    parser = argparse.ArgumentParser(description='Train PIRL model for pipeline routing')
+    parser.add_argument('--config', type=str, required=True, 
+                        help='Path to training config YAML file')
+    args = parser.parse_args()
+    config_path = args.config
     
     logger.info("=" * 80)
     logger.info("PIRL REINFORCEMENT LEARNING TRAINING")
@@ -109,11 +122,10 @@ def main():
         return _init
     
     # Create vectorized environment
-    if num_envs == 1:
-        env = DummyVecEnv([make_env()])
-    else:
-        # Use subprocess for parallel training
-        env = SubprocVecEnv([make_env() for _ in range(num_envs)])
+    # Use DummyVecEnv for better debugging (no multiprocessing)
+    # Switch to SubprocVecEnv for production once stable
+    logger.info(f"Creating {num_envs} environments in single process (DummyVecEnv)")
+    env = DummyVecEnv([make_env() for _ in range(num_envs)])
     
     # Wrap with VecNormalize for observation and reward normalization
     env = VecNormalize(

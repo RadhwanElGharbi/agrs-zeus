@@ -64,14 +64,18 @@ class PIRLNativeEnvironment(gym.Env):
         logger.info("✓ Native C++ environment initialized")
         
         # Define observation and action spaces
-        # State dimension: 17 features (x, y, goal_dist, goal_bearing, elevation,
-        #                              slope, aspect, curvature, no_go, water_prox,
-        #                              road_prox, geohazard, soil, cadastre, population,
-        #                              railway_prox, prev_heading, prev_step)
+        # State dimension: 21 features (UPDATED Phase 2)
+        #   Position & Navigation (4): x, y, goal_dist, goal_bearing
+        #   Terrain (4): elevation, slope, aspect, curvature
+        #   Infrastructure (3): water_prox, road_prox, railway_prox
+        #   Risk Factors (3): geohazard, soil, population
+        #   Constraints (2): no_go, cadastre
+        #   Hydraulics (4): cumulative_pressure_drop, segments_since_pump, flow_velocity, reynolds
+        #   Action History (1): prev_heading
         self.observation_space = gym.spaces.Box(
             low=-np.inf,
             high=np.inf,
-            shape=(17,),
+            shape=(21,),  # Updated from 17 to 21 (Phase 2: Hydraulics)
             dtype=np.float32
         )
         
@@ -151,24 +155,40 @@ class PIRLNativeEnvironment(gym.Env):
         # observation is already a numpy array from C++
         # reward is a float
         # terminated and truncated are booleans
-        # info is a dict with reward_info and termination_reason
+        # info is a dict with reward_info (C++ object) and termination_reason (string)
         
         self.current_step += 1
         
-        # Add step counter to info
-        info['step'] = self.current_step
-        info['episode'] = self.current_episode
+        # Convert C++ RewardInfo to plain Python dict (for pickling/deepcopy compatibility)
+        reward_info = info.get('reward_info')
+        if reward_info is not None:
+            info['reward_info'] = {
+                'total_reward': float(reward_info.total_reward),
+                'progress_reward': float(reward_info.progress_reward),
+                'cost_penalty': float(reward_info.cost_penalty),
+                'constraint_penalty': float(reward_info.constraint_penalty),
+                'curvature_penalty': float(reward_info.curvature_penalty),
+                'goal_bonus': float(reward_info.goal_bonus),
+                'slope_violation': bool(reward_info.slope_violation),
+                'no_go_violation': bool(reward_info.no_go_violation),
+                'crossing_violation': bool(reward_info.crossing_violation)
+            }
+        
+        # Add step counter to info (use underscores to avoid conflicts with Monitor)
+        info['_step'] = self.current_step
+        info['_episode'] = self.current_episode
         
         # Log significant events
-        if terminated:
-            reward_info = info.get('reward_info')
+        if terminated or truncated:
+            reward_info_dict = info.get('reward_info')
             reason = info.get('termination_reason', 'unknown')
             
-            if reward_info and reward_info.goal_bonus > 0:
+            if reward_info_dict and reward_info_dict.get('goal_bonus', 0) > 0:
                 logger.info(f"🎯 Goal reached! Episode {self.current_episode}, Steps: {self.current_step}")
-                logger.info(f"   Total reward: {reward_info.total_reward:.2f}")
+                logger.info(f"   Total reward: {reward_info_dict['total_reward']:.2f}")
             else:
-                logger.warning(f"❌ Episode terminated: {reason}")
+                if terminated:
+                    logger.warning(f"❌ Episode terminated: {reason}")
         
         return observation, reward, terminated, truncated, info
     

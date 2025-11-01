@@ -77,6 +77,17 @@ State PipelineEnvironment::reset() {
     step_count_ = 0;
     done_ = false;
     
+    // Initialize trajectory tracking (NEW)
+    trajectory_.clear();
+    cumulative_cost_ = 0.0;
+    cumulative_distance_ = 0.0;
+    previous_state_ = current_state_;
+    total_reward_accumulated_ = 0.0;
+    
+    // Initialize out-of-bounds and exploration tracking (NEW)
+    out_of_bounds_steps_ = 0;
+    best_distance_to_goal_ = current_state_.goal_distance;
+    
     std::cout << "🔄 Environment reset. Initial distance to goal: " 
               << current_state_.goal_distance << "m" << std::endl;
     
@@ -145,6 +156,89 @@ std::pair<State, RewardInfo> PipelineEnvironment::step(const Action& action) {
     done_ = check_termination(current_state_, term_reason);
     reward_info.termination_reason = term_reason;
     
+    // Record segment in trajectory (NEW - for detailed route export)
+    RouteSegment segment;
+    segment.segment_id = trajectory_.size() + 1;
+    segment.step_number = step_count_;
+    
+    // Geometry (ACTUAL coordinates, not normalized)
+    segment.start_x = prev_state.x;
+    segment.start_y = prev_state.y;
+    segment.end_x = current_state_.x;
+    segment.end_y = current_state_.y;
+    
+    double seg_dx = segment.end_x - segment.start_x;
+    double seg_dy = segment.end_y - segment.start_y;
+    segment.length_m = std::sqrt(seg_dx*seg_dx + seg_dy*seg_dy);
+    
+    // Elevation
+    segment.elevation_start = prev_state.elevation;
+    segment.elevation_end = current_state_.elevation;
+    segment.slope_percent = current_state_.slope;  // Already in percent from get_slope()
+    segment.aspect = current_state_.aspect;
+    segment.curvature = current_state_.curvature;
+    
+    // Cost breakdown (extract from RewardInfo)
+    segment.terrain_cost = reward_info.terrain_cost;
+    segment.water_crossing_cost = reward_info.water_crossing_cost;
+    segment.infrastructure_cost = reward_info.infrastructure_cost;
+    segment.environmental_cost = reward_info.environmental_cost;
+    segment.row_cost = reward_info.row_cost;
+    segment.permitting_cost = reward_info.permitting_cost;
+    segment.hydraulic_cost = reward_info.hydraulic_cost;
+    segment.regulatory_cost = reward_info.regulatory_cost;
+    segment.total_cost = segment.terrain_cost + segment.water_crossing_cost + 
+                         segment.infrastructure_cost + segment.environmental_cost +
+                         segment.row_cost + segment.permitting_cost + 
+                         segment.hydraulic_cost + segment.regulatory_cost;
+    
+    // Cumulative
+    cumulative_cost_ += segment.total_cost;
+    cumulative_distance_ += segment.length_m;
+    segment.cumulative_cost = cumulative_cost_;
+    segment.cumulative_distance_m = cumulative_distance_;
+    
+    // Land cover
+    segment.land_cover_class = gis_->get_land_cover_class(segment.end_x, segment.end_y);
+    segment.land_cover_name = gis_->get_land_cover_name(segment.land_cover_class);
+    
+    // Environment
+    segment.geohazard_risk = current_state_.geohazard_risk;
+    segment.soil_capacity = current_state_.soil_capacity;
+    segment.population_density = current_state_.population_density;
+    
+    // Infrastructure proximity (denormalize to meters, assuming 1km normalization)
+    segment.water_proximity = current_state_.water_proximity * 1000.0;
+    segment.road_proximity = current_state_.road_proximity * 1000.0;
+    segment.railway_proximity = current_state_.railway_proximity * 1000.0;
+    segment.powerline_proximity = gis_->distance_to_power_line(segment.end_x, segment.end_y) * 1000.0;
+    segment.pipeline_proximity = gis_->distance_to_pipeline(segment.end_x, segment.end_y) * 1000.0;
+    
+    // Hydraulics (if enabled)
+    if (hydraulics_) {
+        auto hydraulics_result = hydraulics_->calculate_segment(
+            segment.length_m, 
+            segment.elevation_end - segment.elevation_start,
+            0.5,  // flow_rate from config (TODO: get from config)
+            current_pressure_pa_,
+            config_.pipeline_specs.operating_temp_k
+        );
+        segment.pressure_drop_pa = hydraulics_result.pressure_drop_pa;
+        segment.cumulative_pressure_drop_pa = total_pressure_drop_pa_;
+        segment.flow_velocity_m_s = hydraulics_result.flow_velocity_m_s;
+        segment.reynolds_number = hydraulics_result.reynolds_number;
+        segment.requires_pumping_station = hydraulics_result.requires_pumping_station;
+    }
+    
+    // RL metadata
+    segment.reward = reward_info.total_reward;
+    total_reward_accumulated_ += reward_info.total_reward;
+    segment.total_reward = total_reward_accumulated_;
+    
+    // Store segment
+    trajectory_.push_back(segment);
+    previous_state_ = current_state_;
+    
     return {current_state_, reward_info};
 }
 
@@ -167,7 +261,7 @@ RewardInfo PipelineEnvironment::calculate_reward(const State& prev_state,
     info.total_reward += info.progress_reward;
     
     // 2. Cost penalty: negative reward based on construction cost
-    double segment_cost = cost_model_->calculate_segment_cost(prev_state, new_state, *gis_);
+    double segment_cost = cost_model_->calculate_segment_cost(prev_state, new_state, *gis_, &info);
     // Normalize: typical segment costs are $200-1000/m * 50m step = $10k-50k per step
     // Divide by 100k to get reward in range [-0.1 to -0.5] per step
     info.cost_penalty = -segment_cost / 100000.0; // Normalize cost appropriately
@@ -194,7 +288,26 @@ RewardInfo PipelineEnvironment::calculate_reward(const State& prev_state,
         info.total_reward += info.curvature_penalty;
     }
     
+    // Out-of-bounds penalty (NEW - CRITICAL for boundary learning)
+    if (!gis_->is_within_aoi(new_state.x, new_state.y)) {
+        // Strong penalty for going out of bounds
+        // This teaches agent to avoid boundaries during training
+        double oob_penalty = -50.0;
+        info.constraint_penalty += oob_penalty;
+        info.total_reward += oob_penalty;
+    }
+    
     info.total_reward += info.constraint_penalty;
+    
+    // Exploration bonus for reaching new milestone distances (NEW)
+    // Encourages agent to keep pushing toward goal
+    if (new_state.goal_distance < best_distance_to_goal_ - 1000.0) {
+        // Bonus for getting 1km closer than ever before this episode
+        double exploration_bonus = 10.0;
+        info.progress_reward += exploration_bonus;
+        info.total_reward += exploration_bonus;
+        best_distance_to_goal_ = new_state.goal_distance;
+    }
     
     // 4. Goal bonus: large positive reward for reaching goal
     if (new_state.goal_distance < 50.0) { // Within 50m of goal
@@ -221,12 +334,27 @@ bool PipelineEnvironment::check_termination(const State& state, std::string& rea
         return true;
     }
     
-    // Failure: out of bounds (but allow small buffer near goal)
-    // If within 2km of goal, allow going slightly outside AOI to reach endpoint
-    bool near_goal = state.goal_distance < 2000.0;
-    if (!gis_->is_within_aoi(state.x, state.y) && !near_goal) {
-        reason = "FAILURE: Out of bounds";
-        return true;
+    // Gradual out-of-bounds handling (NEW - allows brief recovery)
+    // Allow brief excursions but terminate if too long out of bounds
+    if (!gis_->is_within_aoi(state.x, state.y)) {
+        out_of_bounds_steps_++;
+        
+        // If very close to goal (< 500m), be more lenient
+        if (state.goal_distance < 500.0) {
+            // Allow finishing route even if slightly out of bounds
+            if (out_of_bounds_steps_ > 10) {
+                reason = "FAILURE: Too far out of bounds near goal";
+                return true;
+            }
+        }
+        // If farther from goal, be strict but allow 3 steps recovery
+        else if (out_of_bounds_steps_ > 3) {
+            reason = "FAILURE: Out of bounds";
+            return true;
+        }
+    } else {
+        // Reset counter when back in bounds
+        out_of_bounds_steps_ = 0;
     }
     
     // Failure: entered no-go zone
@@ -509,6 +637,21 @@ PIRLAgent::RouteEvaluation PIRLAgent::evaluate_route(
     eval.all_constraints_satisfied = true;
     
     return eval;
+}
+
+RouteTrajectory PipelineEnvironment::get_route_trajectory() const {
+    RouteTrajectory traj;
+    traj.segments = trajectory_;
+    traj.pumping_stations = pumping_stations_;
+    traj.success = done_ && (current_state_.goal_distance < 10.0);  // Within 10m of goal
+    traj.total_cost = cumulative_cost_;
+    traj.total_length_m = cumulative_distance_;
+    traj.termination_reason = done_ ? "Goal reached" : "In progress";
+    return traj;
+}
+
+std::pair<double, double> PipelineEnvironment::get_current_position() const {
+    return {current_state_.x, current_state_.y};
 }
 
 } // namespace pirl
