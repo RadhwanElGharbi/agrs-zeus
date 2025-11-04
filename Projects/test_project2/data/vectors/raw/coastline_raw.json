@@ -1,0 +1,20 @@
+{
+  "dataset_name": "coastline",
+  "source": {
+    "name": "OpenStreetMap",
+    "coverage": "Worldwide",
+    "accuracy": "\u00b110-50m (variable)",
+    "api": "Overpass API"
+  },
+  "query_bbox": {
+    "min_lon": 13.5,
+    "min_lat": 42.9,
+    "max_lon": 14.0,
+    "max_lat": 43.4
+  },
+  "geometry_type": "LineString",
+  "feature_count": 37,
+  "crs": "EPSG:4326",
+  "download_date": "2025-11-01",
+  "description": "Coastline boundary for offshore routing constraint in PIRL"
+}

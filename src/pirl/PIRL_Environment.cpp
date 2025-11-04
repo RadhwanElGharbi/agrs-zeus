@@ -297,6 +297,15 @@ RewardInfo PipelineEnvironment::calculate_reward(const State& prev_state,
         info.total_reward += oob_penalty;
     }
     
+    // Coastline boundary constraint (NEW - prevents offshore routing)
+    if (gis_->has_coastline() && gis_->is_beyond_coastline(new_state.x, new_state.y)) {
+        // Massive penalty for offshore routing (same magnitude as going out of bounds)
+        // This prevents agent from routing through sea/ocean waters
+        double offshore_penalty = -1000.0;
+        info.constraint_penalty += offshore_penalty;
+        info.total_reward += offshore_penalty;
+    }
+    
     info.total_reward += info.constraint_penalty;
     
     // Exploration bonus for reaching new milestone distances (NEW)
@@ -355,6 +364,14 @@ bool PipelineEnvironment::check_termination(const State& state, std::string& rea
     } else {
         // Reset counter when back in bounds
         out_of_bounds_steps_ = 0;
+    }
+    
+    // Coastline crossing - IMMEDIATE TERMINATION (hard boundary)
+    // Any position that violates coastline constraint terminates immediately
+    // This includes: crossing the coastline itself OR being in coastal waters (<200m from coast)
+    if (gis_->has_coastline() && gis_->is_beyond_coastline(state.x, state.y)) {
+        reason = "FAILURE: Coastline boundary violated";
+        return true;  // Immediate termination - no recovery allowed
     }
     
     // Failure: entered no-go zone

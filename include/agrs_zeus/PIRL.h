@@ -344,6 +344,10 @@ public:
     void get_aoi_bounds(double& minx, double& miny, 
                        double& maxx, double& maxy) const;
     
+    // Coastline constraint methods (NEW - offshore routing prevention)
+    bool is_beyond_coastline(double x, double y) const;
+    bool has_coastline() const { return coastline_geom_ != nullptr; }
+    
     // Additional dataset queries
     double get_geohazard_risk(double x, double y) const;  // Landslide, seismic risk
     double get_soil_bearing_capacity(double x, double y) const;  // Foundation suitability
@@ -371,6 +375,7 @@ private:
     std::unique_ptr<OGRGeometry> cadastre_complex_;  // Complex land parcels
     std::unique_ptr<OGRGeometry> power_lines_;       // Power transmission lines
     std::unique_ptr<OGRGeometry> pipelines_;         // Existing pipelines
+    std::unique_ptr<OGRGeometry> coastline_geom_;    // Coastline boundary (NEW - offshore constraint)
     
     // Helper: sample raster at point
     double sample_raster(GDALDataset* dataset, double x, double y) const;

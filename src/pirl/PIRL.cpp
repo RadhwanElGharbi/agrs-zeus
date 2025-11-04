@@ -228,6 +228,44 @@ void GISDataManager::load_all_data() {
         }
     }
     
+    // Load coastline boundary (optional - for coastal projects)
+    std::string coastline_path = project_dir_ + "/data/vectors/coastline.gpkg";
+    if (!fs::exists(coastline_path)) {
+        coastline_path = project_dir_ + "/data/vectors/coastline.shp";
+    }
+    if (!fs::exists(coastline_path)) {
+        coastline_path = project_dir_ + "/data/vectors/processed/coastline_epsg" + 
+                         std::to_string(epsg_code_) + "_processed.gpkg";
+    }
+    
+    if (fs::exists(coastline_path)) {
+        GDALDataset* coast_ds = static_cast<GDALDataset*>(
+            GDALOpenEx(coastline_path.c_str(), GDAL_OF_VECTOR, nullptr, nullptr, nullptr));
+        if (coast_ds && coast_ds->GetLayerCount() > 0) {
+            OGRLayer* layer = coast_ds->GetLayer(0);
+            OGRGeometryCollection* collection = new OGRGeometryCollection();
+            OGRFeature* feature;
+            int count = 0;
+            while ((feature = layer->GetNextFeature()) != nullptr) {
+                OGRGeometry* geom = feature->GetGeometryRef();
+                if (geom) {
+                    collection->addGeometry(geom);
+                    count++;
+                }
+                OGRFeature::DestroyFeature(feature);
+            }
+            if (count > 0) {
+                coastline_geom_.reset(collection);
+                std::cout << "    ✅ Coastline boundary loaded (" << count << " segments)" << std::endl;
+            } else {
+                delete collection;
+            }
+            GDALClose(coast_ds);
+        }
+    } else {
+        std::cout << "    ℹ️  No coastline data (offshore routing not constrained)" << std::endl;
+    }
+    
     // Load water bodies
     std::string water_path = project_dir_ + "/data/vectors/water_bodies.gpkg";
     if (!fs::exists(water_path)) {
@@ -703,6 +741,43 @@ bool GISDataManager::is_within_aoi(double x, double y) const {
     return aoi_geom_->Contains(&point);
 }
 
+bool GISDataManager::is_beyond_coastline(double x, double y) const {
+    if (!coastline_geom_) {
+        // No coastline loaded - allow all positions
+        return false;
+    }
+    
+    OGRPoint point(x, y);
+    
+    // Set spatial reference if needed
+    if (coastline_geom_->getSpatialReference()) {
+        point.assignSpatialReference(coastline_geom_->getSpatialReference());
+    }
+    
+    // Check distance to nearest coastline segment
+    double min_distance = coastline_geom_->Distance(&point);
+    
+    // Hard boundary: ANY crossing of coastline itself terminates (within 10m = on the line)
+    const double COASTLINE_CROSSING_THRESHOLD = 10.0;  // meters - essentially touching the line
+    if (min_distance < COASTLINE_CROSSING_THRESHOLD) {
+        // Position is ON or crossing the coastline polyline itself
+        return true;  // Immediate termination
+    }
+    
+    // Check if this is coastal water (within 200m buffer of coastline)
+    // This prevents offshore routing while allowing inland rivers
+    int land_cover = get_land_cover_class(x, y);
+    if (land_cover == 80) {  // Water land cover
+        // If water AND within 200m of coast = coastal/offshore water (blocked)
+        // If water AND beyond 200m of coast = inland river/lake (allowed for crossing)
+        const double OFFSHORE_BUFFER = 200.0;  // meters
+        return (min_distance < OFFSHORE_BUFFER);
+    }
+    
+    // Not water and not crossing coastline = safe
+    return false;
+}
+
 void GISDataManager::get_aoi_bounds(double& minx, double& miny, 
                                    double& maxx, double& maxy) const {
     if (dem_) {
@@ -786,7 +861,9 @@ CostModel::CostModel(const ProjectConfig& config) : config_(config) {
     landcover_costs_[50] = 80.0;   // Built-up
     landcover_costs_[60] = 100.0;  // Bare/sparse vegetation
     landcover_costs_[70] = 100.0;  // Snow and ice
-    landcover_costs_[80] = 500.0;  // Permanent water bodies
+    landcover_costs_[80] = 3500.0; // Permanent water bodies (UPDATED: realistic offshore cost)
+                                    // Note: With coastline constraint, agent won't reach offshore
+                                    // This cost now represents inland water body traversal
     landcover_costs_[90] = 400.0;  // Herbaceous wetland
     landcover_costs_[95] = 350.0;  // Mangroves
     landcover_costs_[100] = 250.0; // Moss and lichen

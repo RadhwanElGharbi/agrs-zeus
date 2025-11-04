@@ -1,0 +1,66 @@
+A comprehensive case study of a midstream oil & gas pipeline route selection process involves sequential evaluation of technical, environmental, social, and regulatory factors using industry-standard methodologies such as Multi Criteria Decision Analysis (MCDA) and Geographic Information System (GIS)-enabled Least Cost Path (LCPA) analysis. Experts integrate geospatial, stakeholder, and regulatory considerations throughout iterative selection phases to optimize route feasibility and compliance.[1][2]
+
+### Industry Routing Decision Process
+
+Midstream pipeline route selection typically follows these stages:
+
+- Define source and destination points, then establish wide corridors of interest that connect these termini while considering initial feasibility and market demand.[3][1]
+- Engage in MCDA or similar analytical techniques, weighting criteria such as slope, geology, environmental sensitivity, population density, land ownership, and constructability.[1]
+- Use GIS tools (ArcGIS, LANDSAT, etc.) to objectively evaluate routes, generate weighted overlay surfaces, and compare alternatives for shortest, safest, and most cost-effective path.[1]
+- Iteratively narrow corridor width as project data improves, progressing from regional-scale selection down to specific right-of-way (ROW) strips.[3]
+
+### Regulatory Considerations
+
+Pipeline routing is subject to a multi-layered regulatory regime:
+
+- In the US, interstate natural gas pipelines require Federal Energy Regulatory Commission (FERC) approval, which includes rigorous environmental review (EIS/EA), landowner engagement, and integration of local, state, and federal permits (Clean Water Act, Endangered Species Act, National Historic Preservation Act, etc.).[2]
+- For hazardous liquid pipelines and intrastate lines, regulatory responsibility shifts to state and local authorities, with rules and depth of oversight varying widely between jurisdictions.[2]
+- Crossing private or sensitive lands necessitates voluntary easement agreements or where legally supported, exercise of eminent domain powers, which are controversial and thus carefully managed through negotiation and legal recourse.[2]
+
+### Technical and Environmental Factors
+
+The most optimal pipeline routes balance multiple interests:
+
+- Construction criteria: Shortest path, minimum impact to settlements, minimizing river/stream/road/platform crossings.[1]
+- Environmental/geological criteria: Route avoidance of fragile ecosystems, aquifers (e.g. Ogallala), floodplains, and geotechnically unstable zones.[3][1]
+- Regulatory criteria: Full compliance with route exclusion zones and necessary permit acquisitions.
+- Other key factors: Offtake points, stakeholder concerns, cost optimization through cartographic simplification or path minimization, and engagement with local governments and the public.
+
+### Example Case Studies
+
+- The Dangote Refinery Project in Nigeria used LANDSAT GIS modeling to classify land cover types and prioritize routing factors, with environmental and geological aspects outweighing economic costs in their MCDA expert feedback model; the selected route minimized crossings and sensitive area impact.[1]
+- The Keystone XL pipeline routing was optimized using weighted GIS overlays for slope, geology, population, and land use, avoiding key aquifers and maximizing correct, least-cost results.[1]
+- Traditional manual methods are increasingly replaced by automated algorithms, yielding up to 20% cost reduction and significant improvements in environmental and stakeholder compliance.[1]
+
+### Summary Table: Route Selection Components
+
+| Factor             | Example Methodology                     | Regulatory Interface                | Industry Practice Citation       |
+|--------------------|----------------------------------------|-------------------------------------|----------------------------------|
+| Environmental      | GIS overlay, MCDA, satellite imagery    | EIS, Clean Water Act, local zoning  | Dangote/Keystone XL case studies [1] |
+| Construction Cost  | LCPA algorithms, cartographic simplification | FERC, state-level approval         | GIS-based Nigeria/Turkey studies [1] |
+| Land Ownership     | Easement negotiation, eminent domain    | FERC certificate, state law         | PST regulatory briefing [2] |
+| Regulatory         | Multiple-permit acquisition, compliance | EIS, NEPA, state-specific mandates  | PST regulatory briefing [2] |
+
+
+Midstream route selection is a rigorous, data-driven process involving cross-disciplinary input and robust regulatory review. GIS-enabled and MCDA methods are now preferred for both technical accuracy and compliance assurance, with stakeholder engagement and multi-agency permitting central throughout execution.[2][3][1]
+
+[1](https://www.academia.edu/43548775/Selection_of_Optimum_Petroleum_Pipeline_Routes_Using_A_Multi_Criteria_Decision_Analysis_and_GIS_Least_Cost_Path_Approach)
+[2](https://pstrust.org/wp-content/uploads/2024/09/10-PST-BriefingPaper-RoutingSitingIssues.pdf)
+[3](https://kh.aquaenergyexpo.com/wp-content/uploads/2024/01/Pipeline-Route-Selection-Class-location.pdf)
+[4](https://eisdocs.dsdip.qld.gov.au/Wandoan%20Coal/EIS/EIS%20-%20Volume%203%20-%20Appendices%20and%20Attachments/appendix-2-1-v3-4-western-csm-water-supply-pipeline-route-selection-report.pdf)
+[5](https://www.emerson.com/documents/automation/case-study-business-operational-integration-for-a-gas-pipeline-ras-en-68244.pdf)
+[6](https://www.ijsrp.org/research-paper-0620/ijsrp-p10270.pdf)
+[7](https://www.sdewes.org/jsdnarema/pid1.0556)
+[8](https://cgi.di.uoa.gr/~phdsbook/files/thomaidis.pdf)
+[9](https://www.scribd.com/document/468121901/midstream-applications-for-oil-gas-en-4244612)
+[10](https://www.esmap.org/sites/default/files/esmap-files/03503.Cross_Border%20Oil%20and%20Gas%20Pipelines_Problems%20and%20Prospects.pdf)
+[11](https://dynamicrisk.net/pipeline-regulatory-compliance/)
+[12](https://ww2.eagle.org/content/dam/eagle/rules-and-guides/current/offshore/234_guidance_notes_on_subsea_pipeline_route_determination/Pipeline_Route_Determination_GN_e-Aug16-New%20Logo.pdf)
+[13](https://www.sciencedirect.com/science/article/abs/pii/S2949891025006013)
+[14](https://web.itu.edu.tr/tahsin/PAPERBOX/B57.pdf)
+[15](https://journalofenergyanddevelopment.org/index.php/journalofenergyanddevelopment/article/download/25/15/50)
+[16](https://opencivilengineeringjournal.com/VOLUME/16/ELOCATOR/e187414952209160/FULLTEXT/)
+[17](https://www.scribd.com/document/420135879/Midstream-Overview-and-Offerings)
+[18](https://www.eib.org/attachments/registers/82037213.pdf)
+[19](https://www.pillsburylaw.com/a/web/2410/CDB718561D38BABF356E4AB372ED2A70.pdf)
+[20](https://proceedings.esri.com/library/userconf/proc15/papers/1272_673.pdf)
