@@ -11,6 +11,7 @@
 #include <random>
 #include <filesystem>
 #include <sstream>
+#include <limits>
 
 namespace agrs {
 namespace pirl {
@@ -78,14 +79,73 @@ std::vector<float> Action::to_vector() const {
 
 void Action::apply_constraints(const State& current_state, 
                               const PhysicsConstraints& physics) {
-    // Clamp heading change to reasonable limits
-    heading_change = std::clamp(heading_change, -M_PI / 4.0, M_PI / 4.0);
-    
-    // Clamp step size
+    // Clamp step size first (needed for bend radius calculation)
     step_size = std::clamp(step_size, 10.0, 100.0);
     
-    // Additional physics-based constraints would go here
-    // (e.g., reduce step size if slope is high)
+    // Initial heading change limit
+    heading_change = std::clamp(heading_change, -M_PI / 4.0, M_PI / 4.0);
+    
+    // ============================================================================
+    // BEND RADIUS ENFORCEMENT (based on pipeline specifications)
+    // ============================================================================
+    
+    // For pipe bending, we need to ensure the bend radius meets minimum requirements
+    // Bend radius R = L / (2 * sin(θ/2)) where L = step_size, θ = heading_change
+    
+    if (std::abs(heading_change) > 1e-6) {  // Only if actually turning
+        double current_bend_radius = step_size / (2.0 * std::sin(std::abs(heading_change) / 2.0));
+        
+        // Determine minimum allowable bend radius based on bend type
+        // From pipeline_specs.json:
+        // - Hot bend min radius: 1.981m (very tight, pre-fabricated bends)
+        // - Field bend max angle: 5° (very gentle, cold bending)
+        // - HDD min radius: 792.48m (for trenchless crossings)
+        
+        // For normal routing, we use field bend constraints (cold bending)
+        // Field bends are limited to 5° maximum per joint/step
+        // This translates to a minimum bend radius for the given step size
+        
+        const double FIELD_BEND_MAX_ANGLE_DEG = 5.0;  // From specs
+        const double FIELD_BEND_MAX_ANGLE_RAD = FIELD_BEND_MAX_ANGLE_DEG * M_PI / 180.0;
+        
+        // For cold field bending, typical industry standard is 40D (40 × diameter)
+        // Pipeline diameter = 660.4mm = 0.6604m
+        // Minimum bend radius = 40 × 0.6604 = 26.4m for cold bending
+        const double PIPE_DIAMETER_M = 0.6604;
+        const double MIN_COLD_BEND_RADIUS = PIPE_DIAMETER_M * 40.0;  // 26.4m
+        
+        // Calculate maximum heading change for this step size to meet minimum radius
+        double max_angle_for_radius = 2.0 * std::asin(step_size / (2.0 * MIN_COLD_BEND_RADIUS));
+        
+        // Also enforce field bend angle limit (5° per step for cold bending)
+        double max_angle_for_field_bend = FIELD_BEND_MAX_ANGLE_RAD;
+        
+        // Use the most restrictive constraint
+        double max_allowed_angle = std::min(max_angle_for_radius, max_angle_for_field_bend);
+        
+        // Clamp heading change to meet bend radius requirements
+        heading_change = std::clamp(heading_change, -max_allowed_angle, max_allowed_angle);
+        
+        // Recalculate actual bend radius after constraint
+        double final_bend_radius = step_size / (2.0 * std::sin(std::abs(heading_change) / 2.0));
+        
+        // Ensure we meet the minimum (safety check)
+        if (final_bend_radius < MIN_COLD_BEND_RADIUS - 0.1) {
+            // If still violating, reduce heading change further
+            heading_change = std::clamp(heading_change, 
+                                       -max_allowed_angle * 0.9, 
+                                       max_allowed_angle * 0.9);
+        }
+    }
+    
+    // Additional physics-based constraints
+    
+    // Reduce step size on steep slopes (harder to bend pipe on incline)
+    if (current_state.slope > 15.0) {  // > 15% slope
+        double slope_factor = 1.0 - ((current_state.slope - 15.0) / 50.0);
+        slope_factor = std::clamp(slope_factor, 0.5, 1.0);
+        step_size *= slope_factor;
+    }
 }
 
 // ============================================================================
@@ -228,42 +288,46 @@ void GISDataManager::load_all_data() {
         }
     }
     
-    // Load coastline boundary (optional - for coastal projects)
-    std::string coastline_path = project_dir_ + "/data/vectors/coastline.gpkg";
-    if (!fs::exists(coastline_path)) {
-        coastline_path = project_dir_ + "/data/vectors/coastline.shp";
-    }
-    if (!fs::exists(coastline_path)) {
-        coastline_path = project_dir_ + "/data/vectors/processed/coastline_epsg" + 
-                         std::to_string(epsg_code_) + "_processed.gpkg";
-    }
+    // Load sea polygon (largest water body - 1km exclusion zone)
+    std::string sea_polygon_path = project_dir_ + "/data/vectors/sea_polygon.gpkg";
     
-    if (fs::exists(coastline_path)) {
-        GDALDataset* coast_ds = static_cast<GDALDataset*>(
-            GDALOpenEx(coastline_path.c_str(), GDAL_OF_VECTOR, nullptr, nullptr, nullptr));
-        if (coast_ds && coast_ds->GetLayerCount() > 0) {
-            OGRLayer* layer = coast_ds->GetLayer(0);
-            OGRGeometryCollection* collection = new OGRGeometryCollection();
-            OGRFeature* feature;
-            int count = 0;
-            while ((feature = layer->GetNextFeature()) != nullptr) {
+    if (fs::exists(sea_polygon_path)) {
+        std::cout << "    🌊 Loading sea polygon..." << std::endl;
+        GDALDataset* sea_ds = static_cast<GDALDataset*>(
+            GDALOpenEx(sea_polygon_path.c_str(), GDAL_OF_VECTOR, nullptr, nullptr, nullptr));
+        if (sea_ds && sea_ds->GetLayerCount() > 0) {
+            OGRLayer* layer = sea_ds->GetLayer(0);
+            OGRFeature* feature = layer->GetNextFeature();
+            if (feature) {
                 OGRGeometry* geom = feature->GetGeometryRef();
                 if (geom) {
-                    collection->addGeometry(geom);
-                    count++;
+                    sea_polygon_geom_.reset(geom->clone());
+                    
+                    // Get area from attributes if available
+                    double area_km2 = 0.0;
+                    int area_field_idx = feature->GetFieldIndex("area_km2");
+                    if (area_field_idx >= 0) {
+                        area_km2 = feature->GetFieldAsDouble(area_field_idx);
+                    } else {
+                        // Calculate from geometry  
+                        OGREnvelope envelope;
+                        geom->getEnvelope(&envelope);
+                        double width = envelope.MaxX - envelope.MinX;
+                        double height = envelope.MaxY - envelope.MinY;
+                        area_km2 = (width * height) / 1000000.0;  // Rough estimate
+                    }
+                    
+                    std::cout << "       ✅ Sea polygon loaded:" << std::endl;
+                    std::cout << "          Area: " << area_km2 << " km²" << std::endl;
+                    std::cout << "          Exclusion zone: 1000 m (1 km)" << std::endl;
+                    std::cout << "          🔒 Offshore routing will be blocked" << std::endl;
                 }
                 OGRFeature::DestroyFeature(feature);
             }
-            if (count > 0) {
-                coastline_geom_.reset(collection);
-                std::cout << "    ✅ Coastline boundary loaded (" << count << " segments)" << std::endl;
-            } else {
-                delete collection;
-            }
-            GDALClose(coast_ds);
+            GDALClose(sea_ds);
         }
     } else {
-        std::cout << "    ℹ️  No coastline data (offshore routing not constrained)" << std::endl;
+        std::cout << "    ℹ️  No sea polygon (inland project or extract with extract_sea_polygon.py)" << std::endl;
     }
     
     // Load water bodies
@@ -741,41 +805,32 @@ bool GISDataManager::is_within_aoi(double x, double y) const {
     return aoi_geom_->Contains(&point);
 }
 
-bool GISDataManager::is_beyond_coastline(double x, double y) const {
-    if (!coastline_geom_) {
-        // No coastline loaded - allow all positions
-        return false;
+// Sea polygon constraint: 1km exclusion zone
+double GISDataManager::distance_to_sea(double x, double y) const {
+    if (!sea_polygon_geom_) {
+        return std::numeric_limits<double>::max();  // No sea = infinitely far
     }
     
     OGRPoint point(x, y);
     
     // Set spatial reference if needed
-    if (coastline_geom_->getSpatialReference()) {
-        point.assignSpatialReference(coastline_geom_->getSpatialReference());
+    if (sea_polygon_geom_->getSpatialReference()) {
+        point.assignSpatialReference(sea_polygon_geom_->getSpatialReference());
     }
     
-    // Check distance to nearest coastline segment
-    double min_distance = coastline_geom_->Distance(&point);
-    
-    // Hard boundary: ANY crossing of coastline itself terminates (within 10m = on the line)
-    const double COASTLINE_CROSSING_THRESHOLD = 10.0;  // meters - essentially touching the line
-    if (min_distance < COASTLINE_CROSSING_THRESHOLD) {
-        // Position is ON or crossing the coastline polyline itself
-        return true;  // Immediate termination
+    return sea_polygon_geom_->Distance(&point);
+}
+
+bool GISDataManager::is_near_sea(double x, double y) const {
+    if (!sea_polygon_geom_) {
+        return false;  // No sea polygon = can't be near it
     }
     
-    // Check if this is coastal water (within 200m buffer of coastline)
-    // This prevents offshore routing while allowing inland rivers
-    int land_cover = get_land_cover_class(x, y);
-    if (land_cover == 80) {  // Water land cover
-        // If water AND within 200m of coast = coastal/offshore water (blocked)
-        // If water AND beyond 200m of coast = inland river/lake (allowed for crossing)
-        const double OFFSHORE_BUFFER = 200.0;  // meters
-        return (min_distance < OFFSHORE_BUFFER);
-    }
+    const double SEA_EXCLUSION_DISTANCE_M = 1000.0;  // 1 km buffer
+    double distance = distance_to_sea(x, y);
     
-    // Not water and not crossing coastline = safe
-    return false;
+    // Terminate if within 1 km of sea polygon
+    return distance < SEA_EXCLUSION_DISTANCE_M;
 }
 
 void GISDataManager::get_aoi_bounds(double& minx, double& miny, 
@@ -973,8 +1028,34 @@ double CostModel::calculate_segment_cost(const State& from_state,
         reward_info_out->terrain_cost = terrain_cost_val * length * regional_multiplier_;
         reward_info_out->water_crossing_cost = (to_state.water_proximity < 0.02) ? 
             water_crossing_cost(20.0, 2.0) * regional_multiplier_ : 0.0;
-        reward_info_out->infrastructure_cost = (to_state.road_proximity < 0.01) ? 
-            road_crossing_cost("major_road") * regional_multiplier_ : 0.0;
+        
+        // Infrastructure crossing costs (roads, railways, powerlines)
+        double infra_cost = 0.0;
+        
+        // Road crossing
+        if (to_state.road_proximity < 0.01) {  // < 10m = crossing
+            infra_cost += road_crossing_cost("major_road") * regional_multiplier_;
+        }
+        
+        // Railway crossing - MUST use HDD (Criteria 12: trenchless crossing)
+        if (to_state.railway_proximity < 0.003) {  // < 3m = crossing railway corridor
+            // HDD costs are significantly higher than open cut
+            // Typical HDD: $500-2000/m depending on diameter, geology, length
+            // For 660mm pipe at ~100m crossing: $150k-$300k
+            double hdd_cost_railway = 250000.0;  // $250k for railway HDD crossing
+            infra_cost += hdd_cost_railway * regional_multiplier_;
+        }
+        
+        // Powerline crossing - Requires HDD for safety (overhead clearance during construction)
+        double powerline_dist_m = gis.distance_to_power_line(to_state.x, to_state.y) * 1000.0;
+        if (powerline_dist_m < 2.0) {  // < 2m = crossing powerline corridor
+            // HDD required to avoid electrical hazards during construction
+            // Shorter crossing than railway, but still expensive
+            double hdd_cost_powerline = 150000.0;  // $150k for powerline HDD crossing
+            infra_cost += hdd_cost_powerline * regional_multiplier_;
+        }
+        
+        reward_info_out->infrastructure_cost = infra_cost;
         reward_info_out->environmental_cost = (env_cost_val * length + geohazard_cost * length) * regional_multiplier_;
         reward_info_out->row_cost = cadastre_cost * length * regional_multiplier_;
         reward_info_out->permitting_cost = social_cost * length * regional_multiplier_;
@@ -1033,47 +1114,43 @@ double CostModel::railway_crossing_cost() const {
     return crossing_costs_.at("railway");
 }
 
-double CostModel::hydraulic_cost(const HydraulicsCalculator::SegmentHydraulics& hydraulics,
+double CostModel::hydraulic_cost(const SegmentHydraulics& hydraulics,
                                  double segment_length_m) const {
     double cost = 0.0;
     
-    // Major cost: Pumping/compression station required
-    if (hydraulics.requires_pumping_station) {
-        // Typical cost range: $500k-$2M depending on capacity
-        // For gas pipeline with 26" diameter at 70 bar: ~$1M
-        cost += 1000000.0;
+    // Major cost: Compressor station required
+    if (hydraulics.has_compressor_station) {
+        // Cost depends on power requirement and type
+        // Base cost is configurable via parameter overrides
+        cost += compressor_base_cost_;
+        
+        // Add power-based cost (based on compressor_power_kw if available)
+        if (hydraulics.compressor_power_kw > 0.0) {
+            // CAPEX per kW is configurable
+            cost += hydraulics.compressor_power_kw * compressor_power_cost_per_kw_;
+        }
     }
     
     // Penalty for suboptimal flow velocity
-    // Erosion risk (too fast)
-    if (hydraulics.erosion_risk) {
-        // High velocity causes erosion: $100-200/m for protective coatings/measures
-        cost += 150.0 * segment_length_m;
+    // Erosion risk (too fast) - threshold and penalty rate configurable
+    if (hydraulics.flow_velocity_m_s > erosion_velocity_threshold_m_s_) {
+        // High velocity causes erosion: protective coatings/measures required
+        double erosion_factor = (hydraulics.flow_velocity_m_s - erosion_velocity_threshold_m_s_) / 5.0;  // Normalized
+        cost += erosion_penalty_per_m_ * erosion_factor * segment_length_m;
     }
     
-    // Corrosion/sedimentation risk (too slow) - mainly for liquids
-    if (hydraulics.corrosion_risk) {
-        // Low velocity allows sedimentation/corrosion: $50-100/m for enhanced monitoring
-        cost += 75.0 * segment_length_m;
+    // Penalty for very low velocity - risk of liquid dropout in gas lines
+    if (hydraulics.flow_velocity_m_s < dropout_velocity_threshold_m_s_ && hydraulics.flow_velocity_m_s > 0.0) {
+        // Low velocity allows liquid dropout: enhanced drainage/monitoring required
+        double dropout_factor = (dropout_velocity_threshold_m_s_ - hydraulics.flow_velocity_m_s) / dropout_velocity_threshold_m_s_;  // Normalized
+        cost += dropout_penalty_per_m_ * dropout_factor * segment_length_m;
     }
     
-    // Cavitation risk (liquids only)
-    if (hydraulics.cavitation_risk) {
-        // Risk of cavitation damage: $200-400/m for surge protection/thicker walls
-        cost += 300.0 * segment_length_m;
-    }
-    
-    // Penalty for high Mach number in gas flow (approaching sonic conditions)
-    if (hydraulics.mach_number > 0.3) {
-        // Approaching sonic flow requires special design
-        double mach_penalty = (hydraulics.mach_number - 0.3) * 500.0; // $/m
-        cost += mach_penalty * segment_length_m;
-    }
-    
-    // Slight penalty for non-optimal flow regimes
-    if (hydraulics.flow_regime == 1) {
-        // Transitional flow is less efficient
-        cost += 10.0 * segment_length_m;
+    // Penalty for high pressure drop (indicates inefficient route)
+    if (hydraulics.pressure_drop_bar > excessive_pressure_drop_threshold_bar_) {
+        // Excessive pressure drop per segment indicates suboptimal routing
+        double excessive_drop = hydraulics.pressure_drop_bar - excessive_pressure_drop_threshold_bar_;
+        cost += excessive_drop * excessive_pressure_drop_per_bar_;
     }
     
     return cost;
@@ -1298,6 +1375,99 @@ bool PhysicsConstraints::check_hot_bend_count(int current_count) const {
 // ============================================================================
 // TO BE CONTINUED IN PART 2...
 // ============================================================================
+void CostModel::apply_parameter_overrides(const nlohmann::json& overrides) {
+    std::cout << "   ⚙️  Applying cost matrix and hydraulic cost overrides..." << std::endl;
+    
+    int override_count = 0;
+    
+    // Apply cost matrix overrides
+    if (overrides.contains("cost_matrix")) {
+        auto cost_matrix = overrides["cost_matrix"];
+        
+        // Terrain multipliers
+        if (cost_matrix.contains("terrain_multipliers")) {
+            auto terrain = cost_matrix["terrain_multipliers"];
+            for (auto it = terrain.begin(); it != terrain.end(); ++it) {
+                std::string key = it.key();
+                double value = it.value().get<double>();
+                if (terrain_multipliers_.count(key)) {
+                    terrain_multipliers_[key] = value;
+                    override_count++;
+                }
+            }
+        }
+        
+        // Land cover costs
+        if (cost_matrix.contains("landcover_costs")) {
+            auto landcover = cost_matrix["landcover_costs"];
+            for (auto it = landcover.begin(); it != landcover.end(); ++it) {
+                int key = std::stoi(it.key());
+                double value = it.value().get<double>();
+                landcover_costs_[key] = value;
+                override_count++;
+            }
+        }
+        
+        // Infrastructure costs
+        if (cost_matrix.contains("infrastructure_costs")) {
+            auto infra = cost_matrix["infrastructure_costs"];
+            for (auto it = infra.begin(); it != infra.end(); ++it) {
+                std::string key = it.key();
+                double value = it.value().get<double>();
+                crossing_costs_[key] = value;
+                override_count++;
+            }
+        }
+    }
+    
+    // Apply hydraulic cost overrides
+    if (overrides.contains("hydraulic_costs")) {
+        auto hydraulic = overrides["hydraulic_costs"];
+        
+        if (hydraulic.contains("compressor_base_cost")) {
+            compressor_base_cost_ = hydraulic["compressor_base_cost"].get<double>();
+            override_count++;
+        }
+        
+        if (hydraulic.contains("compressor_power_cost_per_kw")) {
+            compressor_power_cost_per_kw_ = hydraulic["compressor_power_cost_per_kw"].get<double>();
+            override_count++;
+        }
+        
+        if (hydraulic.contains("erosion_velocity_threshold_m_s")) {
+            erosion_velocity_threshold_m_s_ = hydraulic["erosion_velocity_threshold_m_s"].get<double>();
+            override_count++;
+        }
+        
+        if (hydraulic.contains("erosion_penalty_per_m")) {
+            erosion_penalty_per_m_ = hydraulic["erosion_penalty_per_m"].get<double>();
+            override_count++;
+        }
+        
+        if (hydraulic.contains("dropout_velocity_threshold_m_s")) {
+            dropout_velocity_threshold_m_s_ = hydraulic["dropout_velocity_threshold_m_s"].get<double>();
+            override_count++;
+        }
+        
+        if (hydraulic.contains("dropout_penalty_per_m")) {
+            dropout_penalty_per_m_ = hydraulic["dropout_penalty_per_m"].get<double>();
+            override_count++;
+        }
+        
+        if (hydraulic.contains("excessive_pressure_drop_threshold_bar")) {
+            excessive_pressure_drop_threshold_bar_ = hydraulic["excessive_pressure_drop_threshold_bar"].get<double>();
+            override_count++;
+        }
+        
+        if (hydraulic.contains("excessive_pressure_drop_per_bar")) {
+            excessive_pressure_drop_per_bar_ = hydraulic["excessive_pressure_drop_per_bar"].get<double>();
+            override_count++;
+        }
+    }
+    
+    std::cout << "      Cost model overrides applied (" << override_count << " parameters)" << std::endl;
+}
+
 // Remaining implementations:
 // - PipelineEnvironment (full Gymnasium interface)
 // - PIRLAgent (Python integration)

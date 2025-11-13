@@ -1,563 +1,589 @@
-#include "agrs_zeus/Hydraulics.h"
+/**
+ * @file Hydraulics.cpp
+ * @brief Implementation of hydraulics module for pipeline pressure calculations
+ * 
+ * All equations are deterministic and based on industry standards:
+ * - Darcy-Weisbach for pressure drop
+ * - Swamee-Jain for friction factor
+ * - Real gas equation of state for density
+ * - Polytropic compression for compressor power
+ */
+
+#include "../../include/agrs_zeus/Hydraulics.h"
+#include "../../include/agrs_zeus/HydraulicsConstants.h"
 #include <cmath>
 #include <algorithm>
 #include <stdexcept>
+#include <iostream>
 
 namespace agrs {
 namespace pirl {
 
+using namespace hydraulics;
+
 // ============================================================================
-// FLUID PROPERTIES IMPLEMENTATIONS
+// HYDRAULICS CALCULATOR - CONSTRUCTION
 // ============================================================================
 
-void HydraulicsCalculator::FluidProperties::update_for_conditions(
-    double pressure_pa, double temperature_k) {
-    this->pressure_pa = pressure_pa;
-    this->temperature_k = temperature_k;
+HydraulicsCalculator::HydraulicsCalculator(const PipelineHydraulics& params)
+    : params_(params) {
     
-    // Update density and viscosity based on pressure and temperature
-    // For gases, use ideal gas law with compressibility factor
-    if (type == FluidType::NATURAL_GAS || type == FluidType::HYDROGEN || 
-        type == FluidType::CO2 || type == FluidType::AMMONIA) {
-        // ρ = (P * M) / (Z * R * T)
-        // where M = molecular weight, Z = compressibility factor, R = gas constant
-        double z = compressibility; // Already calculated
-        density_kg_m3 = (pressure_pa * molecular_weight) / 
-                       (z * GAS_CONSTANT_J_MOL_K * temperature_k * 1000.0);
-        
-        // Viscosity update using Sutherland's formula (simplified)
-        // μ(T) = μ₀ * (T/T₀)^0.7
-        double ref_temp = 288.15; // 15°C reference
-        double temp_ratio = temperature_k / ref_temp;
-        viscosity_pa_s *= std::pow(temp_ratio, 0.7);
+    // Validate parameters
+    if (params_.diameter_internal_m <= 0.0) {
+        throw std::invalid_argument("Pipe diameter must be positive");
     }
-    // For liquids, temperature effects are smaller
-    else {
-        // Density changes slightly with temperature (thermal expansion)
-        // Viscosity decreases with temperature (approximate)
-        double temp_diff = temperature_k - 288.15;
-        viscosity_pa_s *= std::exp(-0.02 * temp_diff); // Approximate
+    if (params_.flow_rate_m3_s <= 0.0) {
+        throw std::invalid_argument("Flow rate must be positive");
     }
-}
-
-HydraulicsCalculator::FluidProperties 
-HydraulicsCalculator::FluidProperties::for_natural_gas(double pressure_pa, double temp_k) {
-    FluidProperties props;
-    props.type = FluidType::NATURAL_GAS;
-    props.molecular_weight = 18.5; // kg/kmol (typical natural gas mix)
-    props.specific_gravity = 0.64; // Relative to air
-    props.temperature_k = temp_k;
-    props.pressure_pa = pressure_pa;
-    
-    // Calculate compressibility factor (Z) for real gas
-    // Using simplified correlation for natural gas
-    double pr = pressure_pa / 4.6e6; // Reduced pressure (Pc ~ 4.6 MPa)
-    double tr = temp_k / 190.0;      // Reduced temperature (Tc ~ 190 K)
-    props.compressibility = 1.0 - (0.36 * pr / tr); // Simplified Z-factor
-    
-    // Calculate density using real gas law
-    props.density_kg_m3 = (pressure_pa * props.molecular_weight) / 
-                         (props.compressibility * GAS_CONSTANT_J_MOL_K * temp_k * 1000.0);
-    
-    // Dynamic viscosity (Pa·s) - typical for natural gas
-    props.viscosity_pa_s = 1.1e-5 * std::pow(temp_k / 288.15, 0.7);
-    
-    return props;
-}
-
-HydraulicsCalculator::FluidProperties 
-HydraulicsCalculator::FluidProperties::for_crude_oil(double temp_k) {
-    FluidProperties props;
-    props.type = FluidType::OIL_CRUDE;
-    props.density_kg_m3 = 850.0; // kg/m³ (typical crude oil)
-    props.specific_gravity = 0.85; // Relative to water
-    props.temperature_k = temp_k;
-    props.pressure_pa = STANDARD_PRESSURE_PA;
-    props.molecular_weight = 200.0; // kg/kmol (approximate)
-    props.compressibility = 0.0; // Incompressible
-    
-    // Viscosity strongly depends on temperature
-    // Using exponential relationship: μ = μ₀ * exp(B/T)
-    double mu_0 = 0.001; // Pa·s at reference temp
-    double B = 2000.0;    // Empirical constant
-    props.viscosity_pa_s = mu_0 * std::exp(B / temp_k);
-    
-    return props;
-}
-
-HydraulicsCalculator::FluidProperties 
-HydraulicsCalculator::FluidProperties::for_water(double temp_k) {
-    FluidProperties props;
-    props.type = FluidType::WATER;
-    props.density_kg_m3 = 1000.0; // kg/m³
-    props.specific_gravity = 1.0;
-    props.temperature_k = temp_k;
-    props.pressure_pa = STANDARD_PRESSURE_PA;
-    props.molecular_weight = 18.0; // kg/kmol
-    props.compressibility = 0.0; // Incompressible
-    
-    // Water viscosity (Vogel equation)
-    props.viscosity_pa_s = 0.001792 * std::exp(-1.94 - 4.8 * log(temp_k / 273.15));
-    
-    return props;
-}
-
-HydraulicsCalculator::FluidProperties 
-HydraulicsCalculator::FluidProperties::for_hydrogen(double pressure_pa, double temp_k) {
-    FluidProperties props;
-    props.type = FluidType::HYDROGEN;
-    props.molecular_weight = 2.016; // kg/kmol
-    props.specific_gravity = 0.07; // Relative to air
-    props.temperature_k = temp_k;
-    props.pressure_pa = pressure_pa;
-    props.compressibility = 1.05; // H2 is close to ideal gas
-    
-    props.density_kg_m3 = (pressure_pa * props.molecular_weight) / 
-                         (props.compressibility * GAS_CONSTANT_J_MOL_K * temp_k * 1000.0);
-    
-    props.viscosity_pa_s = 8.8e-6 * std::pow(temp_k / 273.15, 0.68);
-    
-    return props;
-}
-
-HydraulicsCalculator::FluidProperties 
-HydraulicsCalculator::FluidProperties::for_co2(double pressure_pa, double temp_k) {
-    FluidProperties props;
-    props.type = FluidType::CO2;
-    props.molecular_weight = 44.01; // kg/kmol
-    props.specific_gravity = 1.52; // Relative to air
-    props.temperature_k = temp_k;
-    props.pressure_pa = pressure_pa;
-    
-    // CO2 compressibility factor (more complex than ideal gas)
-    double pr = pressure_pa / 7.38e6; // Reduced pressure
-    double tr = temp_k / 304.2;       // Reduced temperature
-    props.compressibility = 1.0 - (0.5 * pr / tr);
-    
-    props.density_kg_m3 = (pressure_pa * props.molecular_weight) / 
-                         (props.compressibility * GAS_CONSTANT_J_MOL_K * temp_k * 1000.0);
-    
-    props.viscosity_pa_s = 1.5e-5 * std::pow(temp_k / 273.15, 0.8);
-    
-    return props;
-}
-
-// ============================================================================
-// MATERIAL PROPERTIES IMPLEMENTATIONS
-// ============================================================================
-
-HydraulicsCalculator::MaterialProperties 
-HydraulicsCalculator::MaterialProperties::for_carbon_steel() {
-    MaterialProperties props;
-    props.type = PipeMaterial::CARBON_STEEL;
-    props.absolute_roughness_mm = ROUGHNESS_CARBON_STEEL_NEW;
-    props.max_allowable_stress_mpa = 360.0; // API 5L X52
-    props.youngs_modulus_gpa = 207.0;
-    props.thermal_expansion_coeff = 11.7e-6; // per °C
-    props.corrosion_resistant = false;
-    return props;
-}
-
-HydraulicsCalculator::MaterialProperties 
-HydraulicsCalculator::MaterialProperties::for_stainless_steel() {
-    MaterialProperties props;
-    props.type = PipeMaterial::STAINLESS_STEEL;
-    props.absolute_roughness_mm = ROUGHNESS_STAINLESS_STEEL;
-    props.max_allowable_stress_mpa = 480.0; // 316L stainless
-    props.youngs_modulus_gpa = 193.0;
-    props.thermal_expansion_coeff = 17.3e-6;
-    props.corrosion_resistant = true;
-    return props;
-}
-
-HydraulicsCalculator::MaterialProperties 
-HydraulicsCalculator::MaterialProperties::for_hdpe() {
-    MaterialProperties props;
-    props.type = PipeMaterial::HDPE;
-    props.absolute_roughness_mm = ROUGHNESS_HDPE;
-    props.max_allowable_stress_mpa = 10.0; // PE100
-    props.youngs_modulus_gpa = 1.1;
-    props.thermal_expansion_coeff = 200e-6; // Much higher than steel
-    props.corrosion_resistant = true;
-    return props;
-}
-
-HydraulicsCalculator::MaterialProperties 
-HydraulicsCalculator::MaterialProperties::for_coated_steel() {
-    MaterialProperties props;
-    props.type = PipeMaterial::COATED_STEEL;
-    props.absolute_roughness_mm = ROUGHNESS_COATED_STEEL;
-    props.max_allowable_stress_mpa = 360.0;
-    props.youngs_modulus_gpa = 207.0;
-    props.thermal_expansion_coeff = 11.7e-6;
-    props.corrosion_resistant = true; // Coating provides resistance
-    return props;
-}
-
-// ============================================================================
-// HYDRAULICS CALCULATOR CONSTRUCTOR
-// ============================================================================
-
-HydraulicsCalculator::HydraulicsCalculator(
-    const PipelineSpecifications& specs,
-    FluidType fluid_type,
-    PipeMaterial material)
-    : specs_(specs), fluid_type_(fluid_type), material_(material) {
-    
-    // Initialize fluid properties based on type
-    switch (fluid_type) {
-        case FluidType::NATURAL_GAS:
-            fluid_properties_ = FluidProperties::for_natural_gas(
-                specs.mop_bar * 1e5, specs.operating_temp_k);
-            break;
-        case FluidType::OIL_CRUDE:
-            fluid_properties_ = FluidProperties::for_crude_oil(specs.operating_temp_k);
-            break;
-        case FluidType::WATER:
-            fluid_properties_ = FluidProperties::for_water(specs.operating_temp_k);
-            break;
-        case FluidType::HYDROGEN:
-            fluid_properties_ = FluidProperties::for_hydrogen(
-                specs.mop_bar * 1e5, specs.operating_temp_k);
-            break;
-        case FluidType::CO2:
-            fluid_properties_ = FluidProperties::for_co2(
-                specs.mop_bar * 1e5, specs.operating_temp_k);
-            break;
-        default:
-            fluid_properties_ = FluidProperties::for_natural_gas(
-                specs.mop_bar * 1e5, specs.operating_temp_k);
+    if (params_.operating_temperature_k <= 0.0) {
+        throw std::invalid_argument("Temperature must be positive (Kelvin)");
     }
     
-    // Initialize material properties
-    switch (material) {
-        case PipeMaterial::CARBON_STEEL:
-            material_properties_ = MaterialProperties::for_carbon_steel();
-            break;
-        case PipeMaterial::STAINLESS_STEEL:
-            material_properties_ = MaterialProperties::for_stainless_steel();
-            break;
-        case PipeMaterial::HDPE:
-            material_properties_ = MaterialProperties::for_hdpe();
-            break;
-        case PipeMaterial::COATED_STEEL:
-            material_properties_ = MaterialProperties::for_coated_steel();
-            break;
-        default:
-            material_properties_ = MaterialProperties::for_carbon_steel();
-    }
+    std::cout << "[Hydraulics] Calculator initialized:" << std::endl;
+    std::cout << "  Internal diameter: " << params_.diameter_internal_m << " m" << std::endl;
+    std::cout << "  Flow rate: " << params_.flow_rate_m3_s << " m³/s" << std::endl;
+    std::cout << "  Operating temp: " << params_.operating_temperature_k << " K" << std::endl;
 }
 
 // ============================================================================
-// MAIN CALCULATION METHODS
+// FUNDAMENTAL CALCULATIONS
 // ============================================================================
 
-HydraulicsCalculator::SegmentHydraulics HydraulicsCalculator::calculate_segment(
-    double length_m,
-    double elevation_change_m,
-    double flow_rate_m3_s,
-    double upstream_pressure_pa,
-    double upstream_temperature_k) const {
+double HydraulicsCalculator::calculate_friction_factor(double reynolds_number) const {
+    // Use Swamee-Jain approximation of Colebrook-White equation
+    // Accurate to ±1% for turbulent flow
+    // f = 0.25 / [log₁₀(ε/(3.7D) + 5.74/Re^0.9)]²
     
-    // Determine if gas or liquid
-    bool is_gas = (fluid_type_ == FluidType::NATURAL_GAS || 
-                   fluid_type_ == FluidType::HYDROGEN ||
-                   fluid_type_ == FluidType::CO2 ||
-                   fluid_type_ == FluidType::AMMONIA);
-    
-    if (is_gas) {
-        // Convert volumetric to mass flow rate
-        double mass_flow_rate_kg_s = flow_rate_m3_s * fluid_properties_.density_kg_m3;
-        return calculate_gas_segment(length_m, elevation_change_m, 
-                                     mass_flow_rate_kg_s, upstream_pressure_pa,
-                                     upstream_temperature_k);
-    } else {
-        return calculate_liquid_segment(length_m, elevation_change_m,
-                                        flow_rate_m3_s, upstream_pressure_pa,
-                                        upstream_temperature_k);
+    if (reynolds_number < RE_LAMINAR_MAX) {
+        // Laminar flow: f = 64/Re
+        return 64.0 / reynolds_number;
     }
+    
+    // Turbulent flow
+    double relative_roughness = params_.roughness_absolute_mm / (params_.diameter_internal_m * 1000.0);
+    
+    double term1 = relative_roughness / 3.7;
+    double term2 = 5.74 / std::pow(reynolds_number, 0.9);
+    
+    double log_term = std::log10(term1 + term2);
+    double f = 0.25 / (log_term * log_term);
+    
+    // Safety bounds
+    f = std::clamp(f, 0.008, 0.100);
+    
+    return f;
 }
 
-HydraulicsCalculator::SegmentHydraulics HydraulicsCalculator::calculate_gas_segment(
-    double length_m,
-    double elevation_change_m,
-    double mass_flow_rate_kg_s,
-    double upstream_pressure_pa,
-    double upstream_temperature_k) const {
+double HydraulicsCalculator::calculate_reynolds_number(double velocity_m_s, double density_kg_m3) const {
+    // Re = (ρ × v × D) / μ
+    double Re = (density_kg_m3 * velocity_m_s * params_.diameter_internal_m) / 
+                params_.gas.dynamic_viscosity_pa_s;
     
-    SegmentHydraulics result = {};
+    return Re;
+}
+
+double HydraulicsCalculator::calculate_gas_density(double pressure_bar, double temperature_k) const {
+    // Real gas equation of state: ρ = (P × MW) / (Z × R × T)
     
-    // Pipeline geometry
-    double diameter_m = specs_.diameter_mm / 1000.0;
-    double area_m2 = M_PI * diameter_m * diameter_m / 4.0;
+    // Calculate Z-factor at these conditions
+    double Z = calculate_compressibility_factor(pressure_bar, temperature_k);
     
-    // Update fluid properties for current conditions
-    FluidProperties fluid = fluid_properties_;
-    fluid.update_for_conditions(upstream_pressure_pa, upstream_temperature_k);
+    // Convert pressure to Pa
+    double pressure_pa = pressure_bar * 100000.0;
     
-    // Calculate flow velocity
-    result.flow_velocity_m_s = mass_flow_rate_kg_s / (fluid.density_kg_m3 * area_m2);
+    // Calculate density
+    double rho = (pressure_pa * params_.gas.molecular_weight_kg_kmol) / 
+                 (Z * R_UNIVERSAL * temperature_k);
+    
+    return rho;
+}
+
+double HydraulicsCalculator::calculate_compressibility_factor(double pressure_bar, double temperature_k) const {
+    // Simplified Standing-Katz correlation for natural gas
+    // Valid for high-pressure gas transmission (Pr < 5, Tr > 1.5)
+    
+    // Reduced properties
+    double Pr = pressure_bar / params_.gas.critical_pressure_bar;
+    double Tr = temperature_k / params_.gas.critical_temperature_k;
+    
+    // Simplified correlation
+    // Z = 1 - (0.36 × Pr / Tr²)
+    double Z = 1.0 - (0.36 * Pr / (Tr * Tr));
+    
+    // Physical bounds
+    Z = std::clamp(Z, 0.5, 1.0);
+    
+    return Z;
+}
+
+double HydraulicsCalculator::calculate_flow_velocity(double flow_rate_m3_s, double diameter_m) const {
+    // v = Q / A where A = π(D/2)²
+    double area = M_PI * (diameter_m / 2.0) * (diameter_m / 2.0);
+    double velocity = flow_rate_m3_s / area;
+    
+    return velocity;
+}
+
+// ============================================================================
+// PRESSURE DROP CALCULATIONS
+// ============================================================================
+
+double HydraulicsCalculator::calculate_pressure_drop_friction(
+    double entry_pressure_bar,
+    double segment_length_m,
+    double elevation_change_m) const {
+    
+    // Use Darcy-Weisbach equation:
+    // ΔP = (f × L × ρ × v²) / (2 × D)
+    
+    // Calculate gas properties at entry conditions
+    double density = calculate_gas_density(entry_pressure_bar, params_.operating_temperature_k);
+    double velocity = calculate_flow_velocity(params_.flow_rate_m3_s, params_.diameter_internal_m);
     
     // Calculate Reynolds number
-    result.reynolds_number = calculate_reynolds(result.flow_velocity_m_s, diameter_m, fluid);
-    
-    // Determine flow regime
-    if (result.reynolds_number < 2300) {
-        result.flow_regime = 0; // Laminar
-    } else if (result.reynolds_number < 4000) {
-        result.flow_regime = 1; // Transitional
-    } else {
-        result.flow_regime = 2; // Turbulent
-    }
+    double Re = calculate_reynolds_number(velocity, density);
     
     // Calculate friction factor
-    double relative_roughness = material_properties_.absolute_roughness_mm / (diameter_m * 1000.0);
-    result.friction_factor = calculate_friction_factor(result.reynolds_number, relative_roughness);
+    double f = calculate_friction_factor(Re);
     
-    // Darcy-Weisbach pressure drop (simplified for gas)
-    // ΔP = f * (L/D) * (ρ * v² / 2)
-    double velocity_head = fluid.density_kg_m3 * result.flow_velocity_m_s * result.flow_velocity_m_s / 2.0;
-    double friction_loss_pa = result.friction_factor * (length_m / diameter_m) * velocity_head;
+    // Calculate pressure drop (in Pa)
+    double delta_P_pa = (f * segment_length_m * density * velocity * velocity) / 
+                        (2.0 * params_.diameter_internal_m);
     
-    // Elevation pressure change (ρ * g * Δh)
-    double elevation_loss_pa = fluid.density_kg_m3 * GRAVITY_M_S2 * elevation_change_m;
+    // Convert to bar
+    double delta_P_bar = delta_P_pa / 100000.0;
+    
+    return delta_P_bar;
+}
+
+double HydraulicsCalculator::calculate_pressure_change_elevation(
+    double density_kg_m3,
+    double elevation_change_m) const {
+    
+    // ΔP = ρ × g × Δh
+    // Positive elevation change (uphill) = pressure loss
+    
+    double delta_P_pa = density_kg_m3 * GRAVITY * elevation_change_m;
+    double delta_P_bar = delta_P_pa / 100000.0;
+    
+    return delta_P_bar;
+}
+
+// ============================================================================
+// SEGMENT CALCULATION
+// ============================================================================
+
+SegmentHydraulics HydraulicsCalculator::calculate_segment(
+    double entry_pressure_bar,
+    double segment_length_m,
+    double elevation_change_m) const {
+    
+    SegmentHydraulics result;
+    
+    // Entry conditions
+    result.entry_pressure_bar = entry_pressure_bar;
+    result.entry_temperature_k = params_.operating_temperature_k;
+    result.elevation_change_m = elevation_change_m;
+    
+    // Calculate gas properties at entry
+    double density_entry = calculate_gas_density(entry_pressure_bar, params_.operating_temperature_k);
+    
+    // Calculate velocity
+    result.flow_velocity_m_s = calculate_flow_velocity(params_.flow_rate_m3_s, params_.diameter_internal_m);
+    
+    // Check velocity limits
+    if (result.flow_velocity_m_s > MAX_VELOCITY_EROSION_LIMIT) {
+        std::cerr << "[Hydraulics] WARNING: Velocity " << result.flow_velocity_m_s 
+                  << " m/s exceeds erosion limit " << MAX_VELOCITY_EROSION_LIMIT << " m/s" << std::endl;
+    }
+    
+    // Calculate Reynolds number
+    result.reynolds_number = calculate_reynolds_number(result.flow_velocity_m_s, density_entry);
+    
+    // Calculate friction factor
+    result.friction_factor = calculate_friction_factor(result.reynolds_number);
+    
+    // Calculate pressure drop from friction
+    result.pressure_drop_friction_bar = calculate_pressure_drop_friction(
+        entry_pressure_bar, segment_length_m, elevation_change_m);
+    
+    // Calculate pressure change from elevation
+    result.pressure_drop_elevation_bar = calculate_pressure_change_elevation(
+        density_entry, elevation_change_m);
     
     // Total pressure drop
-    result.pressure_drop_pa = friction_loss_pa + elevation_loss_pa;
+    result.pressure_drop_bar = result.pressure_drop_friction_bar + result.pressure_drop_elevation_bar;
     
-    // Joule-Thomson effect (temperature drop in gas expansion)
-    double jt_coeff = calculate_joule_thomson_coefficient(upstream_pressure_pa / 1e6, upstream_temperature_k);
-    result.temperature_drop_k = jt_coeff * (result.pressure_drop_pa / 1e6);
+    // Exit pressure
+    result.exit_pressure_bar = entry_pressure_bar - result.pressure_drop_bar;
     
-    // Calculate Mach number
-    result.mach_number = calculate_mach_number(result.flow_velocity_m_s, upstream_temperature_k);
+    // Exit temperature (including Joule-Thomson effect)
+    double temp_change = params_.gas.joule_thomson_coeff_k_bar * result.pressure_drop_bar;
+    result.exit_temperature_k = result.entry_temperature_k + temp_change;
     
-    // Check for pumping station need
-    double downstream_pressure = upstream_pressure_pa - result.pressure_drop_pa;
-    result.requires_pumping_station = needs_pumping_station(
-        result.pressure_drop_pa, downstream_pressure, specs_.mop_bar * 1e5);
-    
-    // Check for erosion risk (high velocity)
-    VelocityLimits limits = get_velocity_limits();
-    result.erosion_risk = (result.flow_velocity_m_s > limits.max_m_s);
-    result.corrosion_risk = false; // Not applicable for gas
-    
-    return result;
-}
-
-HydraulicsCalculator::SegmentHydraulics HydraulicsCalculator::calculate_liquid_segment(
-    double length_m,
-    double elevation_change_m,
-    double volumetric_flow_rate_m3_s,
-    double upstream_pressure_pa,
-    double temperature_k) const {
-    
-    SegmentHydraulics result = {};
-    
-    // Pipeline geometry
-    double diameter_m = specs_.diameter_mm / 1000.0;
-    double area_m2 = M_PI * diameter_m * diameter_m / 4.0;
-    
-    // Flow velocity
-    result.flow_velocity_m_s = volumetric_flow_rate_m3_s / area_m2;
-    
-    // Reynolds number
-    result.reynolds_number = calculate_reynolds(result.flow_velocity_m_s, diameter_m, fluid_properties_);
-    
-    // Flow regime
-    if (result.reynolds_number < 2300) {
-        result.flow_regime = 0; // Laminar
-    } else if (result.reynolds_number < 4000) {
-        result.flow_regime = 1; // Transitional
-    } else {
-        result.flow_regime = 2; // Turbulent
-    }
-    
-    // Friction factor
-    double relative_roughness = material_properties_.absolute_roughness_mm / (diameter_m * 1000.0);
-    result.friction_factor = calculate_friction_factor(result.reynolds_number, relative_roughness);
-    
-    // Darcy-Weisbach equation for incompressible flow
-    // h_f = f * (L/D) * (v²/2g)
-    result.head_loss_m = result.friction_factor * (length_m / diameter_m) * 
-                         (result.flow_velocity_m_s * result.flow_velocity_m_s) / (2.0 * GRAVITY_M_S2);
-    
-    // Convert head loss to pressure drop
-    result.pressure_drop_pa = fluid_properties_.density_kg_m3 * GRAVITY_M_S2 * 
-                              (result.head_loss_m + elevation_change_m);
-    
-    // Check for pumping station need
-    double downstream_pressure = upstream_pressure_pa - result.pressure_drop_pa;
-    result.requires_pumping_station = needs_pumping_station(
-        result.pressure_drop_pa, downstream_pressure, specs_.mop_bar * 1e5);
-    
-    // Velocity checks
-    VelocityLimits limits = get_velocity_limits();
-    result.erosion_risk = (result.flow_velocity_m_s > limits.max_m_s);
-    result.corrosion_risk = (result.flow_velocity_m_s < limits.min_m_s);
-    
-    // Cavitation check (vapor pressure margin)
-    double vapor_pressure_pa = 2340.0; // Water at 20°C (example)
-    result.vapor_pressure_margin_pa = downstream_pressure - vapor_pressure_pa;
-    result.cavitation_risk = (result.vapor_pressure_margin_pa < 50000.0); // 0.5 bar safety margin
-    
-    // No temperature drop for liquids (incompressible)
-    result.temperature_drop_k = 0.0;
-    result.mach_number = 0.0;
+    // Average properties for segment
+    double avg_pressure = (entry_pressure_bar + result.exit_pressure_bar) / 2.0;
+    result.density_avg_kg_m3 = calculate_gas_density(avg_pressure, params_.operating_temperature_k);
+    result.compressibility_factor = calculate_compressibility_factor(avg_pressure, params_.operating_temperature_k);
     
     return result;
 }
 
 // ============================================================================
-// HELPER METHODS
+// ROUTE CALCULATION
 // ============================================================================
 
-bool HydraulicsCalculator::needs_pumping_station(
-    double accumulated_pressure_drop_pa,
-    double current_pressure_pa,
-    double mop_pa) const {
+std::vector<SegmentHydraulics> HydraulicsCalculator::calculate_route(
+    const std::vector<std::pair<double, double>>& route_segments,
+    double initial_pressure_bar,
+    double min_delivery_pressure_bar) {
     
-    // Need station if pressure drops below minimum operating pressure
-    double min_operating_pressure = mop_pa * 0.6; // 60% of MOP as minimum
+    std::vector<SegmentHydraulics> result;
+    result.reserve(route_segments.size());
     
-    // Or if accumulated pressure drop exceeds max allowable
-    double max_pressure_drop = specs_.max_pressure_drop_mpa * 1e6;
+    double current_pressure = initial_pressure_bar;
     
-    return (current_pressure_pa < min_operating_pressure) ||
-           (accumulated_pressure_drop_pa > max_pressure_drop);
-}
-
-double HydraulicsCalculator::calculate_friction_factor(
-    double reynolds, double relative_roughness) const {
+    std::cout << "[Hydraulics] Calculating route pressure profile..." << std::endl;
+    std::cout << "  Initial pressure: " << initial_pressure_bar << " bar" << std::endl;
+    std::cout << "  Minimum delivery: " << min_delivery_pressure_bar << " bar" << std::endl;
+    std::cout << "  Segments: " << route_segments.size() << std::endl;
     
-    // For laminar flow, use Hagen-Poiseuille
-    if (reynolds < 2300) {
-        return 64.0 / reynolds;
-    }
-    
-    // For turbulent flow, use Colebrook-White with Swamee-Jain initial guess
-    return colebrook_white_friction(reynolds, relative_roughness);
-}
-
-double HydraulicsCalculator::calculate_reynolds(
-    double velocity_m_s,
-    double diameter_m,
-    const FluidProperties& fluid) const {
-    
-    // Re = ρVD/μ
-    return (fluid.density_kg_m3 * velocity_m_s * diameter_m) / fluid.viscosity_pa_s;
-}
-
-HydraulicsCalculator::VelocityLimits HydraulicsCalculator::get_velocity_limits() const {
-    VelocityLimits limits;
-    
-    // Limits depend on fluid type and material
-    if (fluid_type_ == FluidType::NATURAL_GAS) {
-        limits.min_m_s = 3.0;   // Below: inefficient
-        limits.max_m_s = 30.0;  // Above: erosion risk
-        limits.optimal_m_s = 15.0;
-    } else if (fluid_type_ == FluidType::WATER) {
-        limits.min_m_s = 0.5;   // Below: sedimentation
-        limits.max_m_s = 3.0;   // Above: erosion
-        limits.optimal_m_s = 1.5;
-    } else if (fluid_type_ == FluidType::OIL_CRUDE) {
-        limits.min_m_s = 0.3;   // Below: wax deposition
-        limits.max_m_s = 2.0;   // Above: erosion
-        limits.optimal_m_s = 1.0;
-    } else {
-        // Default (conservative)
-        limits.min_m_s = 1.0;
-        limits.max_m_s = 5.0;
-        limits.optimal_m_s = 2.5;
-    }
-    
-    return limits;
-}
-
-double HydraulicsCalculator::swamee_jain_friction(
-    double reynolds, double relative_roughness) const {
-    
-    // Swamee-Jain approximation (±1% accuracy)
-    // f = 0.25 / [log₁₀(ε/3.7D + 5.74/Re^0.9)]²
-    double term1 = relative_roughness / 3.7;
-    double term2 = 5.74 / std::pow(reynolds, 0.9);
-    double log_term = std::log10(term1 + term2);
-    return 0.25 / (log_term * log_term);
-}
-
-double HydraulicsCalculator::colebrook_white_friction(
-    double reynolds, double relative_roughness, int max_iter) const {
-    
-    // Start with Swamee-Jain guess
-    double f = swamee_jain_friction(reynolds, relative_roughness);
-    
-    // Iterate Colebrook-White equation
-    // 1/√f = -2.0 log₁₀(ε/3.7D + 2.51/(Re√f))
-    for (int i = 0; i < max_iter; ++i) {
-        double sqrt_f = std::sqrt(f);
-        double term1 = relative_roughness / 3.7;
-        double term2 = 2.51 / (reynolds * sqrt_f);
-        double rhs = -2.0 * std::log10(term1 + term2);
-        double f_new = 1.0 / (rhs * rhs);
+    for (size_t i = 0; i < route_segments.size(); ++i) {
+        double length_m = route_segments[i].first;
+        double elevation_change_m = route_segments[i].second;
         
-        // Check convergence
-        if (std::abs(f_new - f) < 1e-6) {
-            return f_new;
+        // Calculate segment hydraulics
+        SegmentHydraulics segment = calculate_segment(
+            current_pressure, length_m, elevation_change_m);
+        
+        result.push_back(segment);
+        
+        // Update current pressure for next segment
+        current_pressure = segment.exit_pressure_bar;
+        
+        // Log progress every 100 segments
+        if ((i + 1) % 100 == 0) {
+            std::cout << "  Segment " << (i + 1) << "/" << route_segments.size() 
+                      << ": P = " << current_pressure << " bar" << std::endl;
         }
-        f = f_new;
+        
+        // Check for negative pressure (indicates problem)
+        if (current_pressure <= 0.0) {
+            std::cerr << "[Hydraulics] ERROR: Pressure dropped to zero at segment " << i << std::endl;
+            break;
+        }
     }
     
-    return f; // Return last iteration if not converged
+    double final_pressure = result.back().exit_pressure_bar;
+    double total_pressure_drop = initial_pressure_bar - final_pressure;
+    
+    std::cout << "[Hydraulics] Route calculation complete:" << std::endl;
+    std::cout << "  Final pressure: " << final_pressure << " bar" << std::endl;
+    std::cout << "  Total pressure drop: " << total_pressure_drop << " bar" << std::endl;
+    
+    if (final_pressure < min_delivery_pressure_bar) {
+        std::cout << "  ⚠️  WARNING: Final pressure below minimum (" 
+                  << final_pressure << " < " << min_delivery_pressure_bar << ")" << std::endl;
+        std::cout << "  Compressor station(s) required!" << std::endl;
+    } else {
+        std::cout << "  ✅ Route hydraulically feasible without compression" << std::endl;
+    }
+    
+    return result;
 }
 
-double HydraulicsCalculator::calculate_mach_number(
-    double velocity_m_s, double temperature_k) const {
+// ============================================================================
+// HYDRAULIC FEASIBILITY VALIDATION
+// ============================================================================
+
+bool HydraulicsCalculator::validate_hydraulic_feasibility(
+    const std::vector<SegmentHydraulics>& route_hydraulics,
+    double min_pressure_bar) const {
     
-    double speed_of_sound = speed_of_sound_gas(temperature_k);
-    return velocity_m_s / speed_of_sound;
+    if (route_hydraulics.empty()) {
+        return false;
+    }
+    
+    // Check all segment pressures
+    for (size_t i = 0; i < route_hydraulics.size(); ++i) {
+        if (route_hydraulics[i].exit_pressure_bar < min_pressure_bar) {
+            std::cout << "[Hydraulics] Infeasible: Pressure " << route_hydraulics[i].exit_pressure_bar 
+                      << " bar < " << min_pressure_bar << " bar at segment " << i << std::endl;
+            return false;
+        }
+        
+        if (route_hydraulics[i].exit_pressure_bar <= 0.0) {
+            std::cout << "[Hydraulics] Infeasible: Negative pressure at segment " << i << std::endl;
+            return false;
+        }
+    }
+    
+    return true;
 }
 
-double HydraulicsCalculator::speed_of_sound_gas(double temperature_k) const {
-    // c = √(γRT/M) where γ = heat capacity ratio, R = gas constant, M = molecular weight
-    double gamma = 1.3; // For natural gas (approximate)
-    double r_specific = GAS_CONSTANT_J_MOL_K / fluid_properties_.molecular_weight;
-    return std::sqrt(gamma * r_specific * temperature_k * 1000.0);
+// ============================================================================
+// COMPRESSOR STATION PLACEMENT
+// ============================================================================
+
+int HydraulicsCalculator::find_optimal_compressor_placement(
+    const std::vector<SegmentHydraulics>& route_hydraulics,
+    size_t violation_index,
+    double min_pressure_bar,
+    double max_pressure_bar) const {
+    
+    // Look back up to 20 segments or 10% of route length
+    int lookback = std::min<int>(20, route_hydraulics.size() / 10);
+    
+    // Find location where pressure is closest to (min + safety margin)
+    double target_pressure = min_pressure_bar + PRESSURE_SAFETY_MARGIN_BAR;
+    
+    int best_index = violation_index;
+    double best_diff = 999999.0;
+    
+    for (int i = std::max(0, static_cast<int>(violation_index) - lookback); 
+         i <= static_cast<int>(violation_index); ++i) {
+        
+        double pressure = route_hydraulics[i].exit_pressure_bar;
+        double diff = std::abs(pressure - target_pressure);
+        
+        if (diff < best_diff && pressure > min_pressure_bar) {
+            best_diff = diff;
+            best_index = i;
+        }
+    }
+    
+    return best_index;
 }
 
-double HydraulicsCalculator::calculate_z_factor(
-    double pressure_mpa, double temperature_k) const {
+void HydraulicsCalculator::recalculate_downstream_pressures(
+    std::vector<SegmentHydraulics>& route_hydraulics,
+    size_t start_index) {
     
-    // Simplified Z-factor calculation for natural gas
-    // Using Hall-Yarborough correlation (simplified)
-    double pr = pressure_mpa / 4.6; // Reduced pressure
-    double tr = temperature_k / 190.0; // Reduced temperature
+    if (start_index >= route_hydraulics.size()) {
+        return;
+    }
     
-    // Simplified equation (more accurate correlations available)
-    return 1.0 - (0.36 * pr / tr) + (0.1 * pr * pr / (tr * tr));
+    // Get starting pressure (after compression)
+    double current_pressure = route_hydraulics[start_index].exit_pressure_bar;
+    
+    // Recalculate all downstream segments
+    for (size_t i = start_index + 1; i < route_hydraulics.size(); ++i) {
+        // Get segment geometry
+        double length_m = route_hydraulics[i].exit_pressure_bar - route_hydraulics[i].entry_pressure_bar;
+        double elevation_change = route_hydraulics[i].elevation_change_m;
+        
+        // Recalculate with new entry pressure
+        route_hydraulics[i] = calculate_segment(current_pressure, length_m, elevation_change);
+        
+        current_pressure = route_hydraulics[i].exit_pressure_bar;
+    }
 }
 
-double HydraulicsCalculator::calculate_joule_thomson_coefficient(
-    double pressure_mpa, double temperature_k) const {
+std::vector<CompressorStation> HydraulicsCalculator::place_compressor_stations(
+    std::vector<SegmentHydraulics>& route_hydraulics,
+    double min_pressure_bar,
+    double max_pressure_bar) {
     
-    // μ_JT for natural gas (approximate)
-    // Typically 0.4-0.6 K/MPa at pipeline conditions
-    return 0.5; // K/MPa (simplified - more accurate correlations available)
+    std::vector<CompressorStation> stations;
+    
+    std::cout << "[Hydraulics] Checking compressor station requirements..." << std::endl;
+    
+    // Scan route for pressure violations
+    for (size_t i = 0; i < route_hydraulics.size(); ++i) {
+        double pressure = route_hydraulics[i].exit_pressure_bar;
+        
+        // Check if pressure falls below minimum (with safety margin)
+        if (pressure < (min_pressure_bar + PRESSURE_SAFETY_MARGIN_BAR)) {
+            
+            std::cout << "  Pressure violation at segment " << i 
+                      << ": " << pressure << " bar" << std::endl;
+            
+            // Find optimal placement location
+            int placement_index = find_optimal_compressor_placement(
+                route_hydraulics, i, min_pressure_bar, max_pressure_bar);
+            
+            std::cout << "  Placing compressor at segment " << placement_index << std::endl;
+            
+            // Design compressor station
+            CompressorStation station = CompressorStationDesigner::design_station(
+                route_hydraulics[placement_index].exit_pressure_bar,
+                max_pressure_bar,
+                params_.flow_rate_m3_s,
+                params_.gas
+            );
+            
+            station.segment_index = placement_index;
+            station.placement_reason = "pressure_limit";
+            
+            // Mark segment as having compressor
+            route_hydraulics[placement_index].has_compressor_station = true;
+            route_hydraulics[placement_index].compressor_type = station.type;
+            route_hydraulics[placement_index].compressor_power_kw = station.power_required_kw;
+            route_hydraulics[placement_index].compression_ratio = station.compression_ratio;
+            
+            // Reset pressure after compression
+            route_hydraulics[placement_index].exit_pressure_bar = max_pressure_bar;
+            
+            // Recalculate downstream pressures
+            recalculate_downstream_pressures(route_hydraulics, placement_index);
+            
+            stations.push_back(station);
+            
+            std::cout << "  Station placed: " << station.type 
+                      << ", " << station.power_required_kw << " kW" << std::endl;
+            std::cout << "  Compression: " << station.inlet_pressure_bar << " → " 
+                      << station.outlet_pressure_bar << " bar" << std::endl;
+        }
+    }
+    
+    if (stations.empty()) {
+        std::cout << "  ✅ No compressor stations required" << std::endl;
+    } else {
+        std::cout << "  Total compressor stations: " << stations.size() << std::endl;
+    }
+    
+    return stations;
 }
 
-HydraulicsCalculator::FluidProperties HydraulicsCalculator::update_fluid_properties(
-    const FluidProperties& upstream,
-    double pressure_drop_pa,
-    double temperature_drop_k) const {
+// ============================================================================
+// COMPRESSOR STATION DESIGNER - IMPLEMENTATION
+// ============================================================================
+
+CompressorStation CompressorStationDesigner::design_station(
+    double inlet_pressure_bar,
+    double outlet_pressure_bar,
+    double flow_rate_m3_s,
+    const GasProperties& gas) {
     
-    FluidProperties downstream = upstream;
-    downstream.pressure_pa -= pressure_drop_pa;
-    downstream.temperature_k -= temperature_drop_k;
-    downstream.update_for_conditions(downstream.pressure_pa, downstream.temperature_k);
+    CompressorStation station;
     
-    return downstream;
+    // Performance parameters
+    station.inlet_pressure_bar = inlet_pressure_bar;
+    station.outlet_pressure_bar = outlet_pressure_bar;
+    station.compression_ratio = outlet_pressure_bar / inlet_pressure_bar;
+    
+    // Validate compression ratio
+    if (station.compression_ratio < COMPRESSION_RATIO_MIN) {
+        std::cerr << "[Compressor] WARNING: Compression ratio " << station.compression_ratio 
+                  << " below minimum " << COMPRESSION_RATIO_MIN << std::endl;
+    }
+    if (station.compression_ratio > COMPRESSION_RATIO_MAX) {
+        std::cerr << "[Compressor] WARNING: Compression ratio " << station.compression_ratio 
+                  << " exceeds maximum " << COMPRESSION_RATIO_MAX << std::endl;
+        std::cerr << "  Consider two-stage compression" << std::endl;
+    }
+    
+    // Calculate power requirement
+    station.power_required_kw = calculate_power_requirement(
+        inlet_pressure_bar, outlet_pressure_bar, flow_rate_m3_s, gas);
+    
+    // Select compressor type
+    station.type = select_compressor_type(station.compression_ratio, station.power_required_kw);
+    
+    // Calculate economics
+    station.capex_usd = calculate_capex(station.power_required_kw, station.type);
+    station.opex_annual_usd = calculate_opex_annual(station.power_required_kw, station.capex_usd);
+    station.lifecycle_cost_usd = calculate_lifecycle_cost(station.capex_usd, station.opex_annual_usd);
+    
+    return station;
 }
 
-}  // namespace pirl
-}  // namespace agrs
+std::string CompressorStationDesigner::select_compressor_type(
+    double compression_ratio,
+    double power_kw) {
+    
+    // Selection logic based on industry standards:
+    // - Centrifugal: Best for low-medium compression, high flow, continuous operation
+    // - Reciprocating: Best for high compression, lower flow, variable conditions
+    
+    if (compression_ratio <= COMPRESSOR_TYPE_THRESHOLD_RATIO && 
+        power_kw >= COMPRESSOR_TYPE_THRESHOLD_POWER_KW) {
+        return "centrifugal";
+    } else if (compression_ratio > COMPRESSOR_TYPE_THRESHOLD_RATIO) {
+        return "reciprocating";
+    } else {
+        return "centrifugal";  // Default for gas transmission
+    }
+}
 
+double CompressorStationDesigner::calculate_power_requirement(
+    double inlet_pressure_bar,
+    double outlet_pressure_bar,
+    double flow_rate_m3_s,
+    const GasProperties& gas,
+    double efficiency) {
+    
+    // Polytropic compression model:
+    // W = (n/(n-1)) × P₁ × Q × [(P₂/P₁)^((n-1)/n) - 1] / η
+    
+    // Convert pressures to Pa
+    double P1_pa = inlet_pressure_bar * 100000.0;
+    double P2_pa = outlet_pressure_bar * 100000.0;
+    
+    // Compression ratio
+    double r = P2_pa / P1_pa;
+    
+    // Polytropic exponent
+    double n = POLYTROPIC_EXPONENT;
+    
+    // Calculate power (W)
+    double power_w = (n / (n - 1.0)) * P1_pa * flow_rate_m3_s * 
+                     (std::pow(r, (n - 1.0) / n) - 1.0) / efficiency;
+    
+    // Convert to kW
+    double power_kw = power_w / 1000.0;
+    
+    return power_kw;
+}
 
+double CompressorStationDesigner::calculate_capex(
+    double power_kw,
+    const std::string& compressor_type) {
+    
+    double cost_per_kw = (compressor_type == "centrifugal") ? 
+                         CAPEX_CENTRIFUGAL_USD_PER_KW : 
+                         CAPEX_RECIPROCATING_USD_PER_KW;
+    
+    double capex = (power_kw * cost_per_kw) + CAPEX_STATION_FIXED_USD;
+    
+    return capex;
+}
+
+double CompressorStationDesigner::calculate_opex_annual(
+    double power_kw,
+    double capex_usd) {
+    
+    // Energy cost
+    double energy_cost = power_kw * OPERATING_HOURS_PER_YEAR * ENERGY_COST_USD_PER_KWH;
+    
+    // Maintenance cost (% of CAPEX)
+    double maintenance_cost = capex_usd * MAINTENANCE_COST_FRACTION;
+    
+    // Personnel cost
+    double personnel_cost = PERSONNEL_COST_USD_PER_YEAR;
+    
+    double opex = energy_cost + maintenance_cost + personnel_cost;
+    
+    return opex;
+}
+
+double CompressorStationDesigner::calculate_lifecycle_cost(
+    double capex_usd,
+    double opex_annual_usd) {
+    
+    // NPV of annuity: PV = PMT × [(1 - (1+r)^-n) / r]
+    // Where PMT = annual payment, r = discount rate, n = years
+    
+    double r = NPV_DISCOUNT_RATE;
+    double n = PROJECT_LIFETIME_YEARS;
+    
+    double annuity_factor = (1.0 - std::pow(1.0 + r, -n)) / r;
+    double opex_npv = opex_annual_usd * annuity_factor;
+    
+    double lifecycle_cost = capex_usd + opex_npv;
+    
+    return lifecycle_cost;
+}
+
+} // namespace pirl
+} // namespace agrs

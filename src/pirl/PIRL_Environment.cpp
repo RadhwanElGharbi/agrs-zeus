@@ -25,6 +25,35 @@ PipelineEnvironment::PipelineEnvironment(const ProjectConfig& config)
     // Initialize physics constraints
     physics_ = std::make_unique<PhysicsConstraints>(config);
     
+    // Initialize hydraulics calculator (if enabled in config)
+    if (config.has_pipeline_specs && 
+        config.pipeline_specs.hydraulics.enable_hydraulics) {
+        
+        PipelineHydraulics hydraulic_params;
+        hydraulic_params.diameter_internal_m = config.pipeline_specs.hydraulics.diameter_internal_m;
+        hydraulic_params.roughness_absolute_mm = config.pipeline_specs.hydraulics.pipe_roughness_mm;
+        hydraulic_params.flow_rate_m3_s = config.pipeline_specs.hydraulics.volumetric_flow_rate_m3_s;
+        hydraulic_params.operating_temperature_k = config.pipeline_specs.hydraulics.operating_temperature_k;
+        
+        // Gas properties
+        hydraulic_params.gas.molecular_weight_kg_kmol = config.pipeline_specs.hydraulics.gas_molecular_weight_kg_kmol;
+        hydraulic_params.gas.specific_gravity = config.pipeline_specs.hydraulics.gas_specific_gravity;
+        
+        hydraulics_ = std::make_unique<HydraulicsCalculator>(hydraulic_params);
+        
+        std::cout << "   🌊 Hydraulics module enabled" << std::endl;
+        std::cout << "      Initial pressure: " << config.pipeline_specs.hydraulics.initial_pressure_bar << " bar" << std::endl;
+        std::cout << "      Min delivery: " << config.pipeline_specs.hydraulics.min_delivery_pressure_bar << " bar" << std::endl;
+    } else {
+        std::cout << "   ℹ️  Hydraulics module disabled" << std::endl;
+    }
+    
+    // Load parameter overrides (if they exist)
+    std::string override_file = config.project_dir + "/PIRL/pirl_parameter_overrides.json";
+    if (std::filesystem::exists(override_file)) {
+        load_parameter_overrides(override_file);
+    }
+    
     // Set goal
     goal_x_ = config.end_point.x;
     goal_y_ = config.end_point.y;
@@ -87,6 +116,29 @@ State PipelineEnvironment::reset() {
     // Initialize out-of-bounds and exploration tracking (NEW)
     out_of_bounds_steps_ = 0;
     best_distance_to_goal_ = current_state_.goal_distance;
+    
+    // Initialize hydraulics (NEW - Phase 2)
+    if (config_.has_pipeline_specs && config_.pipeline_specs.hydraulics.enable_hydraulics) {
+        current_pressure_pa_ = config_.pipeline_specs.hydraulics.initial_pressure_bar * 100000.0;  // Convert bar to Pa
+        total_pressure_drop_pa_ = 0.0;
+        distance_since_pump_m_ = 0.0;
+        pumping_stations_.clear();
+        
+        // Initialize hydraulic state features
+        current_state_.cumulative_pressure_drop_pa = 0.0;
+        current_state_.segments_since_pump = 0.0;
+        current_state_.flow_velocity_m_s = 0.0;
+        current_state_.reynolds_number = 0.0;
+    } else {
+        current_pressure_pa_ = 0.0;
+        total_pressure_drop_pa_ = 0.0;
+        distance_since_pump_m_ = 0.0;
+        
+        current_state_.cumulative_pressure_drop_pa = 0.0;
+        current_state_.segments_since_pump = 0.0;
+        current_state_.flow_velocity_m_s = 0.0;
+        current_state_.reynolds_number = 0.0;
+    }
     
     std::cout << "🔄 Environment reset. Initial distance to goal: " 
               << current_state_.goal_distance << "m" << std::endl;
@@ -178,6 +230,15 @@ std::pair<State, RewardInfo> PipelineEnvironment::step(const Action& action) {
     segment.aspect = current_state_.aspect;
     segment.curvature = current_state_.curvature;
     
+    // Bend characteristics (NEW - pipeline physics)
+    segment.heading_change_deg = constrained_action.heading_change * 180.0 / M_PI;
+    if (std::abs(constrained_action.heading_change) > 1e-6) {
+        segment.bend_radius_m = segment.length_m / (2.0 * std::sin(std::abs(constrained_action.heading_change) / 2.0));
+    } else {
+        segment.bend_radius_m = std::numeric_limits<double>::infinity();  // Straight segment
+    }
+    segment.exceeds_field_bend_limit = (std::abs(segment.heading_change_deg) > 5.0);
+    
     // Cost breakdown (extract from RewardInfo)
     segment.terrain_cost = reward_info.terrain_cost;
     segment.water_crossing_cost = reward_info.water_crossing_cost;
@@ -215,19 +276,36 @@ std::pair<State, RewardInfo> PipelineEnvironment::step(const Action& action) {
     segment.pipeline_proximity = gis_->distance_to_pipeline(segment.end_x, segment.end_y) * 1000.0;
     
     // Hydraulics (if enabled)
-    if (hydraulics_) {
-        auto hydraulics_result = hydraulics_->calculate_segment(
-            segment.length_m, 
-            segment.elevation_end - segment.elevation_start,
-            0.5,  // flow_rate from config (TODO: get from config)
-            current_pressure_pa_,
-            config_.pipeline_specs.operating_temp_k
+    if (hydraulics_ && config_.has_pipeline_specs) {
+        // Convert current pressure from Pa to bar
+        double current_pressure_bar = current_pressure_pa_ / 100000.0;
+        
+        // Calculate segment hydraulics
+        SegmentHydraulics hyd = hydraulics_->calculate_segment(
+            current_pressure_bar,
+            segment.length_m,
+            segment.elevation_end - segment.elevation_start
         );
-        segment.pressure_drop_pa = hydraulics_result.pressure_drop_pa;
+        
+        // Populate segment with hydraulic results
+        segment.entry_pressure_bar = hyd.entry_pressure_bar;
+        segment.exit_pressure_bar = hyd.exit_pressure_bar;
+        segment.pressure_drop_pa = hyd.pressure_drop_bar * 100000.0;  // Convert bar to Pa
         segment.cumulative_pressure_drop_pa = total_pressure_drop_pa_;
-        segment.flow_velocity_m_s = hydraulics_result.flow_velocity_m_s;
-        segment.reynolds_number = hydraulics_result.reynolds_number;
-        segment.requires_pumping_station = hydraulics_result.requires_pumping_station;
+        segment.flow_velocity_m_s = hyd.flow_velocity_m_s;
+        segment.reynolds_number = hyd.reynolds_number;
+        segment.has_compressor_station = hyd.has_compressor_station;
+        segment.compressor_station_type = hyd.compressor_type;
+        
+        // Update current pressure for next segment
+        current_pressure_pa_ = hyd.exit_pressure_bar * 100000.0;  // Convert bar to Pa
+        total_pressure_drop_pa_ += segment.pressure_drop_pa;
+        
+        // Check if compressor station needed (simplified logic for now)
+        double min_pressure_bar = config_.pipeline_specs.hydraulics.min_delivery_pressure_bar;
+        if (hyd.exit_pressure_bar < (min_pressure_bar + 5.0)) {  // 5 bar safety margin
+            segment.requires_pumping_station = true;
+        }
     }
     
     // RL metadata
@@ -256,15 +334,17 @@ RewardInfo PipelineEnvironment::calculate_reward(const State& prev_state,
     double prev_dist = prev_state.goal_distance;
     double new_dist = new_state.goal_distance;
     double progress = prev_dist - new_dist;
-    // Scale to balance with cost: if step is 50m toward goal, reward = +1.0
-    info.progress_reward = progress * 0.02; // Scale progress reward
+    // CRITICAL: Strong progress reward to ensure goal-seeking behavior
+    // At 0.02, agent gets only +1 for 50m progress, but -1000+ for any constraint
+    // Increased to 2.0 so 50m progress = +100, making goal-seeking competitive with cost avoidance
+    info.progress_reward = progress * progress_reward_multiplier_; // Configurable via parameter overrides
     info.total_reward += info.progress_reward;
     
     // 2. Cost penalty: negative reward based on construction cost
     double segment_cost = cost_model_->calculate_segment_cost(prev_state, new_state, *gis_, &info);
     // Normalize: typical segment costs are $200-1000/m * 50m step = $10k-50k per step
-    // Divide by 100k to get reward in range [-0.1 to -0.5] per step
-    info.cost_penalty = -segment_cost / 100000.0; // Normalize cost appropriately
+    // Divide by normalization factor to get reward in appropriate range
+    info.cost_penalty = -segment_cost / cost_normalization_factor_; // Configurable normalization
     info.total_reward += info.cost_penalty;
     
     // 3. Physics-informed penalties
@@ -284,7 +364,7 @@ RewardInfo PipelineEnvironment::calculate_reward(const State& prev_state,
     // Curvature penalty (penalize excessive bending)
     double heading_change = std::abs(action.heading_change);
     if (heading_change > M_PI / 6.0) { // > 30 degrees
-        info.curvature_penalty = -heading_change * 10.0;
+        info.curvature_penalty = heading_change * curvature_penalty_rate_; // Configurable rate
         info.total_reward += info.curvature_penalty;
     }
     
@@ -292,35 +372,72 @@ RewardInfo PipelineEnvironment::calculate_reward(const State& prev_state,
     if (!gis_->is_within_aoi(new_state.x, new_state.y)) {
         // Strong penalty for going out of bounds
         // This teaches agent to avoid boundaries during training
-        double oob_penalty = -50.0;
-        info.constraint_penalty += oob_penalty;
-        info.total_reward += oob_penalty;
+        info.constraint_penalty += out_of_bounds_penalty_; // Configurable penalty
+        info.total_reward += out_of_bounds_penalty_;
     }
     
-    // Coastline boundary constraint (NEW - prevents offshore routing)
-    if (gis_->has_coastline() && gis_->is_beyond_coastline(new_state.x, new_state.y)) {
-        // Massive penalty for offshore routing (same magnitude as going out of bounds)
-        // This prevents agent from routing through sea/ocean waters
-        double offshore_penalty = -1000.0;
-        info.constraint_penalty += offshore_penalty;
-        info.total_reward += offshore_penalty;
+    // Sea polygon constraint (NEW - 1km exclusion zone prevents offshore routing)
+    if (gis_->has_sea_polygon() && gis_->is_near_sea(new_state.x, new_state.y)) {
+        // Massive penalty for approaching sea (within 1km exclusion zone)
+        info.constraint_penalty += sea_penalty_; // Configurable penalty
+        info.total_reward += sea_penalty_;
+    }
+    
+    // Built-up area hard constraint (13.5m clearance from buildings required)
+    int land_cover = gis_->get_land_cover_class(new_state.x, new_state.y);
+    if (land_cover == 50) {  // Built-up areas (LC=50)
+        // ESA WorldCover 10m resolution: being IN built-up pixel means <10m from buildings
+        // This violates the 13.5m clearance requirement from AI_Routing_Criteria.xlsx
+        info.constraint_penalty += buildup_penalty_; // Configurable penalty
+        info.total_reward += buildup_penalty_;
+    }
+    
+    // Powerline clearance constraint (6m minimum - AI_Routing_Criteria.xlsx)
+    // Allow crossings but enforce clearance for parallel routing
+    if (gis_->has_power_lines()) {
+        double dist_to_powerline = gis_->distance_to_power_line(new_state.x, new_state.y);
+        double dist_to_powerline_m = dist_to_powerline * 1000.0;
+        
+        if (dist_to_powerline_m < powerline_clearance_m_ && 
+            dist_to_powerline_m > powerline_crossing_threshold_m_) {
+            // Too close for parallel routing but not crossing
+            // Moderate penalty to discourage parallel routing within clearance
+            info.constraint_penalty += powerline_penalty_; // Configurable penalty
+            info.total_reward += powerline_penalty_;
+        }
+        // If dist < crossing threshold, consider it a crossing - allow but cost will handle HDD expense
+    }
+    
+    // Railway clearance constraint (Criteria 12: crossings must be trenchless)
+    // Allow crossings with HDD cost, enforce clearance for parallel routing
+    if (gis_->has_railways()) {
+        double dist_to_railway = gis_->distance_to_railway(new_state.x, new_state.y);
+        double dist_to_railway_m = dist_to_railway * 1000.0;
+        
+        if (dist_to_railway_m < railway_clearance_m_ && 
+            dist_to_railway_m > railway_crossing_threshold_m_) {
+            // Too close for parallel routing but not crossing
+            // Moderate penalty to discourage parallel routing within clearance
+            info.constraint_penalty += railway_penalty_; // Configurable penalty
+            info.total_reward += railway_penalty_;
+        }
+        // If dist < crossing threshold, consider it a crossing - allow but cost will handle HDD expense
     }
     
     info.total_reward += info.constraint_penalty;
     
     // Exploration bonus for reaching new milestone distances (NEW)
     // Encourages agent to keep pushing toward goal
-    if (new_state.goal_distance < best_distance_to_goal_ - 1000.0) {
-        // Bonus for getting 1km closer than ever before this episode
-        double exploration_bonus = 10.0;
-        info.progress_reward += exploration_bonus;
-        info.total_reward += exploration_bonus;
+    if (new_state.goal_distance < best_distance_to_goal_ - exploration_bonus_milestone_m_) {
+        // Bonus for getting milestone distance closer than ever before this episode
+        info.progress_reward += exploration_bonus_; // Configurable bonus
+        info.total_reward += exploration_bonus_;
         best_distance_to_goal_ = new_state.goal_distance;
     }
     
     // 4. Goal bonus: large positive reward for reaching goal
     if (new_state.goal_distance < 50.0) { // Within 50m of goal
-        info.goal_bonus = 1000.0;
+        info.goal_bonus = goal_bonus_; // Configurable bonus
         info.total_reward += info.goal_bonus;
     }
     
@@ -366,13 +483,24 @@ bool PipelineEnvironment::check_termination(const State& state, std::string& rea
         out_of_bounds_steps_ = 0;
     }
     
-    // Coastline crossing - IMMEDIATE TERMINATION (hard boundary)
-    // Any position that violates coastline constraint terminates immediately
-    // This includes: crossing the coastline itself OR being in coastal waters (<200m from coast)
-    if (gis_->has_coastline() && gis_->is_beyond_coastline(state.x, state.y)) {
-        reason = "FAILURE: Coastline boundary violated";
-        return true;  // Immediate termination - no recovery allowed
+    // Sea proximity constraint - IMMEDIATE TERMINATION (1km exclusion zone)
+    if (gis_->has_sea_polygon() && gis_->is_near_sea(state.x, state.y)) {
+        double distance = gis_->distance_to_sea(state.x, state.y);
+        reason = "FAILURE: Too close to sea (" + 
+                 std::to_string(static_cast<int>(distance)) + 
+                 "m < 1000m exclusion zone)";
+        return true;  // Immediate termination
     }
+    
+    // Built-up area constraint - IMMEDIATE TERMINATION (13.5m clearance required)
+    int land_cover = gis_->get_land_cover_class(state.x, state.y);
+    if (land_cover == 50) {  // Built-up areas
+        reason = "FAILURE: Built-up area violation (<13.5m from buildings)";
+        return true;  // Immediate termination
+    }
+    
+    // Powerline/Railway clearance - NO termination, handled via penalties & HDD costs
+    // Crossings are allowed with appropriate HDD construction costs
     
     // Failure: entered no-go zone
     if (state.no_go_zone > 0.5) {
@@ -380,9 +508,9 @@ bool PipelineEnvironment::check_termination(const State& state, std::string& rea
         return true;
     }
     
-    // Failure: excessive slope
-    if (state.slope > config_.constraints.max_slope_percent * 1.5) {
-        reason = "FAILURE: Excessive slope";
+    // Failure: excessive slope (removed the 1.5x multiplier - should be exactly 20% as per criteria)
+    if (state.slope > config_.constraints.max_slope_percent) {
+        reason = "FAILURE: Excessive slope (>" + std::to_string(config_.constraints.max_slope_percent) + "%)";
         return true;
     }
     
@@ -669,6 +797,139 @@ RouteTrajectory PipelineEnvironment::get_route_trajectory() const {
 
 std::pair<double, double> PipelineEnvironment::get_current_position() const {
     return {current_state_.x, current_state_.y};
+}
+
+void PipelineEnvironment::load_parameter_overrides(const std::string& override_file) {
+    std::cout << "   ⚙️  Loading parameter overrides from: " << override_file << std::endl;
+    
+    std::ifstream file(override_file);
+    if (!file.is_open()) {
+        std::cerr << "   ⚠️  Warning: Could not open override file: " << override_file << std::endl;
+        return;
+    }
+    
+    nlohmann::json overrides;
+    try {
+        file >> overrides;
+    } catch (const std::exception& e) {
+        std::cerr << "   ⚠️  Warning: Failed to parse override file: " << e.what() << std::endl;
+        return;
+    }
+    
+    int override_count = 0;
+    
+    // Apply PPO reward overrides
+    if (overrides.contains("ppo_rewards")) {
+        auto rewards = overrides["ppo_rewards"];
+        
+        if (rewards.contains("progress_multiplier")) {
+            double old_val = progress_reward_multiplier_;
+            progress_reward_multiplier_ = rewards["progress_multiplier"].get<double>();
+            if (std::abs(old_val - progress_reward_multiplier_) > 0.001) {
+                std::cout << "      Progress multiplier: " << old_val << " → " 
+                          << progress_reward_multiplier_ << " (OVERRIDDEN)" << std::endl;
+                override_count++;
+            }
+        }
+        
+        if (rewards.contains("goal_bonus")) {
+            double old_val = goal_bonus_;
+            goal_bonus_ = rewards["goal_bonus"].get<double>();
+            if (std::abs(old_val - goal_bonus_) > 0.001) {
+                std::cout << "      Goal bonus: " << old_val << " → " 
+                          << goal_bonus_ << " (OVERRIDDEN)" << std::endl;
+                override_count++;
+            }
+        }
+        
+        if (rewards.contains("exploration_bonus")) {
+            double old_val = exploration_bonus_;
+            exploration_bonus_ = rewards["exploration_bonus"].get<double>();
+            if (std::abs(old_val - exploration_bonus_) > 0.001) {
+                std::cout << "      Exploration bonus: " << old_val << " → " 
+                          << exploration_bonus_ << " (OVERRIDDEN)" << std::endl;
+                override_count++;
+            }
+        }
+        
+        if (rewards.contains("sea_penalty")) {
+            sea_penalty_ = rewards["sea_penalty"].get<double>();
+            override_count++;
+        }
+        
+        if (rewards.contains("buildup_penalty")) {
+            buildup_penalty_ = rewards["buildup_penalty"].get<double>();
+            override_count++;
+        }
+        
+        if (rewards.contains("powerline_penalty")) {
+            powerline_penalty_ = rewards["powerline_penalty"].get<double>();
+            override_count++;
+        }
+        
+        if (rewards.contains("railway_penalty")) {
+            railway_penalty_ = rewards["railway_penalty"].get<double>();
+            override_count++;
+        }
+        
+        if (rewards.contains("curvature_penalty_rate")) {
+            curvature_penalty_rate_ = rewards["curvature_penalty_rate"].get<double>();
+            override_count++;
+        }
+        
+        if (rewards.contains("out_of_bounds_penalty")) {
+            out_of_bounds_penalty_ = rewards["out_of_bounds_penalty"].get<double>();
+            override_count++;
+        }
+        
+        if (rewards.contains("cost_normalization_factor")) {
+            cost_normalization_factor_ = rewards["cost_normalization_factor"].get<double>();
+            override_count++;
+        }
+    }
+    
+    // Apply constraint threshold overrides
+    if (overrides.contains("constraint_thresholds")) {
+        auto constraints = overrides["constraint_thresholds"];
+        
+        if (constraints.contains("exploration_bonus_milestone_m")) {
+            exploration_bonus_milestone_m_ = constraints["exploration_bonus_milestone_m"].get<double>();
+            override_count++;
+        }
+        
+        if (constraints.contains("powerline_clearance_m")) {
+            powerline_clearance_m_ = constraints["powerline_clearance_m"].get<double>();
+            override_count++;
+        }
+        
+        if (constraints.contains("railway_clearance_m")) {
+            railway_clearance_m_ = constraints["railway_clearance_m"].get<double>();
+            override_count++;
+        }
+        
+        if (constraints.contains("powerline_crossing_threshold_m")) {
+            powerline_crossing_threshold_m_ = constraints["powerline_crossing_threshold_m"].get<double>();
+            override_count++;
+        }
+        
+        if (constraints.contains("railway_crossing_threshold_m")) {
+            railway_crossing_threshold_m_ = constraints["railway_crossing_threshold_m"].get<double>();
+            override_count++;
+        }
+        
+        if (constraints.contains("sea_exclusion_distance_m")) {
+            sea_exclusion_distance_m_ = constraints["sea_exclusion_distance_m"].get<double>();
+            override_count++;
+        }
+    }
+    
+    // Apply cost matrix and hydraulic cost overrides to CostModel
+    if (overrides.contains("cost_matrix") || overrides.contains("hydraulic_costs")) {
+        cost_model_->apply_parameter_overrides(overrides);
+    }
+    
+    std::cout << "   ✅ Parameter overrides applied successfully (" 
+              << override_count << " parameters modified)" << std::endl;
 }
 
 } // namespace pirl

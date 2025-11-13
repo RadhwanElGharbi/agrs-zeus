@@ -64,6 +64,29 @@ PipelineSpecifications PipelineSpecifications::load_from_json(const std::string&
     specs.operating_temp_k = j.value("operating_temp_k", 288.15);  // 15°C
     specs.max_pressure_drop_mpa = j.value("max_pressure_drop_mpa", 5.0);
     
+    // Comprehensive Hydraulics Configuration (NEW)
+    if (j.contains("hydraulics")) {
+        auto h = j["hydraulics"];
+        specs.hydraulics.enable_hydraulics = h.value("enable_hydraulics", false);
+        specs.hydraulics.enable_compressor_placement = h.value("enable_compressor_placement", false);
+        specs.hydraulics.initial_pressure_bar = h.value("initial_pressure_bar", 70.0);
+        specs.hydraulics.min_delivery_pressure_bar = h.value("min_delivery_pressure_bar", 45.0);
+        specs.hydraulics.max_operating_pressure_bar = h.value("max_operating_pressure_bar", 75.0);
+        specs.hydraulics.volumetric_flow_rate_m3_s = h.value("volumetric_flow_rate_m3_s", 1.0);
+        specs.hydraulics.operating_temperature_k = h.value("operating_temperature_k", 288.15);
+        specs.hydraulics.gas_molecular_weight_kg_kmol = h.value("gas_molecular_weight_kg_kmol", 16.8);
+        specs.hydraulics.gas_specific_gravity = h.value("gas_specific_gravity", 0.58);
+        specs.hydraulics.pipe_roughness_mm = h.value("pipe_roughness_mm", 0.045);
+        
+        // Calculate internal diameter from OD and thickness
+        double diameter_internal_mm = specs.diameter_mm - 2.0 * specs.thickness_mm;
+        specs.hydraulics.diameter_internal_m = diameter_internal_mm / 1000.0;
+        
+        specs.hydraulics.compressor_capex_per_kw_usd = h.value("compressor_capex_per_kw_usd", 5000.0);
+        specs.hydraulics.compressor_opex_fraction = h.value("compressor_opex_fraction", 0.03);
+        specs.hydraulics.energy_cost_usd_per_kwh = h.value("energy_cost_usd_per_kwh", 0.05);
+    }
+    
     return specs;
 }
 

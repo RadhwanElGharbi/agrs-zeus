@@ -61,6 +61,25 @@ struct PipelineSpecifications {
     double operating_temp_k;      ///< Operating temperature in Kelvin
     double max_pressure_drop_mpa; ///< Maximum allowable pressure drop between stations (MPa)
     
+    // ===== Comprehensive Hydraulics Configuration (NEW) =====
+    struct HydraulicsConfig {
+        bool enable_hydraulics = false;
+        bool enable_compressor_placement = false;
+        double initial_pressure_bar = 70.0;
+        double min_delivery_pressure_bar = 45.0;
+        double max_operating_pressure_bar = 75.0;
+        double volumetric_flow_rate_m3_s = 1.0;
+        double operating_temperature_k = 288.15;
+        double gas_molecular_weight_kg_kmol = 16.8;
+        double gas_specific_gravity = 0.58;
+        double pipe_roughness_mm = 0.045;
+        double diameter_internal_m = 0.6382;  // Calculated from OD - 2×thickness
+        double compressor_capex_per_kw_usd = 5000.0;
+        double compressor_opex_fraction = 0.03;
+        double energy_cost_usd_per_kwh = 0.05;
+    };
+    HydraulicsConfig hydraulics;
+    
     /**
      * @brief Load pipeline specifications from JSON file
      * @param json_path Path to pipeline_specs.json file

@@ -88,9 +88,9 @@ buffer_water_bodies_m: 50
 max_segment_length_m: 100
 allowed_hot_bend_angles_deg: [5, 10, 22.5, 45, 90]
 
-# Training Section - PRODUCTION RUN (2M timesteps)
+# Training Section - PRODUCTION RUN (1.5M timesteps)
 training:
-  total_timesteps: 2000000  # 2M - production scale (40x more than 50k validation)
+  total_timesteps: 1500000  # 1.5M - production scale (30x more than 50k validation)
   num_envs: 8  # Full parallel environments for production
   eval_freq: 50000  # Evaluate 40 times during training
   save_freq: 100000  # Save 20 checkpoints
@@ -108,7 +108,7 @@ training:
   max_grad_norm: 0.5  # Gradient clipping
 
 # Legacy format (for compatibility)
-total_timesteps: 2000000
+total_timesteps: 1500000
 num_envs: 8
 eval_freq: 50000
 save_freq: 100000

@@ -30,6 +30,9 @@ set(GUI_SOURCES
     VectorStyleDialog.cpp
     FeatureIdentifyDialog.cpp
     PerplexityChatDialog.cpp
+    DatasetCatalog.cpp
+    DatasetFetchPipeline.cpp
+    DatasetFetchProgressDialog.cpp
 )
 
 # GUI header files
@@ -48,6 +51,9 @@ set(GUI_HEADERS
     ${CMAKE_SOURCE_DIR}/include/agrs_zeus/gui/VectorStyleDialog.h
     ${CMAKE_SOURCE_DIR}/include/agrs_zeus/gui/FeatureIdentifyDialog.h
     ${CMAKE_SOURCE_DIR}/include/agrs_zeus/gui/PerplexityChatDialog.h
+    ${CMAKE_SOURCE_DIR}/include/agrs_zeus/gui/DatasetCatalog.h
+    ${CMAKE_SOURCE_DIR}/include/agrs_zeus/gui/DatasetFetchPipeline.h
+    ${CMAKE_SOURCE_DIR}/include/agrs_zeus/gui/DatasetFetchProgressDialog.h
 )
 
 # Create executable

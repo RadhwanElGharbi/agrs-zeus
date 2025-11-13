@@ -38,6 +38,8 @@
 #include <QVBoxLayout>
 #include <QLineEdit>
 #include <QRegularExpression>
+#include <QProcess>
+#include <QThread>
 #include <gdal/gdal_priv.h>
 #include <gdal/ogrsf_frmts.h>
 #include <algorithm>
@@ -149,6 +151,14 @@ void MainWindow::createToolbars() {
     m_viewToolbar->setIconSize(QSize(18, 18));
     QAction* toggle3D = m_viewToolbar->addAction(tr("2D/3D"), this, &MainWindow::onToggle2D3D);
     toggle3D->setToolTip(tr("Toggle between 2D map and 3D terrain views"));
+    
+    // PIRL toolbar - parameter tuning
+    m_pirlToolbar = addToolBar(tr("PIRL"));
+    m_pirlToolbar->setObjectName("PIRLToolbar");
+    m_pirlToolbar->setIconSize(QSize(18, 18));
+    m_tuneAction = m_pirlToolbar->addAction(tr("🎛️ Tune"), this, &MainWindow::onTunePIRL);
+    m_tuneAction->setToolTip(tr("Open PIRL Parameter Tuner"));
+    m_tuneAction->setEnabled(false); // Disabled until project is loaded
 }
 
 void MainWindow::createDockWidgets() {
@@ -447,6 +457,228 @@ void MainWindow::onNewProject() {
         
         m_consoleText->append(tr("[Project] Created: %1").arg(fullPath));
         
+        // ====================================================================
+        // AUTOMATIC PIRL ENVIRONMENT SETUP
+        // ====================================================================
+        m_consoleText->append(tr("[PIRL] Setting up PIRL environment..."));
+        
+        // 1. Create PIRL directory structure
+        QDir pirlDir(fullPath + "/PIRL");
+        pirlDir.mkpath("outputs");
+        pirlDir.mkpath("models/best_model");
+        pirlDir.mkpath("models/checkpoints");
+        pirlDir.mkpath("logs");
+        pirlDir.mkpath("parameter_tuner");
+        m_consoleText->append(tr("[PIRL] Created directory structure"));
+        
+        // 2. Generate pirl_training_config.yaml from template
+        QString templatePath = "/opt/agrs/templates/pirl_training_config_template.yaml";
+        QString configPath = fullPath + "/PIRL/pirl_training_config.yaml";
+        
+        QFile templateFile(templatePath);
+        if (templateFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            QString configContent = QString::fromUtf8(templateFile.readAll());
+            templateFile.close();
+            
+            // Replace placeholders with actual project data
+            configContent.replace("<PROJECT_NAME>", proj.projectName);
+            configContent.replace("<PROJECT_CODE>", proj.projectName.toUpper() + "_V1");
+            configContent.replace("<CLIENT_NAME>", "CLIENT_TBD"); // User can edit later
+            configContent.replace("<EPSG_CODE>", QString::number(proj.epsgCode));
+            configContent.replace("<PROJECT_PATH>", fullPath);
+            configContent.replace("<PROJECT_NAME_LOWER>", proj.projectName.toLower().replace(" ", "_"));
+            configContent.replace("<COUNTRY_CODE>", "XXX"); // User must specify
+            configContent.replace("<REGION_NAME>", "REGION_TBD"); // User must specify
+            
+            // Convert lat/lon to UTM (using pyproj via QProcess - simplified approach)
+            // For now, use placeholders that user must replace with UTM coordinates
+            configContent.replace("<START_X>", QString::number(proj.startLon, 'f', 2) + " # TODO: Convert to UTM");
+            configContent.replace("<START_Y>", QString::number(proj.startLat, 'f', 2) + " # TODO: Convert to UTM");
+            configContent.replace("<END_X>", QString::number(proj.endLon, 'f', 2) + " # TODO: Convert to UTM");
+            configContent.replace("<END_Y>", QString::number(proj.endLat, 'f', 2) + " # TODO: Convert to UTM");
+            
+            // AOI bounds - extract from AOI file or use placeholders
+            configContent.replace("<AOI_MIN_X>", "0.0 # TODO: Extract from AOI");
+            configContent.replace("<AOI_MIN_Y>", "0.0 # TODO: Extract from AOI");
+            configContent.replace("<AOI_MAX_X>", "0.0 # TODO: Extract from AOI");
+            configContent.replace("<AOI_MAX_Y>", "0.0 # TODO: Extract from AOI");
+            
+            QFile configFile(configPath);
+            if (configFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
+                configFile.write(configContent.toUtf8());
+                configFile.close();
+                m_consoleText->append(tr("[PIRL] Created: pirl_training_config.yaml"));
+                m_consoleText->append(tr("[PIRL] NOTE: Review config file and replace TODO items"));
+            }
+        } else {
+            m_consoleText->append(tr("[PIRL] WARNING: Template not found, skipping config generation"));
+        }
+        
+        // 3. Enhance pipeline_specs.json with hydraulics section
+        QString pipelineSpecsPath = fullPath + "/pipeline_specs.json";
+        QFile pipelineSpecsFile(pipelineSpecsPath);
+        if (pipelineSpecsFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            QJsonDocument pipelineDoc = QJsonDocument::fromJson(pipelineSpecsFile.readAll());
+            pipelineSpecsFile.close();
+            
+            if (!pipelineDoc.isNull()) {
+                QJsonObject pipelineObj = pipelineDoc.object();
+                
+                // Add hydraulics section
+                QJsonObject hydraulics;
+                hydraulics["enable_hydraulics"] = true;
+                hydraulics["enable_compressor_placement"] = true;
+                hydraulics["initial_pressure_bar"] = 70.0;
+                hydraulics["min_delivery_pressure_bar"] = 45.0;
+                hydraulics["max_operating_pressure_bar"] = 75.0;
+                hydraulics["volumetric_flow_rate_m3_s"] = 1.0;
+                hydraulics["operating_temperature_k"] = 288.15;
+                hydraulics["gas_molecular_weight_kg_kmol"] = 16.8;
+                hydraulics["gas_specific_gravity"] = 0.58;
+                hydraulics["pipe_roughness_mm"] = 0.045;
+                hydraulics["compressor_capex_per_kw_usd"] = 5000.0;
+                hydraulics["compressor_opex_fraction"] = 0.03;
+                hydraulics["energy_cost_usd_per_kwh"] = 0.05;
+                
+                pipelineObj["hydraulics"] = hydraulics;
+                
+                // Save enhanced pipeline_specs.json
+                QFile enhancedFile(pipelineSpecsPath);
+                if (enhancedFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
+                    enhancedFile.write(QJsonDocument(pipelineObj).toJson(QJsonDocument::Indented));
+                    enhancedFile.close();
+                    m_consoleText->append(tr("[PIRL] Enhanced pipeline_specs.json with hydraulics"));
+                }
+            }
+        }
+        
+        // 4. Copy parameter tuner template
+        QString paramTunerSource = "/opt/agrs/Projects/test_project2/PIRL/parameter_tuner";
+        QString paramTunerDest = fullPath + "/PIRL/parameter_tuner";
+        
+        // Copy parameter tuner files using system command
+        QProcess::execute("cp", QStringList() << "-r" << paramTunerSource + "/main.cpp" << paramTunerDest);
+        QProcess::execute("cp", QStringList() << "-r" << paramTunerSource + "/PIRLParameterTuningDialog.h" << paramTunerDest);
+        QProcess::execute("cp", QStringList() << "-r" << paramTunerSource + "/PIRLParameterTuningDialog.cpp" << paramTunerDest);
+        QProcess::execute("cp", QStringList() << "-r" << paramTunerSource + "/CMakeLists.txt" << paramTunerDest);
+        QProcess::execute("cp", QStringList() << "-r" << paramTunerSource + "/pirl_parameters_default.json" << paramTunerDest);
+        QProcess::execute("cp", QStringList() << "-r" << paramTunerSource + "/README.md" << paramTunerDest);
+        
+        // Copy pirl_parameters_default.json to PIRL root
+        QProcess::execute("cp", QStringList() << paramTunerSource + "/pirl_parameters_default.json" << fullPath + "/PIRL/");
+        
+        // Update CMakeLists.txt with project name
+        QString cmakeListsPath = fullPath + "/PIRL/parameter_tuner/CMakeLists.txt";
+        QFile cmakeFile(cmakeListsPath);
+        if (cmakeFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            QString cmakeContent = QString::fromUtf8(cmakeFile.readAll());
+            cmakeFile.close();
+            
+            cmakeContent.replace("test_project2", proj.projectName);
+            
+            QFile updatedCmake(cmakeListsPath);
+            if (updatedCmake.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
+                updatedCmake.write(cmakeContent.toUtf8());
+                updatedCmake.close();
+                m_consoleText->append(tr("[PIRL] Copied parameter tuner template"));
+            }
+        }
+        
+        // 5. Automatically add to CMakeLists.txt and build parameter tuner
+        m_consoleText->append(tr("[PIRL] ===================================================="));
+        m_consoleText->append(tr("[PIRL] PIRL environment setup complete!"));
+        m_consoleText->append(tr("[PIRL] ===================================================="));
+        
+        // Add to main CMakeLists.txt
+        QString mainCMakePath = "/opt/agrs/CMakeLists.txt";
+        QString cmakeEntry = QString("\n# PIRL Parameter Tuner for %1\nadd_subdirectory(Projects/%1/PIRL/parameter_tuner)\n").arg(proj.projectName);
+        
+        QFile mainCMake(mainCMakePath);
+        if (mainCMake.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            QString cmakeContent = QString::fromUtf8(mainCMake.readAll());
+            mainCMake.close();
+            
+            // Check if entry already exists
+            if (!cmakeContent.contains(QString("Projects/%1/PIRL/parameter_tuner").arg(proj.projectName))) {
+                // Append to end of file
+                QFile appendCMake(mainCMakePath);
+                if (appendCMake.open(QIODevice::Append | QIODevice::Text)) {
+                    appendCMake.write(cmakeEntry.toUtf8());
+                    appendCMake.close();
+                    m_consoleText->append(tr("[PIRL] Added parameter tuner to CMakeLists.txt"));
+                } else {
+                    m_consoleText->append(tr("[PIRL] WARNING: Could not modify CMakeLists.txt"));
+                }
+            } else {
+                m_consoleText->append(tr("[PIRL] Parameter tuner already in CMakeLists.txt"));
+            }
+        }
+        
+        // Build parameter tuner automatically
+        m_consoleText->append(tr("[PIRL] Building parameter tuner (this may take 2-5 minutes)..."));
+        m_consoleText->append(tr("[PIRL] Please wait while cmake and make run..."));
+        
+        // Run cmake first
+        QProcess cmakeProcess;
+        cmakeProcess.setWorkingDirectory("/opt/agrs/build");
+        cmakeProcess.start("cmake", QStringList() << ".." << "-DCMAKE_BUILD_TYPE=Release");
+        
+        if (cmakeProcess.waitForStarted()) {
+            if (cmakeProcess.waitForFinished(60000)) { // 60 second timeout for cmake
+                if (cmakeProcess.exitCode() == 0) {
+                    m_consoleText->append(tr("[PIRL] CMake completed successfully"));
+                    
+                    // Now run make with project-specific target name
+                    QString targetName = QString("pirl_parameter_tuner_%1").arg(proj.projectName);
+                    QProcess makeProcess;
+                    makeProcess.setWorkingDirectory("/opt/agrs/build");
+                    makeProcess.start("make", QStringList() << targetName << QString("-j%1").arg(QThread::idealThreadCount()));
+                    
+                    if (makeProcess.waitForStarted()) {
+                        if (makeProcess.waitForFinished(300000)) { // 5 minute timeout for make
+                            if (makeProcess.exitCode() == 0) {
+                                m_consoleText->append(tr("[PIRL] ✓ Parameter tuner built successfully!"));
+                                m_consoleText->append(tr("[PIRL] Executable: %1/PIRL/pirl_parameter_tuner").arg(fullPath));
+                            } else {
+                                m_consoleText->append(tr("[PIRL] ✗ Build failed (exit code: %1)").arg(makeProcess.exitCode()));
+                                m_consoleText->append(tr("[PIRL] You can build manually: cd /opt/agrs/build && make pirl_parameter_tuner"));
+                                QString makeError = QString::fromUtf8(makeProcess.readAllStandardError());
+                                if (!makeError.isEmpty()) {
+                                    m_consoleText->append(tr("[PIRL] Error: %1").arg(makeError.left(200)));
+                                }
+                            }
+                        } else {
+                            m_consoleText->append(tr("[PIRL] ⏱ Build timeout - continuing in background"));
+                            m_consoleText->append(tr("[PIRL] Check build status: cd /opt/agrs/build && make pirl_parameter_tuner"));
+                        }
+                    } else {
+                        m_consoleText->append(tr("[PIRL] ✗ Failed to start make process"));
+                    }
+                } else {
+                    m_consoleText->append(tr("[PIRL] ✗ CMake failed (exit code: %1)").arg(cmakeProcess.exitCode()));
+                    QString cmakeError = QString::fromUtf8(cmakeProcess.readAllStandardError());
+                    if (!cmakeError.isEmpty()) {
+                        m_consoleText->append(tr("[PIRL] Error: %1").arg(cmakeError.left(200)));
+                    }
+                }
+            } else {
+                m_consoleText->append(tr("[PIRL] ⏱ CMake timeout"));
+            }
+        } else {
+            m_consoleText->append(tr("[PIRL] ✗ Failed to start cmake process"));
+        }
+        
+        m_consoleText->append(tr("[PIRL] ===================================================="));
+        m_consoleText->append(tr("[PIRL] Review and edit: PIRL/pirl_training_config.yaml"));
+        m_consoleText->append(tr("[PIRL] Launch parameter tuner: Click 'Tune' button or cd PIRL && ./pirl_parameter_tuner"));
+        m_consoleText->append(tr("[PIRL] Documentation: /opt/agrs/docs/Project Instructions/"));
+        m_consoleText->append(tr("[PIRL] ===================================================="));
+        
+        // Enable PIRL Tune button
+        if (m_tuneAction) {
+            m_tuneAction->setEnabled(true);
+        }
+        
         // Set terminal working directory to project path
         m_terminalWidget->setWorkingDirectory(fullPath);
         
@@ -475,6 +707,12 @@ void MainWindow::onOpenProject() {
     QString projectName = QFileInfo(dir).fileName();
     if (projectName.isEmpty()) projectName = dir;
     setWindowTitle(tr("AGRS ZEUS - %1").arg(projectName));
+    
+    // Check if PIRL parameter tuner exists and enable Tune button
+    QString tunerPath = dir + "/PIRL/pirl_parameter_tuner";
+    if (QFile::exists(tunerPath) && m_tuneAction) {
+        m_tuneAction->setEnabled(true);
+    }
     
     // Auto-load all layers from data directories
     loadProjectLayers(dir);
@@ -659,6 +897,77 @@ void MainWindow::onAbout() {
            "Artemis Global Research Solutions Inc.\n"
            "Version 0.1.0\n\n"
            "All geospatial operations are handled by AI."));
+}
+
+void MainWindow::onTunePIRL() {
+    if (m_currentProject.isEmpty()) {
+        QMessageBox::warning(this, tr("No Project"), 
+            tr("Please open or create a project first."));
+        return;
+    }
+    
+    QString tunerPath = m_currentProject + "/PIRL/pirl_parameter_tuner";
+    
+    // Check if parameter tuner exists
+    if (!QFile::exists(tunerPath)) {
+        QMessageBox::critical(this, tr("Parameter Tuner Not Found"),
+            tr("The PIRL parameter tuner executable was not found at:\n%1\n\n"
+               "Please ensure the PIRL environment is set up correctly.").arg(tunerPath));
+        return;
+    }
+    
+    // Launch parameter tuner in project PIRL directory
+    m_consoleText->append(tr("[PIRL] Launching parameter tuner..."));
+    
+    QProcess* tunerProcess = new QProcess(this);
+    tunerProcess->setWorkingDirectory(m_currentProject + "/PIRL");
+    tunerProcess->setProgram(tunerPath);
+    
+    // Connect signals for process feedback
+    connect(tunerProcess, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+            [this, tunerProcess](int exitCode, QProcess::ExitStatus exitStatus) {
+        if (exitStatus == QProcess::NormalExit) {
+            if (exitCode == 0) {
+                m_consoleText->append(tr("[PIRL] Parameter tuner closed"));
+            } else {
+                m_consoleText->append(tr("[PIRL] Parameter tuner exited with code: %1").arg(exitCode));
+            }
+        } else {
+            m_consoleText->append(tr("[PIRL] Parameter tuner crashed"));
+        }
+        tunerProcess->deleteLater();
+    });
+    
+    connect(tunerProcess, &QProcess::errorOccurred, 
+            [this, tunerProcess](QProcess::ProcessError error) {
+        QString errorMsg;
+        switch (error) {
+            case QProcess::FailedToStart:
+                errorMsg = tr("Failed to start parameter tuner. Check file permissions.");
+                break;
+            case QProcess::Crashed:
+                errorMsg = tr("Parameter tuner crashed unexpectedly.");
+                break;
+            default:
+                errorMsg = tr("Parameter tuner error: %1").arg(static_cast<int>(error));
+                break;
+        }
+        m_consoleText->append(tr("[PIRL] Error: %1").arg(errorMsg));
+        QMessageBox::critical(this, tr("Error"), errorMsg);
+        tunerProcess->deleteLater();
+    });
+    
+    // Start the parameter tuner
+    tunerProcess->start();
+    
+    if (!tunerProcess->waitForStarted(3000)) {
+        m_consoleText->append(tr("[PIRL] Failed to start parameter tuner"));
+        QMessageBox::critical(this, tr("Error"), 
+            tr("Failed to start the parameter tuner.\n\nMake sure it's executable:\nchmod +x %1").arg(tunerPath));
+        tunerProcess->deleteLater();
+    } else {
+        m_consoleText->append(tr("[PIRL] Parameter tuner is running"));
+    }
 }
 
 void MainWindow::onCoordinatesChanged(double lat, double lon) {

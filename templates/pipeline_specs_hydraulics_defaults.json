@@ -1,0 +1,89 @@
+{
+  "_comment": "Hydraulics section defaults for pipeline_specs.json",
+  "_description": "This file contains industry-standard hydraulics parameters to be merged into pipeline_specs.json after GUI project creation",
+  "_usage": "Merge this 'hydraulics' object into the pipeline_specs.json created by the GUI workflow",
+  
+  "hydraulics": {
+    "enable_hydraulics": true,
+    "enable_compressor_placement": true,
+    
+    "_pressure_parameters": "Pressure settings for gas pipeline operations",
+    "initial_pressure_bar": 70.0,
+    "min_delivery_pressure_bar": 45.0,
+    "max_operating_pressure_bar": 75.0,
+    
+    "_flow_parameters": "Flow rate and operating conditions",
+    "volumetric_flow_rate_m3_s": 1.0,
+    "operating_temperature_k": 288.15,
+    
+    "_gas_properties": "Natural gas composition defaults",
+    "gas_molecular_weight_kg_kmol": 16.8,
+    "gas_specific_gravity": 0.58,
+    
+    "_pipe_properties": "Internal surface roughness",
+    "pipe_roughness_mm": 0.045,
+    
+    "_compressor_economics": "Compressor station cost parameters",
+    "compressor_capex_per_kw_usd": 5000.0,
+    "compressor_opex_fraction": 0.03,
+    "energy_cost_usd_per_kwh": 0.05,
+    
+    "_calculated_fields": "These are computed from other parameters",
+    "_note_diameter_internal_m": "Calculated as: (diameter_mm - 2 * thickness_mm) / 1000.0"
+  },
+  
+  "_merging_instructions": {
+    "step_1": "Read existing pipeline_specs.json created by GUI",
+    "step_2": "Add or merge the 'hydraulics' section from this template",
+    "step_3": "Calculate diameter_internal_m from diameter_mm and thickness_mm",
+    "step_4": "Adjust gas properties if pipeline type is not natural gas",
+    "step_5": "Save updated pipeline_specs.json"
+  },
+  
+  "_gas_property_presets": {
+    "natural_gas": {
+      "gas_molecular_weight_kg_kmol": 16.8,
+      "gas_specific_gravity": 0.58,
+      "description": "Typical natural gas composition"
+    },
+    "hydrogen": {
+      "gas_molecular_weight_kg_kmol": 2.016,
+      "gas_specific_gravity": 0.0696,
+      "description": "Pure hydrogen (H2)"
+    },
+    "co2": {
+      "gas_molecular_weight_kg_kmol": 44.01,
+      "gas_specific_gravity": 1.52,
+      "description": "Carbon dioxide for CCS applications"
+    },
+    "methane": {
+      "gas_molecular_weight_kg_kmol": 16.04,
+      "gas_specific_gravity": 0.554,
+      "description": "Pure methane (CH4)"
+    },
+    "ngl": {
+      "gas_molecular_weight_kg_kmol": 30.0,
+      "gas_specific_gravity": 1.04,
+      "description": "Natural gas liquids mix"
+    }
+  },
+  
+  "_pressure_conversion_reference": {
+    "1_bar": "100,000 Pa = 100 kPa = 0.1 MPa = 14.5038 psi",
+    "70_bar": "7.0 MPa = 7,000 kPa = 1,015 psi (typical inlet pressure)",
+    "45_bar": "4.5 MPa = 4,500 kPa = 653 psi (typical minimum delivery)"
+  },
+  
+  "_industry_standards": {
+    "typical_inlet_pressure_bar": "60-75",
+    "typical_delivery_pressure_bar": "40-50",
+    "typical_flow_rate_m3_s": "0.5-2.0 (depends on pipeline size and demand)",
+    "typical_compressor_spacing_km": "80-150 (depends on terrain and flow)",
+    "pipe_roughness_new_steel_mm": "0.045",
+    "pipe_roughness_aged_steel_mm": "0.05-0.15"
+  }
+}
+
+
+
+

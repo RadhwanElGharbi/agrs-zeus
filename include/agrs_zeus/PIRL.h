@@ -246,6 +246,11 @@ struct RouteSegment {
     double aspect = 0.0;
     double curvature = 0.0;
     
+    // Bend characteristics (NEW - pipeline physics)
+    double heading_change_deg = 0.0;  // Bend angle in degrees
+    double bend_radius_m = 0.0;        // Actual bend radius
+    bool exceeds_field_bend_limit = false;  // > 5° field bend limit
+    
     // Cost breakdown (USD)
     double total_cost = 0.0;
     double terrain_cost = 0.0;
@@ -277,12 +282,16 @@ struct RouteSegment {
     double powerline_proximity = 0.0;
     double pipeline_proximity = 0.0;
     
-    // Hydraulics
-    double pressure_drop_pa = 0.0;
-    double cumulative_pressure_drop_pa = 0.0;
-    double flow_velocity_m_s = 0.0;
-    double reynolds_number = 0.0;
-    bool requires_pumping_station = false;
+    // Hydraulics (NEW - comprehensive pressure profile)
+    double entry_pressure_bar = 0.0;        // Pressure at segment start (bar)
+    double exit_pressure_bar = 0.0;         // Pressure at segment end (bar)
+    double pressure_drop_pa = 0.0;          // Pressure drop in this segment (Pa)
+    double cumulative_pressure_drop_pa = 0.0; // Total pressure drop from start (Pa)
+    double flow_velocity_m_s = 0.0;         // Gas velocity (m/s)
+    double reynolds_number = 0.0;           // Flow regime indicator
+    bool has_compressor_station = false;    // Whether segment contains compressor
+    std::string compressor_station_type;    // "centrifugal", "reciprocating", or empty
+    bool requires_pumping_station = false;  // Legacy field (kept for compatibility)
     
     // RL metadata
     int step_number = 0;
@@ -344,9 +353,14 @@ public:
     void get_aoi_bounds(double& minx, double& miny, 
                        double& maxx, double& maxy) const;
     
-    // Coastline constraint methods (NEW - offshore routing prevention)
-    bool is_beyond_coastline(double x, double y) const;
-    bool has_coastline() const { return coastline_geom_ != nullptr; }
+    // Sea polygon constraint methods (NEW - 1km exclusion zone from largest water body)
+    bool is_near_sea(double x, double y) const;
+    bool has_sea_polygon() const { return sea_polygon_geom_ != nullptr; }
+    double distance_to_sea(double x, double y) const;
+    
+    // Infrastructure checks
+    bool has_power_lines() const { return power_lines_ != nullptr; }
+    bool has_railways() const { return railways_ != nullptr; }
     
     // Additional dataset queries
     double get_geohazard_risk(double x, double y) const;  // Landslide, seismic risk
@@ -375,7 +389,7 @@ private:
     std::unique_ptr<OGRGeometry> cadastre_complex_;  // Complex land parcels
     std::unique_ptr<OGRGeometry> power_lines_;       // Power transmission lines
     std::unique_ptr<OGRGeometry> pipelines_;         // Existing pipelines
-    std::unique_ptr<OGRGeometry> coastline_geom_;    // Coastline boundary (NEW - offshore constraint)
+    std::unique_ptr<OGRGeometry> sea_polygon_geom_;  // Largest water polygon (sea) - 1km exclusion zone
     
     // Helper: sample raster at point
     double sample_raster(GDALDataset* dataset, double x, double y) const;
@@ -421,8 +435,11 @@ public:
                                  const std::map<std::string, double>& criteria_scores) const;
     
     // Hydraulic costs (NEW - Phase 2)
-    double hydraulic_cost(const HydraulicsCalculator::SegmentHydraulics& hydraulics,
+    double hydraulic_cost(const SegmentHydraulics& hydraulics,
                          double segment_length_m) const;
+    
+    // Apply parameter overrides from JSON (NEW - for parameter tuning)
+    void apply_parameter_overrides(const nlohmann::json& overrides);
     
 private:
     ProjectConfig config_;
@@ -434,6 +451,16 @@ private:
     
     // Regional cost adjustments
     double regional_multiplier_;
+    
+    // Hydraulic cost parameters (overridable)
+    double compressor_base_cost_ = 1000000.0;
+    double compressor_power_cost_per_kw_ = 5000.0;
+    double erosion_velocity_threshold_m_s_ = 15.0;
+    double erosion_penalty_per_m_ = 150.0;
+    double dropout_velocity_threshold_m_s_ = 3.0;
+    double dropout_penalty_per_m_ = 75.0;
+    double excessive_pressure_drop_threshold_bar_ = 5.0;
+    double excessive_pressure_drop_per_bar_ = 10000.0;
 };
 
 // ============================================================================
@@ -558,6 +585,27 @@ private:
     
     // Exploration tracking (NEW - for milestone bonuses)
     double best_distance_to_goal_;  // Best distance achieved this episode
+    
+    // Parameter overrides (NEW - loaded from pirl_parameter_overrides.json)
+    double progress_reward_multiplier_ = 2.0;
+    double goal_bonus_ = 10000.0;
+    double exploration_bonus_ = 100.0;
+    double sea_penalty_ = -10000.0;
+    double buildup_penalty_ = -10000.0;
+    double powerline_penalty_ = -500.0;
+    double railway_penalty_ = -500.0;
+    double curvature_penalty_rate_ = -10.0;
+    double out_of_bounds_penalty_ = -50.0;
+    double cost_normalization_factor_ = 100000.0;
+    double exploration_bonus_milestone_m_ = 1000.0;
+    double powerline_clearance_m_ = 6.0;
+    double railway_clearance_m_ = 10.0;
+    double powerline_crossing_threshold_m_ = 2.0;
+    double railway_crossing_threshold_m_ = 3.0;
+    double sea_exclusion_distance_m_ = 1000.0;
+    
+    // Helper: load parameter overrides from JSON
+    void load_parameter_overrides(const std::string& override_file);
     
     // Helper: calculate reward
     RewardInfo calculate_reward(const State& prev_state,

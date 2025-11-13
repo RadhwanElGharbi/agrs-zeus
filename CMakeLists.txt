@@ -189,8 +189,17 @@ if(AGRS_ZEUS_BUILD_PYTHON_BINDINGS)
   message(STATUS "Python bindings will be built: pirl_native module")
 endif()
 
+# PIRL Parameter Tuner (project-specific standalone tool)
+add_subdirectory(Projects/test_project2/PIRL/parameter_tuner)
+
 include(CPack)
 set(CPACK_PACKAGE_NAME "agrs-zeus")
 set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
 set(CPACK_GENERATOR "DEB;TGZ")
 set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Artemis GRS Inc.")
+
+
+
+
+# PIRL Parameter Tuner for test_pirl_automation
+add_subdirectory(Projects/test_pirl_automation/PIRL/parameter_tuner)

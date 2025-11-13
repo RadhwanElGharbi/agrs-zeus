@@ -78,6 +78,22 @@ All new projects MUST be created under this directory.
 │   ├── routing_results/
 │   ├── reports/
 │   └── figures/
+├── PIRL/                           # PIRL (Pipeline Reinforcement Learning) directory
+│   ├── pirl_parameter_tuner        # Parameter tuning executable (auto-generated)
+│   ├── pirl_parameters_default.json # Default parameter values (auto-generated)
+│   ├── pirl_parameter_overrides.json # Custom parameter overrides (user-created)
+│   ├── pirl_training_config.yaml   # Training configuration
+│   ├── parameter_tuner/            # Parameter tuner source code
+│   │   ├── main.cpp
+│   │   ├── PIRLParameterTuningDialog.h
+│   │   ├── PIRLParameterTuningDialog.cpp
+│   │   ├── CMakeLists.txt
+│   │   ├── pirl_parameters_default.json
+│   │   └── README.md
+│   ├── outputs/                    # Training outputs
+│   │   └── route_*.geojson
+│   └── models/                     # Trained model checkpoints
+│       └── best_model/
 ├── logs/                           # Operation logs
 │   ├── project.log                 # Main project log (all operations)
 │   ├── fetch.log                   # Data acquisition log
@@ -208,6 +224,196 @@ All new projects MUST be created under this directory.
 - Cost: USD or local currency (must be specified)
 
 **CRITICAL**: Unit consistency across all datasets is mandatory. Document any deviations from SI in dataset metadata.
+
+---
+
+### 4. PIRL Environment Setup
+
+**MANDATORY**: Every project must include a complete PIRL (Physics-Informed Reinforcement Learning) environment for pipeline route optimization.
+
+#### Overview
+
+The PIRL environment consists of:
+- **Directory structure** for training outputs, models, and logs
+- **Configuration files** for training parameters and pipeline specifications
+- **Parameter tuner** for customizing rewards, costs, and constraints
+- **Integration** with GUI-collected project data
+
+**What the GUI Provides:**
+
+The New Project Dialog already collects and creates:
+- Project identification (`project_metadata.json`)
+- Basic pipeline specs (`pipeline_specs.json`)
+- Route endpoints (start/end lat/lon)
+- CRS and AOI information
+- Base directory structure
+
+**What Requires Manual Setup:**
+
+- PIRL directory structure
+- Training configuration file (`pirl_training_config.yaml`)
+- Enhanced pipeline specs with hydraulics
+- Parameter tuner executable
+
+#### Quick Start
+
+For a complete step-by-step guide with verification, see:
+- **Comprehensive Guide:** `/opt/agrs/docs/Project Instructions/PIRL_ENVIRONMENT_INITIALIZATION.md`
+- **Quick Checklist:** `/opt/agrs/docs/Project Instructions/PIRL_INITIALIZATION_CHECKLIST.md`
+
+#### Initialization Steps (Summary)
+
+**Step 1: Create PIRL Directory Structure**
+
+```bash
+cd /opt/agrs/Projects/<PROJECT_NAME>
+mkdir -p PIRL/{outputs,models/{best_model,checkpoints},logs,parameter_tuner}
+```
+
+**Step 2: Generate Training Configuration**
+
+```bash
+cp /opt/agrs/templates/pirl_training_config_template.yaml PIRL/pirl_training_config.yaml
+# Edit file and replace all <PLACEHOLDER> values with project data
+```
+
+Required placeholders to replace:
+- `<PROJECT_NAME>`, `<PROJECT_CODE>`, `<CLIENT_NAME>`
+- `<EPSG_CODE>` (from GUI)
+- `<START_X>`, `<START_Y>`, `<END_X>`, `<END_Y>` (convert lat/lon to UTM)
+- `<AOI_MIN_X>`, `<AOI_MIN_Y>`, `<AOI_MAX_X>`, `<AOI_MAX_Y>` (extract from AOI file)
+- `<PROJECT_PATH>`, `<COUNTRY_CODE>`, `<REGION_NAME>`
+
+**Step 3: Enhance Pipeline Specs with Hydraulics**
+
+Add hydraulics section to `pipeline_specs.json` (created by GUI):
+
+```bash
+# Reference template for hydraulics defaults
+cat /opt/agrs/templates/pipeline_specs_hydraulics_defaults.json
+# Merge hydraulics section into pipeline_specs.json
+```
+
+**Step 4: Setup Parameter Tuner**
+
+```bash
+cd PIRL
+cp -r /opt/agrs/Projects/test_project2/PIRL/parameter_tuner/* parameter_tuner/
+cp /opt/agrs/Projects/test_project2/PIRL/pirl_parameters_default.json .
+sed -i 's/test_project2/<PROJECT_NAME>/g' parameter_tuner/CMakeLists.txt
+```
+
+**Step 5: Build Parameter Tuner**
+
+Add to `/opt/agrs/CMakeLists.txt`:
+```cmake
+add_subdirectory(Projects/<PROJECT_NAME>/PIRL/parameter_tuner)
+```
+
+Build:
+```bash
+cd /opt/agrs/build
+cmake .. -DCMAKE_BUILD_TYPE=Release
+make pirl_parameter_tuner
+```
+
+#### Configuration Files
+
+**1. pirl_training_config.yaml**
+- Main training configuration
+- Project identification and paths
+- Cost weights and hydraulics settings
+- Training hyperparameters
+- Template: `/opt/agrs/templates/pirl_training_config_template.yaml`
+
+**2. pipeline_specs.json**
+- Pipeline physical properties
+- Hydraulics configuration
+- Clearances and constraints
+- Extended by manual addition of hydraulics section
+
+**3. pirl_parameters_default.json**
+- PPO reward weights
+- Cost matrix (terrain, landcover, infrastructure)
+- Hydraulic costs
+- Constraint thresholds
+- Copied from parameter tuner template
+
+**4. pirl_parameter_overrides.json**
+- Custom parameter modifications (created by parameter tuner)
+- Automatically loaded by training environment
+- Overrides default values
+
+#### Parameter Tuner Usage
+
+Launch the parameter tuner:
+
+```bash
+cd /opt/agrs/Projects/<PROJECT_NAME>/PIRL
+./pirl_parameter_tuner
+```
+
+The dialog provides 6 tabs for customization:
+1. **PPO Reward Weights** - Progress, goal, exploration bonuses and penalties
+2. **Terrain Multipliers** - Cost factors for different terrain types
+3. **Land Cover Costs** - Per-meter costs for different land cover classes
+4. **Infrastructure Crossings** - Costs for crossing roads, railways, power lines
+5. **Hydraulic Costs** - Compressor costs and flow velocity penalties
+6. **Constraint Thresholds** - Slope limits, clearances, pressure thresholds
+
+Export parameters to `pirl_parameter_overrides.json` - automatically loaded during training.
+
+#### Verification
+
+Use the automated checklist:
+
+```bash
+cd /opt/agrs/Projects/<PROJECT_NAME>/PIRL
+
+# Check directory structure
+tree -L 3 .
+
+# Verify no placeholders remain
+grep -E "<[A-Z_]+>" pirl_training_config.yaml
+
+# Check hydraulics section
+python3 -c "import json; print('hydraulics' in json.load(open('../pipeline_specs.json')))"
+
+# Test parameter tuner
+ls -lh pirl_parameter_tuner
+timeout 2 ./pirl_parameter_tuner 2>&1 || echo "✓ Executable functional"
+```
+
+**Expected Files:**
+- `PIRL/pirl_training_config.yaml`
+- `PIRL/pirl_parameters_default.json`
+- `PIRL/pirl_parameter_tuner` (executable)
+- `PIRL/parameter_tuner/` (source code)
+- `pipeline_specs.json` (with hydraulics section)
+
+#### Time Estimate
+
+- **Manual PIRL setup:** 15-20 minutes
+- **Parameter tuner build:** 2-5 minutes
+- **Verification:** 2-3 minutes
+- **Total:** ~20-30 minutes
+
+#### Documentation
+
+For complete details, troubleshooting, and advanced configuration:
+
+**Primary Documentation:**
+- `/opt/agrs/docs/Project Instructions/PIRL_ENVIRONMENT_INITIALIZATION.md` - Comprehensive guide
+- `/opt/agrs/docs/Project Instructions/PIRL_INITIALIZATION_CHECKLIST.md` - Quick reference checklist
+
+**Supporting Documentation:**
+- `/opt/agrs/docs/Project Instructions/PIRL_STANDARD_INTEGRATION.md` - Integration overview
+- `/opt/agrs/docs/Project Instructions/QUICK_START_PIRL_SETUP.md` - Parameter tuner quick start
+- `/opt/agrs/docs/HYDRAULICS_MODULE_IMPLEMENTATION_PLAN.md` - Hydraulics details
+
+**Templates:**
+- `/opt/agrs/templates/pirl_training_config_template.yaml` - Training config template
+- `/opt/agrs/templates/pipeline_specs_hydraulics_defaults.json` - Hydraulics defaults
 
 ---
 

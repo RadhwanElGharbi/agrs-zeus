@@ -2,6 +2,9 @@
 #include "agrs_zeus/gui/MapWidget.h"
 #include "agrs_zeus/gui/CursorInterface.h"
 #include "agrs_zeus/gui/TerminalWidget.h"
+#include "agrs_zeus/gui/DatasetCatalog.h"
+#include "agrs_zeus/gui/DatasetFetchPipeline.h"
+#include "agrs_zeus/gui/DatasetFetchProgressDialog.h"
 #include "agrs_zeus/Tools.h"
 #include <QtConcurrent>
 #include <QRegularExpression>
@@ -96,6 +99,12 @@ DatasetAvailabilityDialog::DatasetAvailabilityDialog(MapWidget* map,
     
     bottomLayout->addStretch();
     
+    auto* pirlBtn = new QPushButton(tr("🎯 PIRL Required (12)"), this);
+    pirlBtn->setToolTip(tr("Auto-select the 12 required datasets for PIRL training"));
+    pirlBtn->setStyleSheet("QPushButton { background-color: #5cb85c; color: white; font-weight: bold; padding: 8px; }");
+    connect(pirlBtn, &QPushButton::clicked, this, &DatasetAvailabilityDialog::onAutoSelectPIRL);
+    bottomLayout->addWidget(pirlBtn);
+    
     auto* autoBtn = new QPushButton(tr("🤖 Auto (Recommended)"), this);
     autoBtn->setToolTip(tr("AI selects the best datasets for each category (highest resolution, most recent, implemented)"));
     autoBtn->setStyleSheet("QPushButton { background-color: #2a7ab0; color: white; font-weight: bold; padding: 8px; }");
@@ -121,6 +130,14 @@ DatasetAvailabilityDialog::DatasetAvailabilityDialog(MapWidget* map,
     
     // Initialize Cursor interface
     m_cursor = new CursorInterface(this);
+    
+    // Initialize DatasetCatalog
+    m_catalog = new DatasetCatalog(QString("/opt/agrs/data"), this);
+    
+    // Initialize FetchPipeline
+    m_pipeline = new DatasetFetchPipeline(this);
+    m_pipeline->setMaxConcurrent(3);
+    m_pipeline->setMaxRetries(2);
 }
 
 void DatasetAvailabilityDialog::analyzeAndDisplay() {
@@ -133,7 +150,7 @@ void DatasetAvailabilityDialog::analyzeAndDisplay() {
 }
 
 void DatasetAvailabilityDialog::runAnalysisInBackground() {
-    QtConcurrent::run([this]() {
+    (void)QtConcurrent::run([this]() {
         // Step 1: Load all dataset inventories from CSV files
         QMetaObject::invokeMethod(this, [this]() {
             m_statusLabel->setText(tr("Loading dataset inventories..."));
@@ -511,7 +528,7 @@ void DatasetAvailabilityDialog::onAutoRecommend() {
     m_progressBar->setRange(0, 0);
     
     // Run in background thread to prevent freezing
-    QtConcurrent::run([this]() {
+    (void)QtConcurrent::run([this]() {
         qDebug() << "[AutoRecommend] Starting comprehensive analysis and fetch workflow...";
         qDebug() << "[AutoRecommend] AOI Path:" << m_aoiPath;
         qDebug() << "[AutoRecommend] Project Path:" << m_projectPath;
@@ -1144,6 +1161,66 @@ void DatasetAvailabilityDialog::onAutoRecommend() {
     });
 }
 
+void DatasetAvailabilityDialog::onAutoSelectPIRL() {
+    if (!m_catalog || !m_catalog->isLoaded()) {
+        QMessageBox::warning(this, tr("Catalog Not Loaded"),
+                           tr("Dataset catalog is not loaded. Please wait for initialization."));
+        return;
+    }
+    
+    m_statusLabel->setText(tr("Selecting PIRL required datasets..."));
+    
+    // Get country code from AOI
+    QString countryCode = "IT";  // Default to Italy, should detect from AOI
+    
+    // Get PIRL required datasets
+    QVector<CatalogDatasetInfo> pirlDatasets = m_catalog->getPIRLRequiredDatasets(countryCode);
+    
+    if (pirlDatasets.isEmpty()) {
+        QMessageBox::warning(this, tr("No PIRL Datasets"),
+                           tr("Could not find PIRL required datasets for this location."));
+        return;
+    }
+    
+    // Clear all selections first
+    for (int i = 0; i < m_table->rowCount(); ++i) {
+        auto* checkItem = m_table->item(i, 0);
+        if (checkItem && checkItem->flags() & Qt::ItemIsUserCheckable) {
+            checkItem->setCheckState(Qt::Unchecked);
+        }
+    }
+    
+    // Select PIRL required datasets
+    int selectedCount = 0;
+    for (const auto& entry : pirlDatasets) {
+        // Find and check the corresponding row
+        for (int i = 0; i < m_table->rowCount(); ++i) {
+            QString category = m_table->item(i, 1)->text();
+            QString datasetName = m_table->item(i, 2)->text();
+            
+            if (category == entry.category && datasetName == entry.datasetName) {
+                auto* checkItem = m_table->item(i, 0);
+                if (checkItem && checkItem->flags() & Qt::ItemIsUserCheckable) {
+                    checkItem->setCheckState(Qt::Checked);
+                    selectedCount++;
+                    break;
+                }
+            }
+        }
+    }
+    
+    m_statusLabel->setText(tr("Selected %1 PIRL required datasets").arg(selectedCount));
+    
+    // Show confirmation message
+    QString msg = tr("Auto-selected %1 PIRL required datasets:\n\n").arg(selectedCount);
+    for (const auto& entry : pirlDatasets) {
+        msg += QString("• %1 - %2\n").arg(entry.category).arg(entry.datasetName);
+    }
+    msg += tr("\nClick 'Fetch & Load Selected' to download these datasets.");
+    
+    QMessageBox::information(this, tr("PIRL Datasets Selected"), msg);
+}
+
 void DatasetAvailabilityDialog::onFetchSelected() {
     // Collect selected datasets
     QVector<DatasetInfo> selectedDatasets;
@@ -1204,7 +1281,7 @@ void DatasetAvailabilityDialog::onFetchSelected() {
         }
         
         // Run fetch in background thread
-        QtConcurrent::run([this, selectedDatasets]() {
+        (void)QtConcurrent::run([this, selectedDatasets]() {
             int successCount = 0;
             int failCount = 0;
             QString bbox = computeBBoxWGS84();

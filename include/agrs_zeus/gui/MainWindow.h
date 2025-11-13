@@ -54,6 +54,7 @@ private slots:
     void onDataAvailability();
     void onClipToAOI();
     void onNewFolder();
+    void onTunePIRL();
     
     // All geospatial operations handled by Cursor CLI
     
@@ -114,6 +115,8 @@ private:
     QToolBar* m_fileToolbar;
     QToolBar* m_dataToolbar;
     QToolBar* m_viewToolbar;
+    QToolBar* m_pirlToolbar;
+    QAction* m_tuneAction;
     
     // Status bar
     QLabel* m_coordsLabel;
