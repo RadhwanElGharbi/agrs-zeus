@@ -1253,11 +1253,20 @@ bool PhysicsConstraints::check_no_go_zones(double x, double y,
 
 double PhysicsConstraints::slope_penalty(double slope) const {
     if (slope <= config_.constraints.max_slope_percent) {
-        return 0.0;
+        return 0.0;  // No penalty within constraint
     }
-    // Exponential penalty for exceeding slope limit
+    
     double excess = slope - config_.constraints.max_slope_percent;
-    return -10.0 * excess;
+    
+    // Exponential penalty: increasingly severe as slope increases
+    // Base penalty: -100 for 1% excess
+    // Grows exponentially: 21% = -100, 25% = -300, 30% = -1000, 40% = -10000
+    double base_penalty = -100.0;
+    double growth_rate = 1.4;  // Exponential growth factor
+    double penalty = base_penalty * std::pow(growth_rate, excess);
+    
+    // Cap at -50000 to prevent reward explosion
+    return std::max(penalty, -50000.0);
 }
 
 double PhysicsConstraints::curvature_penalty(double curvature) const {

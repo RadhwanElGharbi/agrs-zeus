@@ -106,8 +106,31 @@ def create_eval_env(config: PIRLTrainingConfig) -> PIRLEnvironment:
     return create_training_env(eval_config)
 
 
-def create_model(config: PIRLTrainingConfig, env) -> Any:
-    """Create RL model based on configuration."""
+def create_model(config: PIRLTrainingConfig, env, device='auto', policy_type='MlpPolicy') -> Any:
+    """Create RL model with device and policy selection.
+    
+    Args:
+        config: Training configuration
+        env: Vectorized environment
+        device: Device to use ('auto', 'cpu', 'cuda')
+        policy_type: Policy architecture ('MlpPolicy' or 'CnnPolicy')
+    
+    Returns:
+        Trained model instance
+    """
+    import torch
+    
+    # Device selection
+    if device == 'auto':
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    
+    logger.info(f"Using device: {device}")
+    logger.info(f"Using policy: {policy_type}")
+    
+    if device == 'cuda' and torch.cuda.is_available():
+        logger.info(f"GPU: {torch.cuda.get_device_name(0)}")
+        logger.info(f"CUDA version: {torch.version.cuda}")
+    
     model_class = PPO if config.algorithm.upper() == 'PPO' else SAC
     
     # Default parameters
@@ -125,7 +148,8 @@ def create_model(config: PIRLTrainingConfig, env) -> Any:
         'vf_coef': 0.5,
         'max_grad_norm': 0.5,
         'verbose': 1,
-        'tensorboard_log': str(config.log_dir)
+        'tensorboard_log': str(config.log_dir),
+        'device': device
     }
     
     # Update with custom parameters
@@ -134,23 +158,33 @@ def create_model(config: PIRLTrainingConfig, env) -> Any:
     # Create model
     if config.algorithm.upper() == 'PPO':
         model = PPO(
-            'MlpPolicy',
+            policy_type,
             env,
             **model_params
         )
     else:  # SAC
         model = SAC(
-            'MlpPolicy',
+            policy_type,
             env,
             **model_params
         )
     
-    logger.info(f"Created {config.algorithm} model with parameters: {model_params}")
+    logger.info(f"Created {config.algorithm} model with {policy_type} on {device}")
+    logger.info(f"Model parameters: {model_params}")
     return model
 
 
-def train_model(config: PIRLTrainingConfig) -> Any:
-    """Train PIRL model."""
+def train_model(config: PIRLTrainingConfig, device='auto', policy_type='MlpPolicy') -> Any:
+    """Train PIRL model.
+    
+    Args:
+        config: Training configuration
+        device: Device to use ('auto', 'cpu', 'cuda')
+        policy_type: Policy architecture ('MlpPolicy' or 'CnnPolicy')
+    
+    Returns:
+        Trained model
+    """
     logger.info("Starting PIRL model training...")
     
     # Create environments
@@ -162,7 +196,7 @@ def train_model(config: PIRLTrainingConfig) -> Any:
     
     # Create model
     logger.info("Creating model...")
-    model = create_model(config, train_env)
+    model = create_model(config, train_env, device=device, policy_type=policy_type)
     
     # Set up callbacks
     callbacks = []
@@ -263,6 +297,10 @@ def main():
     """Main training function."""
     parser = argparse.ArgumentParser(description="Train PIRL model for pipeline routing")
     parser.add_argument("--config", required=True, help="Training configuration YAML file")
+    parser.add_argument("--device", choices=['auto', 'cpu', 'cuda'], default='auto',
+                        help="Device to use for training (default: auto)")
+    parser.add_argument("--policy", choices=['MlpPolicy', 'CnnPolicy'], default='MlpPolicy',
+                        help="Policy architecture (default: MlpPolicy)")
     parser.add_argument("--eval-only", action="store_true", help="Only evaluate existing model")
     parser.add_argument("--model-path", help="Path to model for evaluation")
     parser.add_argument("--episodes", type=int, default=10, help="Number of evaluation episodes")
@@ -288,7 +326,9 @@ def main():
         
     else:
         # Train model
-        model = train_model(config)
+        logger.info(f"Device: {args.device}")
+        logger.info(f"Policy: {args.policy}")
+        model = train_model(config, device=args.device, policy_type=args.policy)
         
         # Quick evaluation
         logger.info("Running quick evaluation...")

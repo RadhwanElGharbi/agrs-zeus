@@ -492,12 +492,10 @@ bool PipelineEnvironment::check_termination(const State& state, std::string& rea
         return true;  // Immediate termination
     }
     
-    // Built-up area constraint - IMMEDIATE TERMINATION (13.5m clearance required)
-    int land_cover = gis_->get_land_cover_class(state.x, state.y);
-    if (land_cover == 50) {  // Built-up areas
-        reason = "FAILURE: Built-up area violation (<13.5m from buildings)";
-        return true;  // Immediate termination
-    }
+    // NOTE: Built-up area violations handled via heavy penalties in calculate_reward()
+    // Very heavy penalty (-10000.0) for <13.5m clearance - agent must learn to avoid
+    // No immediate termination - allows penalty-based learning
+    // Similar to slope constraint: learn through experience, not forced termination
     
     // Powerline/Railway clearance - NO termination, handled via penalties & HDD costs
     // Crossings are allowed with appropriate HDD construction costs
@@ -508,9 +506,11 @@ bool PipelineEnvironment::check_termination(const State& state, std::string& rea
         return true;
     }
     
-    // Failure: excessive slope (removed the 1.5x multiplier - should be exactly 20% as per criteria)
-    if (state.slope > config_.constraints.max_slope_percent) {
-        reason = "FAILURE: Excessive slope (>" + std::to_string(config_.constraints.max_slope_percent) + "%)";
+    // NOTE: Slope violations are handled via heavy penalties in calculate_reward()
+    // No immediate termination - agent must learn to avoid through penalty-based learning
+    // Only terminate on catastrophic slopes (>50%) that are physically impossible for pipeline
+    if (state.slope > 50.0) {
+        reason = "FAILURE: Catastrophic slope (>50% - physically impossible for pipeline)";
         return true;
     }
     

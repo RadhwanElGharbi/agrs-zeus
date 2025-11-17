@@ -1,0 +1,177 @@
+================================================================================
+PIRL 10K VALIDATION TRAINING - QUICK START
+================================================================================
+
+IMPLEMENTATION STATUS: ✅ COMPLETE AND READY
+
+All systems go! Built-up area and slope constraints now use penalties instead 
+of termination. 21D state space active. 24 parallel environments configured.
+
+================================================================================
+MANUAL TRAINING INSTRUCTIONS
+================================================================================
+
+OPTION 1: GPU + MLP (FASTEST - RECOMMENDED)
+────────────────────────────────────────────
+cd /opt/agrs/Projects/test_project2/PIRL
+./train_10k_gpu_mlp.sh
+
+Runtime: ~5-15 minutes
+Output: outputs/validation_10k/training_gpu_mlp.log
+
+
+OPTION 2: CPU + MLP (BASELINE)
+────────────────────────────────────────────
+cd /opt/agrs/Projects/test_project2/PIRL
+./train_10k_cpu_mlp.sh
+
+Runtime: ~20-40 minutes
+Output: outputs/validation_10k/training_cpu_mlp.log
+
+
+OPTION 3: GPU + CNN (EXPERIMENTAL - MAY FAIL)
+────────────────────────────────────────────
+cd /opt/agrs/Projects/test_project2/PIRL
+./train_10k_gpu_cnn.sh
+
+⚠️ CNN expects image input, current state is 21D vector
+Will prompt for confirmation before running
+
+
+OPTION 4: CPU + CNN (EXPERIMENTAL - MAY FAIL)
+────────────────────────────────────────────
+cd /opt/agrs/Projects/test_project2/PIRL
+./train_10k_cpu_cnn.sh
+
+⚠️ CNN expects image input, current state is 21D vector
+Will prompt for confirmation before running
+
+================================================================================
+MONITORING TRAINING
+================================================================================
+
+Watch logs in real-time:
+────────────────────────────────────────────
+tail -f outputs/validation_10k/training_gpu_mlp.log
+# or
+tail -f outputs/validation_10k/training_cpu_mlp.log
+
+
+TensorBoard (in separate terminal):
+────────────────────────────────────────────
+cd /opt/agrs/Projects/test_project2/PIRL
+tensorboard --logdir=outputs/validation_10k/tensorboard --port=6006
+
+Then open: http://localhost:6006
+
+================================================================================
+AFTER TRAINING: ANALYTICS & GEOJSON
+================================================================================
+
+Generate analytics report:
+────────────────────────────────────────────
+cd /opt/agrs/Projects/test_project2/PIRL
+python3 analyze_training_run.py outputs/validation_10k
+
+Output:
+  - outputs/validation_10k/analytics_report.md
+  - outputs/validation_10k/training_plots/
+  - outputs/validation_10k/training_statistics.json
+
+
+Generate GeoJSON route:
+────────────────────────────────────────────
+cd /opt/agrs/Projects/test_project2/PIRL
+python3 generate_route_from_model.py \
+    --model models/pirl_10k_validation_best_model.zip \
+    --config pirl_training_config_10k_validation.yaml \
+    --output outputs/validation_10k/route_10k.geojson
+
+Output: outputs/validation_10k/route_10k.geojson
+
+View in QGIS:
+  Layer → Add Layer → Add Vector Layer → route_10k.geojson
+
+================================================================================
+WHAT WAS FIXED
+================================================================================
+
+✅ Slope constraint: Exponential penalties instead of immediate termination
+✅ Built-up area: Heavy penalties instead of immediate termination  
+✅ Native bindings: Rebuilt with all fixes
+✅ 21D state space: Confirmed and active
+✅ Device support: CPU and GPU options
+✅ Policy options: MLP (recommended) and CNN (experimental)
+
+================================================================================
+FILES CREATED
+================================================================================
+
+Configuration:
+  - pirl_training_config_10k_validation.yaml
+
+Training scripts:
+  - train_10k_cpu_mlp.sh (baseline)
+  - train_10k_gpu_mlp.sh (fastest)
+  - train_10k_cpu_cnn.sh (experimental)
+  - train_10k_gpu_cnn.sh (experimental)
+
+Analysis tools:
+  - analyze_training_run.py
+  - generate_route_from_model.py
+
+Documentation:
+  - TRAINING_10K_INSTRUCTIONS.md (full guide)
+  - IMPLEMENTATION_COMPLETE.md (summary)
+  - QUICK_START.txt (this file)
+
+================================================================================
+EXPECTED RESULTS
+================================================================================
+
+Training Success:
+  ✅ Completes 10,000 timesteps
+  ✅ Reward improves over time
+  ✅ No premature terminations
+  ✅ Episodes get longer
+  ✅ Models saved successfully
+
+Performance Targets (10K is short, don't expect perfection):
+  - Episode Reward: Start ~-50000, improve to >-30000
+  - Episode Length: Start ~50-100, improve to >200
+  - Goal Progress: Improve from <10% to >30%
+
+================================================================================
+TROUBLESHOOTING
+================================================================================
+
+CNN fails with shape error:
+  → Use MLP instead (recommended for vector states)
+
+CUDA out of memory:
+  → Reduce num_envs in config or use CPU version
+
+Training very slow:
+  → Use GPU version or reduce num_envs
+
+No GeoJSON generated:
+  → Increase --max-steps or check model trained successfully
+
+For detailed troubleshooting, see: TRAINING_10K_INSTRUCTIONS.md
+
+================================================================================
+RECOMMENDATION
+================================================================================
+
+Start with: ./train_10k_gpu_mlp.sh (or ./train_10k_cpu_mlp.sh if no GPU)
+
+This is the most reliable option and will complete in 5-40 minutes.
+
+After successful 10K validation, scale up to production training (1.5M-2M steps).
+
+================================================================================
+READY TO TRAIN! 🚀
+================================================================================
+
+For full documentation, see: TRAINING_10K_INSTRUCTIONS.md
+
