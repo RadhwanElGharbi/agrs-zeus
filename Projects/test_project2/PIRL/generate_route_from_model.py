@@ -10,6 +10,7 @@ import sys
 import json
 from pathlib import Path
 import numpy as np
+import yaml
 
 sys.path.insert(0, '/opt/agrs/python/pirl_training')
 
@@ -38,7 +39,7 @@ def convert_to_json_serializable(obj):
         return obj
 
 
-def generate_route(model_path: str, config_path: str, max_steps: int = 5000) -> dict:
+def generate_route(model_path: str, config_path: str, max_steps: int = 5000, algorithm: str = None) -> dict:
     """Generate route using trained model."""
     print(f"Loading model: {model_path}")
     
@@ -46,21 +47,36 @@ def generate_route(model_path: str, config_path: str, max_steps: int = 5000) -> 
     print(f"Creating environment: {config_path}")
     env = PIRLNativeEnvironment(config_path)
     
-    # Load model (auto-detect algorithm)
-    if 'ppo' in model_path.lower():
+    # Load model (use provided algorithm or auto-detect)
+    detected_algorithm = None
+    if algorithm:
+        # Explicit algorithm provided
+        if algorithm.upper() == 'PPO':
+            model = PPO.load(model_path, env=env)
+            detected_algorithm = 'PPO'
+            print("✅ Loaded PPO model (explicit)")
+        else:
+            model = SAC.load(model_path, env=env)
+            detected_algorithm = 'SAC'
+            print("✅ Loaded SAC model (explicit)")
+    elif 'ppo' in model_path.lower():
         model = PPO.load(model_path, env=env)
-        print("✅ Loaded PPO model")
+        detected_algorithm = 'PPO'
+        print("✅ Loaded PPO model (detected from filename)")
     elif 'sac' in model_path.lower():
         model = SAC.load(model_path, env=env)
-        print("✅ Loaded SAC model")
+        detected_algorithm = 'SAC'
+        print("✅ Loaded SAC model (detected from filename)")
     else:
-        # Try PPO first, then SAC
+        # Try PPO first (more common), then SAC
         try:
             model = PPO.load(model_path, env=env)
-            print("✅ Loaded PPO model")
+            detected_algorithm = 'PPO'
+            print("✅ Loaded PPO model (auto-detected)")
         except:
             model = SAC.load(model_path, env=env)
-            print("✅ Loaded SAC model")
+            detected_algorithm = 'SAC'
+            print("✅ Loaded SAC model (auto-detected)")
     
     # Reset environment
     print("Generating route...")
@@ -104,15 +120,35 @@ def generate_route(model_path: str, config_path: str, max_steps: int = 5000) -> 
         print("\n❌ ERROR: No valid route generated")
         return None
     
-    # Create GeoJSON
+    # Load config to get EPSG code
+    with open(config_path, 'r') as f:
+        config = yaml.safe_load(f)
+    
+    epsg_code = config.get('crs_epsg') or config.get('epsg_code') or config.get('project', {}).get('crs_epsg', 32633)
+    
+    # CRS name mapping (common UTM zones for Italy)
+    crs_names = {
+        32632: "WGS 84 / UTM zone 32N",
+        32633: "WGS 84 / UTM zone 33N",
+        32634: "WGS 84 / UTM zone 34N"
+    }
+    crs_name = crs_names.get(epsg_code, f"EPSG:{epsg_code}")
+    
+    # Create GeoJSON with proper CRS structure
     geojson = {
         "type": "FeatureCollection",
+        "crs": {
+            "type": "name",
+            "properties": {
+                "name": f"urn:ogc:def:crs:EPSG::{epsg_code}"
+            }
+        },
         "features": [
             {
                 "type": "Feature",
                 "geometry": {
                     "type": "LineString",
-                    "coordinates": [[float(x), float(y)] for x, y in route]
+                    "coordinates": [[float(f'{x:.1f}'), float(f'{y:.1f}')] for x, y in route]
                 },
                 "properties": {
                     "model": str(model_path),
@@ -120,7 +156,10 @@ def generate_route(model_path: str, config_path: str, max_steps: int = 5000) -> 
                     "episode_length": int(episode_length),
                     "episode_reward": float(episode_reward),
                     "num_points": len(route),
-                    "algorithm": "PPO" if 'ppo' in model_path.lower() else "SAC"
+                    "algorithm": detected_algorithm,
+                    "crs": f"EPSG:{epsg_code}",
+                    "crs_name": crs_name,
+                    "termination_reason": info.get('termination_reason', 'Unknown')
                 }
             }
         ]
@@ -141,6 +180,8 @@ def main():
     parser.add_argument('--output', required=True, help="Output GeoJSON file path")
     parser.add_argument('--max-steps', type=int, default=5000,
                         help="Maximum steps per episode (default: 5000)")
+    parser.add_argument('--algorithm', choices=['PPO', 'SAC'], default=None,
+                        help="Algorithm used to train the model (auto-detect if not provided)")
     
     args = parser.parse_args()
     
@@ -162,7 +203,7 @@ def main():
     
     # Generate route
     try:
-        geojson = generate_route(str(model_path), str(config_path), args.max_steps)
+        geojson = generate_route(str(model_path), str(config_path), args.max_steps, algorithm=args.algorithm)
         
         if geojson is None:
             print("\n❌ Failed to generate route")

@@ -1,0 +1,13 @@
+{
+  "steps_completed": 8,
+  "max_steps": 1000,
+  "total_reward": -18460.302795101423,
+  "initial_distance": 3.796788454055786,
+  "final_distance": 3.800572395324707,
+  "progress_meters": -0.0037839412689208984,
+  "progress_percent": -0.09966163337230682,
+  "slope_violations": 0,
+  "slope_violation_rate": 0.0,
+  "terminated_early": true,
+  "termination_reason": "FAILURE: Built-up area violation (<13.5m from buildings)",
+  "goal_reached": 

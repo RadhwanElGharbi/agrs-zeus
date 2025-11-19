@@ -202,4 +202,4 @@ set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Artemis GRS Inc.")
 
 
 # PIRL Parameter Tuner for test_pirl_automation
-add_subdirectory(Projects/test_pirl_automation/PIRL/parameter_tuner)
+# add_subdirectory(Projects/test_pirl_automation/PIRL/parameter_tuner)  # Commented out - directory does not exist

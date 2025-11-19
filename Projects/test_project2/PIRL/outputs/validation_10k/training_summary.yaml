@@ -1,0 +1,35 @@
+algorithm: PPO
+final_evaluation:
+  mean_length: !!python/object/apply:numpy._core.multiarray.scalar
+  - &id001 !!python/object/apply:numpy.dtype
+    args:
+    - f8
+    - false
+    - true
+    state: !!python/tuple
+    - 3
+    - <
+    - null
+    - null
+    - null
+    - -1
+    - -1
+    - 0
+  - !!binary |
+    AAAAAADAXEA=
+  mean_reward: !!python/object/apply:numpy._core.multiarray.scalar
+  - *id001
+  - !!binary |
+    zvHCUE3g/8A=
+  num_episodes: 5
+  std_length: !!python/object/apply:numpy._core.multiarray.scalar
+  - *id001
+  - !!binary |
+    AAAAAAAAAAA=
+  std_reward: !!python/object/apply:numpy._core.multiarray.scalar
+  - *id001
+  - !!binary |
+    AAAAAAAAAAA=
+model_path: /opt/agrs/Projects/test_project2/PIRL/outputs/validation_10k/pirl_model.zip
+num_envs: 24
+total_timesteps: 10000

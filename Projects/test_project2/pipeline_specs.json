@@ -12,7 +12,7 @@
   "hdd_min_bend_radius_m": 792.48,
   "hdd_min_radius_m": 792.48,
   "hdd_applicable": false,
-  "hot_bend_angles_deg": [5.0, 10.0, 22.5, 45.0, 90.0],
+  "hot_bend_angles_deg": [15.0, 30.0, 45.0, 60.0, 90.0],
   "hot_bend_min_radius_m": 1.981,
   "hot_bend_max_count": 50,
   "field_bend_max_angle_deg": 5.0,

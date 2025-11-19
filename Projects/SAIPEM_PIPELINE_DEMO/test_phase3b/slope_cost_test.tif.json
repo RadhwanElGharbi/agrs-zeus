@@ -1,9 +1,0 @@
-{
-  "expression": "where(((A>=0)&(A<=500)),1.0,where(((A>=500)&(A<=1000)),1.5,where(((A>=1000)&(A<=1500)),2.0,where((A>=1500),3.0,0))))",
-  "input_raster": "../data/rasters/dem_tinitaly_10m.tif",
-  "output_raster": "slope_cost_test.tif",
-  "output_type": "Float32",
-  "reclass_rules": "0:500=1.0,500:1000=1.5,1000:1500=2.0,1500:*=3.0",
-  "timestamp_utc": "2025-10-15T15:41:27Z",
-  "tool": "raster_reclassify"
-}

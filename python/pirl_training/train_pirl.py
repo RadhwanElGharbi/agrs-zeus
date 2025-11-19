@@ -23,7 +23,7 @@ from stable_baselines3.common.vec_env import VecMonitor
 from stable_baselines3.common.logger import configure
 
 # Custom environment
-from pirl_env import PIRLEnvironment, make_pirl_env
+from pirl_native_env import PIRLNativeEnvironment, make_env as make_pirl_env
 
 # Set up logging
 logging.basicConfig(
@@ -71,9 +71,9 @@ class PIRLTrainingConfig:
         logger.info(f"Number of environments: {self.num_envs}")
 
 
-def create_training_env(config_path: str) -> PIRLEnvironment:
+def create_training_env(config_path: str) -> PIRLNativeEnvironment:
     """Create a single training environment."""
-    return make_pirl_env(config_path)
+    return PIRLNativeEnvironment(config_path)
 
 
 def create_vec_env(config: PIRLTrainingConfig) -> VecMonitor:
@@ -91,12 +91,12 @@ def create_vec_env(config: PIRLTrainingConfig) -> VecMonitor:
     )
     
     # Wrap with monitor for logging
-    vec_env = VecMonitor(vec_env, config.log_dir / 'vec_env_monitor')
+    vec_env = VecMonitor(vec_env, str(config.log_dir / 'vec_env_monitor'))
     
     return vec_env
 
 
-def create_eval_env(config: PIRLTrainingConfig) -> PIRLEnvironment:
+def create_eval_env(config: PIRLTrainingConfig) -> PIRLNativeEnvironment:
     """Create evaluation environment."""
     # Use first config for evaluation (could be extended for multiple eval configs)
     eval_config = config.env_configs[0] if config.env_configs else None
@@ -133,36 +133,49 @@ def create_model(config: PIRLTrainingConfig, env, device='auto', policy_type='Ml
     
     model_class = PPO if config.algorithm.upper() == 'PPO' else SAC
     
-    # Default parameters
-    default_params = {
+    # Common parameters
+    common_params = {
         'learning_rate': 3e-4,
-        'batch_size': 256,
-        'buffer_size': 100000,
-        'learning_starts': 10000,
-        'train_freq': 4,
-        'gradient_steps': 1,
-        'target_update_interval': 1,
         'gamma': 0.99,
-        'tau': 0.005,
-        'ent_coef': 'auto',
-        'vf_coef': 0.5,
-        'max_grad_norm': 0.5,
         'verbose': 1,
         'tensorboard_log': str(config.log_dir),
         'device': device
     }
     
-    # Update with custom parameters
-    model_params = {**default_params, **config.algorithm_params}
+    # PPO-specific parameters
+    ppo_params = {
+        'n_steps': 2048,
+        'batch_size': 256,
+        'n_epochs': 10,
+        'gae_lambda': 0.95,
+        'clip_range': 0.2,
+        'ent_coef': 0.01,
+        'vf_coef': 0.5,
+        'max_grad_norm': 0.5
+    }
+    
+    # SAC-specific parameters
+    sac_params = {
+        'buffer_size': 100000,
+        'learning_starts': 10000,
+        'batch_size': 256,
+        'tau': 0.005,
+        'train_freq': 4,
+        'gradient_steps': 1,
+        'target_update_interval': 1,
+        'ent_coef': 'auto'
+    }
     
     # Create model
     if config.algorithm.upper() == 'PPO':
+        model_params = {**common_params, **ppo_params, **config.algorithm_params}
         model = PPO(
             policy_type,
             env,
             **model_params
         )
     else:  # SAC
+        model_params = {**common_params, **sac_params, **config.algorithm_params}
         model = SAC(
             policy_type,
             env,
@@ -241,15 +254,20 @@ def train_model(config: PIRLTrainingConfig, device='auto', policy_type='MlpPolic
     return model
 
 
-def evaluate_model(model_path: str, config_path: str, num_episodes: int = 10) -> Dict[str, float]:
+def evaluate_model(model_path: str, config_path: str, num_episodes: int = 10, algorithm: str = None) -> Dict[str, float]:
     """Evaluate a trained model."""
     logger.info(f"Evaluating model: {model_path}")
     
     # Create evaluation environment
     env = create_training_env(config_path)
     
-    # Load model
-    model_class = PPO if 'ppo' in model_path.lower() else SAC
+    # Load model - use provided algorithm or try to detect from filename
+    if algorithm:
+        model_class = PPO if algorithm.upper() == 'PPO' else SAC
+    else:
+        model_class = PPO if 'ppo' in model_path.lower() else SAC
+    
+    logger.info(f"Loading model as {model_class.__name__}")
     model = model_class.load(model_path, env=env)
     
     # Run evaluation episodes
@@ -315,7 +333,7 @@ def main():
             logger.error("Model path required for evaluation")
             return 1
         
-        eval_stats = evaluate_model(args.model_path, config.env_configs[0], args.episodes)
+        eval_stats = evaluate_model(args.model_path, config.env_configs[0], args.episodes, algorithm=config.algorithm)
         
         # Save evaluation results
         eval_results_path = config.output_dir / 'evaluation_results.yaml'
@@ -335,7 +353,8 @@ def main():
         eval_stats = evaluate_model(
             str(config.model_save_path.with_suffix('.zip')),
             config.env_configs[0],
-            num_episodes=5
+            num_episodes=5,
+            algorithm=config.algorithm
         )
         
         # Save training summary

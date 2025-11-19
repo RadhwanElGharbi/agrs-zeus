@@ -12,6 +12,9 @@ echo ""
 # Force CPU-only execution
 export CUDA_VISIBLE_DEVICES=""
 
+# Activate Python virtual environment
+source /opt/agrs/python/pirl_venv/bin/activate
+
 # Set Python path
 export PYTHONPATH="/opt/agrs/python/pirl_training:$PYTHONPATH"
 
@@ -29,7 +32,7 @@ echo "  Timesteps: 10,000"
 echo "  Environments: 24"
 echo ""
 
-python3 /opt/agrs/python/pirl_training/train_pirl.py \
+/opt/agrs/python/pirl_venv/bin/python3 /opt/agrs/python/pirl_training/train_pirl.py \
     --config pirl_training_config_10k_validation.yaml \
     --device cpu \
     --policy MlpPolicy \

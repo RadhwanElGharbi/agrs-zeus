@@ -5,6 +5,7 @@
 #include <ogrsf_frmts.h>
 #include <ogr_api.h>
 #include <cmath>
+#include <cctype>
 #include <fstream>
 #include <iostream>
 #include <algorithm>
@@ -31,29 +32,45 @@ std::vector<float> State::to_vector() const {
         return static_cast<float>(std::clamp(val, min_val, max_val));
     };
     
-    return {
-        safe_float(x / coord_scale, 0.0, 10.0),                  // Normalize coordinates
-        safe_float(y / coord_scale, 0.0, 100.0),                 // Normalize coordinates  
-        safe_float(goal_distance / 100000.0, 0.0, 10.0),         // Normalize to ~100km
-        safe_float(goal_bearing, -3.15, 3.15),                   // Radians [-π, π]
-        safe_float(elevation / 1000.0, -1.0, 10.0),              // Normalize to km
-        safe_float(slope / 100.0, 0.0, 1.0),                     // Normalize slope (was degrees/percent)
-        safe_float(aspect, -3.15, 3.15),                         // Radians
-        safe_float(curvature, -1.0, 1.0),                        // Small values
-        safe_float(no_go_zone, 0.0, 1.0),                        // Binary 0/1
-        safe_float(water_proximity, 0.0, 1.0),                   // Normalized 0-1
-        safe_float(road_proximity, 0.0, 1.0),                    // Normalized 0-1
-        safe_float(geohazard_risk, 0.0, 1.0),                    // 0-1
-        safe_float(soil_capacity, 0.0, 1.0),                     // 0-1 (clamp bad values)
-        safe_float(cadastre_complex, 0.0, 1.0),                  // 0-1
-        safe_float(population_density / 1000.0, 0.0, 10.0),      // Normalize to thousands/km²
-        safe_float(railway_proximity, 0.0, 1.0),                 // Normalized 0-1
-        safe_float(cumulative_pressure_drop_pa / 1e6, 0.0, 100.0),  // Normalize to MPa
-        safe_float(segments_since_pump / 100000.0, 0.0, 10.0),   // Normalize to ~100km
-        safe_float(flow_velocity_m_s / 30.0, 0.0, 5.0),          // Normalize to max velocity
-        safe_float(reynolds_number / 1e6, 0.0, 100.0),           // Normalize to millions
-        safe_float(prev_heading, -3.15, 3.15)                    // Radians
-    };
+    // Use direct array construction with fixed size
+    std::vector<float> vec(29, 0.0f);  // Pre-allocate and zero-initialize (expanded to 29)
+    
+    // Original 21 dimensions
+    vec[0] = safe_float(x / coord_scale, 0.0, 10.0);
+    vec[1] = safe_float(y / coord_scale, 0.0, 100.0);
+    vec[2] = safe_float(goal_distance / 100000.0, 0.0, 10.0);
+    vec[3] = safe_float(goal_bearing, -3.15, 3.15);
+    vec[4] = safe_float(elevation / 1000.0, -1.0, 10.0);
+    vec[5] = safe_float(slope / 100.0, 0.0, 1.0);
+    vec[6] = safe_float(aspect, -3.15, 3.15);
+    vec[7] = safe_float(curvature, -1.0, 1.0);
+    vec[8] = safe_float(no_go_zone, 0.0, 1.0);
+    vec[9] = safe_float(water_proximity, 0.0, 1.0);
+    vec[10] = safe_float(road_proximity, 0.0, 1.0);
+    vec[11] = safe_float(geohazard_risk, 0.0, 1.0);
+    vec[12] = safe_float(soil_capacity, 0.0, 1.0);
+    vec[13] = safe_float(cadastre_complex, 0.0, 1.0);
+    vec[14] = safe_float(population_density / 1000.0, 0.0, 10.0);
+    vec[15] = safe_float(railway_proximity, 0.0, 1.0);
+    vec[16] = safe_float(cumulative_pressure_drop_pa / 1e6, 0.0, 100.0);
+    vec[17] = safe_float(segments_since_pump / 100000.0, 0.0, 10.0);
+    vec[18] = safe_float(flow_velocity_m_s / 30.0, 0.0, 5.0);
+    vec[19] = safe_float(reynolds_number / 1e6, 0.0, 100.0);
+    vec[20] = safe_float(prev_heading, -3.15, 3.15);
+    
+    // NEW: Crossing context features (Phase 3: Enhanced Crossing Logic)
+    vec[21] = safe_float(nearest_crossing_dist / 1000.0, 0.0, 1.0);
+    vec[22] = safe_float(nearest_crossing_width / 100.0, 0.0, 1.0);
+    vec[23] = safe_float(nearest_crossing_type / 4.0, 0.0, 1.0);
+    vec[24] = safe_float(crossing_before_dist / 1000.0, 0.0, 1.0);
+    vec[25] = safe_float(crossing_after_dist / 1000.0, 0.0, 1.0);
+    vec[26] = safe_float(crossing_cardinal_alignment, 0.0, 1.0);
+    
+    // NEW: Boundary awareness (Phase 4: Continuous Cost System)
+    vec[27] = safe_float(distance_to_aoi_boundary / 1000.0, 0.0, 10.0);  // Normalize by 1km
+    vec[28] = safe_float(distance_to_sea_boundary / 1000.0, 0.0, 10.0);  // Normalize by 1km
+    
+    return vec;
 }
 
 // ============================================================================
@@ -529,7 +546,73 @@ void GISDataManager::load_all_data() {
         std::cerr << "    ❌ Existing pipelines not found (REQUIRED)" << std::endl;
     }
     
-    std::cout << "✅ GIS data loading complete" << std::endl;
+    // ===================================================================
+    // Load individual feature datasets for attribute-rich crossing logic
+    // (Phase 3: Enhanced Crossing Logic with Full Attributes)
+    // ===================================================================
+    std::cout << "  🔄 Loading individual feature datasets for crossing attributes..." << std::endl;
+    
+    // Load individual roads dataset (for lanes, highway type)
+    std::string roads_attr_path = project_dir_ + "/data/vectors/processed/osm_roads_epsg32633_processed.gpkg";
+    if (!fs::exists(roads_attr_path)) {
+        roads_attr_path = project_dir_ + "/data/vectors/roads.gpkg";  // Fallback
+    }
+    if (fs::exists(roads_attr_path)) {
+        roads_dataset_.reset(static_cast<GDALDataset*>(
+            GDALOpenEx(roads_attr_path.c_str(), GDAL_OF_VECTOR | GDAL_OF_READONLY, nullptr, nullptr, nullptr)));
+        if (roads_dataset_) {
+            std::cout << "    ✅ Roads attribute dataset loaded (for crossing widths)" << std::endl;
+        }
+    } else {
+        std::cerr << "    ⚠️  Roads attribute dataset not found (crossing widths will use defaults)" << std::endl;
+    }
+    
+    // Load individual waterways dataset (for width_m, waterway type, dam/weir detection)
+    std::string waterways_attr_path = project_dir_ + "/data/vectors/processed/osm_waterways_epsg32633_processed.gpkg";
+    if (!fs::exists(waterways_attr_path)) {
+        waterways_attr_path = project_dir_ + "/data/vectors/water_bodies.gpkg";  // Fallback
+    }
+    if (fs::exists(waterways_attr_path)) {
+        waterways_dataset_.reset(static_cast<GDALDataset*>(
+            GDALOpenEx(waterways_attr_path.c_str(), GDAL_OF_VECTOR | GDAL_OF_READONLY, nullptr, nullptr, nullptr)));
+        if (waterways_dataset_) {
+            std::cout << "    ✅ Waterways attribute dataset loaded (for crossing widths, dam/weir detection)" << std::endl;
+        }
+    } else {
+        std::cerr << "    ⚠️  Waterways attribute dataset not found (crossing widths will use defaults)" << std::endl;
+    }
+    
+    // Load individual railways dataset (for gauge, railway type)
+    std::string railways_attr_path = project_dir_ + "/data/vectors/processed/osm_railways_epsg32633_processed.gpkg";
+    if (!fs::exists(railways_attr_path)) {
+        railways_attr_path = project_dir_ + "/data/vectors/railways.gpkg";  // Fallback
+    }
+    if (fs::exists(railways_attr_path)) {
+        railways_dataset_.reset(static_cast<GDALDataset*>(
+            GDALOpenEx(railways_attr_path.c_str(), GDAL_OF_VECTOR | GDAL_OF_READONLY, nullptr, nullptr, nullptr)));
+        if (railways_dataset_) {
+            std::cout << "    ✅ Railways attribute dataset loaded (for gauge-based widths)" << std::endl;
+        }
+    } else {
+        std::cerr << "    ⚠️  Railways attribute dataset not found (crossing widths will use defaults)" << std::endl;
+    }
+    
+    // Load individual powerlines dataset (for power type, voltage)
+    std::string powerlines_attr_path = project_dir_ + "/data/vectors/processed/osm_power_lines_epsg32633_processed.gpkg";
+    if (!fs::exists(powerlines_attr_path)) {
+        powerlines_attr_path = project_dir_ + "/data/vectors/power_lines.gpkg";  // Fallback
+    }
+    if (fs::exists(powerlines_attr_path)) {
+        powerlines_dataset_.reset(static_cast<GDALDataset*>(
+            GDALOpenEx(powerlines_attr_path.c_str(), GDAL_OF_VECTOR | GDAL_OF_READONLY, nullptr, nullptr, nullptr)));
+        if (powerlines_dataset_) {
+            std::cout << "    ✅ Powerlines attribute dataset loaded (for voltage-based costs)" << std::endl;
+        }
+    } else {
+        std::cerr << "    ⚠️  Powerlines attribute dataset not found (crossing costs will use defaults)" << std::endl;
+    }
+    
+    std::cout << "✅ GIS data loading complete (with attribute-rich datasets)" << std::endl;
 }
 
 double GISDataManager::distance_to_geometry(OGRGeometry* geom, double x, double y) const {
@@ -821,6 +904,65 @@ double GISDataManager::distance_to_sea(double x, double y) const {
     return sea_polygon_geom_->Distance(&point);
 }
 
+double GISDataManager::calculate_distance_to_aoi_boundary(double x, double y) const {
+    if (!aoi_geom_) {
+        return std::numeric_limits<double>::max();  // No AOI = infinitely far
+    }
+    
+    OGRPoint point(x, y);
+    
+    // Set spatial reference if needed
+    if (aoi_geom_->getSpatialReference()) {
+        point.assignSpatialReference(aoi_geom_->getSpatialReference());
+    }
+    
+    // If point is inside AOI, calculate distance to boundary (exterior ring)
+    // If point is outside AOI, distance is 0 (or negative conceptually)
+    if (aoi_geom_->Contains(&point)) {
+        // Get the boundary (exterior ring) of the AOI polygon
+        OGRGeometry* boundary = aoi_geom_->getBoundary();
+        if (boundary) {
+            double dist = boundary->Distance(&point);
+            delete boundary;  // getBoundary() returns a new geometry that must be freed
+            return dist;
+        }
+    }
+    
+    // If point is outside AOI, return 0 (on or outside boundary)
+    return 0.0;
+}
+
+double GISDataManager::distance_to_land_cover_type(double x, double y, int land_cover_class) const {
+    // Query land cover at current point
+    int current_lc = get_land_cover_class(x, y);
+    
+    if (current_lc == land_cover_class) {
+        // Agent is IN the target land cover type
+        return 0.0;
+    }
+    
+    // Expanding ring search for performance-conscious distance calculation
+    // Search at 10m, 20m, 50m, 100m, 200m radii
+    const std::vector<double> search_rings = {10.0, 20.0, 50.0, 100.0, 200.0};
+    const int num_samples = 16;  // 16 directions per ring (22.5° spacing)
+    
+    for (double radius : search_rings) {
+        for (int i = 0; i < num_samples; i++) {
+            double angle = (2.0 * M_PI * i) / num_samples;
+            double sample_x = x + radius * std::cos(angle);
+            double sample_y = y + radius * std::sin(angle);
+            
+            if (get_land_cover_class(sample_x, sample_y) == land_cover_class) {
+                // Found target land cover at this radius
+                return radius;
+            }
+        }
+    }
+    
+    // Not found within 200m search radius
+    return 1000.0;
+}
+
 bool GISDataManager::is_near_sea(double x, double y) const {
     if (!sea_polygon_geom_) {
         return false;  // No sea polygon = can't be near it
@@ -952,13 +1094,31 @@ double CostModel::calculate_segment_cost(const State& from_state,
     // Base terrain cost ($/meter)
     double terrain_cost_val = terrain_cost(avg_slope, landcover_class);
     
-    // Check for crossings
+    // ============================================================================
+    // ENHANCED CROSSING COST LOGIC (Phase 4: Continuous Cost System)
+    // ============================================================================
+    // Check for actual crossings using width-dependent continuous cost functions
     double crossing_cost_val = 0.0;
-    if (to_state.water_proximity < 0.02) {  // Normalized < 20m
-        crossing_cost_val += water_crossing_cost(20.0, 2.0); // Assume 20m width, 2m depth
-    }
-    if (to_state.road_proximity < 0.01) {  // Normalized < 10m
-        crossing_cost_val += road_crossing_cost("major_road");
+    
+    if (to_state.nearest_crossing_dist < 20.0 && to_state.nearest_crossing_type > 0) {
+        // Agent is within crossing range and a crossing feature is detected
+        // Query the actual feature for width/type data
+        auto crossing_features = gis.get_nearest_crossing_features(to_state.x, to_state.y, 20.0, 1);
+        
+        if (!crossing_features.empty()) {
+            const auto& feature = crossing_features[0];
+            
+            // Calculate crossing cost based on feature type using continuous functions
+            if (to_state.nearest_crossing_type == 1.0) {  // Road
+                crossing_cost_val = calculate_road_crossing_cost(feature);
+            } else if (to_state.nearest_crossing_type == 2.0) {  // Waterway
+                crossing_cost_val = calculate_waterway_crossing_cost(feature);
+            } else if (to_state.nearest_crossing_type == 3.0) {  // Railway
+                crossing_cost_val = calculate_railway_crossing_cost(feature);
+            } else if (to_state.nearest_crossing_type == 4.0) {  // Powerline
+                crossing_cost_val = calculate_powerline_crossing_cost(feature);
+            }
+        }
     }
     
     // Environmental cost
@@ -1112,6 +1272,130 @@ double CostModel::road_crossing_cost(const std::string& road_type) const {
 
 double CostModel::railway_crossing_cost() const {
     return crossing_costs_.at("railway");
+}
+
+// ============================================================================
+// CONTINUOUS CROSSING COST FUNCTIONS (Phase 4: Continuous Cost System)
+// ============================================================================
+
+double CostModel::calculate_road_crossing_cost(const CrossingFeature& feature) const {
+    // HDD cost model: Base cost + linear width scaling
+    // Engineering basis: Drill length = width + 2×entry_angle_buffer (typically width × 1.4)
+    double drill_length = feature.width_m * 1.4;  // 20-degree entry angles
+    
+    // Cost components:
+    // - Setup: $5,000 (mobilization)
+    // - Drilling: $150/meter of bore
+    // - Pipe installation: $80/meter
+    double base_cost = 5000.0;
+    double drilling_cost = drill_length * 150.0;
+    double installation_cost = drill_length * 80.0;
+    
+    // Type multiplier (reflects complexity and permitting)
+    double type_multiplier = 1.0;
+    if (feature.feature_type.find("motorway") != std::string::npos) {
+        type_multiplier = 2.0;  // Higher scrutiny, deeper bore
+    } else if (feature.feature_type.find("primary") != std::string::npos) {
+        type_multiplier = 1.5;
+    }
+    
+    return (base_cost + drilling_cost + installation_cost) * type_multiplier;
+}
+
+double CostModel::calculate_waterway_crossing_cost(const CrossingFeature& feature) const {
+    // Uncrossable features
+    if (!feature.is_crossable) {
+        return std::numeric_limits<double>::max();
+    }
+    
+    // Wetted width requires deeper bore and environmental permitting
+    double drill_length = feature.width_m * 1.6;  // Steeper entry for clearance
+    
+    double base_cost = 8000.0;  // Environmental assessment
+    double drilling_cost = drill_length * 200.0;  // Harder drilling (water-saturated)
+    double installation_cost = drill_length * 100.0;
+    double environmental_cost = feature.width_m * 500.0;  // Per-meter permitting
+    
+    return base_cost + drilling_cost + installation_cost + environmental_cost;
+}
+
+double CostModel::calculate_railway_crossing_cost(const CrossingFeature& feature) const {
+    // Railway requires deepest bore (3-5m below track) and strictest safety
+    double drill_length = feature.width_m * 1.8;
+    
+    double base_cost = 15000.0;  // Railway authority permitting
+    double drilling_cost = drill_length * 250.0;  // Deep, precise bore
+    double installation_cost = drill_length * 120.0;
+    double safety_buffer_cost = feature.width_m * 1000.0;  // Railway safety premium
+    
+    return base_cost + drilling_cost + installation_cost + safety_buffer_cost;
+}
+
+double CostModel::calculate_powerline_crossing_cost(const CrossingFeature& feature) const {
+    // Powerline crossing based on clearance height (affects equipment access)
+    // Assume width represents clearance zone
+    double drill_length = feature.width_m * 1.5;
+    
+    double base_cost = 10000.0;  // Utility coordination
+    double drilling_cost = drill_length * 180.0;
+    double installation_cost = drill_length * 90.0;
+    
+    return base_cost + drilling_cost + installation_cost;
+}
+
+// ============================================================================
+// CONTINUOUS TERRAIN COST FUNCTION (Phase 4: Continuous Cost System)
+// ============================================================================
+
+double CostModel::calculate_terrain_cost(
+    double slope_percent,
+    int land_cover_class,
+    double segment_length_m,
+    double soil_capacity,
+    double geohazard_risk
+) const {
+    // Baseline: flat grassland with good soil
+    double base_cost_per_m = 100.0;  // EUR/meter for ideal conditions
+    
+    // === Slope Factor (continuous, exponential) ===
+    // Engineering basis: Equipment difficulty and safety margins
+    // 0% slope: 1.0×
+    // 10% slope: 1.5×
+    // 20% slope: 3.0× (max safe slope)
+    // 30% slope: 8.0×
+    // 50% slope: 50.0× (near-impossible)
+    double slope_factor = 1.0 + 0.05 * slope_percent + 
+                          0.002 * std::pow(slope_percent, 2);
+    
+    // === Land Cover Factor (continuous) ===
+    // Base costs from existing matrix
+    double landcover_base = 100.0;  // Default grassland
+    switch(land_cover_class) {
+        case 10: landcover_base = 150.0; break;  // Tree cover (clearing)
+        case 20: landcover_base = 120.0; break;  // Shrubland
+        case 30: landcover_base = 100.0; break;  // Grassland (baseline)
+        case 40: landcover_base = 200.0; break;  // Cropland (compensation)
+        case 50: landcover_base = 300.0; break;  // Built-up (avoidance preferred)
+        case 80: landcover_base = 3500.0; break; // Water (wetland)
+        default: landcover_base = 100.0; break;
+    }
+    double landcover_factor = landcover_base / base_cost_per_m;
+    
+    // === Soil Complexity Factor ===
+    // soil_capacity: 0.0 (poor) to 1.0 (excellent)
+    // Poor soil requires more foundation work
+    double soil_factor = 2.0 - soil_capacity;  // Range: 1.0× to 2.0×
+    
+    // === Geohazard Risk Factor ===
+    // geohazard_risk: 0.0 (none) to 1.0 (high)
+    // High risk requires monitoring, stabilization
+    double hazard_factor = 1.0 + (geohazard_risk * 1.5);  // Range: 1.0× to 2.5×
+    
+    // === Combined Cost ===
+    double cost_per_m = base_cost_per_m * slope_factor * landcover_factor * 
+                        soil_factor * hazard_factor;
+    
+    return cost_per_m * segment_length_m;
 }
 
 double CostModel::hydraulic_cost(const SegmentHydraulics& hydraulics,
@@ -1475,6 +1759,346 @@ void CostModel::apply_parameter_overrides(const nlohmann::json& overrides) {
     }
     
     std::cout << "      Cost model overrides applied (" << override_count << " parameters)" << std::endl;
+}
+
+// ============================================================================
+// ENHANCED CROSSING LOGIC IMPLEMENTATIONS (Phase 3)
+// ============================================================================
+
+std::vector<CrossingFeature> GISDataManager::get_nearest_crossing_features(
+    double x, double y, double search_radius_m, int max_features
+) const {
+    std::vector<CrossingFeature> features;
+    
+    OGRPoint query_point(x, y);
+    
+    // Create a circular search envelope
+    OGREnvelope search_envelope;
+    search_envelope.MinX = x - search_radius_m;
+    search_envelope.MaxX = x + search_radius_m;
+    search_envelope.MinY = y - search_radius_m;
+    search_envelope.MaxY = y + search_radius_m;
+    
+    // =================================================================
+    // Query Roads Dataset (for lanes, highway type)
+    // =================================================================
+    if (roads_dataset_) {
+        OGRLayer* roads_layer = roads_dataset_->GetLayer(0);
+        if (roads_layer) {
+            roads_layer->ResetReading();
+            roads_layer->SetSpatialFilterRect(search_envelope.MinX, search_envelope.MinY, 
+                                             search_envelope.MaxX, search_envelope.MaxY);
+            
+            OGRFeature* feature;
+            while ((feature = roads_layer->GetNextFeature()) != nullptr) {
+                OGRGeometry* geom = feature->GetGeometryRef();
+                if (geom) {
+                    double dist = geom->Distance(&query_point);
+                    if (dist <= search_radius_m) {
+                        CrossingFeature cf;
+                        cf.geometry = nullptr;  // Don't store (will be destroyed)
+                        cf.distance_from_point = dist;
+                        cf.feature_type = "road";
+                        cf.is_crossable = true;
+                        
+                        // Extract attributes
+                        int lanes_idx = feature->GetFieldIndex("lanes");
+                        if (lanes_idx >= 0 && feature->IsFieldSetAndNotNull(lanes_idx)) {
+                            cf.num_lanes = feature->GetFieldAsInteger(lanes_idx);
+                        } else {
+                            cf.num_lanes = 2;  // Default
+                        }
+                        
+                        int highway_idx = feature->GetFieldIndex("highway");
+                        if (highway_idx >= 0 && feature->IsFieldSetAndNotNull(highway_idx)) {
+                            cf.feature_type = feature->GetFieldAsString(highway_idx);
+                        }
+                        
+                        cf.width_m = calculate_road_width(cf);
+                        features.push_back(cf);
+                    }
+                }
+                OGRFeature::DestroyFeature(feature);
+            }
+            
+            roads_layer->SetSpatialFilter(nullptr);  // Clear filter
+        }
+    }
+    
+    // =================================================================
+    // Query Waterways Dataset (for width_m, waterway type, dam/weir)
+    // =================================================================
+    if (waterways_dataset_) {
+        OGRLayer* waterways_layer = waterways_dataset_->GetLayer(0);
+        if (waterways_layer) {
+            waterways_layer->ResetReading();
+            waterways_layer->SetSpatialFilterRect(search_envelope.MinX, search_envelope.MinY, 
+                                                 search_envelope.MaxX, search_envelope.MaxY);
+            
+            OGRFeature* feature;
+            while ((feature = waterways_layer->GetNextFeature()) != nullptr) {
+                OGRGeometry* geom = feature->GetGeometryRef();
+                if (geom) {
+                    double dist = geom->Distance(&query_point);
+                    if (dist <= search_radius_m) {
+                        CrossingFeature cf;
+                        cf.geometry = nullptr;
+                        cf.distance_from_point = dist;
+                        cf.feature_type = "waterway";
+                        cf.is_crossable = true;
+                        
+                        // Extract waterway type
+                        int waterway_idx = feature->GetFieldIndex("waterway");
+                        if (waterway_idx >= 0 && feature->IsFieldSetAndNotNull(waterway_idx)) {
+                            std::string waterway_type = feature->GetFieldAsString(waterway_idx);
+                            cf.feature_type = waterway_type;
+                            
+                            // Check for uncrossable features
+                            if (waterway_type == "dam" || waterway_type == "weir") {
+                                cf.is_crossable = false;
+                            }
+                        }
+                        
+                        // Extract width
+                        int width_idx = feature->GetFieldIndex("width_m");
+                        if (width_idx < 0) width_idx = feature->GetFieldIndex("width");
+                        
+                        if (width_idx >= 0 && feature->IsFieldSetAndNotNull(width_idx)) {
+                            cf.width_m = feature->GetFieldAsDouble(width_idx);
+                        } else {
+                            cf.width_m = calculate_waterway_width(cf);
+                        }
+                        
+                        features.push_back(cf);
+                    }
+                }
+                OGRFeature::DestroyFeature(feature);
+            }
+            
+            waterways_layer->SetSpatialFilter(nullptr);
+        }
+    }
+    
+    // =================================================================
+    // Query Railways Dataset (for gauge, railway type)
+    // =================================================================
+    if (railways_dataset_) {
+        OGRLayer* railways_layer = railways_dataset_->GetLayer(0);
+        if (railways_layer) {
+            railways_layer->ResetReading();
+            railways_layer->SetSpatialFilterRect(search_envelope.MinX, search_envelope.MinY, 
+                                                search_envelope.MaxX, search_envelope.MaxY);
+            
+            OGRFeature* feature;
+            while ((feature = railways_layer->GetNextFeature()) != nullptr) {
+                OGRGeometry* geom = feature->GetGeometryRef();
+                if (geom) {
+                    double dist = geom->Distance(&query_point);
+                    if (dist <= search_radius_m) {
+                        CrossingFeature cf;
+                        cf.geometry = nullptr;
+                        cf.distance_from_point = dist;
+                        cf.feature_type = "railway";
+                        cf.is_crossable = true;
+                        
+                        // Extract gauge (in mm)
+                        int gauge_idx = feature->GetFieldIndex("gauge");
+                        if (gauge_idx >= 0 && feature->IsFieldSetAndNotNull(gauge_idx)) {
+                            cf.gauge_mm = feature->GetFieldAsInteger(gauge_idx);
+                        } else {
+                            cf.gauge_mm = 1435;  // Standard gauge default
+                        }
+                        
+                        // Extract railway type
+                        int railway_idx = feature->GetFieldIndex("railway");
+                        if (railway_idx >= 0 && feature->IsFieldSetAndNotNull(railway_idx)) {
+                            cf.feature_type = feature->GetFieldAsString(railway_idx);
+                        }
+                        
+                        cf.width_m = calculate_railway_width(cf);
+                        features.push_back(cf);
+                    }
+                }
+                OGRFeature::DestroyFeature(feature);
+            }
+            
+            railways_layer->SetSpatialFilter(nullptr);
+        }
+    }
+    
+    // =================================================================
+    // Query Powerlines Dataset (for power type, voltage)
+    // =================================================================
+    if (powerlines_dataset_) {
+        OGRLayer* powerlines_layer = powerlines_dataset_->GetLayer(0);
+        if (powerlines_layer) {
+            powerlines_layer->ResetReading();
+            powerlines_layer->SetSpatialFilterRect(search_envelope.MinX, search_envelope.MinY, 
+                                                  search_envelope.MaxX, search_envelope.MaxY);
+            
+            OGRFeature* feature;
+            while ((feature = powerlines_layer->GetNextFeature()) != nullptr) {
+                OGRGeometry* geom = feature->GetGeometryRef();
+                if (geom) {
+                    double dist = geom->Distance(&query_point);
+                    if (dist <= search_radius_m) {
+                        CrossingFeature cf;
+                        cf.geometry = nullptr;
+                        cf.distance_from_point = dist;
+                        cf.feature_type = "powerline";
+                        cf.is_crossable = true;
+                        
+                        // Extract power type
+                        int power_idx = feature->GetFieldIndex("power");
+                        if (power_idx >= 0 && feature->IsFieldSetAndNotNull(power_idx)) {
+                            cf.feature_type = feature->GetFieldAsString(power_idx);
+                        }
+                        
+                        cf.width_m = 5.0;  // Standard clearance zone
+                        features.push_back(cf);
+                    }
+                }
+                OGRFeature::DestroyFeature(feature);
+            }
+            
+            powerlines_layer->SetSpatialFilter(nullptr);
+        }
+    }
+    
+    // =================================================================
+    // Fallback to union geometries if no individual datasets loaded
+    // =================================================================
+    if (features.empty()) {
+        // Helper lambda for union geometry fallback
+        auto check_feature_type = [&](OGRGeometry* geom, int type, const std::string& type_name) {
+            if (!geom) return;
+            
+            double dist = geom->Distance(&query_point);
+            if (dist <= search_radius_m) {
+                CrossingFeature cf;
+                cf.geometry = nullptr;
+                cf.distance_from_point = dist;
+                cf.feature_type = type_name;
+                cf.is_crossable = true;
+                
+                // Set default widths based on type
+                if (type == 1) {  // Road
+                    cf.width_m = 10.0;
+                    cf.num_lanes = 2;
+                } else if (type == 2) {  // Waterway
+                    cf.width_m = 15.0;
+                } else if (type == 3) {  // Railway
+                    cf.gauge_mm = 1435;
+                    cf.width_m = calculate_railway_width(cf);
+                } else if (type == 4) {  // Powerline
+                    cf.width_m = 5.0;
+                }
+                
+                features.push_back(cf);
+            }
+        };
+        
+        // Check union geometries as fallback
+        check_feature_type(roads_.get(), 1, "road");
+        check_feature_type(water_bodies_.get(), 2, "waterway");
+        check_feature_type(railways_.get(), 3, "railway");
+        check_feature_type(power_lines_.get(), 4, "powerline");
+    }
+    
+    // =================================================================
+    // Sort by distance and limit results
+    // =================================================================
+    std::sort(features.begin(), features.end(),
+        [](const CrossingFeature& a, const CrossingFeature& b) {
+            return a.distance_from_point < b.distance_from_point;
+        });
+    
+    // Limit to max_features
+    if (features.size() > static_cast<size_t>(max_features)) {
+        features.resize(max_features);
+    }
+    
+    return features;
+}
+
+double GISDataManager::calculate_road_width(const CrossingFeature& feature) const {
+    // Priority 1: Use num_lanes if available
+    if (feature.num_lanes > 0) {
+        return feature.num_lanes * 3.5;  // 3.5m per lane (standard)
+    }
+    
+    // Priority 2: Infer from highway type (as specified by user)
+    std::string highway_type = feature.feature_type;
+    
+    // Convert to lowercase for matching
+    std::transform(highway_type.begin(), highway_type.end(), highway_type.begin(), ::tolower);
+    
+    // Exact lane assumptions per highway type
+    if (highway_type == "motorway") {
+        return 4 * 3.5;  // 4 lanes = 14.0m
+    } else if (highway_type == "trunk") {
+        return 2 * 3.5;  // 2 lanes = 7.0m
+    } else if (highway_type == "primary") {
+        return 3 * 3.5;  // 3 lanes = 10.5m
+    } else if (highway_type == "secondary") {
+        return 2 * 3.5;  // 2 lanes = 7.0m
+    } else if (highway_type == "tertiary") {
+        return 3 * 3.5;  // 3 lanes = 10.5m
+    } else if (highway_type == "residential") {
+        return 2 * 3.5;  // 2 lanes = 7.0m
+    } else if (highway_type == "unclassified") {
+        return 2 * 3.5;  // 2 lanes = 7.0m
+    } else if (highway_type == "service") {
+        return 2 * 3.5;  // 2 lanes = 7.0m
+    } else if (highway_type == "track") {
+        return 1 * 3.5;  // 1 lane = 3.5m
+    } else if (highway_type == "path") {
+        return 2 * 3.5;  // 2 lanes = 7.0m
+    }
+    
+    // Default: 2-lane road
+    return 2 * 3.5;  // 7.0m
+}
+
+double GISDataManager::calculate_waterway_width(const CrossingFeature& feature) const {
+    // Check if uncrossable
+    if (!feature.is_crossable) {
+        return std::numeric_limits<double>::max();  // Uncrossable (dam/weir)
+    }
+    
+    // Priority 1: Use width_m if available
+    if (feature.width_m > 0) {
+        return feature.width_m;
+    }
+    
+    // Priority 2: Infer from waterway type
+    std::string waterway_type = feature.feature_type;
+    
+    // Convert to lowercase for matching
+    std::transform(waterway_type.begin(), waterway_type.end(), waterway_type.begin(), ::tolower);
+    
+    if (waterway_type == "river") {
+        return 20.0;  // Average river width
+    } else if (waterway_type == "stream" || waterway_type == "brook") {
+        return 5.0;   // Small stream
+    } else if (waterway_type == "canal") {
+        return 15.0;  // Canal width
+    } else if (waterway_type == "drain" || waterway_type == "ditch") {
+        return 2.0;   // Small drainage
+    }
+    
+    // Default: medium waterway
+    return 15.0;
+}
+
+double GISDataManager::calculate_railway_width(const CrossingFeature& feature) const {
+    // Calculate width as gauge * 4 (as specified by user)
+    if (feature.gauge_mm > 0) {
+        return (feature.gauge_mm * 4.0) / 1000.0;  // Convert mm to m, multiply by 4
+    }
+    
+    // Default: Standard gauge (1435mm) * 4 = 5.74m
+    return (1435.0 * 4.0) / 1000.0;  // 5.74m
 }
 
 // Remaining implementations:

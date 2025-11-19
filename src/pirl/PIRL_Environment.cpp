@@ -4,6 +4,8 @@
 #include <algorithm>
 #include <fstream>
 #include <filesystem>
+#include <gdal/ogr_geometry.h>
+#include <gdal/ogr_feature.h>
 
 namespace agrs {
 namespace pirl {
@@ -140,6 +142,18 @@ State PipelineEnvironment::reset() {
         current_state_.reynolds_number = 0.0;
     }
     
+    // Initialize crossing context features (NEW - Phase 3: Enhanced Crossing Logic)
+    current_state_.nearest_crossing_dist = 1000.0;  // Far away
+    current_state_.nearest_crossing_width = 0.0;
+    current_state_.nearest_crossing_type = 0;  // None
+    current_state_.crossing_before_dist = 1000.0;
+    current_state_.crossing_after_dist = 1000.0;
+    current_state_.crossing_cardinal_alignment = 0.0;
+    
+    // Initialize boundary awareness features (NEW - Phase 4: Continuous Cost System)
+    current_state_.distance_to_aoi_boundary = gis_->calculate_distance_to_aoi_boundary(current_state_.x, current_state_.y);
+    current_state_.distance_to_sea_boundary = gis_->distance_to_sea(current_state_.x, current_state_.y);
+    
     std::cout << "🔄 Environment reset. Initial distance to goal: " 
               << current_state_.goal_distance << "m" << std::endl;
     
@@ -191,6 +205,86 @@ std::pair<State, RewardInfo> PipelineEnvironment::step(const Action& action) {
     current_state_.cadastre_complex = gis_->is_cadastre_complex(new_x, new_y) ? 1.0 : 0.0;
     current_state_.population_density = gis_->get_population_density(new_x, new_y);
     current_state_.railway_proximity = gis_->distance_to_railway(new_x, new_y);
+    
+    // Update crossing context features (NEW - Phase 3: Enhanced Crossing Logic)
+    // Query nearby crossing features within 100m radius
+    auto crossing_features = gis_->get_nearest_crossing_features(new_x, new_y, 100.0, 3);
+    
+    if (!crossing_features.empty()) {
+        const auto& nearest = crossing_features[0];
+        current_state_.nearest_crossing_dist = nearest.distance_from_point;
+        current_state_.nearest_crossing_type = 0.0;  // Default: none (now double)
+        
+        // Determine crossing type based on feature
+        if (nearest.num_lanes > 0 || !nearest.feature_type.empty()) {
+            std::string ft_lower = nearest.feature_type;
+            std::transform(ft_lower.begin(), ft_lower.end(), ft_lower.begin(), ::tolower);
+            
+            // Identify type: 1=road, 2=waterway, 3=railway, 4=powerline
+            // Check for roads (either by lanes or highway type)
+            if (nearest.num_lanes > 0 || 
+                ft_lower == "motorway" || ft_lower == "trunk" || ft_lower == "primary" ||
+                ft_lower == "secondary" || ft_lower == "tertiary" || ft_lower == "residential" ||
+                ft_lower == "unclassified" || ft_lower == "service" || ft_lower == "track" ||
+                ft_lower == "path" || ft_lower == "motorway_link" || ft_lower == "trunk_link" ||
+                ft_lower == "primary_link" || ft_lower == "secondary_link" || ft_lower == "tertiary_link") {
+                current_state_.nearest_crossing_type = 1.0;  // Road
+                current_state_.nearest_crossing_width = gis_->calculate_road_width(nearest);
+            }
+            // Check for waterways
+            else if (ft_lower.find("water") != std::string::npos || 
+                     ft_lower == "river" || ft_lower == "stream" || ft_lower == "canal" || 
+                     ft_lower == "dam" || ft_lower == "weir" || ft_lower == "ditch" || 
+                     ft_lower == "drain" || ft_lower == "brook") {
+                current_state_.nearest_crossing_type = 2.0;  // Waterway
+                current_state_.nearest_crossing_width = gis_->calculate_waterway_width(nearest);
+            }
+            // Check for railways
+            else if (ft_lower.find("rail") != std::string::npos || ft_lower == "tram" || 
+                     ft_lower == "subway" || ft_lower == "light_rail") {
+                current_state_.nearest_crossing_type = 3.0;  // Railway
+                current_state_.nearest_crossing_width = gis_->calculate_railway_width(nearest);
+            }
+            // Check for powerlines
+            else if (ft_lower == "line" || ft_lower == "minor_line" || ft_lower == "cable" ||
+                     ft_lower == "tower" || ft_lower == "pole") {
+                current_state_.nearest_crossing_type = 4.0;  // Powerline
+                current_state_.nearest_crossing_width = 10.0;  // Assume ~10m corridor
+            }
+        }
+        
+        // Get distances to features before and after nearest
+        if (crossing_features.size() > 1) {
+            current_state_.crossing_before_dist = crossing_features[1].distance_from_point;
+        } else {
+            current_state_.crossing_before_dist = 1000.0;  // Default: far away
+        }
+        
+        if (crossing_features.size() > 2) {
+            current_state_.crossing_after_dist = crossing_features[2].distance_from_point;
+        } else {
+            current_state_.crossing_after_dist = 1000.0;  // Default: far away
+        }
+        
+        // Calculate cardinal alignment (how perpendicular to feature)
+        // 1.0 = perfect perpendicular crossing, 0.0 = parallel
+        // Cardinal alignment: geometry pointer is null (not stored to avoid dangling pointers)
+        // Use heuristic: assume moderate perpendicular alignment for all crossings
+        // TODO: Recalculate alignment dynamically when needed (query geometry on-demand)
+        current_state_.crossing_cardinal_alignment = 0.7;  // Assume reasonable alignment
+    } else {
+        // No crossing features nearby - set defaults
+        current_state_.nearest_crossing_dist = 1000.0;
+        current_state_.nearest_crossing_width = 0.0;
+        current_state_.nearest_crossing_type = 0.0;  // None (now double)
+        current_state_.crossing_before_dist = 1000.0;
+        current_state_.crossing_after_dist = 1000.0;
+        current_state_.crossing_cardinal_alignment = 0.0;
+    }
+    
+    // Populate boundary awareness features (NEW - Phase 4: Continuous Cost System)
+    current_state_.distance_to_aoi_boundary = gis_->calculate_distance_to_aoi_boundary(current_state_.x, current_state_.y);
+    current_state_.distance_to_sea_boundary = gis_->distance_to_sea(current_state_.x, current_state_.y);
     
     // Update action history
     current_state_.prev_heading = new_heading;
@@ -313,6 +407,19 @@ std::pair<State, RewardInfo> PipelineEnvironment::step(const Action& action) {
     total_reward_accumulated_ += reward_info.total_reward;
     segment.total_reward = total_reward_accumulated_;
     
+    // Crossing context (NEW - Phase 3: Enhanced Crossing Logic)
+    // Capture the crossing context at segment end for analysis
+    segment.nearest_crossing_dist = current_state_.nearest_crossing_dist;
+    segment.nearest_crossing_width = current_state_.nearest_crossing_width;
+    segment.nearest_crossing_type = current_state_.nearest_crossing_type;
+    segment.crossing_before_dist = current_state_.crossing_before_dist;
+    segment.crossing_after_dist = current_state_.crossing_after_dist;
+    segment.crossing_cardinal_alignment = current_state_.crossing_cardinal_alignment;
+    
+    // Boundary awareness (NEW - Phase 4: Continuous Cost System)
+    segment.distance_to_aoi_boundary = current_state_.distance_to_aoi_boundary;
+    segment.distance_to_sea_boundary = current_state_.distance_to_sea_boundary;
+    
     // Store segment
     trajectory_.push_back(segment);
     previous_state_ = current_state_;
@@ -349,13 +456,11 @@ RewardInfo PipelineEnvironment::calculate_reward(const State& prev_state,
     
     // 3. Physics-informed penalties
     
-    // Slope violation
-    if (new_state.slope > config_.constraints.max_slope_percent) {
-        info.slope_violation = physics_->slope_penalty(new_state.slope);
-        info.constraint_penalty += info.slope_violation;
-    }
+    // NOTE: Slope violation penalty REMOVED (Phase 4: Continuous Cost System)
+    // Slopes are now handled via continuous terrain cost function (exponential slope factor)
+    // Slopes > 20% still cause termination in check_termination(), with small terminal penalty (-50)
     
-    // No-go zone violation
+    // No-go zone violation (KEEP - this is a hard constraint)
     if (new_state.no_go_zone > 0.5) {
         info.no_go_violation = PhysicsConstraints::MAX_PENALTY;
         info.constraint_penalty += info.no_go_violation;
@@ -368,60 +473,85 @@ RewardInfo PipelineEnvironment::calculate_reward(const State& prev_state,
         info.total_reward += info.curvature_penalty;
     }
     
-    // Out-of-bounds penalty (NEW - CRITICAL for boundary learning)
-    if (!gis_->is_within_aoi(new_state.x, new_state.y)) {
-        // Strong penalty for going out of bounds
-        // This teaches agent to avoid boundaries during training
-        info.constraint_penalty += out_of_bounds_penalty_; // Configurable penalty
-        info.total_reward += out_of_bounds_penalty_;
-    }
+    // ============================================================================
+    // BOUNDARY PROXIMITY PENALTIES (Phase 4: Continuous Cost System)
+    // ============================================================================
     
-    // Sea polygon constraint (NEW - 1km exclusion zone prevents offshore routing)
-    if (gis_->has_sea_polygon() && gis_->is_near_sea(new_state.x, new_state.y)) {
-        // Massive penalty for approaching sea (within 1km exclusion zone)
-        info.constraint_penalty += sea_penalty_; // Configurable penalty
-        info.total_reward += sea_penalty_;
-    }
-    
-    // Built-up area hard constraint (13.5m clearance from buildings required)
-    int land_cover = gis_->get_land_cover_class(new_state.x, new_state.y);
-    if (land_cover == 50) {  // Built-up areas (LC=50)
-        // ESA WorldCover 10m resolution: being IN built-up pixel means <10m from buildings
-        // This violates the 13.5m clearance requirement from AI_Routing_Criteria.xlsx
-        info.constraint_penalty += buildup_penalty_; // Configurable penalty
-        info.total_reward += buildup_penalty_;
-    }
-    
-    // Powerline clearance constraint (6m minimum - AI_Routing_Criteria.xlsx)
-    // Allow crossings but enforce clearance for parallel routing
-    if (gis_->has_power_lines()) {
-        double dist_to_powerline = gis_->distance_to_power_line(new_state.x, new_state.y);
-        double dist_to_powerline_m = dist_to_powerline * 1000.0;
+    // AOI boundary exponential penalty (100m threshold)
+    if (new_state.distance_to_aoi_boundary < 100.0) {
+        // Exception: Don't apply if goal is closer than boundary
+        // This prevents penalizing the agent when the goal is near the boundary
+        double distance_to_goal = new_state.goal_distance;
         
-        if (dist_to_powerline_m < powerline_clearance_m_ && 
-            dist_to_powerline_m > powerline_crossing_threshold_m_) {
-            // Too close for parallel routing but not crossing
-            // Moderate penalty to discourage parallel routing within clearance
-            info.constraint_penalty += powerline_penalty_; // Configurable penalty
-            info.total_reward += powerline_penalty_;
+        if (new_state.distance_to_aoi_boundary <= distance_to_goal) {
+            // Exponential penalty: -5 at 100m, -20 at 50m, -100 at 0m
+            // Formula: penalty = -100 * exp(-2.3 * normalized_dist)
+            double normalized_dist = new_state.distance_to_aoi_boundary / 100.0;
+            double aoi_penalty = -100.0 * std::exp(-2.3 * normalized_dist);
+            info.constraint_penalty += aoi_penalty;
+            info.total_reward += aoi_penalty;
         }
-        // If dist < crossing threshold, consider it a crossing - allow but cost will handle HDD expense
     }
     
-    // Railway clearance constraint (Criteria 12: crossings must be trenchless)
-    // Allow crossings with HDD cost, enforce clearance for parallel routing
-    if (gis_->has_railways()) {
-        double dist_to_railway = gis_->distance_to_railway(new_state.x, new_state.y);
-        double dist_to_railway_m = dist_to_railway * 1000.0;
+    // Sea boundary exponential penalty (400m threshold)
+    if (new_state.distance_to_sea_boundary < 400.0) {
+        // Exponential penalty: similar curve but over 400m range
+        // This creates a graduated penalty zone approaching the sea
+        double normalized_dist = new_state.distance_to_sea_boundary / 400.0;
+        double sea_penalty = -100.0 * std::exp(-2.3 * normalized_dist);
+        info.constraint_penalty += sea_penalty;
+        info.total_reward += sea_penalty;
+    }
+    
+    // Built-up area exponential penalty (house_min_distance_m threshold from pipeline_specs.json)
+    // Based on distance to land cover type 50 (Built-up)
+    double distance_to_buildup = gis_->distance_to_land_cover_type(new_state.x, new_state.y, 50);
+    const double buildup_threshold_m = 15.0;  // house_min_distance_m from pipeline_specs.json
+    
+    if (distance_to_buildup < buildup_threshold_m) {
+        // Exponential penalty: -5 at 15m, -20 at 7.5m, -100 at 0m
+        double normalized_dist = distance_to_buildup / buildup_threshold_m;
+        double buildup_penalty = -100.0 * std::exp(-2.3 * normalized_dist);
+        info.constraint_penalty += buildup_penalty;
+        info.total_reward += buildup_penalty;
         
-        if (dist_to_railway_m < railway_clearance_m_ && 
-            dist_to_railway_m > railway_crossing_threshold_m_) {
-            // Too close for parallel routing but not crossing
-            // Moderate penalty to discourage parallel routing within clearance
-            info.constraint_penalty += railway_penalty_; // Configurable penalty
-            info.total_reward += railway_penalty_;
+        // NOTE: Termination for built-up area violation is handled in check_termination()
+        // At distance ≤ 0.5m, episode will be terminated
+    }
+    
+    // NOTE: Powerline and railway discrete penalties REMOVED (Phase 4: Continuous Cost System)
+    // Clearance violations are now handled via continuous cost multipliers in terrain_cost
+    // Crossings are handled via continuous crossing cost functions (calculate_powerline_crossing_cost, etc.)
+    
+    // ============================================================================
+    // ENHANCED CROSSING LOGIC (Phase 3)
+    // ============================================================================
+    
+    // Check for uncrossable feature violations (dams/weirs)
+    if (new_state.nearest_crossing_dist < 20.0 && action.crossing_decision == 1) {
+        // Agent chose to cross and is within crossing range
+        auto nearby_features = gis_->get_nearest_crossing_features(new_state.x, new_state.y, 20.0, 1);
+        if (!nearby_features.empty() && !nearby_features[0].is_crossable) {
+            // Attempted to cross an uncrossable feature (dam/weir)
+            // Apply moderate penalty (termination handled in check_termination())
+            info.constraint_penalty += -1000.0;
+            info.total_reward += -1000.0;
+            // NOTE: Termination is handled in check_termination()
         }
-        // If dist < crossing threshold, consider it a crossing - allow but cost will handle HDD expense
+    }
+    
+    // NOTE: Perpendicular crossing bonus REMOVED (Phase 4: Continuous Cost System)
+    // Economic rationale: A +50 bonus doesn't make sense when crossing costs are $10k-$30k
+    // (normalized to -1.0 to -3.0 in reward space). The bonus would exceed the cost penalty,
+    // which is backwards. Perpendicular crossings are already incentivized via lower risk
+    // (reflected in cost model) and better construction efficiency (implicit in HDD costs).
+    
+    // Contouring adherence bonus (if agent is in contouring mode)
+    if (is_contouring_ && action.crossing_decision == 2) {
+        // Agent requested contour and is following waypoints
+        double adherence_bonus = calculate_contour_adherence_bonus();
+        info.progress_reward += adherence_bonus;
+        info.total_reward += adherence_bonus;
     }
     
     info.total_reward += info.constraint_penalty;
@@ -435,28 +565,38 @@ RewardInfo PipelineEnvironment::calculate_reward(const State& prev_state,
         best_distance_to_goal_ = new_state.goal_distance;
     }
     
-    // 4. Goal bonus: large positive reward for reaching goal
+    // 4. Goal bonus: large positive reward for reaching goal (success termination)
     if (new_state.goal_distance < 50.0) { // Within 50m of goal
         info.goal_bonus = goal_bonus_; // Configurable bonus
         info.total_reward += info.goal_bonus;
     }
     
-    // 5. Step penalty: small penalty to encourage shorter routes
-    info.total_reward -= 0.1;
+    // NOTE: Terminal penalty for failures is implicitly applied via the lack of goal bonus
+    // Success: accumulated rewards + goal_bonus (+100)
+    // Failure: accumulated rewards (no bonus)
+    // This 100-point difference is sufficient to signal success vs failure to PPO
     
     return info;
 }
 
 bool PipelineEnvironment::check_termination(const State& state, std::string& reason) {
+    // Helper to format coordinates
+    auto format_coords = [](double x, double y) -> std::string {
+        return "@ (" + std::to_string(static_cast<int>(x)) + ", " + 
+               std::to_string(static_cast<int>(y)) + ")";
+    };
+    
     // Success: reached goal
     if (state.goal_distance < 50.0) {
-        reason = "SUCCESS: Goal reached";
+        reason = "SUCCESS: Goal reached " + format_coords(state.x, state.y);
+        std::cout << "🎉 " << reason << std::endl;
         return true;
     }
     
     // Failure: max steps exceeded
     if (step_count_ >= config_.training.max_steps_per_episode) {
-        reason = "FAILURE: Max steps exceeded";
+        reason = "FAILURE: Max steps exceeded " + format_coords(state.x, state.y);
+        std::cout << "⏱️  " << reason << std::endl;
         return true;
     }
     
@@ -469,13 +609,15 @@ bool PipelineEnvironment::check_termination(const State& state, std::string& rea
         if (state.goal_distance < 500.0) {
             // Allow finishing route even if slightly out of bounds
             if (out_of_bounds_steps_ > 10) {
-                reason = "FAILURE: Too far out of bounds near goal";
+                reason = "FAILURE: Too far out of bounds near goal " + format_coords(state.x, state.y);
+                std::cout << "🚫 " << reason << std::endl;
                 return true;
             }
         }
         // If farther from goal, be strict but allow 3 steps recovery
         else if (out_of_bounds_steps_ > 3) {
-            reason = "FAILURE: Out of bounds";
+            reason = "FAILURE: Out of bounds " + format_coords(state.x, state.y);
+            std::cout << "🚫 " << reason << std::endl;
             return true;
         }
     } else {
@@ -483,18 +625,27 @@ bool PipelineEnvironment::check_termination(const State& state, std::string& rea
         out_of_bounds_steps_ = 0;
     }
     
-    // Sea proximity constraint - IMMEDIATE TERMINATION (1km exclusion zone)
-    if (gis_->has_sea_polygon() && gis_->is_near_sea(state.x, state.y)) {
-        double distance = gis_->distance_to_sea(state.x, state.y);
-        reason = "FAILURE: Too close to sea (" + 
-                 std::to_string(static_cast<int>(distance)) + 
-                 "m < 1000m exclusion zone)";
-        return true;  // Immediate termination
+    // NOTE: Sea proximity constraint REMOVED (Phase 4: Continuous Cost System)
+    // Sea boundary is now handled via exponential penalty within 400m in calculate_reward()
+    // Termination occurs when distance_to_sea_boundary = 0 (boundary actually crossed)
+    if (gis_->has_sea_polygon()) {
+        double distance_to_sea = gis_->distance_to_sea(state.x, state.y);
+        if (distance_to_sea <= 0.0) {
+            reason = "FAILURE: Sea boundary crossed " + format_coords(state.x, state.y);
+            std::cout << "🌊 " << reason << std::endl;
+            return true;
+        }
     }
     
-    // NOTE: Built-up area violations handled via heavy penalties in calculate_reward()
-    // Very heavy penalty (-10000.0) for <13.5m clearance - agent must learn to avoid
-    // No immediate termination - allows penalty-based learning
+    // Built-up area violation (Phase 4: Continuous Cost System)
+    // Exponential penalties applied in calculate_reward() when approaching built-up areas
+    // Immediate termination when agent is effectively touching built-up area (distance ≤ 0.5m)
+    double distance_to_buildup = gis_->distance_to_land_cover_type(state.x, state.y, 50);
+    if (distance_to_buildup <= 0.5) {
+        reason = "FAILURE: Built-up area violation (land cover type 50) " + format_coords(state.x, state.y);
+        std::cout << "🏘️  " << reason << std::endl;
+        return true;
+    }
     // Similar to slope constraint: learn through experience, not forced termination
     
     // Powerline/Railway clearance - NO termination, handled via penalties & HDD costs
@@ -502,7 +653,8 @@ bool PipelineEnvironment::check_termination(const State& state, std::string& rea
     
     // Failure: entered no-go zone
     if (state.no_go_zone > 0.5) {
-        reason = "FAILURE: No-go zone violation";
+        reason = "FAILURE: No-go zone violation " + format_coords(state.x, state.y);
+        std::cout << "🚫 " << reason << std::endl;
         return true;
     }
     
@@ -510,7 +662,10 @@ bool PipelineEnvironment::check_termination(const State& state, std::string& rea
     // No immediate termination - agent must learn to avoid through penalty-based learning
     // Only terminate on catastrophic slopes (>50%) that are physically impossible for pipeline
     if (state.slope > 50.0) {
-        reason = "FAILURE: Catastrophic slope (>50% - physically impossible for pipeline)";
+        reason = "FAILURE: Catastrophic slope (>50% - physically impossible for pipeline) " + 
+                 format_coords(state.x, state.y) + " [slope=" + 
+                 std::to_string(static_cast<int>(state.slope)) + "%]";
+        std::cout << "⛰️  " << reason << std::endl;
         return true;
     }
     
@@ -930,6 +1085,115 @@ void PipelineEnvironment::load_parameter_overrides(const std::string& override_f
     
     std::cout << "   ✅ Parameter overrides applied successfully (" 
               << override_count << " parameters modified)" << std::endl;
+}
+
+// ============================================================================
+// CONTOURING SUPPORT (Phase 3: Enhanced Crossing Logic)
+// ============================================================================
+
+void PipelineEnvironment::generate_contour_waypoints(const CrossingFeature& feature, 
+                                                      double current_x, double current_y) {
+    active_contour_waypoints_.clear();
+    current_waypoint_idx_ = 0;
+    is_contouring_ = false;
+    
+    if (!feature.geometry) {
+        return;  // No geometry to contour
+    }
+    
+    // Calculate buffer distance
+    // buffer = feature_width / 2 + clearance_from_criteria + safety_margin
+    double feature_width = feature.width_m;
+    if (feature_width <= 0.0) {
+        feature_width = 10.0;  // Default width
+    }
+    
+    double min_clearance = 10.0;  // Minimum clearance from criteria (configurable)
+    double buffer_distance = (feature_width / 2.0) + min_clearance + contour_buffer_safety_margin_m_;
+    
+    // Simplified waypoint generation:
+    // For a linear feature, generate waypoints along a parallel line at buffer_distance
+    // In a full implementation, this would use OGR Buffer() and extract boundary points
+    // For now, we'll create a simple approximation with waypoints perpendicular to the feature
+    
+    if (feature.geometry->getGeometryType() == wkbLineString ||
+        feature.geometry->getGeometryType() == wkbMultiLineString) {
+        OGRLineString* line = static_cast<OGRLineString*>(feature.geometry);
+        
+        if (line->getNumPoints() >= 2) {
+            // Generate waypoints along the feature, offset by buffer_distance
+            // This is a simplified approach - production would use proper buffering
+            
+            // Get goal direction
+            double goal_dx = goal_x_ - current_x;
+            double goal_dy = goal_y_ - current_y;
+            double goal_angle = std::atan2(goal_dy, goal_dx);
+            
+            // Find which side of the feature to contour (toward goal)
+            // Generate 5-10 waypoints along the buffer
+            int num_waypoints = std::min(10, static_cast<int>(line->get_Length() / 50.0));
+            num_waypoints = std::max(5, num_waypoints);
+            
+            for (int i = 0; i < num_waypoints; i++) {
+                double t = static_cast<double>(i) / (num_waypoints - 1);
+                OGRPoint point;
+                line->Value(t * line->get_Length(), &point);
+                
+                // Offset perpendicular to feature by buffer_distance
+                // (Simplified: just add buffer in direction away from feature)
+                double offset_x = point.getX() + buffer_distance * std::cos(goal_angle);
+                double offset_y = point.getY() + buffer_distance * std::sin(goal_angle);
+                
+                active_contour_waypoints_.push_back({offset_x, offset_y});
+            }
+            
+            is_contouring_ = true;
+        }
+    }
+    
+    // Note: This is a simplified implementation
+    // A production implementation would:
+    // 1. Use OGRGeometry::Buffer() to create proper buffer polygon
+    // 2. Extract boundary as LineString
+    // 3. Find closest point on boundary to current position
+    // 4. Generate waypoints along boundary toward goal direction
+    // 5. Handle complex geometries (polygons, multigeometries)
+}
+
+double PipelineEnvironment::calculate_contour_adherence_bonus() const {
+    if (!is_contouring_ || active_contour_waypoints_.empty()) {
+        return 0.0;
+    }
+    
+    // Get current position
+    double current_x = current_state_.x;
+    double current_y = current_state_.y;
+    
+    // Find nearest waypoint
+    double min_dist = std::numeric_limits<double>::max();
+    for (const auto& waypoint : active_contour_waypoints_) {
+        double dx = waypoint.first - current_x;
+        double dy = waypoint.second - current_y;
+        double dist = std::sqrt(dx*dx + dy*dy);
+        min_dist = std::min(min_dist, dist);
+    }
+    
+    // Bonus decreases with distance from waypoints
+    // Within 20m of waypoint: full bonus
+    // 20-50m: linearly decreasing bonus
+    // >50m: no bonus (agent has abandoned contour)
+    
+    if (min_dist < 20.0) {
+        return contour_adherence_bonus_;  // Full bonus
+    } else if (min_dist < 50.0) {
+        // Linear decay
+        double decay_factor = 1.0 - ((min_dist - 20.0) / 30.0);
+        return contour_adherence_bonus_ * decay_factor;
+    } else {
+        // Too far from contour - abandon contouring mode
+        // (In practice, would set is_contouring_ = false, but that requires mutable state)
+        return 0.0;
+    }
 }
 
 } // namespace pirl

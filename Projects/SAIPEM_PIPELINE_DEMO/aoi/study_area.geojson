@@ -1,8 +1,0 @@
-{
-"type": "FeatureCollection",
-"name": "STUDY_AREA.kmz",
-"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
-"features": [
-{ "type": "Feature", "properties": { "Name": "STUDY_AREA", "tessellate": 1, "extrude": 0, "visibility": -1 }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 13.642291592316379, 42.857057330021718, 0.0 ], [ 13.93876854267544, 42.911703839381723, 0.0 ], [ 13.75370991569536, 43.43888598089638, 0.0 ], [ 13.454779499318461, 43.382707018147528, 0.0 ], [ 13.642291592316379, 42.857057330021718, 0.0 ] ] ] } }
-]
-}

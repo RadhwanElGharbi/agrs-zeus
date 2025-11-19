@@ -11,6 +11,10 @@ project:
   measurement_units: SI
   pipeline_specs_path: "../pipeline_specs.json"
 
+# Environment configuration for training
+env_configs:
+  - /opt/agrs/Projects/test_project2/PIRL/pirl_training_config_10k_validation.yaml
+
 # Legacy format (for compatibility)
 project_name: test_project2_10k_validation
 project_code: TP2_ITALY_10K_VAL

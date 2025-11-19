@@ -1,0 +1,1643 @@
+{
+  "type": "FeatureCollection",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "EPSG:32633"
+    }
+  },
+  "metadata": {
+    "project_name": "test_project2",
+    "algorithm": "PPO",
+    "crs": "EPSG:32633",
+    "total_segments": 50,
+    "total_length_m": 2654.67,
+    "total_cost_usd": 1221813.29,
+    "generated_at": "2025-11-17T19:12:52.652045",
+    "generator_version": "2.1_arcgis_compatible"
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            379647.98,
+            4805029.95
+          ],
+          [
+            379666.62,
+            4804985.24
+          ],
+          [
+            379680.28,
+            4804942.21
+          ],
+          [
+            379726.65,
+            4804902.84
+          ],
+          [
+            379754.08,
+            4804883.39
+          ],
+          [
+            379785.49,
+            4804856.71
+          ],
+          [
+            379797.82,
+            4804847.77
+          ],
+          [
+            379865.29,
+            4804778.12
+          ],
+          [
+            379875.68,
+            4804765.34
+          ],
+          [
+            379896.36,
+            4804744.0
+          ],
+          [
+            379919.35,
+            4804715.7
+          ],
+          [
+            379939.08,
+            4804686.55
+          ],
+          [
+            379954.08,
+            4804629.91
+          ],
+          [
+            379990.98,
+            4804570.16
+          ],
+          [
+            380060.37,
+            4804543.28
+          ],
+          [
+            380136.34,
+            4804499.23
+          ],
+          [
+            380167.2,
+            4804484.77
+          ],
+          [
+            380182.64,
+            4804475.82
+          ],
+          [
+            380256.14,
+            4804449.46
+          ],
+          [
+            380336.24,
+            4804444.56
+          ],
+          [
+            380393.77,
+            4804399.85
+          ],
+          [
+            380421.36,
+            4804382.02
+          ],
+          [
+            380485.48,
+            4804379.97
+          ],
+          [
+            380507.76,
+            4804377.31
+          ],
+          [
+            380596.58,
+            4804387.12
+          ],
+          [
+            380647.35,
+            4804359.78
+          ],
+          [
+            380713.81,
+            4804378.85
+          ],
+          [
+            380775.25,
+            4804421.26
+          ],
+          [
+            380826.06,
+            4804438.39
+          ],
+          [
+            380855.61,
+            4804491.92
+          ],
+          [
+            380870.92,
+            4804524.87
+          ],
+          [
+            380896.78,
+            4804603.48
+          ],
+          [
+            380897.4,
+            4804692.17
+          ],
+          [
+            380896.33,
+            4804716.75
+          ],
+          [
+            380892.08,
+            4804749.11
+          ],
+          [
+            380889.98,
+            4804828.43
+          ],
+          [
+            380886.85,
+            4804855.76
+          ],
+          [
+            380884.27,
+            4804868.43
+          ],
+          [
+            380846.71,
+            4804950.42
+          ],
+          [
+            380842.48,
+            4805015.26
+          ],
+          [
+            380854.41,
+            4805073.63
+          ],
+          [
+            380887.71,
+            4805132.07
+          ],
+          [
+            380909.36,
+            4805179.18
+          ],
+          [
+            380925.67,
+            4805224.78
+          ],
+          [
+            380980.84,
+            4805257.41
+          ],
+          [
+            381008.86,
+            4805277.48
+          ],
+          [
+            381075.86,
+            4805270.55
+          ],
+          [
+            381171.31,
+            4805262.35
+          ],
+          [
+            381183.98,
+            4805260.14
+          ],
+          [
+            381208.49,
+            4805258.04
+          ],
+          [
+            381237.95,
+            4805252.89
+          ]
+        ]
+      },
+      "properties": {
+        "feature_type": "full_route",
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "total_segments": 50,
+        "total_length_m": 2654.67,
+        "total_cost_usd": 1221813.29,
+        "algorithm": "PPO",
+        "generated_at": "2025-11-17T19:12:52.651703"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            379647.98,
+            4805029.95
+          ],
+          [
+            379666.62,
+            4804985.24
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 1,
+        "length_m": 48.44,
+        "elevation_start": 161.73,
+        "slope_percent": 2.67,
+        "cost_usd": 14532.89,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            379666.62,
+            4804985.24
+          ],
+          [
+            379680.28,
+            4804942.21
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 2,
+        "length_m": 45.14,
+        "elevation_start": 160.08,
+        "slope_percent": 8.9,
+        "cost_usd": 17831.58,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            379680.28,
+            4804942.21
+          ],
+          [
+            379726.65,
+            4804902.84
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 3,
+        "length_m": 60.83,
+        "elevation_start": 156.75,
+        "slope_percent": 9.68,
+        "cost_usd": 18491.22,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            379726.65,
+            4804902.84
+          ],
+          [
+            379754.08,
+            4804883.39
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 4,
+        "length_m": 33.63,
+        "elevation_start": 151.81,
+        "slope_percent": 14.27,
+        "cost_usd": 13283.03,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            379754.08,
+            4804883.39
+          ],
+          [
+            379785.49,
+            4804856.71
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 5,
+        "length_m": 41.22,
+        "elevation_start": 148.15,
+        "slope_percent": 14.64,
+        "cost_usd": 16280.26,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            379785.49,
+            4804856.71
+          ],
+          [
+            379797.82,
+            4804847.77
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 6,
+        "length_m": 15.22,
+        "elevation_start": 140.86,
+        "slope_percent": 14.09,
+        "cost_usd": 4626.93,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            379797.82,
+            4804847.77
+          ],
+          [
+            379865.29,
+            4804778.12
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 7,
+        "length_m": 96.97,
+        "elevation_start": 139.13,
+        "slope_percent": 9.96,
+        "cost_usd": 44607.58,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            379865.29,
+            4804778.12
+          ],
+          [
+            379875.68,
+            4804765.34
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 8,
+        "length_m": 16.47,
+        "elevation_start": 126.91,
+        "slope_percent": 9.81,
+        "cost_usd": 7574.18,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            379875.68,
+            4804765.34
+          ],
+          [
+            379896.36,
+            4804744.0
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 9,
+        "length_m": 29.72,
+        "elevation_start": 125.72,
+        "slope_percent": 6.35,
+        "cost_usd": 13671.54,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            379896.36,
+            4804744.0
+          ],
+          [
+            379919.35,
+            4804715.7
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 10,
+        "length_m": 36.46,
+        "elevation_start": 122.84,
+        "slope_percent": 10.67,
+        "cost_usd": 12030.88,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            379919.35,
+            4804715.7
+          ],
+          [
+            379939.08,
+            4804686.55
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 11,
+        "length_m": 35.2,
+        "elevation_start": 123.06,
+        "slope_percent": 14.13,
+        "cost_usd": 13905.26,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            379939.08,
+            4804686.55
+          ],
+          [
+            379954.08,
+            4804629.91
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 12,
+        "length_m": 58.6,
+        "elevation_start": 121.76,
+        "slope_percent": 17.97,
+        "cost_usd": 22267.63,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            379954.08,
+            4804629.91
+          ],
+          [
+            379990.98,
+            4804570.16
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 13,
+        "length_m": 70.21,
+        "elevation_start": 121.55,
+        "slope_percent": 15.66,
+        "cost_usd": 39319.69,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            379990.98,
+            4804570.16
+          ],
+          [
+            380060.37,
+            4804543.28
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 14,
+        "length_m": 74.42,
+        "elevation_start": 122.33,
+        "slope_percent": 10.77,
+        "cost_usd": 34232.2,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            380060.37,
+            4804543.28
+          ],
+          [
+            380136.34,
+            4804499.23
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 15,
+        "length_m": 87.82,
+        "elevation_start": 126.02,
+        "slope_percent": 5.84,
+        "cost_usd": 40397.91,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            380136.34,
+            4804499.23
+          ],
+          [
+            380167.2,
+            4804484.77
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 16,
+        "length_m": 34.08,
+        "elevation_start": 130.12,
+        "slope_percent": 5.4,
+        "cost_usd": 15675.23,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            380167.2,
+            4804484.77
+          ],
+          [
+            380182.64,
+            4804475.82
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 17,
+        "length_m": 17.85,
+        "elevation_start": 130.11,
+        "slope_percent": 6.1,
+        "cost_usd": 8211.68,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            380182.64,
+            4804475.82
+          ],
+          [
+            380256.14,
+            4804449.46
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 18,
+        "length_m": 78.08,
+        "elevation_start": 129.74,
+        "slope_percent": 4.33,
+        "cost_usd": 27795.6,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            380256.14,
+            4804449.46
+          ],
+          [
+            380336.24,
+            4804444.56
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 19,
+        "length_m": 80.25,
+        "elevation_start": 129.24,
+        "slope_percent": 11.61,
+        "cost_usd": 31700.29,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            380336.24,
+            4804444.56
+          ],
+          [
+            380393.77,
+            4804399.85
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 20,
+        "length_m": 72.86,
+        "elevation_start": 123.63,
+        "slope_percent": 14.43,
+        "cost_usd": 33515.26,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            380393.77,
+            4804399.85
+          ],
+          [
+            380421.36,
+            4804382.02
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 21,
+        "length_m": 32.85,
+        "elevation_start": 119.65,
+        "slope_percent": 15.25,
+        "cost_usd": 15111.46,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            380421.36,
+            4804382.02
+          ],
+          [
+            380485.48,
+            4804379.97
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 22,
+        "length_m": 64.16,
+        "elevation_start": 113.84,
+        "slope_percent": 14.76,
+        "cost_usd": 35927.9,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            380485.48,
+            4804379.97
+          ],
+          [
+            380507.76,
+            4804377.31
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 23,
+        "length_m": 22.43,
+        "elevation_start": 105.24,
+        "slope_percent": 14.71,
+        "cost_usd": 8860.14,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            380507.76,
+            4804377.31
+          ],
+          [
+            380596.58,
+            4804387.12
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 24,
+        "length_m": 89.36,
+        "elevation_start": 102.02,
+        "slope_percent": 4.86,
+        "cost_usd": 41105.93,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            380596.58,
+            4804387.12
+          ],
+          [
+            380647.35,
+            4804359.78
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 25,
+        "length_m": 57.67,
+        "elevation_start": 98.36,
+        "slope_percent": 6.47,
+        "cost_usd": 26526.5,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            380647.35,
+            4804359.78
+          ],
+          [
+            380713.81,
+            4804378.85
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 26,
+        "length_m": 69.14,
+        "elevation_start": 97.4,
+        "slope_percent": 6.21,
+        "cost_usd": 31804.62,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            380713.81,
+            4804378.85
+          ],
+          [
+            380775.25,
+            4804421.26
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 27,
+        "length_m": 74.66,
+        "elevation_start": 99.31,
+        "slope_percent": 9.67,
+        "cost_usd": 34342.28,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            380775.25,
+            4804421.26
+          ],
+          [
+            380826.06,
+            4804438.39
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 28,
+        "length_m": 53.62,
+        "elevation_start": 105.11,
+        "slope_percent": 6.95,
+        "cost_usd": 24666.37,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            380826.06,
+            4804438.39
+          ],
+          [
+            380855.61,
+            4804491.92
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 29,
+        "length_m": 61.15,
+        "elevation_start": 107.67,
+        "slope_percent": 11.35,
+        "cost_usd": 28127.78,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            380855.61,
+            4804491.92
+          ],
+          [
+            380870.92,
+            4804524.87
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 30,
+        "length_m": 36.33,
+        "elevation_start": 113.92,
+        "slope_percent": 11.15,
+        "cost_usd": 16713.75,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            380870.92,
+            4804524.87
+          ],
+          [
+            380896.78,
+            4804603.48
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 31,
+        "length_m": 82.75,
+        "elevation_start": 118.16,
+        "slope_percent": 12.29,
+        "cost_usd": 52308.94,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            380896.78,
+            4804603.48
+          ],
+          [
+            380897.4,
+            4804692.17
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 32,
+        "length_m": 88.69,
+        "elevation_start": 127.62,
+        "slope_percent": 5.7,
+        "cost_usd": 35032.98,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            380897.4,
+            4804692.17
+          ],
+          [
+            380896.33,
+            4804716.75
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 33,
+        "length_m": 24.6,
+        "elevation_start": 136.03,
+        "slope_percent": 10.41,
+        "cost_usd": 11317.08,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            380896.33,
+            4804716.75
+          ],
+          [
+            380892.08,
+            4804749.11
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 34,
+        "length_m": 32.64,
+        "elevation_start": 135.3,
+        "slope_percent": 10.19,
+        "cost_usd": 15014.47,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            380892.08,
+            4804749.11
+          ],
+          [
+            380889.98,
+            4804828.43
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 35,
+        "length_m": 79.35,
+        "elevation_start": 135.08,
+        "slope_percent": 12.31,
+        "cost_usd": 36500.37,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            380889.98,
+            4804828.43
+          ],
+          [
+            380886.85,
+            4804855.76
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 36,
+        "length_m": 27.51,
+        "elevation_start": 135.45,
+        "slope_percent": 11.56,
+        "cost_usd": 12653.45,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            380886.85,
+            4804855.76
+          ],
+          [
+            380884.27,
+            4804868.43
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 37,
+        "length_m": 12.92,
+        "elevation_start": 136.15,
+        "slope_percent": 10.79,
+        "cost_usd": 5944.53,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            380884.27,
+            4804868.43
+          ],
+          [
+            380846.71,
+            4804950.42
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 38,
+        "length_m": 90.19,
+        "elevation_start": 135.89,
+        "slope_percent": 15.44,
+        "cost_usd": 41488.12,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            380846.71,
+            4804950.42
+          ],
+          [
+            380842.48,
+            4805015.26
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 39,
+        "length_m": 64.97,
+        "elevation_start": 132.46,
+        "slope_percent": 11.59,
+        "cost_usd": 29887.39,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            380842.48,
+            4805015.26
+          ],
+          [
+            380854.41,
+            4805073.63
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 40,
+        "length_m": 59.58,
+        "elevation_start": 130.31,
+        "slope_percent": 13.0,
+        "cost_usd": 27406.41,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            380854.41,
+            4805073.63
+          ],
+          [
+            380887.71,
+            4805132.07
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 41,
+        "length_m": 67.26,
+        "elevation_start": 124.73,
+        "slope_percent": 13.68,
+        "cost_usd": 30940.23,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            380887.71,
+            4805132.07
+          ],
+          [
+            380909.36,
+            4805179.18
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 42,
+        "length_m": 51.84,
+        "elevation_start": 117.38,
+        "slope_percent": 13.73,
+        "cost_usd": 23848.57,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            380909.36,
+            4805179.18
+          ],
+          [
+            380925.67,
+            4805224.78
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 43,
+        "length_m": 48.44,
+        "elevation_start": 111.21,
+        "slope_percent": 13.94,
+        "cost_usd": 22280.41,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            380925.67,
+            4805224.78
+          ],
+          [
+            380980.84,
+            4805257.41
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 44,
+        "length_m": 64.09,
+        "elevation_start": 105.98,
+        "slope_percent": 15.9,
+        "cost_usd": 29482.85,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            380980.84,
+            4805257.41
+          ],
+          [
+            381008.86,
+            4805277.48
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 45,
+        "length_m": 34.47,
+        "elevation_start": 97.31,
+        "slope_percent": 14.58,
+        "cost_usd": 19302.51,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            381008.86,
+            4805277.48
+          ],
+          [
+            381075.86,
+            4805270.55
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 46,
+        "length_m": 67.36,
+        "elevation_start": 91.41,
+        "slope_percent": 9.74,
+        "cost_usd": 30984.35,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            381075.86,
+            4805270.55
+          ],
+          [
+            381171.31,
+            4805262.35
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 47,
+        "length_m": 95.8,
+        "elevation_start": 86.62,
+        "slope_percent": 0.96,
+        "cost_usd": 59066.7,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            381171.31,
+            4805262.35
+          ],
+          [
+            381183.98,
+            4805260.14
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 48,
+        "length_m": 12.86,
+        "elevation_start": 79.88,
+        "slope_percent": 6.37,
+        "cost_usd": 20145.75,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            381183.98,
+            4805260.14
+          ],
+          [
+            381208.49,
+            4805258.04
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 49,
+        "length_m": 24.59,
+        "elevation_start": 80.18,
+        "slope_percent": 11.94,
+        "cost_usd": 11313.17,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            381208.49,
+            4805258.04
+          ],
+          [
+            381237.95,
+            4805252.89
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 50,
+        "length_m": 29.91,
+        "elevation_start": 81.73,
+        "slope_percent": 12.41,
+        "cost_usd": 13757.45,
+        "crs": "EPSG:32633",
+        "crs_name": "32633",
+        "nearest_crossing_dist": 1000.0,
+        "nearest_crossing_type": 0,
+        "nearest_crossing_type_name": "none"
+      }
+    }
+  ]
+}

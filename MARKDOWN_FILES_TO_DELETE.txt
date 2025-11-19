@@ -1,0 +1,328 @@
+# Markdown Files Recommended for Deletion (WITH LAST MODIFIED DATES)
+# Generated: November 17, 2025
+# Total: ~146 files recommended for deletion
+# Review MARKDOWN_CLEANUP_ANALYSIS.md for detailed rationale
+# Format: [LAST MODIFIED] FILE PATH
+
+## PHASE 1: SAFE DELETIONS - Root Level Status Files (2 files)
+[2025-11-17 14:03:05] /opt/agrs/PHASE3_ALL_TODOS_COMPLETE.md
+[2025-11-17 15:13:33] /opt/agrs/PHASE3_FINAL_STATUS.md
+
+## PHASE 1: SAFE DELETIONS - Obsolete Implementation Plans (15 files)
+[2025-10-24 09:06:55] /opt/agrs/docs/3D_SCENE_VIEWER_IMPLEMENTATION_PLAN.md
+[2025-10-23 18:26:26] /opt/agrs/docs/AI_OPERATOR_IMPLEMENTATION_PLAN.md
+[2025-10-23 18:26:26] /opt/agrs/docs/AI_OPERATOR_STATUS.md
+[2025-11-16 23:02:26] /opt/agrs/docs/HYDRAULICS_MODULE_IMPLEMENTATION_PLAN.md
+[2025-10-20 15:50:57] /opt/agrs/docs/GUI_IMPLEMENTATION_PLAN_FINAL.md
+[2025-10-20 15:50:57] /opt/agrs/docs/GUI_3D_IMPLEMENTATION_PLAN.md
+[2025-10-23 19:00:09] /opt/agrs/docs/GUI_3D_VIEWER_IMPLEMENTATION_PLAN.md
+[2025-10-30 17:54:42] /opt/agrs/docs/GUI_PIRL_INTEGRATION_PLAN.md
+[2025-10-20 15:50:58] /opt/agrs/docs/GUI_CURSOR_API_INTEGRATION_PLAN.md
+[2025-10-23 18:26:20] /opt/agrs/docs/PERPLEXITY_API_INTEGRATION_PLAN.md
+[2025-10-12 06:18:05] /opt/agrs/docs/FETCH_TOOLS_IMPLEMENTATION_ROADMAP.md
+[2025-10-23 18:26:26] /opt/agrs/docs/DATASET_ROUTING_CONSOLIDATION.md
+[2025-10-23 18:26:26] /opt/agrs/docs/INTELLIGENT_DATASET_ROUTING_IMPLEMENTATION.md
+[2025-10-23 18:26:26] /opt/agrs/docs/INTELLIGENT_DEM_ROUTING.md
+[2025-10-15 09:10:11] /opt/agrs/docs/DATA_SOURCE_CREDIBILITY_ASSESSMENT.md
+
+## PHASE 1: SAFE DELETIONS - Obsolete Fix Documentation (10 files)
+[2025-10-20 15:50:58] /opt/agrs/docs/GUI_LAYER_VISIBILITY_FIX.md
+[2025-10-23 18:26:17] /opt/agrs/docs/GUI_MORE_INFO_HERE_FIX.md
+[2025-10-20 15:50:57] /opt/agrs/docs/GUI_SEGFAULT_FIX.md
+[2025-10-23 18:26:26] /opt/agrs/docs/GUI_LAYER_AUTO_LOADING.md
+[2025-10-20 15:50:58] /opt/agrs/docs/GUI_LAYER_VISIBILITY_AND_ORDERING.md
+[2025-10-20 15:50:58] /opt/agrs/docs/GUI_PHASE_B_LAYER_RENDERING.md
+[2025-10-20 15:50:58] /opt/agrs/docs/GUI_SMOOTH_ZOOM_IMPLEMENTATION.md
+[2025-10-12 05:57:00] /opt/agrs/docs/TINITALY_TILE_NAMING_PATTERN.md
+[2025-10-12 03:26:07] /opt/agrs/docs/TINITALY_FETCH_TOOL_IMPLEMENTATION.md
+[2025-10-04 19:14:57] /opt/agrs/docs/FETCH_TOOLS_STANDARDS.md
+
+## PHASE 1: SAFE DELETIONS - Temporary Status Files (8 files)
+[2025-10-30 17:54:52] /opt/agrs/docs/PLAN_IMPLEMENTATION_STATUS.md
+[2025-10-30 17:54:52] /opt/agrs/docs/PLAN_TODOS_COMPLETION_STATUS.md
+[2025-10-23 18:26:26] /opt/agrs/docs/ITALY_FIXES_STATUS.md
+[2025-10-23 18:26:26] /opt/agrs/docs/ITALY_FETCH_TOOLS_FIX_PROGRESS.md
+[2025-11-11 10:19:53] /opt/agrs/docs/GUI_DATASET_AUTOMATION_PROGRESS.md
+[2025-10-30 17:54:53] /opt/agrs/docs/PHASE_5_IMPLEMENTATION_PROGRESS.md
+[2025-10-23 18:26:26] /opt/agrs/docs/ITALY_FETCH_TOOLS_TEST_REPORT.md
+[2025-11-14 13:59:18] /opt/agrs/Projects/test_project2/PIRL/PIRL_TRAINING_EXECUTION_GUIDE.md
+
+## PHASE 1: SAFE DELETIONS - Development Artifacts (3 files)
+[2025-10-20 15:53:58] /opt/agrs/docs/CURSOR_AGENT_CPP_INTEGRATION.md
+[2025-10-20 15:52:52] /opt/agrs/docs/CURSOR_HEADLESS_CLI_RESEARCH.md
+[2025-10-23 18:26:26] /opt/agrs/docs/CURSOR_INTEGRATION.md
+
+## PHASE 1: SAFE DELETIONS - Analysis Tools (4 files)
+[2025-10-23 18:26:26] /opt/agrs/docs/FETCH_TOOL_ANALYZER.md
+[2025-10-23 18:26:26] /opt/agrs/docs/FETCH_TOOL_ANALYZER_SAMPLE_OUTPUT.md
+[2025-10-15 09:10:11] /opt/agrs/docs/DEM_ANALYSIS_TOOLS.md
+[2025-10-15 09:10:11] /opt/agrs/docs/DEM_TOOLS_IMPLEMENTATION_SUMMARY.md
+
+## PHASE 1: SAFE DELETIONS - Miscellaneous (8 files)
+[2025-10-23 18:26:26] /opt/agrs/docs/DOCUMENTATION_REORGANIZATION.md
+[2025-10-23 18:26:26] /opt/agrs/docs/CLEANUP_COMPLETE_SUMMARY.md
+[2025-10-23 18:26:26] /opt/agrs/docs/SESSION_SUMMARY_OCT15_2025.md
+[2025-10-23 18:26:26] /opt/agrs/docs/EXECUTIVE_SUMMARY_README.md
+[2025-10-24 03:58:01] /opt/agrs/docs/GUI_3D_VIEWER_INSTALLATION_LOG.md
+[2025-10-24 04:15:38] /opt/agrs/docs/GUI_3D_VIEWER_PHASE1_STATUS.md
+[2025-10-20 15:50:58] /opt/agrs/docs/GUI_WORKFLOW_GAP_ANALYSIS.md
+[2025-10-23 18:26:20] /opt/agrs/docs/PROJECT_STRUCTURE_STANDARD.md
+
+## PHASE 1 TOTAL: 50 files
+## OLDEST: 2025-10-04 | NEWEST: 2025-11-17 (TODAY)
+
+## PHASE 2: test_project2 Cleanup - Status Files (9 files)
+[2025-11-03 04:21:26] /opt/agrs/Projects/test_project2/TRAINING_STATUS.md
+[2025-11-04 12:14:58] /opt/agrs/Projects/test_project2/TRAINING_PROGRESS_UPDATE.md
+[2025-11-04 06:58:51] /opt/agrs/Projects/test_project2/TRAINING_2M_STATUS.md
+[2025-11-11 10:20:00] /opt/agrs/Projects/test_project2/TRAINING_1P5M_STARTED.md
+[2025-11-04 06:07:55] /opt/agrs/Projects/test_project2/GAP_ANALYSIS_STATUS.md
+[2025-11-16 23:02:26] /opt/agrs/Projects/test_project2/PHASE_0_COMPILATION_FIXES_STATUS.md
+[2025-11-16 23:02:26] /opt/agrs/Projects/test_project2/HYDRAULICS_IMPLEMENTATION_STATUS.md
+[2025-11-16 23:02:26] /opt/agrs/Projects/test_project2/GUI_DATASET_AUTOMATION_PROGRESS.md
+[2025-10-31 11:56:06] /opt/agrs/Projects/test_project2/PRODUCTION_RUN_READY.md
+
+## PHASE 2: test_project2 Cleanup - Implementation Complete (6 files)
+[2025-11-11 10:19:59] /opt/agrs/Projects/test_project2/BEND_RADIUS_IMPLEMENTATION_COMPLETE.md
+[2025-11-11 10:19:59] /opt/agrs/Projects/test_project2/SEA_POLYGON_IMPLEMENTATION_COMPLETE.md
+[2025-11-11 10:20:00] /opt/agrs/Projects/test_project2/INFRASTRUCTURE_CLEARANCE_IMPLEMENTATION_COMPLETE.md
+[2025-11-16 23:02:26] /opt/agrs/Projects/test_project2/HYDRAULICS_INTEGRATION_COMPLETE.md
+[2025-10-30 19:07:36] /opt/agrs/Projects/test_project2/DATASET_PREPARATION_COMPLETE.md
+[2025-10-30 19:42:13] /opt/agrs/Projects/test_project2/IMPLEMENTATION_SUMMARY.md
+
+## PHASE 2: test_project2 Cleanup - Analysis/Fix Files (10 files)
+[2025-11-03 13:50:40] /opt/agrs/Projects/test_project2/COASTLINE_LOGIC_FIX.md
+[2025-11-11 10:19:58] /opt/agrs/Projects/test_project2/CRITICAL_CONSTRAINT_VIOLATIONS_FIX.md
+[2025-11-16 23:02:26] /opt/agrs/Projects/test_project2/CRITICAL_FIXES_APPLIED.md
+[2025-10-31 11:26:07] /opt/agrs/Projects/test_project2/ROUTE_TERMINATION_FIX_SUMMARY.md
+[2025-11-11 10:19:58] /opt/agrs/Projects/test_project2/ROOT_CAUSE_ANALYSIS.md
+[2025-11-11 10:19:58] /opt/agrs/Projects/test_project2/INFRASTRUCTURE_CROSSING_ANALYSIS.md
+[2025-11-11 10:19:58] /opt/agrs/Projects/test_project2/RIVER_FOLLOWING_ANALYSIS.md
+[2025-11-11 10:19:58] /opt/agrs/Projects/test_project2/ROUTE_PRUNING_SUMMARY.md
+[2025-11-11 10:19:59] /opt/agrs/Projects/test_project2/OFFSHORE_ROUTING_INVESTIGATION.md
+[2025-11-11 10:19:59] /opt/agrs/Projects/test_project2/SEA_POLYGON_DETECTION_PLAN.md
+[2025-11-11 10:19:58] /opt/agrs/Projects/test_project2/QUICK_TEST_RESULTS.md
+
+## PHASE 2: test_project2 Cleanup - Old Training Reports (7 files)
+[2025-11-03 18:13:09] /opt/agrs/Projects/test_project2/VALIDATION_RESULTS_50K.md
+[2025-11-04 12:15:37] /opt/agrs/Projects/test_project2/TRAINING_600K_ANALYSIS.md
+[2025-11-03 13:32:12] /opt/agrs/Projects/test_project2/route_1p3M_analysis.md
+[2025-11-16 23:02:26] /opt/agrs/Projects/test_project2/ROUTE_1P5M_VALIDATION_REPORT.md
+[2025-11-16 23:02:26] /opt/agrs/Projects/test_project2/TRAINING_1P5M_COMPLETE_REPORT.md
+[2025-11-11 10:19:58] /opt/agrs/Projects/test_project2/TRAINING_2M_FINAL_REPORT.md
+[2025-11-01 02:44:35] /opt/agrs/Projects/test_project2/PRODUCTION_2M_RESULTS_SUMMARY.md
+
+## PHASE 2: test_project2 PIRL Cleanup (12 files)
+[2025-11-16 23:02:26] /opt/agrs/Projects/test_project2/PIRL/SEGFAULT_FIX.md
+[2025-11-17 09:43:12] /opt/agrs/Projects/test_project2/PIRL/GEOJSON_FIXES.md
+[2025-11-17 09:47:11] /opt/agrs/Projects/test_project2/PIRL/GEOJSON_STRUCTURE_UPDATE.md
+[2025-11-16 23:02:17] /opt/agrs/Projects/test_project2/PIRL/IMPLEMENTATION_COMPLETE.md
+[2025-10-30 20:15:49] /opt/agrs/Projects/test_project2/PIRL/TEST_RUN_FINDINGS_REPORT.md
+[2025-10-30 20:10:28] /opt/agrs/Projects/test_project2/PIRL/TEST_RUN_VALIDATION_REPORT.md
+[2025-11-14 13:59:18] /opt/agrs/Projects/test_project2/PIRL/TRAINING_RUN_100K_SUMMARY.md
+[2025-11-16 23:02:26] /opt/agrs/Projects/test_project2/PIRL/PARAMETER_TUNER_COMPLETE.md
+[2025-11-16 23:02:26] /opt/agrs/Projects/test_project2/PIRL/PARAMETER_TUNER_TEST_RESULTS.md
+[2025-11-17 15:13:33] /opt/agrs/Projects/test_project2/PIRL/VALIDATION_10K_PHASE3_SUMMARY.md
+[2025-11-17 02:38:45] /opt/agrs/Projects/test_project2/PIRL/TRAINING_10K_SUMMARY.md
+[2025-11-17 09:51:15] /opt/agrs/Projects/test_project2/PIRL/TRAINING_COMPARISON_10K_vs_600K.md
+
+## PHASE 2 TOTAL: 44 files
+## OLDEST: 2025-10-30 | NEWEST: 2025-11-17 (TODAY)
+## NOTE: Several files modified TODAY (GEOJSON fixes) - may want to keep temporarily
+
+## PHASE 3: Perplexity Fetch Tools Research (40 files)
+[2025-10-12 06:59:52] /opt/agrs/docs/Perplexity/Fetch_Tools/Batch2_Failures_Diagnosis.md
+[2025-10-12 06:18:05] /opt/agrs/docs/Perplexity/Fetch_Tools/Copernicus_EEA10_Implementation.md
+[2025-10-12 06:41:22] /opt/agrs/docs/Perplexity/Fetch_Tools/CORINE_Italy_Current.md
+[2025-10-12 06:17:57] /opt/agrs/docs/Perplexity/Fetch_Tools/CORINE_Italy_Implementation.md
+[2025-10-12 06:15:13] /opt/agrs/docs/Perplexity/Fetch_Tools/ERA5_Implementation.md
+[2025-10-12 06:16:28] /opt/agrs/docs/Perplexity/Fetch_Tools/EUAP_Implementation.md
+[2025-10-12 06:30:55] /opt/agrs/docs/Perplexity/Fetch_Tools/EUAP_WFS_Fix_Solution.md
+[2025-10-12 06:40:51] /opt/agrs/docs/Perplexity/Fetch_Tools/FAO_Soil_Current.md
+[2025-10-12 06:15:36] /opt/agrs/docs/Perplexity/Fetch_Tools/FAO_Soil_Implementation.md
+[2025-10-12 06:16:04] /opt/agrs/docs/Perplexity/Fetch_Tools/Global_Seismic_Hazard_Implementation.md
+[2025-10-12 06:40:44] /opt/agrs/docs/Perplexity/Fetch_Tools/HydroSHEDS_Current.md
+[2025-10-12 06:14:56] /opt/agrs/docs/Perplexity/Fetch_Tools/HydroSHEDS_Implementation.md
+[2025-10-12 06:17:04] /opt/agrs/docs/Perplexity/Fetch_Tools/IFFI_Implementation.md
+[2025-10-12 06:30:27] /opt/agrs/docs/Perplexity/Fetch_Tools/IFFI_WFS_Fix_Solution.md
+[2025-10-12 06:34:18] /opt/agrs/docs/Perplexity/Fetch_Tools/ISPRA_Endpoints_Verified.md
+[2025-10-12 17:45:51] /opt/agrs/docs/Perplexity/Fetch_Tools/ISRIC_REST_API.md
+[2025-10-12 16:20:49] /opt/agrs/docs/Perplexity/Fetch_Tools/ISRIC_SoilGrids_Implementation.md
+[2025-10-12 06:41:10] /opt/agrs/docs/Perplexity/Fetch_Tools/ISTAT_Boundaries_Current.md
+[2025-10-12 06:17:49] /opt/agrs/docs/Perplexity/Fetch_Tools/ISTAT_Boundaries_Implementation.md
+[2025-10-12 06:17:24] /opt/agrs/docs/Perplexity/Fetch_Tools/Italian_Soil_Implementation.md
+[2025-10-12 06:14:47] /opt/agrs/docs/Perplexity/Fetch_Tools/MODIS_Implementation.md
+[2025-10-12 08:02:27] /opt/agrs/docs/Perplexity/Fetch_Tools/OSM_Power_Lines_Implementation.md
+[2025-10-12 06:10:11] /opt/agrs/docs/Perplexity/Fetch_Tools/WorldClim_Implementation.md
+
+## PHASE 3: Perplexity GUI Research (17 files)
+[2025-10-24 08:03:09] /opt/agrs/docs/Perplexity/GUI/3D_DEM_VIEWER_IMPLEMENTATION.md
+[2025-10-19 04:09:02] /opt/agrs/docs/Perplexity/GUI/3D_GIS_FRAMEWORKS.md
+[2025-10-24 08:40:15] /opt/agrs/docs/Perplexity/GUI/3D_GLOBE_IMPLEMENTATION.md
+[2025-10-24 09:03:25] /opt/agrs/docs/Perplexity/GUI/3D_PERFORMANCE_OPTIMIZATION.md
+[2025-10-24 08:00:52] /opt/agrs/docs/Perplexity/GUI/3D_SIMPLE_APPROACHES.md
+[2025-10-24 08:22:01] /opt/agrs/docs/Perplexity/GUI/3D_TEXTURE_MAPPING_IMPLEMENTATION.md
+[2025-10-24 08:58:17] /opt/agrs/docs/Perplexity/GUI/3D_VECTOR_RENDERING.md
+[2025-10-23 18:56:48] /opt/agrs/docs/Perplexity/GUI/3D_VIEWER_FRAMEWORKS_QT6.md
+[2025-10-23 18:57:06] /opt/agrs/docs/Perplexity/GUI/3D_VIEWER_INTEGRATION_GUIDE.md
+[2025-10-23 18:57:38] /opt/agrs/docs/Perplexity/GUI/3D_VIEWER_PERFORMANCE.md
+[2025-10-24 08:57:34] /opt/agrs/docs/Perplexity/GUI/ARCGIS_3D_SCENE_FEATURES.md
+[2025-10-26 06:18:01] /opt/agrs/docs/Perplexity/GUI/ARCGIS_FEATURE_IDENTIFY_POPUP.md
+[2025-10-24 09:02:13] /opt/agrs/docs/Perplexity/GUI/ARCGIS_UI_CONTROLS_NAVIGATION.md
+[2025-10-24 09:01:59] /opt/agrs/docs/Perplexity/GUI/ATMOSPHERIC_EFFECTS_LIGHTING.md
+[2025-10-24 08:59:54] /opt/agrs/docs/Perplexity/GUI/AWS_TERRAIN_TILES_IMPLEMENTATION.md
+[2025-10-24 09:00:34] /opt/agrs/docs/Perplexity/GUI/ESRI_IMAGERY_TILES_IMPLEMENTATION.md
+[2025-10-19 04:10:33] /opt/agrs/docs/Perplexity/GUI/GIS_UI_UX_PATTERNS.md
+[2025-10-24 08:44:11] /opt/agrs/docs/Perplexity/GUI/GLOBAL_ELEVATION_SOURCES.md
+[2025-10-19 04:09:38] /opt/agrs/docs/Perplexity/GUI/OSGEARTH_DETAILED.md
+[2025-10-19 04:10:10] /opt/agrs/docs/Perplexity/GUI/QT_3D_INTEGRATION.md
+[2025-10-24 08:59:06] /opt/agrs/docs/Perplexity/GUI/TERRAIN_TILE_STREAMING.md
+
+## PHASE 3 TOTAL: 57 files (40 Fetch Tools + 17 GUI)
+## ALL FROM OCTOBER 2025 (1+ month old)
+## These are completed implementation research notes
+
+## CANDIDATE FOR FULL PROJECT DELETION: test_project (37 files)
+## Consider deleting entire directory: /opt/agrs/Projects/test_project/
+## ALL FILES FROM OCTOBER 2025 (1+ month old)
+
+[2025-10-26 16:44:37] /opt/agrs/Projects/test_project/COMPREHENSIVE_VALIDATION_REPORT.md
+[2025-10-30 17:54:44] /opt/agrs/Projects/test_project/DELIVERABLE_SUMMARY.md
+[2025-10-23 18:26:26] /opt/agrs/Projects/test_project/docs/COMPLETE_DATASET_INVENTORY.md
+[2025-10-26 18:54:47] /opt/agrs/Projects/test_project/docs/perplexity_research/AI_Pipeline_Routing_Cost_Savings_Analysis.md
+[2025-10-26 18:55:40] /opt/agrs/Projects/test_project/docs/perplexity_research/Infrastructure_Route_Optimization_Savings.md
+[2025-10-28 05:13:30] /opt/agrs/Projects/test_project/docs/PIRL_COST_SAVINGS_ANALYSIS.md
+[2025-10-23 11:12:48] /opt/agrs/Projects/test_project/docs/project_confirmation_report.md
+[2025-10-26 10:48:52] /opt/agrs/Projects/test_project/EXECUTIVE_SUMMARY_VALIDATED.md
+[2025-10-26 09:50:51] /opt/agrs/Projects/test_project/FINAL_IMPLEMENTATION_REPORT.md
+[2025-10-30 17:54:45] /opt/agrs/Projects/test_project/FINAL_STATUS.md
+[2025-10-26 10:50:22] /opt/agrs/Projects/test_project/FIX_PLAN.md
+[2025-10-30 17:54:44] /opt/agrs/Projects/test_project/GUI_INTEGRATION_SUMMARY.md
+[2025-10-26 10:00:23] /opt/agrs/Projects/test_project/IMPLEMENTATION_COMPLETE_SUMMARY.md
+[2025-10-27 07:59:47] /opt/agrs/Projects/test_project/outputs/analysis/TRAINING_ANALYSIS_REPORT.md
+[2025-10-26 10:31:10] /opt/agrs/Projects/test_project/PIRL_COMPLETE_DELIVERY.md
+[2025-10-26 14:39:54] /opt/agrs/Projects/test_project/PIRL_COMPREHENSIVE_IMPROVEMENT_ROADMAP.md
+[2025-10-26 16:48:28] /opt/agrs/Projects/test_project/PIRL_CRITERIA_COMPLIANCE_ANALYSIS.md
+[2025-10-26 10:15:23] /opt/agrs/Projects/test_project/PIRL_FINAL_STATUS_WORKING.md
+[2025-10-26 09:46:39] /opt/agrs/Projects/test_project/PIRL_IMPLEMENTATION_STATUS.md
+[2025-10-30 17:54:44] /opt/agrs/Projects/test_project/PIRL_INFERENCE_BUG_REPORT.md
+[2025-10-26 13:24:15] /opt/agrs/Projects/test_project/PIRL_PERFORMANCE_EXPECTATIONS_AND_COST_SAVINGS.md
+[2025-10-26 10:00:23] /opt/agrs/Projects/test_project/PIRL_PERFORMANCE_TRACKING_SCHEMA.md
+[2025-10-26 09:14:59] /opt/agrs/Projects/test_project/PIRL_PRE_IMPLEMENTATION_REPORT.md
+[2025-10-30 17:54:46] /opt/agrs/Projects/test_project/PIRL_PYTHON_CPP_INTEGRATION_COMPLETE.md
+[2025-10-26 12:03:37] /opt/agrs/Projects/test_project/PIRL_RL_TRAINING_FINAL_STATUS.md
+[2025-10-26 16:21:03] /opt/agrs/Projects/test_project/PIRL_ROUTE_REALISM_VALIDATION_FRAMEWORK.md
+[2025-10-26 10:52:54] /opt/agrs/Projects/test_project/PIRL_STATUS_CLARIFICATION.md
+[2025-10-26 11:25:16] /opt/agrs/Projects/test_project/PIRL_TRAINING_STATUS.md
+[2025-10-30 17:54:44] /opt/agrs/Projects/test_project/POST_TRAINING_READY.md
+[2025-10-30 17:54:44] /opt/agrs/Projects/test_project/POST_TRAINING_SUMMARY.md
+[2025-10-26 13:24:15] /opt/agrs/Projects/test_project/QUICK_REFERENCE.md
+[2025-10-26 10:31:10] /opt/agrs/Projects/test_project/QUICK_START.md
+[2025-10-26 09:54:43] /opt/agrs/Projects/test_project/READY_FOR_EXECUTION.md
+[2025-10-26 16:32:42] /opt/agrs/Projects/test_project/SAIPEM_CONFIG_UPDATE_SUMMARY.md
+[2025-10-30 17:54:46] /opt/agrs/Projects/test_project/SOLUTION_COMPLETE.md
+[2025-10-30 17:54:44] /opt/agrs/Projects/test_project/TRAINING_COMPLETE_SUMMARY.md
+[2025-10-28 05:13:29] /opt/agrs/Projects/test_project/TRAINING_REPORT.md
+[2025-10-26 13:24:15] /opt/agrs/Projects/test_project/TRAINING_STATUS.md
+[2025-10-30 17:54:41] /opt/agrs/Projects/test_project/TRAINING_VALIDATION_REPORT.md
+[2025-10-26 10:46:43] /opt/agrs/Projects/test_project/validation/COMPREHENSIVE_VALIDATION_REPORT.md
+[2025-10-26 10:42:01] /opt/agrs/Projects/test_project/validation/COST_VALIDATION_REPORT.md
+[2025-10-26 10:42:19] /opt/agrs/Projects/test_project/validation/industry_standards_research.md
+[2025-10-26 10:40:13] /opt/agrs/Projects/test_project/validation/pipeline_costs_research.md
+
+## CANDIDATE FOR ARCHIVAL: SAIPEM_PIPELINE_DEMO (34 files)
+## Consider archiving entire directory: /opt/agrs/Projects/SAIPEM_PIPELINE_DEMO/
+## ALL FILES FROM OCTOBER 2025 (1+ month old)
+
+[2025-10-23 18:26:26] /opt/agrs/Projects/SAIPEM_PIPELINE_DEMO/docs/COST_MATRIX_RESEARCH_COMPLETE.md
+[2025-10-12 21:27:50] /opt/agrs/Projects/SAIPEM_PIPELINE_DEMO/docs/DATA_ACQUISITION_COMPREHENSIVE_REPORT.md
+[2025-10-13 04:03:25] /opt/agrs/Projects/SAIPEM_PIPELINE_DEMO/docs/perplexity_research/Additional_Pipeline_Datasets_Search.md
+[2025-10-11 23:58:54] /opt/agrs/Projects/SAIPEM_PIPELINE_DEMO/docs/perplexity_research/aoi_intelligence.md
+[2025-10-11 22:16:49] /opt/agrs/Projects/SAIPEM_PIPELINE_DEMO/docs/perplexity_research/central_italy_analysis.md
+[2025-10-23 18:26:26] /opt/agrs/Projects/SAIPEM_PIPELINE_DEMO/docs/perplexity_research/Cost_Optimization_Initial_Findings.md
+[2025-10-23 18:26:26] /opt/agrs/Projects/SAIPEM_PIPELINE_DEMO/docs/perplexity_research/Cost_Optimization_Research_Query.md
+[2025-10-12 00:00:52] /opt/agrs/Projects/SAIPEM_PIPELINE_DEMO/docs/perplexity_research/environmental_constraints.md
+[2025-10-12 00:00:18] /opt/agrs/Projects/SAIPEM_PIPELINE_DEMO/docs/perplexity_research/permitting.md
+[2025-10-13 00:01:46] /opt/agrs/Projects/SAIPEM_PIPELINE_DEMO/docs/perplexity_research/Phase2_Data_Sufficiency_Assessment.md
+[2025-10-12 07:55:19] /opt/agrs/Projects/SAIPEM_PIPELINE_DEMO/docs/perplexity_research/Phase2_Implementation_Guides.md
+[2025-10-12 07:54:52] /opt/agrs/Projects/SAIPEM_PIPELINE_DEMO/docs/perplexity_research/Phase2_Missing_Datasets_Analysis.md
+[2025-10-13 04:25:40] /opt/agrs/Projects/SAIPEM_PIPELINE_DEMO/docs/perplexity_research/Phase3_Essential_Tools_Analysis.md
+[2025-10-11 23:59:23] /opt/agrs/Projects/SAIPEM_PIPELINE_DEMO/docs/perplexity_research/regulatory_authorities.md
+[2025-10-23 18:26:20] /opt/agrs/Projects/SAIPEM_PIPELINE_DEMO/docs/perplexity_research/research_summary.md
+[2025-10-12 00:01:09] /opt/agrs/Projects/SAIPEM_PIPELINE_DEMO/docs/perplexity_research/risk_assessment.md
+[2025-10-12 00:00:03] /opt/agrs/Projects/SAIPEM_PIPELINE_DEMO/docs/perplexity_research/stakeholders.md
+[2025-10-12 08:14:25] /opt/agrs/Projects/SAIPEM_PIPELINE_DEMO/docs/PHASE2_COMPLETE_FINAL.md
+[2025-10-13 00:03:28] /opt/agrs/Projects/SAIPEM_PIPELINE_DEMO/docs/PHASE2_COMPLETION_SUMMARY.md
+[2025-10-23 18:26:26] /opt/agrs/Projects/SAIPEM_PIPELINE_DEMO/docs/PHASE2_DATA_ACQUISITION_COMPLETE.md
+[2025-10-23 18:26:20] /opt/agrs/Projects/SAIPEM_PIPELINE_DEMO/docs/PHASE2_DATA_ACQUISITION_PLAN.md
+[2025-10-23 18:26:26] /opt/agrs/Projects/SAIPEM_PIPELINE_DEMO/docs/PHASE2_MISSING_DATA_REPORT.md
+[2025-10-12 00:03:53] /opt/agrs/Projects/SAIPEM_PIPELINE_DEMO/docs/PHASE2_PERPLEXITY_IMPLEMENTATION.md
+[2025-10-23 18:26:20] /opt/agrs/Projects/SAIPEM_PIPELINE_DEMO/docs/PHASE2_TINITALY_SUCCESS.md
+[2025-10-13 11:54:08] /opt/agrs/Projects/SAIPEM_PIPELINE_DEMO/docs/PHASE3A_COMPLETION_REPORT.md
+[2025-10-14 00:31:32] /opt/agrs/Projects/SAIPEM_PIPELINE_DEMO/docs/PHASE3A_DEM_TOOLS_VALIDATION.md
+[2025-10-12 07:32:12] /opt/agrs/Projects/SAIPEM_PIPELINE_DEMO/docs/PHASE3_IMPLEMENTATION_PLAN.md
+[2025-10-12 07:17:38] /opt/agrs/Projects/SAIPEM_PIPELINE_DEMO/docs/PHASE3_PLANNING_GUIDE.md
+[2025-10-13 04:26:53] /opt/agrs/Projects/SAIPEM_PIPELINE_DEMO/docs/PHASE3_TOOL_IMPLEMENTATION_PLAN.md
+[2025-10-15 09:10:12] /opt/agrs/Projects/SAIPEM_PIPELINE_DEMO/docs/project_initialization_summary.md
+[2025-10-23 18:26:26] /opt/agrs/Projects/SAIPEM_PIPELINE_DEMO/docs/SAIPEM_COST_OPTIMIZATION_STRATEGY.md
+[2025-10-20 15:50:58] /opt/agrs/Projects/SAIPEM_PIPELINE_DEMO/FULL_PIPELINE_TEST_PLAN.md
+[2025-10-15 09:10:12] /opt/agrs/Projects/SAIPEM_PIPELINE_DEMO/README.md
+[2025-10-20 15:50:58] /opt/agrs/Projects/SAIPEM_PIPELINE_DEMO/TEST_RESULTS_SUMMARY.md
+
+## ANALYSIS BY DATES:
+
+### Files Modified TODAY (2025-11-17): 5 files
+- PHASE3_ALL_TODOS_COMPLETE.md
+- PHASE3_FINAL_STATUS.md
+- PIRL/GEOJSON_FIXES.md (test_project2)
+- PIRL/GEOJSON_STRUCTURE_UPDATE.md (test_project2)
+- PIRL/TRAINING_COMPARISON_10K_vs_600K.md (test_project2)
+- PIRL/VALIDATION_10K_PHASE3_SUMMARY.md (test_project2)
+- PIRL/TRAINING_10K_SUMMARY.md (test_project2)
+
+**CAUTION:** Some test_project2 PIRL files were modified today. May want to review before deletion.
+
+### Files from November 2025: 24 files
+- Mostly test_project2 status/training files
+
+### Files from October 2025: 122 files
+- All test_project files (37)
+- All SAIPEM_PIPELINE_DEMO files (34)
+- All Perplexity research (57)
+- Most docs/ implementation plans
+
+### Oldest Files (before Oct 12): 3 files
+- FETCH_TOOLS_STANDARDS.md (Oct 4)
+
+## GRAND TOTAL RECOMMENDED FOR DELETION: ~187 files
+## (Phase 1: 50 + Phase 2: 44 + Phase 3: 57 + test_project: 37 = 188 files)
+
+## DELETION PRIORITY:
+
+### HIGH PRIORITY (SAFE TO DELETE NOW): ~140 files
+- All October files (1+ month old)
+- All Perplexity research (completed)
+- test_project entire directory
+- SAIPEM_PIPELINE_DEMO (archive or delete)
+- Phase 1 implementation plans and fixes
+
+### MEDIUM PRIORITY (REVIEW FIRST): ~40 files
+- test_project2 files from early November
+- Status files less than 2 weeks old
+
+### LOW PRIORITY (KEEP FOR NOW): ~7 files
+- Files modified TODAY (Nov 17)
+- May contain recent work-in-progress info
+
+## RECOMMENDED ACTION PLAN:
+
+1. **Immediate** - Delete Phase 1 (50 files, all Oct 2025)
+2. **Next Week** - Delete Phase 3 Perplexity (57 files, all Oct 2025)
+3. **Archive** - Move test_project and SAIPEM_PIPELINE_DEMO to archive (71 files)
+4. **After Review** - Delete test_project2 old files, keeping recent ones (44 files)
+
+## NOTES:
+- Verify no active links/references in code before deletion
+- Create git branch for cleanup: git checkout -b docs/markdown-cleanup
+- Commit deletions in logical groups
+- Update documentation indexes after cleanup

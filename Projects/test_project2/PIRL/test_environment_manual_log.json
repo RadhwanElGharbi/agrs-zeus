@@ -1,0 +1,167 @@
+[
+  {
+    "step": 1,
+    "x": 3.796943426132202,
+    "y": 3.796943426132202,
+    "goal_distance": 3.796943426132202,
+    "slope": 3.796943426132202,
+    "reward": 199.5699999996804,
+    "terminated": false,
+    "truncated": false,
+    "termination_reason": ""
+  },
+  {
+    "step": 2,
+    "x": 3.7974071502685547,
+    "y": 3.7974071502685547,
+    "goal_distance": 3.7974071502685547,
+    "slope": 3.7974071502685547,
+    "reward": 199.5049999996805,
+    "terminated": false,
+    "truncated": false,
+    "termination_reason": ""
+  },
+  {
+    "step": 3,
+    "x": 3.7978665828704834,
+    "y": 3.7978665828704834,
+    "goal_distance": 3.7978665828704834,
+    "slope": 3.7978665828704834,
+    "reward": 197.57076054138832,
+    "terminated": false,
+    "truncated": false,
+    "termination_reason": ""
+  },
+  {
+    "step": 4,
+    "x": 3.798330068588257,
+    "y": 3.798330068588257,
+    "goal_distance": 3.798330068588257,
+    "slope": 3.798330068588257,
+    "reward": 199.4399999996806,
+    "terminated": false,
+    "truncated": false,
+    "termination_reason": ""
+  },
+  {
+    "step": 5,
+    "x": 3.7987937927246094,
+    "y": 3.7987937927246094,
+    "goal_distance": 3.7987937927246094,
+    "slope": 3.7987937927246094,
+    "reward": 199.4399999996806,
+    "terminated": false,
+    "truncated": false,
+    "termination_reason": ""
+  },
+  {
+    "step": 6,
+    "x": 3.799257516860962,
+    "y": 3.799257516860962,
+    "goal_distance": 3.799257516860962,
+    "slope": 3.799257516860962,
+    "reward": 199.4399999996806,
+    "terminated": false,
+    "truncated": false,
+    "termination_reason": ""
+  },
+  {
+    "step": 7,
+    "x": 3.7997212409973145,
+    "y": 3.7997212409973145,
+    "goal_distance": 3.7997212409973145,
+    "slope": 3.7997212409973145,
+    "reward": 199.5699999996804,
+    "terminated": false,
+    "truncated": false,
+    "termination_reason": ""
+  },
+  {
+    "step": 8,
+    "x": 3.800184965133667,
+    "y": 3.800184965133667,
+    "goal_distance": 3.800184965133667,
+    "slope": 3.800184965133667,
+    "reward": -154.21942043553423,
+    "terminated": false,
+    "truncated": false,
+    "termination_reason": ""
+  },
+  {
+    "step": 9,
+    "x": 3.800567388534546,
+    "y": 3.800567388534546,
+    "goal_distance": 3.800567388534546,
+    "slope": 3.800567388534546,
+    "reward": 164.56728425374868,
+    "terminated": false,
+    "truncated": false,
+    "termination_reason": ""
+  },
+  {
+    "step": 10,
+    "x": 3.8010311126708984,
+    "y": 3.8010311126708984,
+    "goal_distance": 3.8010311126708984,
+    "slope": 3.8010311126708984,
+    "reward": 199.5699999996804,
+    "terminated": false,
+    "truncated": false,
+    "termination_reason": ""
+  },
+  {
+    "step": 11,
+    "x": 3.801494836807251,
+    "y": 3.801494836807251,
+    "goal_distance": 3.801494836807251,
+    "slope": 3.801494836807251,
+    "reward": 299.4399999996806,
+    "terminated": false,
+    "truncated": false,
+    "termination_reason": ""
+  },
+  {
+    "step": 12,
+    "x": 3.8019585609436035,
+    "y": 3.8019585609436035,
+    "goal_distance": 3.8019585609436035,
+    "slope": 3.8019585609436035,
+    "reward": 199.4399999996806,
+    "terminated": false,
+    "truncated": false,
+    "termination_reason": ""
+  },
+  {
+    "step": 13,
+    "x": 3.802422046661377,
+    "y": 3.802422046661377,
+    "goal_distance": 3.802422046661377,
+    "slope": 3.802422046661377,
+    "reward": 199.4399999996806,
+    "terminated": false,
+    "truncated": false,
+    "termination_reason": ""
+  },
+  {
+    "step": 14,
+    "x": 3.8028857707977295,
+    "y": 3.8028857707977295,
+    "goal_distance": 3.8028857707977295,
+    "slope": 3.8028857707977295,
+    "reward": 199.1899999996806,
+    "terminated": false,
+    "truncated": false,
+    "termination_reason": ""
+  },
+  {
+    "step": 15,
+    "x": 3.803349494934082,
+    "y": 3.803349494934082,
+    "goal_distance": 3.803349494934082,
+    "slope": 3.803349494934082,
+    "reward": -19800.404000000333,
+    "terminated": true,
+    "truncated": false,
+    "termination_reason": "FAILURE: Built-up area violation (<13.5m from buildings)"
+  }
+]

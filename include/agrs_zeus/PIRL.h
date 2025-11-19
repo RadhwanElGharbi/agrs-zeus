@@ -155,11 +155,23 @@ struct State {
     double prev_heading;
     double prev_step_size;
     
+    // Crossing context features (NEW - Phase 3: Enhanced Crossing Logic)
+    double nearest_crossing_dist;           // Distance to nearest crossable feature (m)
+    double nearest_crossing_width;          // Width of nearest crossing (m)
+    double nearest_crossing_type;           // 0=none, 1=road, 2=waterway, 3=railway, 4=powerline (stored as double for alignment)
+    double crossing_before_dist;            // Distance to feature before nearest
+    double crossing_after_dist;             // Distance to feature after nearest
+    double crossing_cardinal_alignment;     // How perpendicular to feature (0-1, 1=orthogonal)
+    
+    // Boundary awareness (NEW - Phase 4: Continuous Cost System)
+    double distance_to_aoi_boundary;        // Distance to AOI edge (m)
+    double distance_to_sea_boundary;        // Distance to sea/coastline (m)
+    
     // Convert to vector for neural network input
     std::vector<float> to_vector() const;
     
     // State dimension (for NN architecture)
-    static constexpr int dimension() { return 21; }  // Expanded from 17 to 21 (Phase 2)
+    static constexpr int dimension() { return 29; }  // Expanded from 27 to 29 (Phase 4)
 };
 
 // ============================================================================
@@ -169,11 +181,12 @@ struct State {
 /**
  * @brief Action representation for RL agent
  * 
- * Continuous action space: heading change + step size
+ * Continuous + discrete action space: heading change + step size + crossing decision
  */
 struct Action {
     double heading_change;  // radians, range: [-π/4, π/4]
     double step_size;       // meters, range: [10, 100]
+    int crossing_decision;  // 0=normal, 1=cross, 2=request_contour, 3=avoid
     
     // Convert from neural network output
     static Action from_vector(const std::vector<float>& action_vec);
@@ -182,7 +195,7 @@ struct Action {
     std::vector<float> to_vector() const;
     
     // Action dimension
-    static constexpr int dimension() { return 2; }
+    static constexpr int dimension() { return 3; }
     
     // Apply physics constraints (ensure feasible)
     void apply_constraints(const State& current_state, 
@@ -297,6 +310,19 @@ struct RouteSegment {
     int step_number = 0;
     double reward = 0.0;
     double total_reward = 0.0;
+    
+    // Crossing context (NEW - Phase 3: Enhanced Crossing Logic)
+    // Captured at segment creation for analysis and debugging
+    double nearest_crossing_dist = 0.0;      // Distance to nearest crossable feature (m)
+    double nearest_crossing_width = 0.0;     // Width of nearest crossing (m)
+    double nearest_crossing_type = 0.0;      // 0=none, 1=road, 2=waterway, 3=railway, 4=powerline (stored as double for alignment)
+    double crossing_before_dist = 0.0;       // Distance to feature before nearest (m)
+    double crossing_after_dist = 0.0;        // Distance to feature after nearest (m)
+    double crossing_cardinal_alignment = 0.0; // How perpendicular to feature (0-1, 1=orthogonal)
+    
+    // Boundary awareness (NEW - Phase 4: Continuous Cost System)
+    double distance_to_aoi_boundary = 0.0;   // Distance to AOI edge (m)
+    double distance_to_sea_boundary = 0.0;   // Distance to sea/coastline (m)
 };
 
 /**
@@ -314,6 +340,21 @@ struct RouteTrajectory {
 // ============================================================================
 // GIS DATA MANAGER
 // ============================================================================
+
+/**
+ * @brief Feature information for crossing decision-making
+ */
+struct CrossingFeature {
+    OGRGeometry* geometry = nullptr;  // Not owned - pointer into dataset
+    double width_m = 0.0;
+    std::string feature_type;  // highway type, waterway type, railway type, etc.
+    int num_lanes = 0;         // For roads
+    int gauge_mm = 0;          // For railways (in millimeters)
+    double distance_from_point = 0.0;
+    bool is_crossable = true;  // dams/weirs are not crossable
+    
+    CrossingFeature() = default;
+};
 
 /**
  * @brief Manages all geospatial data for the routing environment
@@ -345,6 +386,7 @@ public:
     // Query land cover
     int get_land_cover_class(double x, double y) const;
     std::string get_land_cover_name(int land_cover_class) const;
+    double distance_to_land_cover_type(double x, double y, int land_cover_class) const;
     
     // Check if point is within AOI
     bool is_within_aoi(double x, double y) const;
@@ -358,6 +400,9 @@ public:
     bool has_sea_polygon() const { return sea_polygon_geom_ != nullptr; }
     double distance_to_sea(double x, double y) const;
     
+    // Boundary distance calculations (NEW - Phase 4: Continuous Cost System)
+    double calculate_distance_to_aoi_boundary(double x, double y) const;
+    
     // Infrastructure checks
     bool has_power_lines() const { return power_lines_ != nullptr; }
     bool has_railways() const { return railways_ != nullptr; }
@@ -367,6 +412,15 @@ public:
     double get_soil_bearing_capacity(double x, double y) const;  // Foundation suitability
     bool is_cadastre_complex(double x, double y) const;  // Complex land ownership
     double get_population_density(double x, double y) const;  // Social impact
+    
+    // Enhanced crossing logic methods (NEW - Phase 3)
+    std::vector<CrossingFeature> get_nearest_crossing_features(
+        double x, double y, double search_radius_m, int max_features = 3
+    ) const;
+    
+    double calculate_road_width(const CrossingFeature& feature) const;
+    double calculate_waterway_width(const CrossingFeature& feature) const;
+    double calculate_railway_width(const CrossingFeature& feature) const;
     
 private:
     std::string project_dir_;
@@ -380,7 +434,7 @@ private:
     std::unique_ptr<GDALDataset> soil_;            // Soil properties
     std::unique_ptr<GDALDataset> population_;      // Population density
     
-    // Vector geometries for constraints
+    // Vector geometries for constraints (merged geometry collections for fast distance queries)
     std::unique_ptr<OGRGeometry> aoi_geom_;
     std::unique_ptr<OGRGeometry> protected_areas_;
     std::unique_ptr<OGRGeometry> water_bodies_;
@@ -390,6 +444,12 @@ private:
     std::unique_ptr<OGRGeometry> power_lines_;       // Power transmission lines
     std::unique_ptr<OGRGeometry> pipelines_;         // Existing pipelines
     std::unique_ptr<OGRGeometry> sea_polygon_geom_;  // Largest water polygon (sea) - 1km exclusion zone
+    
+    // Vector datasets for attribute queries (NEW - Phase 3: Enhanced Crossing Logic)
+    std::unique_ptr<GDALDataset> roads_dataset_;
+    std::unique_ptr<GDALDataset> waterways_dataset_;
+    std::unique_ptr<GDALDataset> railways_dataset_;
+    std::unique_ptr<GDALDataset> powerlines_dataset_;
     
     // Helper: sample raster at point
     double sample_raster(GDALDataset* dataset, double x, double y) const;
@@ -437,6 +497,19 @@ public:
     // Hydraulic costs (NEW - Phase 2)
     double hydraulic_cost(const SegmentHydraulics& hydraulics,
                          double segment_length_m) const;
+    
+    // Enhanced crossing cost calculation (NEW - Phase 3: Enhanced Crossing Logic)
+    double calculate_road_crossing_cost(const CrossingFeature& feature) const;
+    double calculate_waterway_crossing_cost(const CrossingFeature& feature) const;
+    double calculate_railway_crossing_cost(const CrossingFeature& feature) const;
+    double calculate_powerline_crossing_cost(const CrossingFeature& feature) const;
+    
+    // Continuous terrain cost (NEW - Phase 4: Continuous Cost System)
+    double calculate_terrain_cost(double slope_percent,
+                                  int land_cover_class,
+                                  double segment_length_m,
+                                  double soil_capacity,
+                                  double geohazard_risk) const;
     
     // Apply parameter overrides from JSON (NEW - for parameter tuning)
     void apply_parameter_overrides(const nlohmann::json& overrides);
@@ -586,6 +659,11 @@ private:
     // Exploration tracking (NEW - for milestone bonuses)
     double best_distance_to_goal_;  // Best distance achieved this episode
     
+    // Contouring support (NEW - Phase 3: Enhanced Crossing Logic)
+    std::vector<std::pair<double, double>> active_contour_waypoints_;
+    int current_waypoint_idx_;
+    bool is_contouring_;
+    
     // Parameter overrides (NEW - loaded from pirl_parameter_overrides.json)
     double progress_reward_multiplier_ = 2.0;
     double goal_bonus_ = 10000.0;
@@ -603,9 +681,15 @@ private:
     double powerline_crossing_threshold_m_ = 2.0;
     double railway_crossing_threshold_m_ = 3.0;
     double sea_exclusion_distance_m_ = 1000.0;
+    double contour_adherence_bonus_ = 50.0;  // Bonus for staying near contour waypoints
+    double contour_buffer_safety_margin_m_ = 2.0;  // Extra buffer beyond minimum clearance
     
     // Helper: load parameter overrides from JSON
     void load_parameter_overrides(const std::string& override_file);
+    
+    // Helper: contouring support
+    void generate_contour_waypoints(const CrossingFeature& feature, double current_x, double current_y);
+    double calculate_contour_adherence_bonus() const;
     
     // Helper: calculate reward
     RewardInfo calculate_reward(const State& prev_state,

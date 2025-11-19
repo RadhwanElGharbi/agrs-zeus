@@ -19,22 +19,24 @@ namespace py = pybind11;
 // Helper to convert State to numpy array for Python
 py::array_t<float> state_to_numpy(const agrs::pirl::State& state) {
     std::vector<float> vec = state.to_vector();
-    // Create numpy array with a copy of the data (not a pointer to local variable!)
-    py::array_t<float> result(vec.size());
-    auto buf = result.request();
-    float* ptr = static_cast<float*>(buf.ptr);
-    std::copy(vec.begin(), vec.end(), ptr);
-    return result;
+    // Use pybind11's built-in conversion from std::vector to numpy array
+    // This ensures proper memory handling and data copying
+    return py::cast(vec);
 }
 
 // Helper to convert numpy array to Action
 agrs::pirl::Action numpy_to_action(py::array_t<float> action_array) {
     auto buf = action_array.request();
-    if (buf.size != 2) {
-        throw std::runtime_error("Action array must have size 2");
+    if (buf.size != 3 && buf.size != 2) {
+        throw std::runtime_error("Action array must have size 2 or 3");
     }
     float* ptr = static_cast<float*>(buf.ptr);
-    std::vector<float> action_vec{ptr[0], ptr[1]};
+    std::vector<float> action_vec;
+    if (buf.size == 3) {
+        action_vec = {ptr[0], ptr[1], ptr[2]};  // 3D: heading, step_size, crossing_decision
+    } else {
+        action_vec = {ptr[0], ptr[1]};  // 2D: backward compatibility
+    }
     return agrs::pirl::Action::from_vector(action_vec);
 }
 
@@ -194,7 +196,17 @@ PYBIND11_MODULE(pirl_native, m) {
         .def_readonly("requires_pumping_station", &agrs::pirl::RouteSegment::requires_pumping_station)
         .def_readonly("step_number", &agrs::pirl::RouteSegment::step_number)
         .def_readonly("reward", &agrs::pirl::RouteSegment::reward)
-        .def_readonly("total_reward", &agrs::pirl::RouteSegment::total_reward);
+        .def_readonly("total_reward", &agrs::pirl::RouteSegment::total_reward)
+        // Crossing context (NEW - Phase 3: Enhanced Crossing Logic)
+        .def_readonly("nearest_crossing_dist", &agrs::pirl::RouteSegment::nearest_crossing_dist)
+        .def_readonly("nearest_crossing_width", &agrs::pirl::RouteSegment::nearest_crossing_width)
+        .def_readonly("nearest_crossing_type", &agrs::pirl::RouteSegment::nearest_crossing_type)
+        .def_readonly("crossing_before_dist", &agrs::pirl::RouteSegment::crossing_before_dist)
+        .def_readonly("crossing_after_dist", &agrs::pirl::RouteSegment::crossing_after_dist)
+        .def_readonly("crossing_cardinal_alignment", &agrs::pirl::RouteSegment::crossing_cardinal_alignment)
+        // Boundary awareness (NEW - Phase 4: Continuous Cost System)
+        .def_readonly("distance_to_aoi_boundary", &agrs::pirl::RouteSegment::distance_to_aoi_boundary)
+        .def_readonly("distance_to_sea_boundary", &agrs::pirl::RouteSegment::distance_to_sea_boundary);
 
     // ========================================================================
     // RouteTrajectory binding

@@ -1,9 +1,0 @@
-{
-  "input_dem": "data/rasters/dem_tinitaly_10m.tif",
-  "nodata_value": 0.0,
-  "output_aspect": "test_outputs/aspect_test.tif",
-  "timestamp_utc": "2025-10-13T15:50:15Z",
-  "tool": "raster_aspect",
-  "units": "degrees (0-360, 0=North, clockwise)",
-  "zero_for_flat": true
-}

@@ -1,0 +1,90 @@
+AGRS ZEUS - PIRL Pipeline Routing Cost Matrix
+Generated: 2025-11-05 04:40:41
+Project: test_project2
+Route: Pruned 2M timestep training (76.22 km)
+Status: Corrected with industry-standard infrastructure crossing costs
+""
+NOTES:
+- All costs in USD (2025)
+"- Infrastructure crossing costs updated to industry standards (Perplexity research, Nov 2025)"
+- Terrain costs are per-meter of pipeline construction
+- Land cover costs are ADDITIVE to terrain costs (base * land_cover_multiplier)
+- Regional multipliers apply to all cost components
+- Model uses these costs for reinforcement learning reward calculations
+""
+Category,Item,Unit,Cost (USD),Notes,Source
+Terrain,Flat terrain (<5% slope),$/m,80,Base construction cost,Industry standard
+Terrain,Rolling terrain (5-15% slope),$/m,120,Moderate difficulty,Industry standard
+Terrain,Hilly terrain (15-25% slope),$/m,200,Increased excavation,Industry standard
+Terrain,Mountainous (25-35% slope),$/m,350,Significant challenges,Industry standard
+Terrain,Extreme slope (>35% slope),$/m,500,Specialized equipment required,Industry standard
+Land Cover,Tree cover (LC 10),$/m,120,Clearing and grubbing required,Model definition
+Land Cover,Shrubland (LC 20),$/m,80,Light clearing,Model definition
+Land Cover,Grassland (LC 30),$/m,60,Minimal clearing,Model definition
+Land Cover,Cropland (LC 40),$/m,100,"Agricultural land, ROW compensation",Model definition
+Land Cover,Built-up (LC 50),$/m,400,Urban construction complexity,Model definition
+Land Cover,Bare/sparse vegetation (LC 60),$/m,70,Easy access,Model definition
+Land Cover,Snow and ice (LC 70),$/m,150,Cold weather construction,Model definition
+Land Cover,Permanent water bodies (LC 80),$/m,3500,Offshore/underwater construction,Model definition (corrected)
+Land Cover,Herbaceous wetland (LC 90),$/m,200,"Unstable ground, environmental permits",Model definition
+Land Cover,Mangroves (LC 95),$/m,300,Protected ecosystem,Model definition
+Land Cover,Moss and lichen (LC 100),$/m,250,Remote/arctic conditions,Model definition
+Infrastructure Crossing,Footway/path,per crossing,50000,Minor open-cut or small HDD,Industry research (2025)
+Infrastructure Crossing,Residential road,per crossing,100000,"Standard HDD, traffic management",Industry research (2025)
+Infrastructure Crossing,Secondary road,per crossing,150000,"Medium HDD, coordination required",Industry research (2025)
+Infrastructure Crossing,Primary road,per crossing,200000,"Major HDD, extensive permits",Industry research (2025)
+Infrastructure Crossing,Trunk road,per crossing,300000,"Large diameter HDD, high traffic",Industry research (2025)
+Infrastructure Crossing,Motorway/highway,per crossing,500000,"Complex HDD, strict safety requirements",Industry research (2025)
+Infrastructure Crossing,Railway (active),per crossing,1000000,"Specialized HDD, cannot disrupt operations",Industry research (2025)
+Infrastructure Crossing,Railway (abandoned),per crossing,200000,"Standard crossing, no operational constraints",Industry estimate
+Infrastructure Crossing,Small stream (<10m width),per crossing,100000,Standard HDD or open-cut,Industry research (2025)
+Infrastructure Crossing,Medium river (10-50m width),per crossing,300000,"Medium HDD, environmental permits",Industry research (2025)
+Infrastructure Crossing,Large river (>50m width),per crossing,500000,"Long-distance HDD, complex engineering",Industry research (2025)
+Infrastructure Crossing,Canal/waterway,per crossing,400000,"HDD, navigation considerations",Industry estimate
+Infrastructure Crossing,Power transmission line,per crossing,150000,"Specialized techniques, clearance requirements",Industry estimate
+Infrastructure Crossing,Existing pipeline,per crossing,200000,"Conflict detection, depth management",Industry estimate
+Infrastructure Crossing,Underground utilities (bundle),per crossing,100000,"Careful excavation, potholing",Industry estimate
+Environmental,Protected area (Natura 2000),$/m,200,Enhanced environmental monitoring,Model definition
+Environmental,Wildlife corridor,$/m,150,"Seasonal restrictions, mitigation",Industry estimate
+Environmental,Wetland,$/m,300,"Extensive permitting, mitigation measures",Industry estimate
+Environmental,Archaeological site,$/m,500,"Survey requirements, potential delays",Industry estimate
+Environmental,Cultural heritage site,$/m,400,Restricted construction methods,Industry estimate
+Regulatory,Urban area construction permit,per km,50000,"Municipal approvals, public consultation",Industry estimate
+Regulatory,Environmental impact assessment,per project,200000,"Major projects, third-party review",Industry estimate
+Regulatory,Geotechnical survey,per km,30000,"Soil analysis, foundation design",Industry estimate
+Regulatory,Right-of-way acquisition (rural),per km,100000,"Land easements, compensation",Industry estimate
+Regulatory,Right-of-way acquisition (urban),per km,500000,"Property values, legal fees",Industry estimate
+Geohazard,Low risk area,$/m,0,Standard construction,Model definition
+Geohazard,Medium risk (landslide/seismic),$/m,50,"Enhanced monitoring, design factors",Model definition
+Geohazard,High risk (active fault zone),$/m,150,"Specialized engineering, protective measures",Model definition
+Geohazard,Flood zone,$/m,100,"Elevation requirements, flood protection",Industry estimate
+Geohazard,Liquefaction zone,$/m,200,"Deep foundations, soil improvement",Industry estimate
+Soil,Good bearing capacity (>0.7),$/m,0,Standard construction,Model definition
+Soil,Medium capacity (0.4-0.7),$/m,30,Enhanced foundation design,Model definition
+Soil,Poor capacity (<0.4),$/m,100,"Ground improvement, deep foundations",Model definition
+Soil,Rock excavation,$/m,200,Blasting or rock-breaking equipment,Industry estimate
+Soil,Contaminated soil,$/m,400,"Remediation, disposal costs",Industry estimate
+Hydraulics,Pumping/compression station,per station,1000000,"Major infrastructure, 26"" pipeline at 70 bar",Model definition
+Hydraulics,Pressure control station,per station,300000,Flow regulation equipment,Industry estimate
+Hydraulics,High velocity erosion protection,$/m,150,"Internal coating, erosion monitoring",Model definition
+Hydraulics,Low velocity deposition prevention,$/m,50,"Flow optimization, cleaning systems",Model definition
+Construction Method,Open trench (standard),$/m,800,Base construction method,Industry baseline
+Construction Method,Horizontal Directional Drill (HDD),$/m,2000,Trenchless crossing method,Industry standard
+Construction Method,Microtunneling,$/m,3000,Precise underground installation,Industry standard
+Construction Method,Direct pipe,$/m,2500,Large diameter trenchless,Industry standard
+Construction Method,Auger boring,$/m,1500,Medium distance crossings,Industry standard
+Materials,"Steel pipe (26"" diameter, 12mm wall)",$/m,500,API 5L X65 grade,Industry estimate
+Materials,Anti-corrosion coating (FBE),$/m,80,Fusion bonded epoxy,Industry estimate
+Materials,Cathodic protection system,per km,50000,Impressed current or sacrificial anodes,Industry estimate
+Materials,Insulation/lagging,$/m,60,Thermal insulation for gas pipelines,Industry estimate
+Materials,Valves and fittings (mainline),per km,100000,"Block valves, control stations",Industry estimate
+Operations,Pipeline monitoring (SCADA),per km/year,5000,Remote monitoring and control,Industry estimate
+Operations,Integrity management (inspection),per km/year,8000,"Inline inspection, testing",Industry estimate
+Operations,Maintenance and repairs,per km/year,3000,Routine maintenance activities,Industry estimate
+Operations,Emergency response,per km/year,2000,Emergency preparedness and response,Industry estimate
+Regional Multiplier,North America (baseline),multiplier,1.0,Reference region,Model definition
+Regional Multiplier,Western Europe,multiplier,1.2,Higher labor and regulatory costs,Industry estimate
+Regional Multiplier,Eastern Europe,multiplier,0.8,Lower labor costs,Industry estimate
+Regional Multiplier,Middle East,multiplier,1.1,"Desert conditions, logistics",Industry estimate
+Regional Multiplier,Asia-Pacific,multiplier,0.9,Variable by country,Industry estimate
+Regional Multiplier,Latin America,multiplier,0.85,"Lower costs, challenging terrain",Industry estimate

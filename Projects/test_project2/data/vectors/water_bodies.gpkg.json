@@ -1,0 +1,18 @@
+{
+    "style": {
+        "color": "#0000ff",
+        "customIconPath": "",
+        "fillColor": "#c0c0c0",
+        "fillEnabled": false,
+        "fillOpacity": 128,
+        "fillPattern": 1,
+        "lineStyle": 1,
+        "outlineColor": "#000000",
+        "outlineEnabled": true,
+        "outlineStyle": 1,
+        "outlineWidth": 1,
+        "pointSize": 8,
+        "pointSymbol": 0,
+        "width": 2
+    }
+}

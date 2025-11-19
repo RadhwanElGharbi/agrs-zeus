@@ -1,8 +1,0 @@
-{
-  "crop_to_cutline": true,
-  "input_raster": "../data/rasters/dem_tinitaly_10m.tif",
-  "mask_vector": "../aoi/study_area.geojson",
-  "output_raster": "dem_clipped.tif",
-  "timestamp_utc": "2025-10-15T15:52:39Z",
-  "tool": "raster_extract_by_mask"
-}

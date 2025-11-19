@@ -1,0 +1,109 @@
+{
+  "status": "ok",
+  "messages": [
+    {
+      "level": "info",
+      "message": "No precomputed slope.tif found. Will derive slope from DEM on-the-fly (preferred)."
+    }
+  ],
+  "datasets": {
+    "dem": {
+      "path": "/opt/agrs/Projects/test_project2/data/rasters/dem.tif",
+      "epsg": 32633,
+      "pixel_size": [
+        8.640523802323653,
+        8.63953620629369
+      ],
+      "stats": {
+        "min": 0.013916212134063,
+        "max": 691.36999511719,
+        "mean": 170.44691036936,
+        "std": 133.06853233611
+      }
+    },
+    "landcover": {
+      "path": "/opt/agrs/Projects/test_project2/data/rasters/landcover.tif",
+      "epsg": 32633,
+      "pixel_size": [
+        7.999977538286181,
+        7.999210625699745
+      ],
+      "stats": {
+        "min": 10.0,
+        "max": 90.0,
+        "mean": 38.899436563993,
+        "std": 23.0492770663
+      }
+    },
+    "geohazards": {
+      "path": "/opt/agrs/Projects/test_project2/data/rasters/geohazards.tif",
+      "epsg": 32633,
+      "pixel_size": [
+        100.0,
+        100.0
+      ],
+      "stats": {
+        "min": 0.15376791151834,
+        "max": 0.21680431343053,
+        "mean": 0.17379521256157,
+        "std": 0.01479652139709
+      }
+    },
+    "soil": {
+      "path": "/opt/agrs/Projects/test_project2/data/rasters/soil.tif",
+      "epsg": 32633,
+      "pixel_size": [
+        269.06591120435854,
+        268.91463956396495
+      ],
+      "stats": {
+        "min": 50.0,
+        "max": 50.0,
+        "mean": 50.0,
+        "std": 0.0
+      }
+    },
+    "population": {
+      "path": "/opt/agrs/Projects/test_project2/data/rasters/population.tif",
+      "epsg": 32633,
+      "pixel_size": [
+        79.92056768446294,
+        80.00210527027957
+      ],
+      "stats": {
+        "min": 0.0,
+        "max": 259.81488037109,
+        "mean": 1.9222103450453,
+        "std": 7.6904244691114
+      }
+    },
+    "aoi": {
+      "path": "/opt/agrs/Projects/test_project2/data/vectors/aoi.gpkg",
+      "layers": 1
+    },
+    "protected_areas": {
+      "path": "/opt/agrs/Projects/test_project2/data/vectors/protected_areas.gpkg",
+      "layers": 1
+    },
+    "water_bodies": {
+      "path": "/opt/agrs/Projects/test_project2/data/vectors/water_bodies.gpkg",
+      "layers": 1
+    },
+    "roads": {
+      "path": "/opt/agrs/Projects/test_project2/data/vectors/roads.gpkg",
+      "layers": 1
+    },
+    "railways": {
+      "path": "/opt/agrs/Projects/test_project2/data/vectors/railways.gpkg",
+      "layers": 1
+    },
+    "power_lines": {
+      "path": "/opt/agrs/Projects/test_project2/data/vectors/power_lines.gpkg",
+      "layers": 1
+    },
+    "pipelines": {
+      "path": "/opt/agrs/Projects/test_project2/data/vectors/pipelines.gpkg",
+      "layers": 1
+    }
+  }
+}

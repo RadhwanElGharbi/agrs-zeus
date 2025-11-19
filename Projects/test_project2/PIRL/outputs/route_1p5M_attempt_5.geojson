@@ -1,0 +1,1187 @@
+{
+  "type": "FeatureCollection",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "EPSG:32633"
+    }
+  },
+  "metadata": {
+    "model_path": "PIRL/models/checkpoints/pirl_model_1500000_steps.zip",
+    "config_path": "PIRL/pirl_training_config_production.yaml",
+    "vec_normalize_path": null,
+    "policy_type": "stochastic",
+    "total_reward": -243.25412891720399,
+    "success": false,
+    "num_segments": 19,
+    "num_points": 20,
+    "timestamp": "2025-11-06T04:58:58.719192",
+    "generated_by": "PIRL AGRS System"
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "id": "full_route",
+      "properties": {
+        "feature_type": "full_route",
+        "total_segments": 19,
+        "total_length_m": 1899.9999999997442,
+        "total_cost_usd": 868999.9999998162,
+        "total_reward": -243.25412891720399,
+        "success": false,
+        "model_path": "PIRL/models/checkpoints/pirl_model_1500000_steps.zip",
+        "config_path": "PIRL/pirl_training_config_production.yaml",
+        "generated_at": "2025-11-06T04:58:58.719192"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            379647.98,
+            4805029.95
+          ],
+          [
+            379634.55028443615,
+            4804930.85588948
+          ],
+          [
+            379567.9256592709,
+            4804856.282708499
+          ],
+          [
+            379470.4413934492,
+            4804833.993295828
+          ],
+          [
+            379378.02930853376,
+            4804872.203328039
+          ],
+          [
+            379324.75166593085,
+            4804956.828931721
+          ],
+          [
+            379330.24612440675,
+            4805056.677872256
+          ],
+          [
+            379392.48747609975,
+            4805134.9467303
+          ],
+          [
+            379488.53411988064,
+            4805162.786310369
+          ],
+          [
+            379582.98412871076,
+            4805129.935194224
+          ],
+          [
+            379641.02408080077,
+            4805048.502007123
+          ],
+          [
+            379641.2609730395,
+            4804948.502287713
+          ],
+          [
+            379583.60748908337,
+            4804866.795031073
+          ],
+          [
+            379489.31418337335,
+            4804833.496795409
+          ],
+          [
+            379393.13671834144,
+            4804860.881010206
+          ],
+          [
+            379330.52524056,
+            4804938.854100757
+          ],
+          [
+            379324.5577762978,
+            4805038.675888811
+          ],
+          [
+            379377.43387908523,
+            4805123.552963183
+          ],
+          [
+            379469.66389411216,
+            4805162.200399426
+          ],
+          [
+            379567.2526692918,
+            4805140.373100946
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "segment_1",
+      "properties": {
+        "segment_id": 1,
+        "length_m": 99.99999999992885,
+        "elevation_start": 161.72647094726562,
+        "elevation_end": 158.52725219726562,
+        "slope_percent": 6.228684952626352,
+        "aspect": 2.3739020807735693,
+        "curvature": 0.003465423583984375,
+        "cost_usd": 32999.99999997652,
+        "cost_per_m": 330.0,
+        "terrain_cost": 12999.99999999075,
+        "water_crossing_cost": 0.0,
+        "infrastructure_cost": 0.0,
+        "environmental_cost": 19999.99999998577,
+        "row_cost": 0.0,
+        "permitting_cost": 0.0,
+        "hydraulic_cost": 0.0,
+        "regulatory_cost": 0.0,
+        "cumulative_cost": 32999.99999997652,
+        "cumulative_distance_m": 99.99999999992885,
+        "land_cover": "grassland",
+        "land_cover_class": 30,
+        "geohazard_risk": 0.0017237503826618194,
+        "soil_capacity": 414.0,
+        "population_density": 0.0005231110453605652,
+        "water_proximity_m": 684.7289525113343,
+        "road_proximity_m": 18.267306927083787,
+        "railway_proximity_m": 1000.0,
+        "powerline_proximity_m": 1000.0,
+        "pipeline_proximity_m": 1000.0,
+        "pressure_drop_pa": 0.0,
+        "cumulative_pressure_drop_pa": 0.0,
+        "flow_velocity_m_s": 0.0,
+        "reynolds_number": 0.0,
+        "requires_pumping_station": false,
+        "step": 1,
+        "reward": -4.967634624818123,
+        "total_reward": -4.967634624818123
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            379647.98,
+            4805029.95
+          ],
+          [
+            379634.55028443615,
+            4804930.85588948
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "segment_2",
+      "properties": {
+        "segment_id": 2,
+        "length_m": 100.00000000015946,
+        "elevation_start": 158.52725219726562,
+        "elevation_end": 153.37371826171875,
+        "slope_percent": 6.948366866114536,
+        "aspect": -0.13396139670569332,
+        "curvature": 0.0002960205078125001,
+        "cost_usd": 46000.00000007335,
+        "cost_per_m": 460.0,
+        "terrain_cost": 26000.00000004146,
+        "water_crossing_cost": 0.0,
+        "infrastructure_cost": 0.0,
+        "environmental_cost": 20000.00000003189,
+        "row_cost": 0.0,
+        "permitting_cost": 0.0,
+        "hydraulic_cost": 0.0,
+        "regulatory_cost": 0.0,
+        "cumulative_cost": 79000.00000004987,
+        "cumulative_distance_m": 200.0000000000883,
+        "land_cover": "cropland",
+        "land_cover_class": 40,
+        "geohazard_risk": 0.0017214569449424744,
+        "soil_capacity": 414.0,
+        "population_density": 0.0001042865440249443,
+        "water_proximity_m": 602.668120954121,
+        "road_proximity_m": 117.91230374883989,
+        "railway_proximity_m": 1000.0,
+        "powerline_proximity_m": 1000.0,
+        "pipeline_proximity_m": 1000.0,
+        "pressure_drop_pa": 0.0,
+        "cumulative_pressure_drop_pa": 0.0,
+        "flow_velocity_m_s": 0.0,
+        "reynolds_number": 0.0,
+        "requires_pumping_station": false,
+        "step": 2,
+        "reward": -5.8041768260404805,
+        "total_reward": -10.771811450858603
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            379634.55028443615,
+            4804930.85588948
+          ],
+          [
+            379567.9256592709,
+            4804856.282708499
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "segment_3",
+      "properties": {
+        "segment_id": 3,
+        "length_m": 100.00000000001347,
+        "elevation_start": 153.37371826171875,
+        "elevation_end": 142.56387329101562,
+        "slope_percent": 19.811642895284,
+        "aspect": -0.12266252842056748,
+        "curvature": 0.010471801757812501,
+        "cost_usd": 46000.0000000062,
+        "cost_per_m": 460.0,
+        "terrain_cost": 26000.000000003503,
+        "water_crossing_cost": 0.0,
+        "infrastructure_cost": 0.0,
+        "environmental_cost": 20000.000000002696,
+        "row_cost": 0.0,
+        "permitting_cost": 0.0,
+        "hydraulic_cost": 0.0,
+        "regulatory_cost": 0.0,
+        "cumulative_cost": 125000.00000005607,
+        "cumulative_distance_m": 300.00000000010175,
+        "land_cover": "cropland",
+        "land_cover_class": 40,
+        "geohazard_risk": 0.0017218507826328277,
+        "soil_capacity": 414.0,
+        "population_density": 4.716390371322632e-05,
+        "water_proximity_m": 581.0527902276891,
+        "road_proximity_m": 191.24230804460873,
+        "railway_proximity_m": 1000.0,
+        "powerline_proximity_m": 1000.0,
+        "pipeline_proximity_m": 1000.0,
+        "pressure_drop_pa": 0.0,
+        "cumulative_pressure_drop_pa": 0.0,
+        "flow_velocity_m_s": 0.0,
+        "reynolds_number": 0.0,
+        "requires_pumping_station": false,
+        "step": 3,
+        "reward": -7.243811227955848,
+        "total_reward": -18.015622678814452
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            379567.9256592709,
+            4804856.282708499
+          ],
+          [
+            379470.4413934492,
+            4804833.993295828
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "segment_4",
+      "properties": {
+        "segment_id": 4,
+        "length_m": 99.99999999980272,
+        "elevation_start": 142.56387329101562,
+        "elevation_end": 130.54067993164062,
+        "slope_percent": 11.744283859367268,
+        "aspect": 0.09326530542891072,
+        "curvature": 0.0014070129394531251,
+        "cost_usd": 55999.99999988952,
+        "cost_per_m": 560.0,
+        "terrain_cost": 35999.99999992898,
+        "water_crossing_cost": 0.0,
+        "infrastructure_cost": 0.0,
+        "environmental_cost": 19999.999999960546,
+        "row_cost": 0.0,
+        "permitting_cost": 0.0,
+        "hydraulic_cost": 0.0,
+        "regulatory_cost": 0.0,
+        "cumulative_cost": 180999.99999994558,
+        "cumulative_distance_m": 399.9999999999045,
+        "land_cover": "cropland",
+        "land_cover_class": 40,
+        "geohazard_risk": 0.0017222444713115691,
+        "soil_capacity": 418.0,
+        "population_density": 3.076968714594841e-05,
+        "water_proximity_m": 633.6601152768721,
+        "road_proximity_m": 241.753241390931,
+        "railway_proximity_m": 1000.0,
+        "powerline_proximity_m": 1000.0,
+        "pipeline_proximity_m": 1000.0,
+        "pressure_drop_pa": 0.0,
+        "cumulative_pressure_drop_pa": 0.0,
+        "flow_velocity_m_s": 0.0,
+        "reynolds_number": 0.0,
+        "requires_pumping_station": false,
+        "step": 4,
+        "reward": -8.368374134474395,
+        "total_reward": -26.383996813288846
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            379470.4413934492,
+            4804833.993295828
+          ],
+          [
+            379378.02930853376,
+            4804872.203328039
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "segment_5",
+      "properties": {
+        "segment_id": 5,
+        "length_m": 99.9999999996408,
+        "elevation_start": 130.54067993164062,
+        "elevation_end": 126.49600982666016,
+        "slope_percent": 5.279601700510605,
+        "aspect": 0.651184573924302,
+        "curvature": 0.0062414550781249994,
+        "cost_usd": 45999.99999983477,
+        "cost_per_m": 460.0,
+        "terrain_cost": 25999.99999990661,
+        "water_crossing_cost": 0.0,
+        "infrastructure_cost": 0.0,
+        "environmental_cost": 19999.99999992816,
+        "row_cost": 0.0,
+        "permitting_cost": 0.0,
+        "hydraulic_cost": 0.0,
+        "regulatory_cost": 0.0,
+        "cumulative_cost": 226999.99999978035,
+        "cumulative_distance_m": 499.9999999995453,
+        "land_cover": "cropland",
+        "land_cover_class": 40,
+        "geohazard_risk": 0.0017247740924358369,
+        "soil_capacity": 418.0,
+        "population_density": 3.0169207602739333e-05,
+        "water_proximity_m": 728.9466779071239,
+        "road_proximity_m": 265.8025299905721,
+        "railway_proximity_m": 1000.0,
+        "powerline_proximity_m": 1000.0,
+        "pipeline_proximity_m": 1000.0,
+        "pressure_drop_pa": 0.0,
+        "cumulative_pressure_drop_pa": 0.0,
+        "flow_velocity_m_s": 0.0,
+        "reynolds_number": 0.0,
+        "requires_pumping_station": false,
+        "step": 5,
+        "reward": -8.722935797295936,
+        "total_reward": -35.10693261058478
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            379378.02930853376,
+            4804872.203328039
+          ],
+          [
+            379324.75166593085,
+            4804956.828931721
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "segment_6",
+      "properties": {
+        "segment_id": 6,
+        "length_m": 99.99999999997497,
+        "elevation_start": 126.49600982666016,
+        "elevation_end": 136.01580810546875,
+        "slope_percent": 11.469284579164233,
+        "aspect": 2.228782579738179,
+        "curvature": 0.0098590087890625,
+        "cost_usd": 32999.99999999174,
+        "cost_per_m": 330.0,
+        "terrain_cost": 12999.999999996746,
+        "water_crossing_cost": 0.0,
+        "infrastructure_cost": 0.0,
+        "environmental_cost": 19999.999999994994,
+        "row_cost": 0.0,
+        "permitting_cost": 0.0,
+        "hydraulic_cost": 0.0,
+        "regulatory_cost": 0.0,
+        "cumulative_cost": 259999.9999997721,
+        "cumulative_distance_m": 599.9999999995202,
+        "land_cover": "grassland",
+        "land_cover_class": 30,
+        "geohazard_risk": 0.001726909875869751,
+        "soil_capacity": 411.0,
+        "population_density": 3.6166872829198836e-05,
+        "water_proximity_m": 824.1841651068188,
+        "road_proximity_m": 263.0237998024444,
+        "railway_proximity_m": 1000.0,
+        "powerline_proximity_m": 1000.0,
+        "pipeline_proximity_m": 1000.0,
+        "pressure_drop_pa": 0.0,
+        "cumulative_pressure_drop_pa": 0.0,
+        "flow_velocity_m_s": 0.0,
+        "reynolds_number": 0.0,
+        "requires_pumping_station": false,
+        "step": 6,
+        "reward": -8.312000100094847,
+        "total_reward": -43.41893271067963
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            379324.75166593085,
+            4804956.828931721
+          ],
+          [
+            379330.24612440675,
+            4805056.677872256
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "segment_7",
+      "properties": {
+        "segment_id": 7,
+        "length_m": 100.0000000000055,
+        "elevation_start": 136.01580810546875,
+        "elevation_end": 139.0380401611328,
+        "slope_percent": 6.914260629420636,
+        "aspect": 1.8724007537535303,
+        "curvature": 0.004314117431640625,
+        "cost_usd": 46000.00000000253,
+        "cost_per_m": 460.0,
+        "terrain_cost": 26000.00000000143,
+        "water_crossing_cost": 0.0,
+        "infrastructure_cost": 0.0,
+        "environmental_cost": 20000.0000000011,
+        "row_cost": 0.0,
+        "permitting_cost": 0.0,
+        "hydraulic_cost": 0.0,
+        "regulatory_cost": 0.0,
+        "cumulative_cost": 305999.9999997746,
+        "cumulative_distance_m": 699.9999999995257,
+        "land_cover": "cropland",
+        "land_cover_class": 40,
+        "geohazard_risk": 0.0017288096249103546,
+        "soil_capacity": 411.0,
+        "population_density": 0.00011982270330190659,
+        "water_proximity_m": 889.2431451181103,
+        "road_proximity_m": 230.52140508854507,
+        "railway_proximity_m": 1000.0,
+        "powerline_proximity_m": 1000.0,
+        "pipeline_proximity_m": 1000.0,
+        "pressure_drop_pa": 0.0,
+        "cumulative_pressure_drop_pa": 0.0,
+        "flow_velocity_m_s": 0.0,
+        "reynolds_number": 0.0,
+        "requires_pumping_station": false,
+        "step": 7,
+        "reward": -7.531648374412107,
+        "total_reward": -50.950581085091734
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            379330.24612440675,
+            4805056.677872256
+          ],
+          [
+            379392.48747609975,
+            4805134.9467303
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "segment_8",
+      "properties": {
+        "segment_id": 8,
+        "length_m": 100.00000000004312,
+        "elevation_start": 139.0380401611328,
+        "elevation_end": 140.69972229003906,
+        "slope_percent": 9.836287606880909,
+        "aspect": 0.0878704136640629,
+        "curvature": 0.001995391845703125,
+        "cost_usd": 46000.000000019834,
+        "cost_per_m": 460.0,
+        "terrain_cost": 26000.00000001121,
+        "water_crossing_cost": 0.0,
+        "infrastructure_cost": 0.0,
+        "environmental_cost": 20000.000000008622,
+        "row_cost": 0.0,
+        "permitting_cost": 0.0,
+        "hydraulic_cost": 0.0,
+        "regulatory_cost": 0.0,
+        "cumulative_cost": 351999.99999979447,
+        "cumulative_distance_m": 799.9999999995688,
+        "land_cover": "cropland",
+        "land_cover_class": 40,
+        "geohazard_risk": 0.001728573590517044,
+        "soil_capacity": 408.0,
+        "population_density": 0.0004257115125656128,
+        "water_proximity_m": 908.1280243757006,
+        "road_proximity_m": 168.1521131703907,
+        "railway_proximity_m": 1000.0,
+        "powerline_proximity_m": 1000.0,
+        "pipeline_proximity_m": 1000.0,
+        "pressure_drop_pa": 0.0,
+        "cumulative_pressure_drop_pa": 0.0,
+        "flow_velocity_m_s": 0.0,
+        "reynolds_number": 0.0,
+        "requires_pumping_station": false,
+        "step": 8,
+        "reward": -6.327063705792925,
+        "total_reward": -57.27764479088466
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            379392.48747609975,
+            4805134.9467303
+          ],
+          [
+            379488.53411988064,
+            4805162.786310369
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "segment_9",
+      "properties": {
+        "segment_id": 9,
+        "length_m": 99.99999999991401,
+        "elevation_start": 140.69972229003906,
+        "elevation_end": 158.67691040039062,
+        "slope_percent": 21.084274590213724,
+        "aspect": -0.7938029555042027,
+        "curvature": 0.032740325927734376,
+        "cost_usd": 46999.99999995959,
+        "cost_per_m": 470.00000000000006,
+        "terrain_cost": 26999.999999976782,
+        "water_crossing_cost": 0.0,
+        "infrastructure_cost": 0.0,
+        "environmental_cost": 19999.999999982803,
+        "row_cost": 0.0,
+        "permitting_cost": 0.0,
+        "hydraulic_cost": 0.0,
+        "regulatory_cost": 0.0,
+        "cumulative_cost": 398999.9999997541,
+        "cumulative_distance_m": 899.9999999994828,
+        "land_cover": "tree_cover",
+        "land_cover_class": 10,
+        "geohazard_risk": 0.0017283374071121215,
+        "soil_capacity": 408.0,
+        "population_density": 0.0008587132096290588,
+        "water_proximity_m": 854.6360689474446,
+        "road_proximity_m": 74.38596128727917,
+        "railway_proximity_m": 1000.0,
+        "powerline_proximity_m": 1000.0,
+        "pipeline_proximity_m": 1000.0,
+        "pressure_drop_pa": 0.0,
+        "cumulative_pressure_drop_pa": 0.0,
+        "flow_velocity_m_s": 0.0,
+        "reynolds_number": 0.0,
+        "requires_pumping_station": false,
+        "step": 9,
+        "reward": -16.12222999356141,
+        "total_reward": -73.39987478444607
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            379488.53411988064,
+            4805162.786310369
+          ],
+          [
+            379582.98412871076,
+            4805129.935194224
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "segment_10",
+      "properties": {
+        "segment_id": 10,
+        "length_m": 100.00000000021524,
+        "elevation_start": 158.67691040039062,
+        "elevation_end": 162.41143798828125,
+        "slope_percent": 4.093857704322223,
+        "aspect": 0.8988545947888453,
+        "curvature": 0.001658477783203125,
+        "cost_usd": 33000.00000007103,
+        "cost_per_m": 330.0,
+        "terrain_cost": 13000.000000027982,
+        "water_crossing_cost": 0.0,
+        "infrastructure_cost": 0.0,
+        "environmental_cost": 20000.00000004305,
+        "row_cost": 0.0,
+        "permitting_cost": 0.0,
+        "hydraulic_cost": 0.0,
+        "regulatory_cost": 0.0,
+        "cumulative_cost": 431999.9999998251,
+        "cumulative_distance_m": 999.999999999698,
+        "land_cover": "grassland",
+        "land_cover_class": 30,
+        "geohazard_risk": 0.0017260439693927766,
+        "soil_capacity": 408.0,
+        "population_density": 0.0007033289074897766,
+        "water_proximity_m": 774.2087309641536,
+        "road_proximity_m": 22.204184195858677,
+        "railway_proximity_m": 1000.0,
+        "powerline_proximity_m": 1000.0,
+        "pipeline_proximity_m": 1000.0,
+        "pressure_drop_pa": 0.0,
+        "cumulative_pressure_drop_pa": 0.0,
+        "flow_velocity_m_s": 0.0,
+        "reynolds_number": 0.0,
+        "requires_pumping_station": false,
+        "step": 10,
+        "reward": -4.617243216712698,
+        "total_reward": -78.01711800115876
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            379582.98412871076,
+            4805129.935194224
+          ],
+          [
+            379641.02408080077,
+            4805048.502007123
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "segment_11",
+      "properties": {
+        "segment_id": 11,
+        "length_m": 100.0000000002609,
+        "elevation_start": 162.41143798828125,
+        "elevation_end": 159.3540496826172,
+        "slope_percent": 4.715678845257357,
+        "aspect": 2.3278174782329186,
+        "curvature": 0.003710479736328125,
+        "cost_usd": 55000.000000078275,
+        "cost_per_m": 549.9999999993478,
+        "terrain_cost": 10000.00000002609,
+        "water_crossing_cost": 0.0,
+        "infrastructure_cost": 25000.0,
+        "environmental_cost": 20000.00000005218,
+        "row_cost": 0.0,
+        "permitting_cost": 0.0,
+        "hydraulic_cost": 0.0,
+        "regulatory_cost": 0.0,
+        "cumulative_cost": 486999.9999999034,
+        "cumulative_distance_m": 1099.9999999999588,
+        "land_cover": "grassland",
+        "land_cover_class": 30,
+        "geohazard_risk": 0.0017237503826618194,
+        "soil_capacity": 414.0,
+        "population_density": 0.0005231110453605652,
+        "water_proximity_m": 703.2438460259843,
+        "road_proximity_m": 0.13097315472604412,
+        "railway_proximity_m": 1000.0,
+        "powerline_proximity_m": 1000.0,
+        "pipeline_proximity_m": 1000.0,
+        "pressure_drop_pa": 0.0,
+        "cumulative_pressure_drop_pa": 0.0,
+        "flow_velocity_m_s": 0.0,
+        "reynolds_number": 0.0,
+        "requires_pumping_station": false,
+        "step": 11,
+        "reward": -5.044615188616984,
+        "total_reward": -83.06173318977575
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            379641.02408080077,
+            4805048.502007123
+          ],
+          [
+            379641.2609730395,
+            4804948.502287713
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "segment_12",
+      "properties": {
+        "segment_id": 12,
+        "length_m": 99.99999999981891,
+        "elevation_start": 159.3540496826172,
+        "elevation_end": 154.71690368652344,
+        "slope_percent": 8.840087113058793,
+        "aspect": 0.17510029076855374,
+        "curvature": 0.00561614990234375,
+        "cost_usd": 45999.999999916705,
+        "cost_per_m": 460.00000000000006,
+        "terrain_cost": 25999.999999952917,
+        "water_crossing_cost": 0.0,
+        "infrastructure_cost": 0.0,
+        "environmental_cost": 19999.999999963784,
+        "row_cost": 0.0,
+        "permitting_cost": 0.0,
+        "hydraulic_cost": 0.0,
+        "regulatory_cost": 0.0,
+        "cumulative_cost": 532999.99999982,
+        "cumulative_distance_m": 1199.9999999997779,
+        "land_cover": "cropland",
+        "land_cover_class": 40,
+        "geohazard_risk": 0.0017214569449424744,
+        "soil_capacity": 414.0,
+        "population_density": 0.0001042865440249443,
+        "water_proximity_m": 614.5043059530473,
+        "road_proximity_m": 100.08478220068258,
+        "railway_proximity_m": 1000.0,
+        "powerline_proximity_m": 1000.0,
+        "pipeline_proximity_m": 1000.0,
+        "pressure_drop_pa": 0.0,
+        "cumulative_pressure_drop_pa": 0.0,
+        "flow_velocity_m_s": 0.0,
+        "reynolds_number": 0.0,
+        "requires_pumping_station": false,
+        "step": 12,
+        "reward": -5.817842256253585,
+        "total_reward": -88.87957544602934
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            379641.2609730395,
+            4804948.502287713
+          ],
+          [
+            379583.60748908337,
+            4804866.795031073
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "segment_13",
+      "properties": {
+        "segment_id": 13,
+        "length_m": 100.00000000002724,
+        "elevation_start": 154.71690368652344,
+        "elevation_end": 146.17625427246094,
+        "slope_percent": 20.139019072306034,
+        "aspect": -0.18425187895297462,
+        "curvature": 0.00167724609375,
+        "cost_usd": 46000.00000001253,
+        "cost_per_m": 460.0,
+        "terrain_cost": 26000.000000007083,
+        "water_crossing_cost": 0.0,
+        "infrastructure_cost": 0.0,
+        "environmental_cost": 20000.00000000545,
+        "row_cost": 0.0,
+        "permitting_cost": 0.0,
+        "hydraulic_cost": 0.0,
+        "regulatory_cost": 0.0,
+        "cumulative_cost": 578999.9999998326,
+        "cumulative_distance_m": 1299.9999999998051,
+        "land_cover": "cropland",
+        "land_cover_class": 40,
+        "geohazard_risk": 0.0017218507826328277,
+        "soil_capacity": 414.0,
+        "population_density": 4.716390371322632e-05,
+        "water_proximity_m": 579.1609110279048,
+        "road_proximity_m": 175.02390481579863,
+        "railway_proximity_m": 1000.0,
+        "powerline_proximity_m": 1000.0,
+        "pipeline_proximity_m": 1000.0,
+        "pressure_drop_pa": 0.0,
+        "cumulative_pressure_drop_pa": 0.0,
+        "flow_velocity_m_s": 0.0,
+        "reynolds_number": 0.0,
+        "requires_pumping_station": false,
+        "step": 13,
+        "reward": -8.408918177447488,
+        "total_reward": -97.28849362347682
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            379583.60748908337,
+            4804866.795031073
+          ],
+          [
+            379489.31418337335,
+            4804833.496795409
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "segment_14",
+      "properties": {
+        "segment_id": 14,
+        "length_m": 100.00000000008109,
+        "elevation_start": 146.17625427246094,
+        "elevation_end": 132.5339813232422,
+        "slope_percent": 12.280081902741479,
+        "aspect": 0.206722586508421,
+        "curvature": 0.0087945556640625,
+        "cost_usd": 56000.00000004541,
+        "cost_per_m": 560.0,
+        "terrain_cost": 36000.00000002919,
+        "water_crossing_cost": 0.0,
+        "infrastructure_cost": 0.0,
+        "environmental_cost": 20000.000000016218,
+        "row_cost": 0.0,
+        "permitting_cost": 0.0,
+        "hydraulic_cost": 0.0,
+        "regulatory_cost": 0.0,
+        "cumulative_cost": 634999.999999878,
+        "cumulative_distance_m": 1399.9999999998863,
+        "land_cover": "cropland",
+        "land_cover_class": 40,
+        "geohazard_risk": 0.0017222444713115691,
+        "soil_capacity": 418.0,
+        "population_density": 3.076968714594841e-05,
+        "water_proximity_m": 619.3040825896129,
+        "road_proximity_m": 234.121433074665,
+        "railway_proximity_m": 1000.0,
+        "powerline_proximity_m": 1000.0,
+        "pipeline_proximity_m": 1000.0,
+        "pressure_drop_pa": 0.0,
+        "cumulative_pressure_drop_pa": 0.0,
+        "flow_velocity_m_s": 0.0,
+        "reynolds_number": 0.0,
+        "requires_pumping_station": false,
+        "step": 14,
+        "reward": -8.211931112125523,
+        "total_reward": -105.50042473560235
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            379489.31418337335,
+            4804833.496795409
+          ],
+          [
+            379393.13671834144,
+            4804860.881010206
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "segment_15",
+      "properties": {
+        "segment_id": 15,
+        "length_m": 100.00000000014134,
+        "elevation_start": 132.5339813232422,
+        "elevation_end": 125.95646667480469,
+        "slope_percent": 8.249255466937205,
+        "aspect": 0.2984173777039156,
+        "curvature": 0.0024466705322265625,
+        "cost_usd": 46000.00000006502,
+        "cost_per_m": 460.0,
+        "terrain_cost": 26000.000000036747,
+        "water_crossing_cost": 0.0,
+        "infrastructure_cost": 0.0,
+        "environmental_cost": 20000.000000028267,
+        "row_cost": 0.0,
+        "permitting_cost": 0.0,
+        "hydraulic_cost": 0.0,
+        "regulatory_cost": 0.0,
+        "cumulative_cost": 680999.999999943,
+        "cumulative_distance_m": 1500.0000000000277,
+        "land_cover": "cropland",
+        "land_cover_class": 40,
+        "geohazard_risk": 0.0017247740924358369,
+        "soil_capacity": 418.0,
+        "population_density": 3.0169207602739333e-05,
+        "water_proximity_m": 710.0796566521259,
+        "road_proximity_m": 263.6748490277383,
+        "railway_proximity_m": 1000.0,
+        "powerline_proximity_m": 1000.0,
+        "pipeline_proximity_m": 1000.0,
+        "pressure_drop_pa": 0.0,
+        "cumulative_pressure_drop_pa": 0.0,
+        "flow_velocity_m_s": 0.0,
+        "reynolds_number": 0.0,
+        "requires_pumping_station": false,
+        "step": 15,
+        "reward": -8.692756081558734,
+        "total_reward": -114.19318081716108
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            379393.13671834144,
+            4804860.881010206
+          ],
+          [
+            379330.52524056,
+            4804938.854100757
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "segment_16",
+      "properties": {
+        "segment_id": 16,
+        "length_m": 100.00000000005205,
+        "elevation_start": 125.95646667480469,
+        "elevation_end": 134.28558349609375,
+        "slope_percent": 11.873370186231815,
+        "aspect": 2.049403783782006,
+        "curvature": 0.002486419677734375,
+        "cost_usd": 46000.000000023945,
+        "cost_per_m": 460.0,
+        "terrain_cost": 26000.000000013533,
+        "water_crossing_cost": 0.0,
+        "infrastructure_cost": 0.0,
+        "environmental_cost": 20000.000000010412,
+        "row_cost": 0.0,
+        "permitting_cost": 0.0,
+        "hydraulic_cost": 0.0,
+        "regulatory_cost": 0.0,
+        "cumulative_cost": 726999.9999999669,
+        "cumulative_distance_m": 1600.0000000000798,
+        "land_cover": "cropland",
+        "land_cover_class": 40,
+        "geohazard_risk": 0.001726909875869751,
+        "soil_capacity": 411.0,
+        "population_density": 3.6166872829198836e-05,
+        "water_proximity_m": 808.0681587094152,
+        "road_proximity_m": 265.35407065881554,
+        "railway_proximity_m": 1000.0,
+        "powerline_proximity_m": 1000.0,
+        "pipeline_proximity_m": 1000.0,
+        "pressure_drop_pa": 0.0,
+        "cumulative_pressure_drop_pa": 0.0,
+        "flow_velocity_m_s": 0.0,
+        "reynolds_number": 0.0,
+        "requires_pumping_station": false,
+        "step": 16,
+        "reward": -8.548664760373645,
+        "total_reward": -122.74184557753472
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            379330.52524056,
+            4804938.854100757
+          ],
+          [
+            379324.5577762978,
+            4805038.675888811
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "segment_17",
+      "properties": {
+        "segment_id": 17,
+        "length_m": 99.99999999971084,
+        "elevation_start": 134.28558349609375,
+        "elevation_end": 138.533935546875,
+        "slope_percent": 6.977452652815054,
+        "aspect": 1.8505227955489614,
+        "curvature": 0.006215057373046875,
+        "cost_usd": 45999.99999986698,
+        "cost_per_m": 459.99999999999994,
+        "terrain_cost": 25999.999999924818,
+        "water_crossing_cost": 0.0,
+        "infrastructure_cost": 0.0,
+        "environmental_cost": 19999.999999942167,
+        "row_cost": 0.0,
+        "permitting_cost": 0.0,
+        "hydraulic_cost": 0.0,
+        "regulatory_cost": 0.0,
+        "cumulative_cost": 772999.9999998339,
+        "cumulative_distance_m": 1699.9999999997906,
+        "land_cover": "cropland",
+        "land_cover_class": 40,
+        "geohazard_risk": 0.0017288096249103546,
+        "soil_capacity": 411.0,
+        "population_density": 0.00011982270330190659,
+        "water_proximity_m": 880.3344040745919,
+        "road_proximity_m": 238.7916159051631,
+        "railway_proximity_m": 1000.0,
+        "powerline_proximity_m": 1000.0,
+        "pipeline_proximity_m": 1000.0,
+        "pressure_drop_pa": 0.0,
+        "cumulative_pressure_drop_pa": 0.0,
+        "flow_velocity_m_s": 0.0,
+        "reynolds_number": 0.0,
+        "requires_pumping_station": false,
+        "step": 17,
+        "reward": -7.7355252118030595,
+        "total_reward": -130.47737078933778
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            379324.5577762978,
+            4805038.675888811
+          ],
+          [
+            379377.43387908523,
+            4805123.552963183
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "segment_18",
+      "properties": {
+        "segment_id": 18,
+        "length_m": 99.99999999994812,
+        "elevation_start": 138.533935546875,
+        "elevation_end": 139.25442504882812,
+        "slope_percent": 2.9526908126887386,
+        "aspect": 0.40877652683728244,
+        "curvature": 0.008165435791015625,
+        "cost_usd": 39999.99999997925,
+        "cost_per_m": 400.0,
+        "terrain_cost": 19999.999999989624,
+        "water_crossing_cost": 0.0,
+        "infrastructure_cost": 0.0,
+        "environmental_cost": 19999.999999989624,
+        "row_cost": 0.0,
+        "permitting_cost": 0.0,
+        "hydraulic_cost": 0.0,
+        "regulatory_cost": 0.0,
+        "cumulative_cost": 812999.9999998132,
+        "cumulative_distance_m": 1799.9999999997387,
+        "land_cover": "cropland",
+        "land_cover_class": 40,
+        "geohazard_risk": 0.001728573590517044,
+        "soil_capacity": 408.0,
+        "population_density": 0.0004257115125656128,
+        "water_proximity_m": 908.4509951382936,
+        "road_proximity_m": 182.33668854762465,
+        "railway_proximity_m": 1000.0,
+        "powerline_proximity_m": 1000.0,
+        "pipeline_proximity_m": 1000.0,
+        "pressure_drop_pa": 0.0,
+        "cumulative_pressure_drop_pa": 0.0,
+        "flow_velocity_m_s": 0.0,
+        "reynolds_number": 0.0,
+        "requires_pumping_station": false,
+        "step": 18,
+        "reward": -6.493334882057519,
+        "total_reward": -136.9707056713953
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            379377.43387908523,
+            4805123.552963183
+          ],
+          [
+            379469.66389411216,
+            4805162.200399426
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "segment_19",
+      "properties": {
+        "segment_id": 19,
+        "length_m": 100.00000000000536,
+        "elevation_start": 139.25442504882812,
+        "elevation_end": 153.00418090820312,
+        "slope_percent": 30.074814007723248,
+        "aspect": -0.4465483559812228,
+        "curvature": 0.004661865234375,
+        "cost_usd": 56000.000000003,
+        "cost_per_m": 560.0,
+        "terrain_cost": 36000.00000000193,
+        "water_crossing_cost": 0.0,
+        "infrastructure_cost": 0.0,
+        "environmental_cost": 20000.000000001073,
+        "row_cost": 0.0,
+        "permitting_cost": 0.0,
+        "hydraulic_cost": 0.0,
+        "regulatory_cost": 0.0,
+        "cumulative_cost": 868999.9999998162,
+        "cumulative_distance_m": 1899.9999999997442,
+        "land_cover": "cropland",
+        "land_cover_class": 40,
+        "geohazard_risk": 0.0017283374071121215,
+        "soil_capacity": 408.0,
+        "population_density": 0.0008587132096290588,
+        "water_proximity_m": 873.0077834023356,
+        "road_proximity_m": 93.16352275721215,
+        "railway_proximity_m": 1000.0,
+        "powerline_proximity_m": 1000.0,
+        "pipeline_proximity_m": 1000.0,
+        "pressure_drop_pa": 0.0,
+        "cumulative_pressure_drop_pa": 0.0,
+        "flow_velocity_m_s": 0.0,
+        "reynolds_number": 0.0,
+        "requires_pumping_station": false,
+        "step": 19,
+        "reward": -106.28342324580868,
+        "total_reward": -243.25412891720399
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            379469.66389411216,
+            4805162.200399426
+          ],
+          [
+            379567.2526692918,
+            4805140.373100946
+          ]
+        ]
+      }
+    }
+  ]
+}

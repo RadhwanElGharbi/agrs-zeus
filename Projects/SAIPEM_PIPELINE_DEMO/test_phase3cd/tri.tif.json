@@ -1,6 +1,0 @@
-{
-  "input_dem": "../data/rasters/dem_tinitaly_10m.tif",
-  "output_raster": "tri.tif",
-  "timestamp_utc": "2025-10-15T15:52:35Z",
-  "tool": "raster_tri"
-}
