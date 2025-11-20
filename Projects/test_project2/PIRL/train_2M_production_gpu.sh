@@ -7,7 +7,7 @@ echo "=========================================="
 echo "Total timesteps: 2,000,000"
 echo "Device: CUDA (GPU)"
 echo "Policy: MlpPolicy"
-echo "Environments: 24 parallel"
+echo "Environments: 24 parallel (SubprocVecEnv)"
 echo "n_steps: 2,048"
 echo "Batch size: 256"
 echo "Expected runtime: ~30-45 minutes @ 60-150 FPS"
@@ -49,6 +49,7 @@ cd /opt/agrs/Projects/test_project2/PIRL
     --config "$CONFIG_FILE" \
     --device "$DEVICE" \
     --policy "$POLICY" \
+    --parallel \
     2>&1 | tee "$LOG_FILE"
 
 echo ""
