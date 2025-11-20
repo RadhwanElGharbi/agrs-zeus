@@ -8,8 +8,9 @@ echo "Total timesteps: 2,000,000"
 echo "Device: CUDA (GPU)"
 echo "Policy: MlpPolicy"
 echo "Environments: 24 parallel"
-echo "n_steps: 2048"
-echo "Expected runtime: ~45 minutes @ 60 FPS"
+echo "n_steps: 2,048"
+echo "Batch size: 256"
+echo "Expected runtime: ~30-45 minutes @ 60-150 FPS"
 echo "=========================================="
 
 CONFIG_FILE="pirl_training_config_2M_production.yaml"
@@ -54,14 +55,37 @@ echo ""
 echo "=========================================="
 echo "✅ Training complete!"
 echo "=========================================="
-echo "Model saved to: models/pirl_2M_production.zip"
+echo "Model saved to: ${OUTPUT_DIR}/eval/best_model.zip"
 echo "Logs saved to: $LOG_FILE"
 echo ""
-echo "To generate GeoJSON from the trained model:"
-echo "python3 /opt/agrs/python/pirl_training/generate_geojson_from_trajectory.py \\"
-echo "  --model models/pirl_2M_production.zip \\"
-echo "  --config $CONFIG_FILE \\"
-echo "  --output outputs/production_2M/route_2M_production.geojson \\"
-echo "  --algorithm PPO"
+echo "🗺️  Generating GeoJSON for ArcGIS analysis..."
+echo ""
+
+# Generate GeoJSON from best model
+GEOJSON_OUTPUT="${OUTPUT_DIR}/route_2M_production_gpu.geojson"
+
+/opt/agrs/python/pirl_venv/bin/python3 \
+    /opt/agrs/python/pirl_training/generate_geojson_from_trajectory.py \
+    --model "${OUTPUT_DIR}/eval/best_model.zip" \
+    --config "$CONFIG_FILE" \
+    --output "$GEOJSON_OUTPUT" \
+    --algorithm PPO \
+    --episodes 1
+
+if [ -f "$GEOJSON_OUTPUT" ]; then
+    echo ""
+    echo "✅ GeoJSON generated successfully!"
+    echo "   📍 Output: $GEOJSON_OUTPUT"
+    echo "   🗺️  Ready for ArcGIS import"
+    echo "   📊 CRS: EPSG:32633 (UTM Zone 33N)"
+else
+    echo ""
+    echo "⚠️  GeoJSON generation failed. You can generate it manually:"
+    echo "python3 /opt/agrs/python/pirl_training/generate_geojson_from_trajectory.py \\"
+    echo "  --model ${OUTPUT_DIR}/eval/best_model.zip \\"
+    echo "  --config $CONFIG_FILE \\"
+    echo "  --output $GEOJSON_OUTPUT \\"
+    echo "  --algorithm PPO"
+fi
 echo ""
 

@@ -637,8 +637,9 @@ private:
     int step_count_;
     bool done_;
     
-    // Goal
+    // Goal and start positions
     double goal_x_, goal_y_;
+    double start_x_, start_y_;  // For safety zone around start point
     
     // Hydraulic tracking (NEW - Phase 2)
     double current_pressure_pa_;           // Current pressure in pipeline

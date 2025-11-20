@@ -19,7 +19,7 @@ import gymnasium as gym
 from stable_baselines3 import PPO, SAC
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold
-from stable_baselines3.common.vec_env import VecMonitor
+from stable_baselines3.common.vec_env import VecMonitor, SubprocVecEnv, DummyVecEnv
 from stable_baselines3.common.logger import configure
 
 # Custom environment
@@ -76,19 +76,32 @@ def create_training_env(config_path: str) -> PIRLNativeEnvironment:
     return PIRLNativeEnvironment(config_path)
 
 
-def create_vec_env(config: PIRLTrainingConfig) -> VecMonitor:
-    """Create vectorized training environment."""
-    # For now, use the same config for all environments
-    # In the future, this could support multiple project configs
-    env_fns = [lambda: create_training_env(config.env_configs[0]) 
-               for _ in range(config.num_envs)]
+def create_vec_env(config: PIRLTrainingConfig, use_subproc: bool = False) -> VecMonitor:
+    """Create vectorized training environment.
     
-    vec_env = make_vec_env(
-        env_fns[0],  # Use the same environment function for all
-        n_envs=config.num_envs,
-        vec_env_cls=None,  # Use default DummyVecEnv
-        env_kwargs=None
-    )
+    Args:
+        config: Training configuration
+        use_subproc: Use SubprocVecEnv for parallel execution (default: False - uses DummyVecEnv)
+    
+    Returns:
+        Vectorized and monitored environment
+    """
+    # Create environment functions (one per environment)
+    # Important: Use a factory function to avoid lambda closure issues
+    def make_env_fn(config_path):
+        def _init():
+            return create_training_env(config_path)
+        return _init
+    
+    env_fns = [make_env_fn(config.env_configs[0]) for _ in range(config.num_envs)]
+    
+    # Choose vectorization strategy
+    if use_subproc and config.num_envs > 1:
+        logger.info(f"Using SubprocVecEnv for parallel execution ({config.num_envs} processes)")
+        vec_env = SubprocVecEnv(env_fns, start_method='spawn')  # 'spawn' is safer for C++ bindings
+    else:
+        logger.info(f"Using DummyVecEnv for serial execution")
+        vec_env = DummyVecEnv(env_fns)
     
     # Wrap with monitor for logging
     vec_env = VecMonitor(vec_env, str(config.log_dir / 'vec_env_monitor'))
@@ -187,13 +200,14 @@ def create_model(config: PIRLTrainingConfig, env, device='auto', policy_type='Ml
     return model
 
 
-def train_model(config: PIRLTrainingConfig, device='auto', policy_type='MlpPolicy') -> Any:
+def train_model(config: PIRLTrainingConfig, device='auto', policy_type='MlpPolicy', use_subproc=False) -> Any:
     """Train PIRL model.
     
     Args:
         config: Training configuration
         device: Device to use ('auto', 'cpu', 'cuda')
         policy_type: Policy architecture ('MlpPolicy' or 'CnnPolicy')
+        use_subproc: Use SubprocVecEnv for parallel execution (default: False - uses DummyVecEnv)
     
     Returns:
         Trained model
@@ -202,7 +216,7 @@ def train_model(config: PIRLTrainingConfig, device='auto', policy_type='MlpPolic
     
     # Create environments
     logger.info("Creating training environment...")
-    train_env = create_vec_env(config)
+    train_env = create_vec_env(config, use_subproc=use_subproc)
     
     logger.info("Creating evaluation environment...")
     eval_env = create_eval_env(config)
@@ -319,6 +333,10 @@ def main():
                         help="Device to use for training (default: auto)")
     parser.add_argument("--policy", choices=['MlpPolicy', 'CnnPolicy'], default='MlpPolicy',
                         help="Policy architecture (default: MlpPolicy)")
+    parser.add_argument("--parallel", action="store_true", default=False,
+                        help="Use SubprocVecEnv for parallel environments")
+    parser.add_argument("--no-parallel", dest='parallel', action="store_false",
+                        help="Use DummyVecEnv (serial execution, default)")
     parser.add_argument("--eval-only", action="store_true", help="Only evaluate existing model")
     parser.add_argument("--model-path", help="Path to model for evaluation")
     parser.add_argument("--episodes", type=int, default=10, help="Number of evaluation episodes")
@@ -346,7 +364,8 @@ def main():
         # Train model
         logger.info(f"Device: {args.device}")
         logger.info(f"Policy: {args.policy}")
-        model = train_model(config, device=args.device, policy_type=args.policy)
+        logger.info(f"Parallel execution: {args.parallel}")
+        model = train_model(config, device=args.device, policy_type=args.policy, use_subproc=args.parallel)
         
         # Quick evaluation
         logger.info("Running quick evaluation...")

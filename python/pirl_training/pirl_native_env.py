@@ -181,17 +181,29 @@ class PIRLNativeEnvironment(gym.Env):
         info['_step'] = self.current_step
         info['_episode'] = self.current_episode
         
-        # Log significant events
+        # Log significant events with detailed reward breakdown
         if terminated or truncated:
             reward_info_dict = info.get('reward_info')
             reason = info.get('termination_reason', 'unknown')
             
-            if reward_info_dict and reward_info_dict.get('goal_bonus', 0) > 0:
-                logger.info(f"🎯 Goal reached! Episode {self.current_episode}, Steps: {self.current_step}")
-                logger.info(f"   Total reward: {reward_info_dict['total_reward']:.2f}")
+            # Check if episode succeeded (reached goal) - termination reason starts with "SUCCESS"
+            is_success = reason.startswith('SUCCESS')
+            
+            if is_success:
+                logger.info(f"✅ SUCCESS: Goal reached! Episode {self.current_episode}, Steps: {self.current_step}")
             else:
-                if terminated:
-                    logger.warning(f"❌ Episode terminated: {reason}")
+                # Failure - already logged by C++ with emoji prefix
+                pass  # C++ logs already show: 🏘️/🚫/⏱️/🌊 FAILURE: ...
+            
+            # Show detailed reward breakdown for all terminations
+            if reward_info_dict:
+                logger.info(f"📊 REWARD BREAKDOWN:")
+                logger.info(f"   Total Reward:        {reward_info_dict['total_reward']:>8.2f}")
+                logger.info(f"   ├─ Progress:         {reward_info_dict['progress_reward']:>8.2f}")
+                logger.info(f"   ├─ Cost Penalty:     {reward_info_dict['cost_penalty']:>8.2f}")
+                logger.info(f"   ├─ Constraint:       {reward_info_dict['constraint_penalty']:>8.2f}")
+                logger.info(f"   ├─ Curvature:        {reward_info_dict['curvature_penalty']:>8.2f}")
+                logger.info(f"   └─ Goal Bonus:       {reward_info_dict['goal_bonus']:>8.2f}")
         
         return observation, reward, terminated, truncated, info
     

@@ -7,9 +7,10 @@ echo "=========================================="
 echo "Total timesteps: 2,000,000"
 echo "Device: CPU (multi-threaded)"
 echo "Policy: MlpPolicy"
-echo "Environments: 24 parallel"
-echo "n_steps: 2048"
-echo "Expected runtime: ~1.5 hours @ 15 FPS"
+echo "Environments: 24 parallel (serial execution via DummyVecEnv)"
+echo "n_steps: 2,048"
+echo "Batch size: 256"
+echo "Expected runtime: ~3-4 hours @ 12-15 FPS"
 echo "=========================================="
 
 CONFIG_FILE="pirl_training_config_2M_production.yaml"
@@ -32,15 +33,15 @@ echo "🔄 Activating Python virtual environment..."
 source /opt/agrs/python/pirl_venv/bin/activate
 
 # Set CPU threading for optimal performance
-export OMP_NUM_THREADS=16
-export MKL_NUM_THREADS=16
-export OPENBLAS_NUM_THREADS=16
-export NUMEXPR_NUM_THREADS=16
+export OMP_NUM_THREADS=8
+export MKL_NUM_THREADS=8
+export OPENBLAS_NUM_THREADS=8
+export NUMEXPR_NUM_THREADS=8
 
 echo "✅ Environment configured"
 echo "   Device: $DEVICE"
 echo "   Policy: $POLICY"
-echo "   CPU threads: 16 (optimal for 24 environments)"
+echo "   CPU threads: 8 (for neural network operations)"
 echo ""
 
 # Start training
@@ -61,14 +62,37 @@ echo ""
 echo "=========================================="
 echo "✅ Training complete!"
 echo "=========================================="
-echo "Model saved to: models/pirl_2M_production.zip"
+echo "Model saved to: ${OUTPUT_DIR}/eval/best_model.zip"
 echo "Logs saved to: $LOG_FILE"
 echo ""
-echo "To generate GeoJSON from the trained model:"
-echo "python3 /opt/agrs/python/pirl_training/generate_geojson_from_trajectory.py \\"
-echo "  --model models/pirl_2M_production.zip \\"
-echo "  --config $CONFIG_FILE \\"
-echo "  --output outputs/production_2M/route_2M_production.geojson \\"
-echo "  --algorithm PPO"
+echo "🗺️  Generating GeoJSON for ArcGIS analysis..."
+echo ""
+
+# Generate GeoJSON from best model
+GEOJSON_OUTPUT="${OUTPUT_DIR}/route_2M_production_cpu.geojson"
+
+/opt/agrs/python/pirl_venv/bin/python3 \
+    /opt/agrs/python/pirl_training/generate_geojson_from_trajectory.py \
+    --model "${OUTPUT_DIR}/eval/best_model.zip" \
+    --config "$CONFIG_FILE" \
+    --output "$GEOJSON_OUTPUT" \
+    --algorithm PPO \
+    --episodes 1
+
+if [ -f "$GEOJSON_OUTPUT" ]; then
+    echo ""
+    echo "✅ GeoJSON generated successfully!"
+    echo "   📍 Output: $GEOJSON_OUTPUT"
+    echo "   🗺️  Ready for ArcGIS import"
+    echo "   📊 CRS: EPSG:32633 (UTM Zone 33N)"
+else
+    echo ""
+    echo "⚠️  GeoJSON generation failed. You can generate it manually:"
+    echo "python3 /opt/agrs/python/pirl_training/generate_geojson_from_trajectory.py \\"
+    echo "  --model ${OUTPUT_DIR}/eval/best_model.zip \\"
+    echo "  --config $CONFIG_FILE \\"
+    echo "  --output $GEOJSON_OUTPUT \\"
+    echo "  --algorithm PPO"
+fi
 echo ""
 

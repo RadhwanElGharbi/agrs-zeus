@@ -56,9 +56,11 @@ PipelineEnvironment::PipelineEnvironment(const ProjectConfig& config)
         load_parameter_overrides(override_file);
     }
     
-    // Set goal
+    // Set goal and start positions
     goal_x_ = config.end_point.x;
     goal_y_ = config.end_point.y;
+    start_x_ = config.start_point.x;
+    start_y_ = config.start_point.y;
     
     std::cout << "🎯 Pipeline Environment initialized" << std::endl;
     std::cout << "   Start: (" << config.start_point.x << ", " 
@@ -640,8 +642,16 @@ bool PipelineEnvironment::check_termination(const State& state, std::string& rea
     // Built-up area violation (Phase 4: Continuous Cost System)
     // Exponential penalties applied in calculate_reward() when approaching built-up areas
     // Immediate termination when agent is effectively touching built-up area (distance ≤ 0.5m)
+    // EXCEPTION: 75m safety zone from start point to allow initial exploration
     double distance_to_buildup = gis_->distance_to_land_cover_type(state.x, state.y, 50);
-    if (distance_to_buildup <= 0.5) {
+    
+    // Calculate distance from current position to start point
+    double dx_start = state.x - start_x_;
+    double dy_start = state.y - start_y_;
+    double distance_from_start = std::sqrt(dx_start*dx_start + dy_start*dy_start);
+    
+    // Only terminate for built-up if we're outside the 75m safety zone from start
+    if (distance_to_buildup <= 0.5 && distance_from_start > 75.0) {
         reason = "FAILURE: Built-up area violation (land cover type 50) " + format_coords(state.x, state.y);
         std::cout << "🏘️  " << reason << std::endl;
         return true;
