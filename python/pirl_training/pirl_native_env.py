@@ -77,17 +77,16 @@ class PIRLNativeEnvironment(gym.Env):
         self.observation_space = gym.spaces.Box(
             low=-np.inf,
             high=np.inf,
-            shape=(29,),  # Updated from 27 to 29 (Phase 4: Continuous Cost System)
+            shape=(29,),  # Updated from 21 to 29 (Phase 4: Continuous Cost System)
             dtype=np.float32
         )
         
-        # Action dimension: 3 (heading_change, step_size, crossing_decision)
-        # heading_change: [-π/4, π/4] radians → normalized to [-1, 1] for NN
-        # step_size: [10, 100] meters → normalized to [-1, 1] for NN
-        # crossing_decision: continuous [-1, 1] → discretized to {0,1,2,3} in C++
+        # Action dimension: 2 (heading_change, step_size)
+        # heading_change: [-π/4, π/4] radians
+        # step_size: [10, 100] meters
         self.action_space = gym.spaces.Box(
-            low=np.array([-1.0, -1.0, -1.0], dtype=np.float32),
-            high=np.array([1.0, 1.0, 1.0], dtype=np.float32),
+            low=np.array([-np.pi/4, 10.0], dtype=np.float32),
+            high=np.array([np.pi/4, 100.0], dtype=np.float32),
             dtype=np.float32
         )
         
@@ -138,7 +137,7 @@ class PIRLNativeEnvironment(gym.Env):
         Execute one step in the environment.
         
         Args:
-            action: Action to take [heading_change, step_size, crossing_decision]
+            action: Action to take [heading_change, step_size]
             
         Returns:
             observation: New state as numpy array
@@ -147,10 +146,10 @@ class PIRLNativeEnvironment(gym.Env):
             truncated: Whether episode was truncated (max steps)
             info: Additional information dictionary
         """
-        # Ensure action is float32 and has correct shape (3D: heading, step_size, crossing_decision)
+        # Ensure action is float32 and has correct shape
         action = np.array(action, dtype=np.float32)
-        if action.shape != (3,):
-            raise ValueError(f"Action must have shape (3,), got {action.shape}")
+        if action.shape != (2,):
+            raise ValueError(f"Action must have shape (2,), got {action.shape}")
         
         # Execute step in native C++ environment
         observation, reward, terminated, truncated, info = self.env.step(action)
