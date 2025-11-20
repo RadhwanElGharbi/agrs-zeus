@@ -489,7 +489,7 @@ RewardInfo PipelineEnvironment::calculate_reward(const State& prev_state,
             // Exponential penalty: -5 at 100m, -20 at 50m, -100 at 0m
             // Formula: penalty = -100 * exp(-2.3 * normalized_dist)
             double normalized_dist = new_state.distance_to_aoi_boundary / 100.0;
-            double aoi_penalty = -100.0 * std::exp(-2.3 * normalized_dist);
+            double aoi_penalty = -20.0 * std::exp(-2.3 * normalized_dist);
             info.constraint_penalty += aoi_penalty;
             info.total_reward += aoi_penalty;
         }
@@ -500,7 +500,7 @@ RewardInfo PipelineEnvironment::calculate_reward(const State& prev_state,
         // Exponential penalty: similar curve but over 400m range
         // This creates a graduated penalty zone approaching the sea
         double normalized_dist = new_state.distance_to_sea_boundary / 400.0;
-        double sea_penalty = -100.0 * std::exp(-2.3 * normalized_dist);
+        double sea_penalty = -20.0 * std::exp(-2.3 * normalized_dist);
         info.constraint_penalty += sea_penalty;
         info.total_reward += sea_penalty;
     }
@@ -513,7 +513,7 @@ RewardInfo PipelineEnvironment::calculate_reward(const State& prev_state,
     if (distance_to_buildup < buildup_threshold_m) {
         // Exponential penalty: -5 at 15m, -20 at 7.5m, -100 at 0m
         double normalized_dist = distance_to_buildup / buildup_threshold_m;
-        double buildup_penalty = -100.0 * std::exp(-2.3 * normalized_dist);
+        double buildup_penalty = -20.0 * std::exp(-2.3 * normalized_dist);
         info.constraint_penalty += buildup_penalty;
         info.total_reward += buildup_penalty;
         
@@ -536,7 +536,7 @@ RewardInfo PipelineEnvironment::calculate_reward(const State& prev_state,
         if (!nearby_features.empty() && !nearby_features[0].is_crossable) {
             // Attempted to cross an uncrossable feature (dam/weir)
             // Apply moderate penalty (termination handled in check_termination())
-            info.constraint_penalty += -1000.0;
+            info.constraint_penalty += -20.0;
             info.total_reward += -1000.0;
             // NOTE: Termination is handled in check_termination()
         }
@@ -639,10 +639,8 @@ bool PipelineEnvironment::check_termination(const State& state, std::string& rea
         }
     }
     
-    // Built-up area violation (Phase 4: Continuous Cost System)
-    // Exponential penalties applied in calculate_reward() when approaching built-up areas
-    // Immediate termination when agent is effectively touching built-up area (distance ≤ 0.5m)
-    // EXCEPTION: 75m safety zone from start point to allow initial exploration
+    // Built-up area violation with depth check (allows crossing roads, blocks towns)
+    // distance_to_buildup returns 0 if IN built-up, positive if outside
     double distance_to_buildup = gis_->distance_to_land_cover_type(state.x, state.y, 50);
     
     // Calculate distance from current position to start point
@@ -650,11 +648,37 @@ bool PipelineEnvironment::check_termination(const State& state, std::string& rea
     double dy_start = state.y - start_y_;
     double distance_from_start = std::sqrt(dx_start*dx_start + dy_start*dy_start);
     
-    // Only terminate for built-up if we're outside the 75m safety zone from start
-    if (distance_to_buildup <= 0.5 && distance_from_start > 75.0) {
-        reason = "FAILURE: Built-up area violation (land cover type 50) " + format_coords(state.x, state.y);
-        std::cout << "🏘️  " << reason << std::endl;
-        return true;
+    // Only enforce outside 2km safety zone from start
+    if (distance_from_start > 2000.0 && distance_to_buildup == 0.0) {
+        // Agent is IN built-up area - check how deep by measuring to non-built-up edge
+        // Sample in all directions to find nearest exit
+        double min_depth = 1000.0;
+        const int num_samples = 16;
+        const double search_step = 10.0;
+        
+        for (int i = 0; i < num_samples; i++) {
+            double angle = (2.0 * M_PI * i) / num_samples;
+            
+            // Search outward to find edge of built-up area
+            for (double r = search_step; r <= 200.0; r += search_step) {
+                double test_x = state.x + r * std::cos(angle);
+                double test_y = state.y + r * std::sin(angle);
+                
+                if (gis_->get_land_cover_class(test_x, test_y) != 50) {
+                    // Found edge - this is distance to exit
+                    min_depth = std::min(min_depth, r);
+                    break;
+                }
+            }
+        }
+        
+        // Terminate only if more than 50m from any edge (deep inside built-up)
+        // This allows crossing roads (~10-20m wide) but blocks routing through towns
+        if (min_depth > 50.0) {
+            reason = "FAILURE: Built-up area violation (land cover type 50) @ " + format_coords(state.x, state.y);
+            std::cout << "🏘️  " << reason << " [depth: " << min_depth << "m]" << std::endl;
+            return true;
+        }
     }
     // Similar to slope constraint: learn through experience, not forced termination
     

@@ -41,15 +41,17 @@ class PIRLNativeEnvironment(gym.Env):
     
     metadata = {'render_modes': ['geojson']}
     
-    def __init__(self, config_path: str):
+    def __init__(self, config_path: str, env_id: int = 0):
         """
         Initialize the native PIRL environment.
-        
+
         Args:
             config_path: Path to YAML configuration file
+            env_id: Environment ID for multi-env training (default: 0)
         """
         super().__init__()
-        
+
+        self.env_id = env_id
         self.config_path = Path(config_path)
         if not self.config_path.exists():
             raise FileNotFoundError(f"Config file not found: {config_path}")
@@ -216,7 +218,7 @@ class PIRLNativeEnvironment(gym.Env):
             
             # Show detailed metrics and reward breakdown for all terminations
             if reward_info_dict:
-                logger.info(f"📊 EPISODE METRICS:")
+                logger.info(f"📊 EPISODE METRICS: [Env {self.env_id} | Episode {self.current_episode}]")
                 logger.info(f"   Total Length:        {total_length_m:>8.2f} m  ({total_length_m/1000.0:.2f} km)")
                 logger.info(f"   Distance from Goal:  {distance_from_goal:>8.2f} m  ({distance_from_goal/1000.0:.2f} km)")
                 logger.info(f"   Total Reward:        {reward_info_dict['total_reward']:>8.2f}")
@@ -280,20 +282,21 @@ class PIRLNativeEnvironment(gym.Env):
         return f"PIRLNativeEnvironment(config={self.config_path.name})"
 
 
-def make_env(config_path: str):
+def make_env(config_path: str, env_id: int = 0):
     """
     Factory function to create PIRL native environment.
-    
+
     This is useful for vectorized environments in Stable-Baselines3.
-    
+
     Args:
         config_path: Path to YAML configuration file
-        
+        env_id: Environment ID for multi-env training
+
     Returns:
         Callable that creates the environment
     """
     def _init():
-        return PIRLNativeEnvironment(config_path)
+        return PIRLNativeEnvironment(config_path, env_id=env_id)
     return _init
 
 

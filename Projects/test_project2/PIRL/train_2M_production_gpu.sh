@@ -56,18 +56,20 @@ echo ""
 echo "=========================================="
 echo "✅ Training complete!"
 echo "=========================================="
-echo "Model saved to: ${OUTPUT_DIR}/eval/best_model.zip"
+echo "Model saved to: outputs/production_2M/pirl_model.zip"
 echo "Logs saved to: $LOG_FILE"
 echo ""
 echo "🗺️  Generating GeoJSON for ArcGIS analysis..."
 echo ""
 
-# Generate GeoJSON from best model
+# Generate GeoJSON from trained model
+# Note: The config saves to outputs/production_2M, not production_2M_gpu
+MODEL_PATH="outputs/production_2M/pirl_model.zip"
 GEOJSON_OUTPUT="${OUTPUT_DIR}/route_2M_production_gpu.geojson"
 
 /opt/agrs/python/pirl_venv/bin/python3 \
     /opt/agrs/python/pirl_training/generate_geojson_from_trajectory.py \
-    --model "${OUTPUT_DIR}/eval/best_model.zip" \
+    --model "$MODEL_PATH" \
     --config "$CONFIG_FILE" \
     --output "$GEOJSON_OUTPUT" \
     --algorithm PPO \
@@ -83,7 +85,7 @@ else
     echo ""
     echo "⚠️  GeoJSON generation failed. You can generate it manually:"
     echo "python3 /opt/agrs/python/pirl_training/generate_geojson_from_trajectory.py \\"
-    echo "  --model ${OUTPUT_DIR}/eval/best_model.zip \\"
+    echo "  --model $MODEL_PATH \\"
     echo "  --config $CONFIG_FILE \\"
     echo "  --output $GEOJSON_OUTPUT \\"
     echo "  --algorithm PPO"
