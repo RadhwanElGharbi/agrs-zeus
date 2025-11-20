@@ -3,7 +3,7 @@
   "_description": "This file is loaded automatically by PipelineEnvironment during initialization",
   
   "ppo_rewards": {
-    "progress_multiplier": 0.06,
+    "progress_multiplier": 1.0,
     "cost_normalization_factor": 10000.0,
     "goal_bonus": 100.0,
     "exploration_bonus": 20.0,
