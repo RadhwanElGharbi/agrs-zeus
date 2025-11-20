@@ -131,16 +131,22 @@ DatasetFetchProgressDialog::DatasetFetchProgressDialog(DatasetFetchPipeline* pip
         connect(m_pipeline, &DatasetFetchPipeline::taskProgress, 
                 this, &DatasetFetchProgressDialog::onTaskProgress);
         connect(m_pipeline, &DatasetFetchPipeline::taskCompleted, 
-                this, &DatasetFetchProgressDialog::onTaskCompleted);
+                this, [this](const QString& taskId, const QString& outputPath) {
+                    // Get file size
+                    QFileInfo fileInfo(outputPath);
+                    onTaskCompleted(taskId, QString(), outputPath, fileInfo.size());
+                });
         connect(m_pipeline, &DatasetFetchPipeline::taskFailed, 
-                this, &DatasetFetchProgressDialog::onTaskFailed);
+                this, [this](const QString& taskId, const QString& errorMessage) {
+                    onTaskFailed(taskId, QString(), errorMessage);
+                });
         connect(m_pipeline, &DatasetFetchPipeline::allTasksCompleted, 
                 this, &DatasetFetchProgressDialog::onAllTasksCompleted);
-        connect(m_pipeline, &DatasetFetchPipeline::pipelinePaused, 
+        connect(m_pipeline, &DatasetFetchPipeline::paused, 
                 this, &DatasetFetchProgressDialog::onPipelinePaused);
-        connect(m_pipeline, &DatasetFetchPipeline::pipelineResumed, 
+        connect(m_pipeline, &DatasetFetchPipeline::resumed, 
                 this, &DatasetFetchProgressDialog::onPipelineResumed);
-        connect(m_pipeline, &DatasetFetchPipeline::pipelineCancelled, 
+        connect(m_pipeline, &DatasetFetchPipeline::cancelled, 
                 this, &DatasetFetchProgressDialog::onPipelineCancelled);
         connect(m_pipeline, &DatasetFetchPipeline::logMessage, 
                 this, &DatasetFetchProgressDialog::onLogMessage);
@@ -158,7 +164,7 @@ void DatasetFetchProgressDialog::startMonitoring()
     }
     
     // Get all tasks and populate table
-    QVector<DatasetFetchPipeline::FetchTask> tasks = m_pipeline->getAllTasks();
+    QVector<FetchTask> tasks = m_pipeline->getAllTasks();
     m_totalTasks = tasks.size();
     
     for (const auto& task : tasks) {
@@ -315,11 +321,11 @@ void DatasetFetchProgressDialog::onRetryFailedClicked()
     }
     
     // Get all tasks and retry failed ones
-    QVector<DatasetFetchPipeline::FetchTask> tasks = m_pipeline->getAllTasks();
+    QVector<FetchTask> tasks = m_pipeline->getAllTasks();
     int retryCount = 0;
     
     for (const auto& task : tasks) {
-        if (task.status == DatasetFetchPipeline::TaskStatus::Failed) {
+        if (task.status == "failed") {
             m_pipeline->retryTask(task.id);
             retryCount++;
         }
@@ -372,10 +378,10 @@ void DatasetFetchProgressDialog::updateOverallProgress()
     
     // Calculate weighted progress based on individual task progress
     int totalProgress = 0;
-    QVector<DatasetFetchPipeline::FetchTask> tasks = m_pipeline->getAllTasks();
+    QVector<FetchTask> tasks = m_pipeline->getAllTasks();
     
     for (const auto& task : tasks) {
-        totalProgress += task.progress;
+        totalProgress += task.progressPercent;
     }
     
     int overallPercent = totalProgress / m_totalTasks;

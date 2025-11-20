@@ -156,6 +156,12 @@ public:
      * @param retries Number of retries (0-3, default 2)
      */
     void setMaxRetries(int retries);
+    
+    /**
+     * @brief Retry a failed task
+     * @param taskId Task ID to retry
+     */
+    void retryTask(const QString& taskId);
 
 signals:
     /**
@@ -296,16 +302,11 @@ private:
      * @brief Mark task as failed
      */
     void markFailed(FetchTask& task, const QString& errorMessage);
-    
-    /**
-     * @brief Retry a failed task
-     */
-    void retryTask(const QString& taskId);
 
 private:
     // Task management
     QVector<FetchTask> m_tasks;
-    QMap<QString, std::unique_ptr<QProcess>> m_runningProcesses;
+    QMap<QString, QProcess*> m_runningProcesses;
     mutable QMutex m_tasksMutex;
     
     // State

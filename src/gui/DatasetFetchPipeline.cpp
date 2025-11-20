@@ -9,7 +9,9 @@
 #include <QJsonArray>
 #include <QDateTime>
 #include <gdal_priv.h>
+#include <ogrsf_frmts.h>
 #include <ogr_api.h>
+#include <ogr_feature.h>
 #include <ogr_geometry.h>
 
 namespace agrs {
@@ -151,11 +153,15 @@ void DatasetFetchPipeline::cancel()
     m_cancelled = true;
     m_running = false;
     
-    // Kill all running processes
+    // Kill and delete all running processes
     for (auto it = m_runningProcesses.begin(); it != m_runningProcesses.end(); ++it) {
-        if (it.value() && it.value()->state() != QProcess::NotRunning) {
-            it.value()->kill();
-            it.value()->waitForFinished(1000);
+        QProcess* proc = it.value();
+        if (proc) {
+            if (proc->state() != QProcess::NotRunning) {
+                proc->kill();
+                proc->waitForFinished(1000);
+            }
+            delete proc;
         }
     }
     
@@ -323,19 +329,18 @@ void DatasetFetchPipeline::executeTask(FetchTask& task)
     }
     
     // Create process
-    auto process = std::make_unique<QProcess>();
-    QProcess* processPtr = process.get();
+    QProcess* process = new QProcess(this);
     
     // Connect signals
-    connect(processPtr, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+    connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
             this, &DatasetFetchPipeline::onProcessFinished);
-    connect(processPtr, &QProcess::readyReadStandardOutput,
+    connect(process, &QProcess::readyReadStandardOutput,
             this, &DatasetFetchPipeline::onProcessReadyRead);
-    connect(processPtr, &QProcess::errorOccurred,
+    connect(process, &QProcess::errorOccurred,
             this, &DatasetFetchPipeline::onProcessErrorOccurred);
     
     // Track process
-    m_processToTaskId[processPtr] = task.id;
+    m_processToTaskId[process] = task.id;
     
     // Start process
     emit taskProgress(task.id, 10, "Initializing fetch...");
@@ -343,17 +348,18 @@ void DatasetFetchPipeline::executeTask(FetchTask& task)
     QStringList args = command.split(' ', Qt::SkipEmptyParts);
     QString program = args.takeFirst();
     
-    processPtr->start(program, args);
+    process->start(program, args);
     
-    if (!processPtr->waitForStarted(5000)) {
+    if (!process->waitForStarted(5000)) {
         markFailed(task, "Failed to start process: " + command);
-        m_processToTaskId.remove(processPtr);
+        m_processToTaskId.remove(process);
+        process->deleteLater();
         executeNextTask();
         return;
     }
     
-    // Store process
-    m_runningProcesses[task.id] = std::move(process);
+    // Store process (ownership now held by map)
+    m_runningProcesses[task.id] = process;
 }
 
 QString DatasetFetchPipeline::buildFetchCommand(const FetchTask& task) const
@@ -458,6 +464,7 @@ void DatasetFetchPipeline::onProcessFinished(int exitCode, QProcess::ExitStatus 
     // Cleanup
     m_runningProcesses.remove(taskId);
     m_processToTaskId.remove(process);
+    process->deleteLater();  // Delete process safely
     
     // Start next task
     QMetaObject::invokeMethod(this, "executeNextTask", Qt::QueuedConnection);
