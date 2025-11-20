@@ -455,7 +455,27 @@ RewardInfo PipelineEnvironment::calculate_reward(const State& prev_state,
     // Divide by normalization factor to get reward in appropriate range
     info.cost_penalty = -segment_cost / cost_normalization_factor_; // Configurable normalization
     info.total_reward += info.cost_penalty;
-    
+
+    // 2b. Tortuosity penalty: penalize inefficient routes
+    // Calculate from trajectory: progress made vs route length traveled
+    // best_distance_to_goal_ is initialized in reset() to the starting goal distance
+    double progress_made = best_distance_to_goal_ - new_state.goal_distance;
+
+    // Only apply if agent has made >100m progress toward goal
+    if (progress_made > 100.0 && cumulative_distance_ > 0.0) {
+        double tortuosity = cumulative_distance_ / progress_made;
+        // Allow 30% overhead (tortuosity < 1.3) without penalty
+        // Gentle penalty for routes that are 1.5x-2x+ too long
+        if (tortuosity > 1.3) {
+            double efficiency_penalty = -(tortuosity - 1.3) * 10.0;  // -10 per 0.1 tortuosity over 1.3
+            info.total_reward += efficiency_penalty;
+            // Max penalty examples:
+            // tortuosity = 1.5 → penalty = -2.0
+            // tortuosity = 1.8 → penalty = -5.0
+            // tortuosity = 2.0 → penalty = -7.0
+        }
+    }
+
     // 3. Physics-informed penalties
     
     // NOTE: Slope violation penalty REMOVED (Phase 4: Continuous Cost System)
