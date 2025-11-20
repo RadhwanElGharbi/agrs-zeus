@@ -77,7 +77,7 @@ class PIRLNativeEnvironment(gym.Env):
         self.observation_space = gym.spaces.Box(
             low=-np.inf,
             high=np.inf,
-            shape=(29,),  # Updated from 27 to 29 (Phase 4: Continuous Cost System)
+            shape=(29,),  # Updated from 21 to 29 (Phase 4: Continuous Cost System)
             dtype=np.float32
         )
         
