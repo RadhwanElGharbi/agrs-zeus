@@ -19,7 +19,7 @@ import gymnasium as gym
 from stable_baselines3 import PPO, SAC
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold
-from stable_baselines3.common.vec_env import VecMonitor
+from stable_baselines3.common.vec_env import VecMonitor, SubprocVecEnv
 from stable_baselines3.common.logger import configure
 
 # Custom environment
@@ -86,7 +86,7 @@ def create_vec_env(config: PIRLTrainingConfig) -> VecMonitor:
     vec_env = make_vec_env(
         env_fns[0],  # Use the same environment function for all
         n_envs=config.num_envs,
-        vec_env_cls=None,  # Use default DummyVecEnv
+        vec_env_cls=SubprocVecEnv,  # Use parallel subprocesses for true parallelism
         env_kwargs=None
     )
     
