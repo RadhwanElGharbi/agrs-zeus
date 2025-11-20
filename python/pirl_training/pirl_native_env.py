@@ -186,6 +186,25 @@ class PIRLNativeEnvironment(gym.Env):
             reward_info_dict = info.get('reward_info')
             reason = info.get('termination_reason', 'unknown')
             
+            # Get total distance traveled and remaining distance from trajectory/state
+            try:
+                trajectory = self.env.get_route_trajectory()
+                total_length_m = float(trajectory.total_length_m)
+                info['total_length_m'] = total_length_m
+            except:
+                total_length_m = 0.0
+                info['total_length_m'] = 0.0
+            
+            # Get distance from goal (from the observation/state - index 2 is goal_distance)
+            try:
+                # observation is the state vector, goal_distance is at index 2, normalized by /100000.0
+                # So we denormalize: distance_m = observation[2] * 100000.0
+                distance_from_goal = float(observation[2]) * 100000.0 if len(observation) > 2 else 0.0
+                info['distance_from_goal'] = distance_from_goal
+            except:
+                distance_from_goal = 0.0
+                info['distance_from_goal'] = 0.0
+            
             # Check if episode succeeded (reached goal) - termination reason starts with "SUCCESS"
             is_success = reason.startswith('SUCCESS')
             
@@ -195,9 +214,11 @@ class PIRLNativeEnvironment(gym.Env):
                 # Failure - already logged by C++ with emoji prefix
                 pass  # C++ logs already show: 🏘️/🚫/⏱️/🌊 FAILURE: ...
             
-            # Show detailed reward breakdown for all terminations
+            # Show detailed metrics and reward breakdown for all terminations
             if reward_info_dict:
-                logger.info(f"📊 REWARD BREAKDOWN:")
+                logger.info(f"📊 EPISODE METRICS:")
+                logger.info(f"   Total Length:        {total_length_m:>8.2f} m  ({total_length_m/1000.0:.2f} km)")
+                logger.info(f"   Distance from Goal:  {distance_from_goal:>8.2f} m  ({distance_from_goal/1000.0:.2f} km)")
                 logger.info(f"   Total Reward:        {reward_info_dict['total_reward']:>8.2f}")
                 logger.info(f"   ├─ Progress:         {reward_info_dict['progress_reward']:>8.2f}")
                 logger.info(f"   ├─ Cost Penalty:     {reward_info_dict['cost_penalty']:>8.2f}")
