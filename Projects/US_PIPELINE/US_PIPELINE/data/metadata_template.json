@@ -1,0 +1,43 @@
+{
+  "_comment": "Metadata template for US_PIPELINE datasets - compliant with DATASET_FETCHING_PROTOCOLS.md",
+  "_usage": "Copy this template and fill in all fields for each fetched dataset",
+  
+  "dataset_name": "",
+  "source": "",
+  "provider": "",
+  "provider_url": "",
+  "coverage_date": "",
+  "fetch_date": "",
+  "fetch_tool": "",
+  "raw_crs": "",
+  "resolution_m": null,
+  "data_type": "Raster or Vector",
+  "format": "",
+  "nodata_value": null,
+  
+  "extent": {
+    "minx": 0,
+    "miny": 0,
+    "maxx": 0,
+    "maxy": 0,
+    "crs": ""
+  },
+  
+  "bbox_wgs84": {
+    "west": 0.0,
+    "south": 0.0,
+    "east": 0.0,
+    "north": 0.0
+  },
+  
+  "documentation_url": "",
+  "license": "",
+  "attribution": "",
+  "file_size_bytes": 0,
+  "checksum_sha256": "",
+  "tiles_downloaded": [],
+  "notes": ""
+}
+
+
+

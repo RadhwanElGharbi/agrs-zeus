@@ -1,0 +1,82 @@
+{
+  "type": "FeatureCollection",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "EPSG:32613"
+    }
+  },
+  "metadata": {
+    "title": "US_PIPELINE PIRL Route (7D Slope Optimization)",
+    "description": "Reinforcement learning generated pipeline route optimized for terrain slope",
+    "model_type": "PPO",
+    "state_space_dim": 7,
+    "action_space_dim": 2,
+    "optimization_focus": "slope_minimization",
+    "generation_date": "2025-11-21T02:12:00.973173",
+    "total_length_m": 171.24,
+    "total_segments": 1,
+    "average_slope_percent": 24.42,
+    "max_slope_percent": 24.42,
+    "crs": "EPSG:32613"
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "MultiLineString",
+        "coordinates": [
+          [
+            [
+              484838.28,
+              4933184.19
+            ],
+            [
+              484738.65,
+              4933044.91
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "type": "full_route",
+        "total_length_m": 171.24,
+        "total_segments": 1,
+        "success": false,
+        "average_slope_percent": 24.42,
+        "max_slope_percent": 24.42,
+        "generation_timestamp": "2025-11-21T02:12:00.973164",
+        "model_path": "/opt/agrs/Projects/US_PIPELINE/PIRL/outputs/validation_10k_cpu_20251121_021118/eval/best_model.zip",
+        "crs": "EPSG:32613"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            484838.28,
+            4933184.19
+          ],
+          [
+            484738.65,
+            4933044.91
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 1,
+        "step": 1,
+        "length_m": 171.24,
+        "cumulative_distance_m": 171.24,
+        "elevation_start_m": 1207.98,
+        "elevation_end_m": 1216.22,
+        "slope_percent": 24.42,
+        "reward": 290.3,
+        "total_reward_cumulative": 290.3,
+        "distance_to_aoi_boundary_m": 0.0
+      }
+    }
+  ]
+}

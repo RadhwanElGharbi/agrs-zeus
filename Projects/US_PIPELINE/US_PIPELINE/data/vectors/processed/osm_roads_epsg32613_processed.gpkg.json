@@ -1,0 +1,32 @@
+{
+  "dataset_name": "osm_roads_epsg32613_processed (Processed)",
+  "processing_date": "2025-11-20T23:48:42Z",
+  "target_crs": "EPSG:32613",
+  "target_crs_name": "WGS 84 / UTM zone 13N",
+  "data_type": "Vector",
+  "format": "GeoPackage",
+  "operations_applied": [
+    {
+      "operation": "reproject",
+      "tool": "ogr2ogr",
+      "source_crs": "",
+      "target_crs": "EPSG:32613",
+      "timestamp": "2025-11-20T23:48:42Z"
+    },
+    {
+      "operation": "clip",
+      "tool": "ogr2ogr",
+      "clipsrc": "aoi/aoi.gpkg",
+      "timestamp": "2025-11-20T23:48:42Z"
+    }
+  ],
+  "source_files": [
+    {
+      "filename": "osm_roads_raw.gpkg",
+      "metadata": "osm_roads_raw.gpkg.json"
+    }
+  ],
+  "file_size_bytes": 114688,
+  "validation_status": "pending",
+  "validation_date": "2025-11-20T23:48:42Z"
+}

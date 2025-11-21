@@ -1,0 +1,41 @@
+{
+  "attributes": {
+    "highway": "Road classification",
+    "lanes": "Number of lanes",
+    "maxspeed": "Speed limit",
+    "name": "Road name",
+    "oneway": "One-way street flag",
+    "osm_id": "OpenStreetMap way ID",
+    "ref": "Road reference number",
+    "surface": "Surface type"
+  },
+  "features": {
+    "crs": "EPSG:4326",
+    "geometry": "LineString",
+    "types": [
+      "motorway",
+      "trunk",
+      "primary",
+      "secondary",
+      "tertiary",
+      "unclassified",
+      "residential",
+      "service",
+      "track",
+      "path"
+    ]
+  },
+  "query": {
+    "aoi_file": "/opt/agrs/Projects/US_PIPELINE/aoi/aoi.kmz",
+    "bbox": "-105.249101,44.493569,-105.189801,44.552869"
+  },
+  "source": {
+    "api": "Overpass API",
+    "attribution": "© OpenStreetMap contributors",
+    "endpoint": "https://overpass-api.de/api/interpreter",
+    "license": "ODbL 1.0",
+    "provider": "OpenStreetMap"
+  },
+  "timestamp": "2025-11-21T04:50:48Z",
+  "tool": "osm_roads_fetch"
+}

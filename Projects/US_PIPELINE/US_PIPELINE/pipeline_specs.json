@@ -1,0 +1,36 @@
+{
+    "depth_of_cover_m": 1.5,
+    "diameter_mm": 660.4,
+    "dp_bar": 75,
+    "hdd_max_curvature_deg": 12,
+    "hot_bend_angles_deg": [
+        15,
+        30,
+        45,
+        60,
+        90
+    ],
+    "house_min_distance_mm": 13500,
+    "hydraulics": {
+        "compressor_capex_per_kw_usd": 5000,
+        "compressor_opex_fraction": 0.03,
+        "enable_compressor_placement": true,
+        "enable_hydraulics": true,
+        "energy_cost_usd_per_kwh": 0.05,
+        "gas_molecular_weight_kg_kmol": 16.8,
+        "gas_specific_gravity": 0.58,
+        "initial_pressure_bar": 70,
+        "max_operating_pressure_bar": 75,
+        "min_delivery_pressure_bar": 45,
+        "operating_temperature_k": 288.15,
+        "pipe_roughness_mm": 0.045,
+        "volumetric_flow_rate_m3_s": 1
+    },
+    "material": "Carbon Steel",
+    "mop_bar": 70,
+    "pipeline_type": "Gas",
+    "poles_min_distance_mm": 6000,
+    "powerlines_min_distance_mm": 6000,
+    "row_file": null,
+    "thickness_mm": 11.1
+}

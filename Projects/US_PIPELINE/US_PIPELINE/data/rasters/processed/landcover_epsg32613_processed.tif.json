@@ -1,0 +1,48 @@
+{
+  "dataset_name": "ESA WorldCover 10m v200 2021 (Processed)",
+  "processing_date": "2025-11-21T04:51:30Z",
+  "target_crs": "EPSG:32613",
+  "target_crs_name": "WGS 84 / UTM zone 13N",
+  "resolution_m": 10,
+  "data_type": "Raster",
+  "format": "GeoTIFF",
+  "extent": {
+    "minx": 480194.86,
+    "miny": 4926710.49,
+    "maxx": 484925.86,
+    "maxy": 4933311.94,
+    "crs": "EPSG:32613"
+  },
+  "bbox_wgs84": {
+    "west": -105.249101,
+    "south": 44.493569,
+    "east": -105.189801,
+    "north": 44.552869
+  },
+  "operations_applied": [
+    {
+      "operation": "reproject",
+      "tool": "gdalwarp",
+      "source_crs": "EPSG:4326",
+      "target_crs": "EPSG:32613",
+      "resampling": "near",
+      "timestamp": "2025-11-21T04:51:30Z"
+    },
+    {
+      "operation": "clip",
+      "tool": "gdalwarp",
+      "cutline": "aoi/aoi.kmz",
+      "timestamp": "2025-11-21T04:51:30Z"
+    }
+  ],
+  "source_files": [
+    {
+      "filename": "landcover_esa_worldcover_10m_raw_N42W108.tif",
+      "metadata": "landcover_esa_worldcover_10m_raw_N42W108.tif.json"
+    }
+  ],
+  "file_size_bytes": 44530,
+  "nodata_value": 0,
+  "validation_status": "passed",
+  "validation_date": "2025-11-21T04:51:30Z"
+}

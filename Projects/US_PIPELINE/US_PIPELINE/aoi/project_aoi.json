@@ -1,0 +1,15 @@
+{
+    "aoi_file": "/opt/agrs/Projects/US_PIPELINE/aoi/aoi.kmz",
+    "crs_epsg": 32613,
+    "crs_name": "WGS 84 / UTM zone 13N",
+    "end_point": {
+        "kmz_file": "/opt/agrs/Projects/US_PIPELINE/aoi/end_point.kml",
+        "latitude": 44.497557,
+        "longitude": -105.243734
+    },
+    "start_point": {
+        "kmz_file": "/opt/agrs/Projects/US_PIPELINE/aoi/start_point.kml",
+        "latitude": 44.551831,
+        "longitude": -105.190888
+    }
+}

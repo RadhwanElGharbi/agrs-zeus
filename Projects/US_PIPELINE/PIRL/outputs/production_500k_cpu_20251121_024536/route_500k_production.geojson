@@ -1,0 +1,1754 @@
+{
+  "type": "FeatureCollection",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "EPSG:32613"
+    }
+  },
+  "metadata": {
+    "title": "US_PIPELINE PIRL Route (7D Slope Optimization)",
+    "description": "Reinforcement learning generated pipeline route optimized for terrain slope",
+    "model_type": "PPO",
+    "state_space_dim": 7,
+    "action_space_dim": 2,
+    "optimization_focus": "slope_minimization",
+    "generation_date": "2025-11-21T02:48:35.597151",
+    "total_length_m": 7571.13,
+    "total_segments": 45,
+    "average_slope_percent": 6.3,
+    "max_slope_percent": 23.67,
+    "crs": "EPSG:32613"
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "MultiLineString",
+        "coordinates": [
+          [
+            [
+              484838.28,
+              4933184.19
+            ],
+            [
+              484741.25,
+              4933044.8
+            ]
+          ],
+          [
+            [
+              484741.25,
+              4933044.8
+            ],
+            [
+              484659.96,
+              4932927.25
+            ]
+          ],
+          [
+            [
+              484659.96,
+              4932927.25
+            ],
+            [
+              484563.77,
+              4932787.27
+            ]
+          ],
+          [
+            [
+              484563.77,
+              4932787.27
+            ],
+            [
+              484468.0,
+              4932647.0
+            ]
+          ],
+          [
+            [
+              484468.0,
+              4932647.0
+            ],
+            [
+              484389.19,
+              4932530.82
+            ]
+          ],
+          [
+            [
+              484389.19,
+              4932530.82
+            ],
+            [
+              484304.01,
+              4932404.42
+            ]
+          ],
+          [
+            [
+              484304.01,
+              4932404.42
+            ],
+            [
+              484209.51,
+              4932263.27
+            ]
+          ],
+          [
+            [
+              484209.51,
+              4932263.27
+            ],
+            [
+              484115.45,
+              4932121.83
+            ]
+          ],
+          [
+            [
+              484115.45,
+              4932121.83
+            ],
+            [
+              484021.81,
+              4931980.1
+            ]
+          ],
+          [
+            [
+              484021.81,
+              4931980.1
+            ],
+            [
+              483928.61,
+              4931838.08
+            ]
+          ],
+          [
+            [
+              483928.61,
+              4931838.08
+            ],
+            [
+              483835.84,
+              4931695.76
+            ]
+          ],
+          [
+            [
+              483835.84,
+              4931695.76
+            ],
+            [
+              483743.52,
+              4931553.16
+            ]
+          ],
+          [
+            [
+              483743.52,
+              4931553.16
+            ],
+            [
+              483651.64,
+              4931410.27
+            ]
+          ],
+          [
+            [
+              483651.64,
+              4931410.27
+            ],
+            [
+              483560.2,
+              4931267.08
+            ]
+          ],
+          [
+            [
+              483560.2,
+              4931267.08
+            ],
+            [
+              483469.22,
+              4931123.61
+            ]
+          ],
+          [
+            [
+              483469.22,
+              4931123.61
+            ],
+            [
+              483378.68,
+              4930979.85
+            ]
+          ],
+          [
+            [
+              483378.68,
+              4930979.85
+            ],
+            [
+              483288.6,
+              4930835.79
+            ]
+          ],
+          [
+            [
+              483288.6,
+              4930835.79
+            ],
+            [
+              483198.97,
+              4930691.45
+            ]
+          ],
+          [
+            [
+              483198.97,
+              4930691.45
+            ],
+            [
+              483109.81,
+              4930546.82
+            ]
+          ],
+          [
+            [
+              483109.81,
+              4930546.82
+            ],
+            [
+              483021.12,
+              4930401.9
+            ]
+          ],
+          [
+            [
+              483021.12,
+              4930401.9
+            ],
+            [
+              482932.89,
+              4930256.69
+            ]
+          ],
+          [
+            [
+              482932.89,
+              4930256.69
+            ],
+            [
+              482845.13,
+              4930111.2
+            ]
+          ],
+          [
+            [
+              482845.13,
+              4930111.2
+            ],
+            [
+              482757.84,
+              4929965.41
+            ]
+          ],
+          [
+            [
+              482757.84,
+              4929965.41
+            ],
+            [
+              482671.04,
+              4929819.34
+            ]
+          ],
+          [
+            [
+              482671.04,
+              4929819.34
+            ],
+            [
+              482584.71,
+              4929672.99
+            ]
+          ],
+          [
+            [
+              482584.71,
+              4929672.99
+            ],
+            [
+              482498.87,
+              4929526.34
+            ]
+          ],
+          [
+            [
+              482498.87,
+              4929526.34
+            ],
+            [
+              482413.51,
+              4929379.41
+            ]
+          ],
+          [
+            [
+              482413.51,
+              4929379.41
+            ],
+            [
+              482328.64,
+              4929232.21
+            ]
+          ],
+          [
+            [
+              482328.64,
+              4929232.21
+            ],
+            [
+              482244.25,
+              4929084.73
+            ]
+          ],
+          [
+            [
+              482244.25,
+              4929084.73
+            ],
+            [
+              482160.35,
+              4928936.97
+            ]
+          ],
+          [
+            [
+              482160.35,
+              4928936.97
+            ],
+            [
+              482076.93,
+              4928788.94
+            ]
+          ],
+          [
+            [
+              482076.93,
+              4928788.94
+            ],
+            [
+              481994.0,
+              4928640.64
+            ]
+          ],
+          [
+            [
+              481994.0,
+              4928640.64
+            ],
+            [
+              481911.55,
+              4928492.08
+            ]
+          ],
+          [
+            [
+              481911.55,
+              4928492.08
+            ],
+            [
+              481829.59,
+              4928343.25
+            ]
+          ],
+          [
+            [
+              481829.59,
+              4928343.25
+            ],
+            [
+              481748.11,
+              4928194.15
+            ]
+          ],
+          [
+            [
+              481748.11,
+              4928194.15
+            ],
+            [
+              481667.12,
+              4928044.8
+            ]
+          ],
+          [
+            [
+              481667.12,
+              4928044.8
+            ],
+            [
+              481586.61,
+              4927895.18
+            ]
+          ],
+          [
+            [
+              481586.61,
+              4927895.18
+            ],
+            [
+              481506.59,
+              4927745.31
+            ]
+          ],
+          [
+            [
+              481506.59,
+              4927745.31
+            ],
+            [
+              481427.05,
+              4927595.19
+            ]
+          ],
+          [
+            [
+              481427.05,
+              4927595.19
+            ],
+            [
+              481348.0,
+              4927444.82
+            ]
+          ],
+          [
+            [
+              481348.0,
+              4927444.82
+            ],
+            [
+              481269.45,
+              4927294.19
+            ]
+          ],
+          [
+            [
+              481269.45,
+              4927294.19
+            ],
+            [
+              481191.4,
+              4927143.31
+            ]
+          ],
+          [
+            [
+              481191.4,
+              4927143.31
+            ],
+            [
+              481113.5,
+              4926992.38
+            ]
+          ],
+          [
+            [
+              481113.5,
+              4926992.38
+            ],
+            [
+              481035.77,
+              4926841.38
+            ]
+          ],
+          [
+            [
+              481035.77,
+              4926841.38
+            ],
+            [
+              480958.22,
+              4926690.28
+            ]
+          ]
+        ]
+      },
+      "properties": {
+        "type": "full_route",
+        "total_length_m": 7571.13,
+        "total_segments": 45,
+        "success": false,
+        "average_slope_percent": 6.3,
+        "max_slope_percent": 23.67,
+        "generation_timestamp": "2025-11-21T02:48:35.597143",
+        "model_path": "/opt/agrs/Projects/US_PIPELINE/PIRL/outputs/production_500k_cpu_20251121_024536/eval/best_model.zip",
+        "crs": "EPSG:32613"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            484838.28,
+            4933184.19
+          ],
+          [
+            484741.25,
+            4933044.8
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 1,
+        "step": 1,
+        "length_m": 169.84,
+        "cumulative_distance_m": 169.84,
+        "elevation_start_m": 1207.98,
+        "elevation_end_m": 1218.42,
+        "slope_percent": 22.92,
+        "reward": 338.72,
+        "total_reward_cumulative": 338.72,
+        "distance_to_aoi_boundary_m": 183.01
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            484741.25,
+            4933044.8
+          ],
+          [
+            484659.96,
+            4932927.25
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 2,
+        "step": 2,
+        "length_m": 142.92,
+        "cumulative_distance_m": 312.75,
+        "elevation_start_m": 1218.42,
+        "elevation_end_m": 1231.31,
+        "slope_percent": 11.13,
+        "reward": 290.26,
+        "total_reward_cumulative": 628.98,
+        "distance_to_aoi_boundary_m": 264.04
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            484659.96,
+            4932927.25
+          ],
+          [
+            484563.77,
+            4932787.27
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 3,
+        "step": 3,
+        "length_m": 169.84,
+        "cumulative_distance_m": 482.6,
+        "elevation_start_m": 1231.31,
+        "elevation_end_m": 1231.21,
+        "slope_percent": 7.1,
+        "reward": 346.12,
+        "total_reward_cumulative": 975.1,
+        "distance_to_aoi_boundary_m": 359.9
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            484563.77,
+            4932787.27
+          ],
+          [
+            484468.0,
+            4932647.0
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 4,
+        "step": 4,
+        "length_m": 169.85,
+        "cumulative_distance_m": 652.45,
+        "elevation_start_m": 1231.21,
+        "elevation_end_m": 1212.72,
+        "slope_percent": 23.67,
+        "reward": 338.17,
+        "total_reward_cumulative": 1313.28,
+        "distance_to_aoi_boundary_m": 455.35
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            484468.0,
+            4932647.0
+          ],
+          [
+            484389.19,
+            4932530.82
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 5,
+        "step": 5,
+        "length_m": 140.39,
+        "cumulative_distance_m": 792.84,
+        "elevation_start_m": 1212.72,
+        "elevation_end_m": 1218.11,
+        "slope_percent": 20.13,
+        "reward": 280.74,
+        "total_reward_cumulative": 1594.02,
+        "distance_to_aoi_boundary_m": 533.88
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            484389.19,
+            4932530.82
+          ],
+          [
+            484304.01,
+            4932404.42
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 6,
+        "step": 6,
+        "length_m": 152.42,
+        "cumulative_distance_m": 945.26,
+        "elevation_start_m": 1218.11,
+        "elevation_end_m": 1216.18,
+        "slope_percent": 9.71,
+        "reward": 309.93,
+        "total_reward_cumulative": 1903.95,
+        "distance_to_aoi_boundary_m": 618.77
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            484304.01,
+            4932404.42
+          ],
+          [
+            484209.51,
+            4932263.27
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 7,
+        "step": 7,
+        "length_m": 169.86,
+        "cumulative_distance_m": 1115.12,
+        "elevation_start_m": 1216.18,
+        "elevation_end_m": 1216.5,
+        "slope_percent": 14.91,
+        "reward": 342.17,
+        "total_reward_cumulative": 2246.12,
+        "distance_to_aoi_boundary_m": 712.94
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            484209.51,
+            4932263.27
+          ],
+          [
+            484115.45,
+            4932121.83
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 8,
+        "step": 8,
+        "length_m": 169.86,
+        "cumulative_distance_m": 1284.98,
+        "elevation_start_m": 1216.5,
+        "elevation_end_m": 1214.2,
+        "slope_percent": 3.45,
+        "reward": 347.87,
+        "total_reward_cumulative": 2594.0,
+        "distance_to_aoi_boundary_m": 806.68
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            484115.45,
+            4932121.83
+          ],
+          [
+            484021.81,
+            4931980.1
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 9,
+        "step": 9,
+        "length_m": 169.87,
+        "cumulative_distance_m": 1454.85,
+        "elevation_start_m": 1214.2,
+        "elevation_end_m": 1206.54,
+        "slope_percent": 5.23,
+        "reward": 346.97,
+        "total_reward_cumulative": 2940.97,
+        "distance_to_aoi_boundary_m": 899.98
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            484021.81,
+            4931980.1
+          ],
+          [
+            483928.61,
+            4931838.08
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 10,
+        "step": 10,
+        "length_m": 169.87,
+        "cumulative_distance_m": 1624.73,
+        "elevation_start_m": 1206.54,
+        "elevation_end_m": 1203.43,
+        "slope_percent": 5.61,
+        "reward": 346.74,
+        "total_reward_cumulative": 3287.7,
+        "distance_to_aoi_boundary_m": 992.86
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            483928.61,
+            4931838.08
+          ],
+          [
+            483835.84,
+            4931695.76
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 11,
+        "step": 11,
+        "length_m": 169.88,
+        "cumulative_distance_m": 1794.6,
+        "elevation_start_m": 1203.43,
+        "elevation_end_m": 1202.84,
+        "slope_percent": 10.91,
+        "reward": 344.04,
+        "total_reward_cumulative": 3631.74,
+        "distance_to_aoi_boundary_m": 1085.29
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            483835.84,
+            4931695.76
+          ],
+          [
+            483743.52,
+            4931553.16
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 12,
+        "step": 12,
+        "length_m": 169.88,
+        "cumulative_distance_m": 1964.48,
+        "elevation_start_m": 1202.84,
+        "elevation_end_m": 1196.7,
+        "slope_percent": 6.42,
+        "reward": 346.23,
+        "total_reward_cumulative": 3977.97,
+        "distance_to_aoi_boundary_m": 1177.28
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            483743.52,
+            4931553.16
+          ],
+          [
+            483651.64,
+            4931410.27
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 13,
+        "step": 13,
+        "length_m": 169.88,
+        "cumulative_distance_m": 2134.37,
+        "elevation_start_m": 1196.7,
+        "elevation_end_m": 1191.55,
+        "slope_percent": 6.56,
+        "reward": 346.1,
+        "total_reward_cumulative": 4324.07,
+        "distance_to_aoi_boundary_m": 1268.83
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            483651.64,
+            4931410.27
+          ],
+          [
+            483560.2,
+            4931267.08
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 14,
+        "step": 14,
+        "length_m": 169.89,
+        "cumulative_distance_m": 2304.25,
+        "elevation_start_m": 1191.55,
+        "elevation_end_m": 1182.53,
+        "slope_percent": 4.37,
+        "reward": 347.12,
+        "total_reward_cumulative": 4671.19,
+        "distance_to_aoi_boundary_m": 1359.93
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            483560.2,
+            4931267.08
+          ],
+          [
+            483469.22,
+            4931123.61
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 15,
+        "step": 15,
+        "length_m": 169.89,
+        "cumulative_distance_m": 2474.15,
+        "elevation_start_m": 1182.53,
+        "elevation_end_m": 1173.56,
+        "slope_percent": 1.17,
+        "reward": 348.64,
+        "total_reward_cumulative": 5019.83,
+        "distance_to_aoi_boundary_m": 1450.59
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            483469.22,
+            4931123.61
+          ],
+          [
+            483378.68,
+            4930979.85
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 16,
+        "step": 16,
+        "length_m": 169.9,
+        "cumulative_distance_m": 2644.04,
+        "elevation_start_m": 1173.56,
+        "elevation_end_m": 1174.94,
+        "slope_percent": 1.31,
+        "reward": 348.47,
+        "total_reward_cumulative": 5368.3,
+        "distance_to_aoi_boundary_m": 1540.79
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            483378.68,
+            4930979.85
+          ],
+          [
+            483288.6,
+            4930835.79
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 17,
+        "step": 17,
+        "length_m": 169.9,
+        "cumulative_distance_m": 2813.94,
+        "elevation_start_m": 1174.94,
+        "elevation_end_m": 1182.11,
+        "slope_percent": 0.77,
+        "reward": 348.62,
+        "total_reward_cumulative": 5716.93,
+        "distance_to_aoi_boundary_m": 1630.53
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            483288.6,
+            4930835.79
+          ],
+          [
+            483198.97,
+            4930691.45
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 18,
+        "step": 18,
+        "length_m": 169.9,
+        "cumulative_distance_m": 2983.85,
+        "elevation_start_m": 1182.11,
+        "elevation_end_m": 1181.68,
+        "slope_percent": 0.86,
+        "reward": 348.44,
+        "total_reward_cumulative": 6065.37,
+        "distance_to_aoi_boundary_m": 1719.82
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            483198.97,
+            4930691.45
+          ],
+          [
+            483109.81,
+            4930546.82
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 19,
+        "step": 19,
+        "length_m": 169.91,
+        "cumulative_distance_m": 3153.75,
+        "elevation_start_m": 1181.68,
+        "elevation_end_m": 1179.03,
+        "slope_percent": 4.39,
+        "reward": 346.52,
+        "total_reward_cumulative": 6411.89,
+        "distance_to_aoi_boundary_m": 1808.65
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            483109.81,
+            4930546.82
+          ],
+          [
+            483021.12,
+            4930401.9
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 20,
+        "step": 20,
+        "length_m": 169.91,
+        "cumulative_distance_m": 3323.66,
+        "elevation_start_m": 1179.03,
+        "elevation_end_m": 1172.19,
+        "slope_percent": 0.44,
+        "reward": 348.31,
+        "total_reward_cumulative": 6760.2,
+        "distance_to_aoi_boundary_m": 1897.01
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            483021.12,
+            4930401.9
+          ],
+          [
+            482932.89,
+            4930256.69
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 21,
+        "step": 21,
+        "length_m": 169.91,
+        "cumulative_distance_m": 3493.57,
+        "elevation_start_m": 1172.19,
+        "elevation_end_m": 1171.1,
+        "slope_percent": 3.62,
+        "reward": 346.51,
+        "total_reward_cumulative": 7106.71,
+        "distance_to_aoi_boundary_m": 1984.9
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            482932.89,
+            4930256.69
+          ],
+          [
+            482845.13,
+            4930111.2
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 22,
+        "step": 22,
+        "length_m": 169.91,
+        "cumulative_distance_m": 3663.48,
+        "elevation_start_m": 1171.1,
+        "elevation_end_m": 1198.67,
+        "slope_percent": 1.31,
+        "reward": 347.42,
+        "total_reward_cumulative": 7454.14,
+        "distance_to_aoi_boundary_m": 2072.32
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            482845.13,
+            4930111.2
+          ],
+          [
+            482757.84,
+            4929965.41
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 23,
+        "step": 23,
+        "length_m": 169.92,
+        "cumulative_distance_m": 3833.4,
+        "elevation_start_m": 1198.67,
+        "elevation_end_m": 1198.37,
+        "slope_percent": 6.95,
+        "reward": 344.32,
+        "total_reward_cumulative": 7798.45,
+        "distance_to_aoi_boundary_m": 2159.26
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            482757.84,
+            4929965.41
+          ],
+          [
+            482671.04,
+            4929819.34
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 24,
+        "step": 24,
+        "length_m": 169.92,
+        "cumulative_distance_m": 4003.32,
+        "elevation_start_m": 1198.37,
+        "elevation_end_m": 1204.61,
+        "slope_percent": 1.95,
+        "reward": 346.48,
+        "total_reward_cumulative": 8144.93,
+        "distance_to_aoi_boundary_m": 2245.73
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            482671.04,
+            4929819.34
+          ],
+          [
+            482584.71,
+            4929672.99
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 25,
+        "step": 25,
+        "length_m": 169.92,
+        "cumulative_distance_m": 4173.24,
+        "elevation_start_m": 1204.61,
+        "elevation_end_m": 1201.26,
+        "slope_percent": 3.7,
+        "reward": 345.21,
+        "total_reward_cumulative": 8490.15,
+        "distance_to_aoi_boundary_m": 2331.72
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            482584.71,
+            4929672.99
+          ],
+          [
+            482498.87,
+            4929526.34
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 26,
+        "step": 26,
+        "length_m": 169.92,
+        "cumulative_distance_m": 4343.16,
+        "elevation_start_m": 1201.26,
+        "elevation_end_m": 1199.93,
+        "slope_percent": 2.61,
+        "reward": 345.29,
+        "total_reward_cumulative": 8835.44,
+        "distance_to_aoi_boundary_m": 2295.46
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            482498.87,
+            4929526.34
+          ],
+          [
+            482413.51,
+            4929379.41
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 27,
+        "step": 27,
+        "length_m": 169.92,
+        "cumulative_distance_m": 4513.08,
+        "elevation_start_m": 1199.93,
+        "elevation_end_m": 1194.61,
+        "slope_percent": 8.1,
+        "reward": 341.99,
+        "total_reward_cumulative": 9177.44,
+        "distance_to_aoi_boundary_m": 2210.55
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            482413.51,
+            4929379.41
+          ],
+          [
+            482328.64,
+            4929232.21
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 28,
+        "step": 28,
+        "length_m": 169.92,
+        "cumulative_distance_m": 4683.0,
+        "elevation_start_m": 1194.61,
+        "elevation_end_m": 1185.66,
+        "slope_percent": 7.23,
+        "reward": 341.76,
+        "total_reward_cumulative": 9519.19,
+        "distance_to_aoi_boundary_m": 2126.13
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            482328.64,
+            4929232.21
+          ],
+          [
+            482244.25,
+            4929084.73
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 29,
+        "step": 29,
+        "length_m": 169.92,
+        "cumulative_distance_m": 4852.92,
+        "elevation_start_m": 1185.66,
+        "elevation_end_m": 1186.08,
+        "slope_percent": 5.47,
+        "reward": 341.83,
+        "total_reward_cumulative": 9861.02,
+        "distance_to_aoi_boundary_m": 2042.19
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            482244.25,
+            4929084.73
+          ],
+          [
+            482160.35,
+            4928936.97
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 30,
+        "step": 30,
+        "length_m": 169.92,
+        "cumulative_distance_m": 5022.83,
+        "elevation_start_m": 1186.08,
+        "elevation_end_m": 1186.08,
+        "slope_percent": 3.9,
+        "reward": 341.64,
+        "total_reward_cumulative": 10202.67,
+        "distance_to_aoi_boundary_m": 1958.74
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            482160.35,
+            4928936.97
+          ],
+          [
+            482076.93,
+            4928788.94
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 31,
+        "step": 31,
+        "length_m": 169.92,
+        "cumulative_distance_m": 5192.75,
+        "elevation_start_m": 1186.08,
+        "elevation_end_m": 1191.47,
+        "slope_percent": 5.89,
+        "reward": 339.44,
+        "total_reward_cumulative": 10542.11,
+        "distance_to_aoi_boundary_m": 1875.78
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            482076.93,
+            4928788.94
+          ],
+          [
+            481994.0,
+            4928640.64
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 32,
+        "step": 32,
+        "length_m": 169.91,
+        "cumulative_distance_m": 5362.66,
+        "elevation_start_m": 1191.47,
+        "elevation_end_m": 1198.89,
+        "slope_percent": 7.52,
+        "reward": 337.12,
+        "total_reward_cumulative": 10879.23,
+        "distance_to_aoi_boundary_m": 1793.3
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            481994.0,
+            4928640.64
+          ],
+          [
+            481911.55,
+            4928492.08
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 33,
+        "step": 33,
+        "length_m": 169.91,
+        "cumulative_distance_m": 5532.57,
+        "elevation_start_m": 1198.89,
+        "elevation_end_m": 1203.84,
+        "slope_percent": 7.51,
+        "reward": 335.21,
+        "total_reward_cumulative": 11214.43,
+        "distance_to_aoi_boundary_m": 1711.3
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            481911.55,
+            4928492.08
+          ],
+          [
+            481829.59,
+            4928343.25
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 34,
+        "step": 34,
+        "length_m": 169.91,
+        "cumulative_distance_m": 5702.48,
+        "elevation_start_m": 1203.84,
+        "elevation_end_m": 1200.4,
+        "slope_percent": 5.32,
+        "reward": 333.83,
+        "total_reward_cumulative": 11548.26,
+        "distance_to_aoi_boundary_m": 1622.57
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            481829.59,
+            4928343.25
+          ],
+          [
+            481748.11,
+            4928194.15
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 35,
+        "step": 35,
+        "length_m": 169.91,
+        "cumulative_distance_m": 5872.38,
+        "elevation_start_m": 1200.4,
+        "elevation_end_m": 1200.73,
+        "slope_percent": 5.06,
+        "reward": 330.68,
+        "total_reward_cumulative": 11878.94,
+        "distance_to_aoi_boundary_m": 1473.26
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            481748.11,
+            4928194.15
+          ],
+          [
+            481667.12,
+            4928044.8
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 36,
+        "step": 36,
+        "length_m": 169.9,
+        "cumulative_distance_m": 6042.29,
+        "elevation_start_m": 1200.73,
+        "elevation_end_m": 1202.86,
+        "slope_percent": 3.68,
+        "reward": 326.93,
+        "total_reward_cumulative": 12205.87,
+        "distance_to_aoi_boundary_m": 1323.69
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            481667.12,
+            4928044.8
+          ],
+          [
+            481586.61,
+            4927895.18
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 37,
+        "step": 37,
+        "length_m": 169.9,
+        "cumulative_distance_m": 6212.19,
+        "elevation_start_m": 1202.86,
+        "elevation_end_m": 1207.02,
+        "slope_percent": 3.85,
+        "reward": 320.64,
+        "total_reward_cumulative": 12526.5,
+        "distance_to_aoi_boundary_m": 1173.86
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            481586.61,
+            4927895.18
+          ],
+          [
+            481506.59,
+            4927745.31
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 38,
+        "step": 38,
+        "length_m": 169.89,
+        "cumulative_distance_m": 6382.08,
+        "elevation_start_m": 1207.02,
+        "elevation_end_m": 1204.85,
+        "slope_percent": 7.86,
+        "reward": 309.67,
+        "total_reward_cumulative": 12836.17,
+        "distance_to_aoi_boundary_m": 1023.78
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            481506.59,
+            4927745.31
+          ],
+          [
+            481427.05,
+            4927595.19
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 39,
+        "step": 39,
+        "length_m": 169.89,
+        "cumulative_distance_m": 6551.97,
+        "elevation_start_m": 1204.85,
+        "elevation_end_m": 1198.71,
+        "slope_percent": 1.8,
+        "reward": 299.25,
+        "total_reward_cumulative": 13135.42,
+        "distance_to_aoi_boundary_m": 873.44
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            481427.05,
+            4927595.19
+          ],
+          [
+            481348.0,
+            4927444.82
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 40,
+        "step": 40,
+        "length_m": 169.89,
+        "cumulative_distance_m": 6721.85,
+        "elevation_start_m": 1198.71,
+        "elevation_end_m": 1196.92,
+        "slope_percent": 2.23,
+        "reward": 278.04,
+        "total_reward_cumulative": 13413.45,
+        "distance_to_aoi_boundary_m": 722.86
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            481348.0,
+            4927444.82
+          ],
+          [
+            481269.45,
+            4927294.19
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 41,
+        "step": 41,
+        "length_m": 169.88,
+        "cumulative_distance_m": 6891.74,
+        "elevation_start_m": 1196.92,
+        "elevation_end_m": 1208.52,
+        "slope_percent": 6.82,
+        "reward": 241.81,
+        "total_reward_cumulative": 13655.26,
+        "distance_to_aoi_boundary_m": 572.02
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            481269.45,
+            4927294.19
+          ],
+          [
+            481191.4,
+            4927143.31
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 42,
+        "step": 42,
+        "length_m": 169.88,
+        "cumulative_distance_m": 7061.61,
+        "elevation_start_m": 1208.52,
+        "elevation_end_m": 1205.32,
+        "slope_percent": 7.01,
+        "reward": 186.54,
+        "total_reward_cumulative": 13841.8,
+        "distance_to_aoi_boundary_m": 420.93
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            481191.4,
+            4927143.31
+          ],
+          [
+            481113.5,
+            4926992.38
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 43,
+        "step": 43,
+        "length_m": 169.84,
+        "cumulative_distance_m": 7231.46,
+        "elevation_start_m": 1205.32,
+        "elevation_end_m": 1208.32,
+        "slope_percent": 4.28,
+        "reward": 104.52,
+        "total_reward_cumulative": 13946.32,
+        "distance_to_aoi_boundary_m": 269.79
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            481113.5,
+            4926992.38
+          ],
+          [
+            481035.77,
+            4926841.38
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 44,
+        "step": 44,
+        "length_m": 169.84,
+        "cumulative_distance_m": 7401.29,
+        "elevation_start_m": 1208.32,
+        "elevation_end_m": 1213.15,
+        "slope_percent": 8.85,
+        "reward": -4.4,
+        "total_reward_cumulative": 13941.92,
+        "distance_to_aoi_boundary_m": 118.58
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            481035.77,
+            4926841.38
+          ],
+          [
+            480958.22,
+            4926690.28
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 45,
+        "step": 45,
+        "length_m": 169.83,
+        "cumulative_distance_m": 7571.13,
+        "elevation_start_m": 1213.15,
+        "elevation_end_m": 0.0,
+        "slope_percent": 0.0,
+        "reward": -153.91,
+        "total_reward_cumulative": 13788.01,
+        "distance_to_aoi_boundary_m": 0.0
+      }
+    }
+  ]
+}

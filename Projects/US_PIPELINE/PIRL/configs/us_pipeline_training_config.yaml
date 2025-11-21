@@ -1,0 +1,56 @@
+# US_PIPELINE PIRL Training Configuration
+# Simplified 7D State Space - Slope Optimization Focus
+
+project_name: US_PIPELINE
+project_dir: /opt/agrs/Projects/US_PIPELINE/US_PIPELINE
+epsg_code: 32613  # WGS 84 / UTM Zone 13N
+
+# Start and End Points (UTM coordinates - from KML files)
+start_point:
+  x: 484838.28
+  y: 4933184.19
+
+end_point:
+  x: 480622.89
+  y: 4927166.70
+
+# Constraints
+constraints:
+  max_slope_percent: 50.0  # Terminal threshold
+  max_steps_per_episode: 5000  # Safety limit
+  step_size_min_m: 40.0    # Minimum step size
+  step_size_max_m: 300.0   # Maximum step size
+
+# Training Parameters
+training:
+  algorithm: PPO        # Proximal Policy Optimization
+  policy: MlpPolicy     # Multi-Layer Perceptron policy
+  num_parallel_envs: 1  # Number of parallel environments (start with 1 for debugging)
+  
+  # Hyperparameters (can be modified in GUI)
+  learning_rate: 0.0003 # Adam optimizer learning rate
+  batch_size: 256       # Number of samples per gradient update
+  n_steps: 2048         # Rollout steps before policy update
+  n_epochs: 10          # Number of passes over rollout buffer
+  gamma: 0.99           # Discount factor for future rewards
+  gae_lambda: 0.95      # Generalized Advantage Estimation smoothing
+  clip_range: 0.2       # PPO clipping parameter
+  ent_coef: 0.01        # Entropy coefficient for exploration
+  vf_coef: 0.5          # Value function loss coefficient
+  max_grad_norm: 0.5    # Gradient clipping threshold
+
+# Evaluation
+evaluation:
+  eval_freq: 10000      # Evaluate every N timesteps
+  n_eval_episodes: 5    # Number of evaluation episodes
+  
+# Logging
+logging:
+  log_interval: 100     # Log every N updates
+  tensorboard: true     # Enable TensorBoard logging
+  
+# Checkpointing
+checkpointing:
+  save_freq: 50000      # Save model every N timesteps
+  keep_best_only: false # Keep all checkpoints for analysis
+

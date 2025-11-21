@@ -1,0 +1,38 @@
+{
+  "attributes": {
+    "depth": "Depth in meters (if tagged)",
+    "intermittent": "Intermittent flow flag",
+    "name": "Name of waterway",
+    "osm_id": "OpenStreetMap way ID",
+    "seasonal": "Seasonal waterway flag",
+    "waterway": "Waterway type",
+    "width": "Width in meters (if tagged)"
+  },
+  "features": {
+    "crs": "EPSG:4326",
+    "geometry": "LineString",
+    "types": [
+      "river",
+      "stream",
+      "canal",
+      "drain",
+      "ditch",
+      "weir",
+      "dam",
+      "lock"
+    ]
+  },
+  "query": {
+    "aoi_file": "/opt/agrs/Projects/US_PIPELINE/aoi/aoi.kmz",
+    "bbox": "-105.249101,44.493569,-105.189801,44.552869"
+  },
+  "source": {
+    "api": "Overpass API",
+    "attribution": "© OpenStreetMap contributors",
+    "endpoint": "https://overpass-api.de/api/interpreter",
+    "license": "ODbL 1.0",
+    "provider": "OpenStreetMap"
+  },
+  "timestamp": "2025-11-21T04:51:03Z",
+  "tool": "osm_waterways_fetch"
+}

@@ -1,0 +1,13 @@
+[2025-11-20 18:48:42] [INFO] ========== Processing started ==========
+[2025-11-20 18:48:42] [INFO] Reading target CRS from project metadata...
+[2025-11-20 18:48:42] [INFO] Target CRS set to EPSG:32613
+[2025-11-20 18:48:42] [INFO] Converting AOI KMZ to GeoPackage...
+[2025-11-20 18:48:42] [INFO] AOI converted: /opt/agrs/Projects/US_PIPELINE/aoi/aoi.gpkg
+[2025-11-20 18:48:42] [INFO] Processing vector: osm_railways
+[2025-11-20 18:48:42] [INFO] Vector processed: /opt/agrs/Projects/US_PIPELINE/data/vectors/processed/osm_railways_epsg32613_processed.gpkg
+[2025-11-20 18:48:42] [INFO] Processing vector: osm_roads
+[2025-11-20 18:48:42] [INFO] Vector processed: /opt/agrs/Projects/US_PIPELINE/data/vectors/processed/osm_roads_epsg32613_processed.gpkg
+[2025-11-20 18:48:42] [INFO] Processing vector: osm_waterways
+[2025-11-20 18:48:42] [INFO] Vector processed: /opt/agrs/Projects/US_PIPELINE/data/vectors/processed/osm_waterways_epsg32613_processed.gpkg
+[2025-11-20 18:48:42] [INFO] Creating convenience symlinks...
+[2025-11-20 18:48:42] [INFO] ========== Processing completed ==========
