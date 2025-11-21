@@ -17,53 +17,68 @@ export function MapViewer() {
   useEffect(() => {
     if (map.current || !mapContainer.current) return
 
+    console.log('🗺️ Initializing Mapbox...')
+    console.log('📍 Token:', MAPBOX_TOKEN ? `${MAPBOX_TOKEN.substring(0, 20)}...` : 'MISSING')
+
     // Set Mapbox access token
     mapboxgl.accessToken = MAPBOX_TOKEN
 
-    // Initialize map
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/dark-v11', // Dark theme for enterprise look
-      center: [-98.5795, 39.8283], // Center of USA
-      zoom: zoom,
-      attributionControl: false
-    })
+    try {
+      // Initialize map
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/dark-v11', // Dark theme for enterprise look
+        center: [-98.5795, 39.8283], // Center of USA
+        zoom: zoom,
+        attributionControl: false
+      })
 
-    // Add navigation controls
-    map.current.addControl(
-      new mapboxgl.NavigationControl({
-        visualizePitch: true
-      }),
-      'top-right'
-    )
+      console.log('✅ Map instance created')
 
-    // Add scale control
-    map.current.addControl(
-      new mapboxgl.ScaleControl({
-        maxWidth: 200,
-        unit: 'metric'
-      }),
-      'bottom-right'
-    )
+      // Add navigation controls
+      map.current.addControl(
+        new mapboxgl.NavigationControl({
+          visualizePitch: true
+        }),
+        'top-right'
+      )
 
-    // Add fullscreen control
-    map.current.addControl(
-      new mapboxgl.FullscreenControl(),
-      'top-right'
-    )
+      // Add scale control
+      map.current.addControl(
+        new mapboxgl.ScaleControl({
+          maxWidth: 200,
+          unit: 'metric'
+        }),
+        'bottom-right'
+      )
 
-    // Update zoom level on map zoom
-    map.current.on('zoom', () => {
-      if (map.current) {
-        setZoom(Math.round(map.current.getZoom() * 10) / 10)
-      }
-    })
+      // Add fullscreen control
+      map.current.addControl(
+        new mapboxgl.FullscreenControl(),
+        'top-right'
+      )
 
-    // Map loaded event
-    map.current.on('load', () => {
-      setMapLoaded(true)
-      console.log('Map loaded successfully')
-    })
+      // Update zoom level on map zoom
+      map.current.on('zoom', () => {
+        if (map.current) {
+          setZoom(Math.round(map.current.getZoom() * 10) / 10)
+        }
+      })
+
+      // Map loaded event
+      map.current.on('load', () => {
+        setMapLoaded(true)
+        console.log('🎉 Map loaded successfully!')
+      })
+
+      // Error handling
+      map.current.on('error', (e) => {
+        console.error('❌ Mapbox error:', e)
+      })
+
+    } catch (error) {
+      console.error('❌ Failed to initialize map:', error)
+    }
 
     // Cleanup
     return () => {
