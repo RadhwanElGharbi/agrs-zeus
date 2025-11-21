@@ -1,89 +1,74 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import mapboxgl from 'mapbox-gl'
 import { Layers, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
-// Mapbox token configured for AGRS ZEUS
-const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || 'pk.eyJ1IjoicmFkLWVsZ2hhcmJpIiwiYSI6ImNtaTlhamp5eTBsNDgybG9hdXp2cTluNDQifQ.ILZUt-5Fdpfzm64icFG8mQ'
-
+// Leaflet fallback for systems without WebGL support
 export function MapViewer() {
   const mapContainer = useRef<HTMLDivElement>(null)
-  const map = useRef<mapboxgl.Map | null>(null)
+  const map = useRef<any>(null)
   const [mapLoaded, setMapLoaded] = useState(false)
   const [zoom, setZoom] = useState(4)
 
   useEffect(() => {
-    if (map.current || !mapContainer.current) return
+    // Dynamically import Leaflet only on client side
+    const initMap = async () => {
+      if (map.current || !mapContainer.current) return
+      
+      console.log('🗺️ Initializing Leaflet (WebGL-free alternative)...')
+      
+      try {
+        // Import Leaflet dynamically
+        const L = (await import('leaflet')).default
+        
+        // Import Leaflet CSS
+        await import('leaflet/dist/leaflet.css')
+        
+        // Fix Leaflet default icon paths
+        delete (L.Icon.Default.prototype as any)._getIconUrl
+        L.Icon.Default.mergeOptions({
+          iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+          iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+          shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+        })
 
-    console.log('🗺️ Initializing Mapbox...')
-    console.log('📍 Token:', MAPBOX_TOKEN ? `${MAPBOX_TOKEN.substring(0, 20)}...` : 'MISSING')
+        // Initialize map
+        map.current = L.map(mapContainer.current, {
+          center: [39.8283, -98.5795], // Center of USA
+          zoom: zoom,
+          zoomControl: false // We'll add custom controls
+        })
 
-    // Set Mapbox access token
-    mapboxgl.accessToken = MAPBOX_TOKEN
+        // Add dark tile layer (CartoDB Dark Matter - no API key needed!)
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+          attribution: '© OpenStreetMap © CartoDB',
+          subdomains: 'abcd',
+          maxZoom: 20
+        }).addTo(map.current)
 
-    try {
-      // Initialize map
-      map.current = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/dark-v11', // Dark theme for enterprise look
-        center: [-98.5795, 39.8283], // Center of USA
-        zoom: zoom,
-        attributionControl: false
-      })
-
-      console.log('✅ Map instance created')
-
-      // Add navigation controls
-      map.current.addControl(
-        new mapboxgl.NavigationControl({
-          visualizePitch: true
-        }),
-        'top-right'
-      )
-
-      // Add scale control
-      map.current.addControl(
-        new mapboxgl.ScaleControl({
-          maxWidth: 200,
-          unit: 'metric'
-        }),
-        'bottom-right'
-      )
-
-      // Add fullscreen control
-      map.current.addControl(
-        new mapboxgl.FullscreenControl(),
-        'top-right'
-      )
-
-      // Update zoom level on map zoom
-      map.current.on('zoom', () => {
-        if (map.current) {
-          setZoom(Math.round(map.current.getZoom() * 10) / 10)
-        }
-      })
-
-      // Map loaded event
-      map.current.on('load', () => {
+        console.log('✅ Leaflet map created successfully!')
         setMapLoaded(true)
-        console.log('🎉 Map loaded successfully!')
-      })
 
-      // Error handling
-      map.current.on('error', (e) => {
-        console.error('❌ Mapbox error:', e)
-      })
+        // Listen for zoom changes
+        map.current.on('zoomend', () => {
+          if (map.current) {
+            setZoom(map.current.getZoom())
+          }
+        })
 
-    } catch (error) {
-      console.error('❌ Failed to initialize map:', error)
+      } catch (error) {
+        console.error('❌ Failed to initialize map:', error)
+      }
     }
+
+    initMap()
 
     // Cleanup
     return () => {
       if (map.current) {
         map.current.remove()
+        map.current = null
       }
     }
   }, [])
@@ -102,11 +87,7 @@ export function MapViewer() {
 
   const handleResetView = () => {
     if (map.current) {
-      map.current.flyTo({
-        center: [-98.5795, 39.8283],
-        zoom: 4,
-        duration: 1500
-      })
+      map.current.setView([39.8283, -98.5795], 4)
     }
   }
 
@@ -116,18 +97,21 @@ export function MapViewer() {
       <div ref={mapContainer} className="absolute inset-0" />
 
       {/* Map Controls Overlay */}
-      <div className="absolute top-4 left-4 z-10 space-y-2">
+      <div className="absolute top-4 left-4 z-[1000] space-y-2">
         <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <Layers className="w-4 h-4" />
-              <span className="text-sm font-medium">Map View</span>
+              <span className="text-sm font-medium">Map View (Leaflet)</span>
             </div>
             <div className="text-xs text-muted-foreground">
               Zoom: {zoom.toFixed(1)}x
             </div>
             <div className="text-xs text-muted-foreground">
               {mapLoaded ? '✓ Loaded' : 'Loading...'}
+            </div>
+            <div className="text-xs text-green-500">
+              ✓ WebGL-free
             </div>
           </div>
         </div>
@@ -165,20 +149,20 @@ export function MapViewer() {
       </div>
 
       {/* Info Panel */}
-      <div className="absolute bottom-4 left-4 z-10">
+      <div className="absolute bottom-4 left-4 z-[1000]">
         <div className="bg-card/90 backdrop-blur border border-border rounded-lg p-3 shadow-lg max-w-xs">
           <h3 className="text-sm font-semibold mb-2">AGRS ZEUS Map Viewer</h3>
           <p className="text-xs text-muted-foreground">
-            Interactive geospatial visualization powered by Mapbox GL JS. 
-            Use the controls to navigate, or click and drag to pan.
+            Interactive geospatial visualization using Leaflet (WebGL-free). 
+            Works on all systems including VMs.
           </p>
         </div>
       </div>
 
-      {/* Attribution (optional) */}
-      <div className="absolute bottom-2 right-2 z-10">
+      {/* Attribution */}
+      <div className="absolute bottom-2 right-2 z-[1000]">
         <div className="text-xs text-muted-foreground bg-background/80 px-2 py-1 rounded">
-          © Mapbox | © OpenStreetMap
+          © OpenStreetMap © CartoDB
         </div>
       </div>
     </div>

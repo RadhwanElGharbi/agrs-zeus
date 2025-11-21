@@ -18,13 +18,16 @@ app = FastAPI(
     redoc_url="/api/redoc"
 )
 
-# Configure CORS for Electron app
+# Configure CORS for Electron app and external access
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
         "http://localhost:*",
         "http://127.0.0.1:*",
+        "http://192.168.0.126:3000",
+        "http://192.168.0.126:*",
+        "*"  # Allow all origins for development
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -45,12 +48,14 @@ async def root():
 
 if __name__ == "__main__":
     # Get configuration from environment
-    host = os.getenv("API_HOST", "127.0.0.1")
+    # Use 0.0.0.0 to allow access from host machine
+    host = os.getenv("API_HOST", "0.0.0.0")
     port = int(os.getenv("API_PORT", "8000"))
     reload = os.getenv("API_RELOAD", "true").lower() == "true"
     
     print(f"🚀 Starting AGRS ZEUS API Server on http://{host}:{port}")
     print(f"📚 API Documentation: http://{host}:{port}/api/docs")
+    print(f"🌐 Access from host machine: http://192.168.0.126:{port}")
     
     uvicorn.run(
         "main:app",
