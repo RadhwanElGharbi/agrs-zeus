@@ -1,15 +1,8 @@
 {
-    "aoi_file": "/opt/agrs/Projects/US_PIPELINE/aoi/aoi.kmz",
-    "crs_epsg": 32613,
-    "crs_name": "WGS 84 / UTM zone 13N",
-    "end_point": {
-        "kmz_file": "/opt/agrs/Projects/US_PIPELINE/aoi/end_point.kml",
-        "latitude": 44.497557,
-        "longitude": -105.243734
-    },
-    "start_point": {
-        "kmz_file": "/opt/agrs/Projects/US_PIPELINE/aoi/start_point.kml",
-        "latitude": 44.551831,
-        "longitude": -105.190888
-    }
+  "name": "US_PIPELINE AOI",
+  "crs": "EPSG:32613",
+  "geometry_type": "POLYGON",
+  "source_file": "aoi.kml (from Downloads)",
+  "date_updated": "2025-11-21",
+  "notes": "Replaced MULTIPOLYGON with simpler POLYGON to fix boundary distance calculations"
 }

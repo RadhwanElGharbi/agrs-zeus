@@ -518,11 +518,17 @@ RewardInfo PipelineEnvironment::calculate_reward(const State& prev_state,
     RewardInfo info;
     info.total_reward = 0.0;
     
-    // 1. Progress reward (moving toward goal) - REDUCED to balance with terrain
+    // 1. Progress reward (moving toward goal) - FIXED per segment for 7347m journey
+    //    Option 2 (Per-Segment Normalized): 50-50 split between progress and terrain
     double prev_dist = prev_state.goal_distance;
     double curr_dist = new_state.goal_distance;
     double progress = prev_dist - curr_dist;
-    info.progress_reward = progress * 0.5;  // REDUCED from 2.0 to 0.5
+    
+    // OLD (distance-based, caused imbalance for 20-25% slopes):
+    // info.progress_reward = progress * 0.5;  // REDUCED from 2.0 to 0.5
+    
+    // NEW (Option 2 - Fixed per segment, journey-scaled):
+    info.progress_reward = 50.0;  // Fixed reward per segment, independent of step size
     info.total_reward += info.progress_reward;
     
     // 2. Slope reward/penalty - HEAVILY FAVOR LOW SLOPES
@@ -580,9 +586,13 @@ RewardInfo PipelineEnvironment::calculate_reward(const State& prev_state,
     info.curvature_penalty = curvature_penalty;
     info.total_reward += curvature_penalty;
     
-    // 5. Goal bonus (reaching destination) - INCREASED range and magnitude
+    // 5. Goal bonus (reaching destination) - Scaled for 43-segment journey
     if (curr_dist < 100.0) {  // Within 100m of goal (increased from 50m)
-        info.goal_bonus = 2000.0;  // Increased from 1000.0 for stronger goal-seeking
+        // OLD (too high for per-segment normalized system):
+        // info.goal_bonus = 2000.0;  // Increased from 1000.0 for stronger goal-seeking
+        
+        // NEW (Option 2 - 10× base reward of 100):
+        info.goal_bonus = 1000.0;  // Scaled for journey length, 10× base per-segment reward
         info.total_reward += info.goal_bonus;
     } else {
         info.goal_bonus = 0.0;
