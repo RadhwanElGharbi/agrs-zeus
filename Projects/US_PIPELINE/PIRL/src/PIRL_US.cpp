@@ -605,14 +605,14 @@ bool PipelineEnvironment::check_termination(const State& state, std::string& rea
     // 1. Out of bounds
     if (!gis_->is_within_aoi(state.x, state.y)) {
         reason = "OUT_OF_BOUNDS";
-        std::cout << "🚫 " << reason << std::endl;
+        // std::cout << "🚫 " << reason << std::endl;  // Silenced for quiet training
         return true;
     }
     
     // 2. Slope termination (50%)
     if (state.slope > 50.0) {
         reason = "SLOPE_VIOLATION_50%";
-        std::cout << "⛰️  " << reason << " (slope: " << state.slope << "%)" << std::endl;
+        // std::cout << "⛰️  " << reason << " (slope: " << state.slope << "%)" << std::endl;  // Silenced for quiet training
         return true;
     }
     
