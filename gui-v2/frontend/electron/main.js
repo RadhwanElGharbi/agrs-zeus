@@ -8,12 +8,18 @@ let backendProcess;
 // Start FastAPI backend server
 function startBackend() {
   const backendPath = path.join(__dirname, '../../backend');
-  const pythonCmd = 'python3';
+  const venvPython = path.join(backendPath, 'venv/bin/python3');
+  
+  // Use venv python if it exists, otherwise fall back to system python3
+  const pythonCmd = require('fs').existsSync(venvPython) ? venvPython : 'python3';
   
   console.log('Starting FastAPI backend...');
+  console.log('Backend path:', backendPath);
+  console.log('Python command:', pythonCmd);
+  
   backendProcess = spawn(pythonCmd, ['main.py'], {
     cwd: backendPath,
-    env: { ...process.env }
+    env: { ...process.env, PYTHONUNBUFFERED: '1' }
   });
 
   backendProcess.stdout.on('data', (data) => {
@@ -26,6 +32,10 @@ function startBackend() {
 
   backendProcess.on('close', (code) => {
     console.log(`Backend process exited with code ${code}`);
+  });
+  
+  backendProcess.on('error', (err) => {
+    console.error('Failed to start backend:', err);
   });
 }
 
