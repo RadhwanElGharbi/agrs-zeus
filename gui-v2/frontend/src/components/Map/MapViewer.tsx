@@ -5,9 +5,8 @@ import mapboxgl from 'mapbox-gl'
 import { Layers, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
-// Note: In production, this should be fetched from the API
-// For now, using a placeholder - users will need to set their own token
-const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || 'pk.eyJ1IjoiZXhhbXBsZSIsImEiOiJleGFtcGxlIn0.example'
+// Mapbox token configured for AGRS ZEUS
+const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || 'pk.eyJ1IjoicmFkLWVsZ2hhcmJpIiwiYSI6ImNtaTlhamp5eTBsNDgybG9hdXp2cTluNDQifQ.ILZUt-5Fdpfzm64icFG8mQ'
 
 export function MapViewer() {
   const mapContainer = useRef<HTMLDivElement>(null)
