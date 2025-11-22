@@ -20,7 +20,7 @@ export function MainLayout({ children }: MainLayoutProps) {
         <Header />
 
         {/* Content */}
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 relative overflow-hidden">
           {children}
         </main>
       </div>
