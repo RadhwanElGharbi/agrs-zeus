@@ -114,6 +114,7 @@ class PIRLNativeEnvironmentUS(gym.Env):
     # Class-level quiet mode configuration
     _quiet_mode: bool = False
     _stats_tracker: Optional[EpisodeStatsTracker] = None
+    _routes_tracker: Optional["TopRoutesTracker"] = None
 
     @classmethod
     def set_quiet_mode(cls, quiet: bool = False, batch_size: int = 50):
@@ -129,6 +130,12 @@ class PIRLNativeEnvironmentUS(gym.Env):
             cls._stats_tracker = EpisodeStatsTracker(batch_size=batch_size)
         else:
             cls._stats_tracker = None
+
+    @classmethod
+    def enable_route_saving(cls, output_dir: str, max_routes: int = 10):
+        """Enable saving top N successful routes by reward."""
+        cls._routes_tracker = TopRoutesTracker(output_dir, max_routes)
+        logger.info(f"Route saving enabled: top {max_routes} to {output_dir}/top_routes/")
 
     def __init__(self, config_path: str, env_id: int = 0):
         """
@@ -293,6 +300,11 @@ class PIRLNativeEnvironmentUS(gym.Env):
 
             is_success = reason.startswith('SUCCESS')
 
+            # Save successful routes if tracking enabled
+            if is_success and self._routes_tracker is not None:
+                total_reward = reward_info_dict['total_reward'] if reward_info_dict else reward
+                self._routes_tracker.maybe_save_route(total_reward, self.current_episode, self)
+
             # Quiet mode: batch episode summaries
             if self._quiet_mode and self._stats_tracker is not None:
                 total_reward = reward_info_dict['total_reward'] if reward_info_dict else reward
@@ -334,16 +346,130 @@ class PIRLNativeEnvironmentUS(gym.Env):
         """Get detailed route trajectory with segment information."""
         return self.env.get_route_trajectory()
 
-    def render(self, mode: str = 'geojson', output_path: Optional[str] = None):
-        """Render the current route."""
+    def render(self, mode: str = 'geojson', output_path: Optional[str] = None, reward: float = 0.0):
+        """Render the current route as ArcGIS-compliant GeoJSON."""
         if mode == 'geojson':
             if output_path is None:
                 output_path = f"route_episode_{self.current_episode}.geojson"
-            self.env.render(output_path)
+            
+            import json
+            from datetime import datetime
+            
+            # Get full trajectory with segment data
+            trajectory = self.env.get_route_trajectory()
+            
+            if not trajectory.segments or len(trajectory.segments) < 1:
+                logger.warning(f"Cannot render: no segments in trajectory")
+                return
+            
+            # Helper functions
+            def fmt(coord):
+                return float(round(float(coord), 2))
+            
+            def sanitize(obj):
+                import numpy as np
+                if isinstance(obj, (np.floating, np.float32, np.float64)):
+                    return float(obj)
+                elif isinstance(obj, (np.integer, np.int32, np.int64)):
+                    return int(obj)
+                elif isinstance(obj, np.ndarray):
+                    return obj.tolist()
+                elif isinstance(obj, dict):
+                    return {k: sanitize(v) for k, v in obj.items()}
+                elif isinstance(obj, list):
+                    return [sanitize(item) for item in obj]
+                return obj
+            
+            # Build segment features
+            features = []
+            slopes = []
+            
+            for idx, seg in enumerate(trajectory.segments):
+                slopes.append(float(seg.max_slope_percent))
+                feature = {
+                    "type": "Feature",
+                    "geometry": {
+                        "type": "LineString",
+                        "coordinates": [
+                            [fmt(seg.start_x), fmt(seg.start_y)],
+                            [fmt(seg.end_x), fmt(seg.end_y)]
+                        ]
+                    },
+                    "properties": {
+                        "segment_id": idx + 1,
+                        "length_m": fmt(seg.length_m),
+                        "cumulative_distance_m": fmt(seg.cumulative_distance_m),
+                        "elevation_start_m": fmt(seg.elevation_start),
+                        "elevation_end_m": fmt(seg.elevation_end),
+                        "max_slope_percent": round(float(seg.max_slope_percent), 2),
+                        "reward": round(float(seg.reward) if hasattr(seg, 'reward') else 0.0, 2),
+                        "distance_to_aoi_boundary_m": round(float(seg.distance_to_aoi_boundary), 2),
+                    }
+                }
+                features.append(feature)
+            
+            # Full route as MultiLineString
+            full_route_coords = [
+                [[fmt(seg.start_x), fmt(seg.start_y)], [fmt(seg.end_x), fmt(seg.end_y)]]
+                for seg in trajectory.segments
+            ]
+            
+            avg_slope = sum(slopes) / len(slopes) if slopes else 0.0
+            max_slope = max(slopes) if slopes else 0.0
+            
+            full_route_feature = {
+                "type": "Feature",
+                "geometry": {
+                    "type": "MultiLineString",
+                    "coordinates": full_route_coords
+                },
+                "properties": {
+                    "type": "full_route",
+                    "episode": self.current_episode,
+                    "total_reward": round(float(reward), 2),
+                    "total_length_m": fmt(trajectory.total_length_m),
+                    "total_segments": len(trajectory.segments),
+                    "success": trajectory.success,
+                    "average_slope_percent": round(avg_slope, 2),
+                    "max_slope_percent": round(max_slope, 2),
+                    "generation_timestamp": datetime.now().isoformat()
+                }
+            }
+            features.insert(0, full_route_feature)
+            
+            # Get CRS from config
+            epsg_code = getattr(self.config, 'epsg_code', 32613)
+            crs = f"EPSG:{epsg_code}"
+            
+            geojson = {
+                "type": "FeatureCollection",
+                "crs": {
+                    "type": "name",
+                    "properties": {"name": crs}
+                },
+                "metadata": {
+                    "title": "US_PIPELINE PIRL Route",
+                    "episode": self.current_episode,
+                    "total_reward": round(float(reward), 2),
+                    "total_length_m": fmt(trajectory.total_length_m),
+                    "total_segments": len(trajectory.segments),
+                    "average_slope_percent": round(avg_slope, 2),
+                    "max_slope_percent": round(max_slope, 2),
+                    "crs": crs
+                },
+                "features": features
+            }
+            
+            geojson = sanitize(geojson)
+            
+            with open(output_path, 'w') as f:
+                json.dump(geojson, f, indent=2)
+            
             if not self._quiet_mode:
                 logger.info(f"Route rendered to: {output_path}")
         else:
             raise ValueError(f"Unsupported render mode: {mode}")
+
 
     def close(self):
         """Clean up resources."""
@@ -371,3 +497,47 @@ def make_env(config_path: str, env_id: int = 0):
     def _init():
         return PIRLNativeEnvironmentUS(config_path, env_id=env_id)
     return _init
+
+
+class TopRoutesTracker:
+    """Track and save top N successful routes by reward."""
+    
+    def __init__(self, output_dir: str, max_routes: int = 10):
+        self.output_dir = Path(output_dir) / "top_routes"
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+        self.max_routes = max_routes
+        self.top_routes: List[Tuple[float, int, str]] = []  # (reward, episode, filepath)
+    
+    def maybe_save_route(self, reward: float, episode: int, env) -> bool:
+        """
+        Check if route qualifies for top N and save if so.
+        Returns True if saved.
+        """
+        # Check if this route qualifies
+        if len(self.top_routes) >= self.max_routes:
+            min_reward = min(r[0] for r in self.top_routes)
+            if reward <= min_reward:
+                return False
+        
+        # Save the route
+        filepath = self.output_dir / f"route_ep{episode}_reward{reward:.0f}.geojson"
+        try:
+            env.render(mode="geojson", output_path=str(filepath), reward=reward)
+        except Exception as e:
+            logger.warning(f"Failed to save route: {e}"); import traceback; traceback.print_exc()
+            return False
+        
+        # Add to tracking list
+        self.top_routes.append((reward, episode, str(filepath)))
+        
+        # If over limit, remove worst and delete its file
+        if len(self.top_routes) > self.max_routes:
+            self.top_routes.sort(key=lambda x: x[0], reverse=True)
+            worst = self.top_routes.pop()
+            try:
+                Path(worst[2]).unlink()
+            except:
+                pass
+        
+        logger.info(f"🏆 Saved top route: ep{episode} reward={reward:.1f} ({len(self.top_routes)}/{self.max_routes})")
+        return True

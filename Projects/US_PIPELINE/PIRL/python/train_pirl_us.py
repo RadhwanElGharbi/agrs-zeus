@@ -165,6 +165,10 @@ def train_model(
     models_dir = output_path / "models"
     models_dir.mkdir(exist_ok=True)
 
+    # Enable top 10 route saving in quiet mode
+    if quiet:
+        PIRLNativeEnvironmentUS.enable_route_saving(str(output_path), max_routes=10)
+
     # Print training configuration (reduced in quiet mode)
     if not quiet:
         logger.info("=" * 80)
