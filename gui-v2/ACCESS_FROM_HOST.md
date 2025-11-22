@@ -33,15 +33,28 @@ The VM's IP address is: **`192.168.0.126`**
 
 (This was automatically configured)
 
-### **Step 3: Open Browser on Windows 11**
+### **Step 3: Trust the Dev Certificate (one-time)**
 
-On your **Windows 11 computer**, open any web browser and go to:
+Because Mapbox GL JS now requires HTTPS, the Next.js dev server ships with a self‑signed cert located here:
 
 ```
-http://192.168.0.126:3000
+/opt/agrs/gui-v2/frontend/certs/dev-cert.pem
 ```
 
-🎉 **The AGRS ZEUS GUI should load with a working map!**
+Copy that file to Windows (e.g. `scp radwan@192.168.0.126:/opt/agrs/gui-v2/frontend/certs/dev-cert.pem C:\Users\<you>\Downloads\agrs-dev-cert.pem`) and double‑click it to import into the **Trusted Root Certification Authorities** store. This removes the scary warning screen.
+
+> ✅ You only have to do this once per machine. If you prefer to “Proceed anyway” on the browser warning, importing isn’t strictly required.
+
+### **Step 4: Open Browser on Windows 11**
+
+On your **Windows 11** computer, open any modern browser **_using HTTPS_**:
+
+```
+https://192.168.0.126:3000
+```
+
+Accept the certificate (or install it as noted above).  
+🎉 **The AGRS ZEUS GUI should load with a working Mapbox map!**
 
 ---
 
@@ -68,7 +81,7 @@ http://192.168.0.126:3000
 ## 🌐 URLs to Use
 
 ### **From Windows 11 Host:**
-- **GUI**: http://192.168.0.126:3000
+- **GUI**: https://192.168.0.126:3000
 - **API**: http://192.168.0.126:8000
 - **API Docs**: http://192.168.0.126:8000/api/docs
 
@@ -133,14 +146,14 @@ http://192.168.0.126:8000/api/health
 }
 ```
 
-### Test 3: Test Frontend
+### Test 3: Test Frontend (HTTPS)
 
 In Windows browser, go to:
 ```
-http://192.168.0.126:3000
+https://192.168.0.126:3000
 ```
 
-✅ Should see the AGRS ZEUS GUI with working map!
+✅ Should see the AGRS ZEUS GUI with working Mapbox map (after trusting the cert).
 
 ---
 
@@ -201,7 +214,11 @@ When you access from Windows 11, you should see:
    ```
    (Re-enable after testing: `sudo ufw enable`)
 
-### Issue 2: Map Still Black
+### Issue 2: Browser shows warning “Connection is not private”
+
+**Solution:** Import `frontend/certs/dev-cert.pem` into Windows Trusted Root store or click “Proceed (unsafe)” once.
+
+### Issue 3: Map Still Black
 
 **Symptoms:** GUI loads but map area is black
 
@@ -233,7 +250,7 @@ Install **Windows Terminal** from Microsoft Store for better terminal experience
 ### Tip 2: Bookmark the URLs
 
 Bookmark these in your Windows browser:
-- GUI: http://192.168.0.126:3000
+- GUI: https://192.168.0.126:3000
 - API Docs: http://192.168.0.126:8000/api/docs
 
 ### Tip 3: Keep VM Terminal Visible
@@ -301,7 +318,7 @@ Before accessing from Windows:
 
 On Windows:
 - [ ] Browser open (Chrome, Firefox, or Edge)
-- [ ] Navigate to http://192.168.0.126:3000
+- [ ] Navigate to https://192.168.0.126:3000
 - [ ] GUI loads and map displays properly
 
 ---

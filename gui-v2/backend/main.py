@@ -7,6 +7,9 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api.routes import router
+from api.projects import router as projects_router
+from api.pirl import router as pirl_router
+from api.data import router as data_router
 import os
 
 # Create FastAPI app
@@ -36,6 +39,9 @@ app.add_middleware(
 
 # Include API routes
 app.include_router(router, prefix="/api")
+app.include_router(projects_router, prefix="/api")
+app.include_router(pirl_router, prefix="/api")
+app.include_router(data_router, prefix="/api")
 
 @app.get("/")
 async def root():

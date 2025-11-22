@@ -53,14 +53,16 @@
   * {
     @apply border-border;
   }
+  html, body, #__next {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
-
-/* Mapbox GL styles */
-@import 'mapbox-gl/dist/mapbox-gl.css';
 
 /* Custom scrollbar for dark theme */
 ::-webkit-scrollbar {

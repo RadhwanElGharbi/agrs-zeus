@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
+import { ProjectProvider } from '@/lib/context/ProjectContext'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -15,11 +16,12 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className="dark">
-      <head>
-        <link href="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css" rel="stylesheet" />
-      </head>
-      <body className={inter.className}>{children}</body>
+    <html lang="en" className="dark" style={{ height: '100%' }}>
+      <body className={inter.className} style={{ height: '100%', margin: 0, padding: 0 }}>
+        <ProjectProvider>
+          {children}
+        </ProjectProvider>
+      </body>
     </html>
   )
 }

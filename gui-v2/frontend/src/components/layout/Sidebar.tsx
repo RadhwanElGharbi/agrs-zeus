@@ -12,6 +12,7 @@ import {
   ChevronRight
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { ProjectSelector } from '@/components/Project/ProjectSelector'
 
 interface SidebarProps {
   className?: string
@@ -62,8 +63,15 @@ export function Sidebar({ className }: SidebarProps) {
         </button>
       </div>
 
+      {/* Project Selector */}
+      {!collapsed && (
+        <div className="p-3 border-b border-border">
+          <ProjectSelector />
+        </div>
+      )}
+
       {/* Navigation */}
-      <nav className="flex-1 p-2 space-y-1">
+      <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
         {navigationItems.map((item, index) => {
           const Icon = item.icon
           return (
