@@ -24,7 +24,7 @@ from stable_baselines3 import PPO
 from stable_baselines3.common.callbacks import (
     EvalCallback, CheckpointCallback, CallbackList, BaseCallback
 )
-from stable_baselines3.common.vec_env import DummyVecEnv, VecMonitor
+from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv, VecMonitor
 from stable_baselines3.common.logger import configure
 
 # Custom environment
@@ -106,10 +106,13 @@ def create_vec_env(config_path: str, num_envs: int = 1, log_dir: str = None, qui
     PIRLNativeEnvironmentUS.set_quiet_mode(quiet)
 
     # Create environment factories
-    env_fns = [make_env(config_path, env_id=i) for i in range(num_envs)]
+    env_fns = [make_env(config_path, env_id=i, quiet=quiet) for i in range(num_envs)]
 
-    # Use DummyVecEnv (sequential execution, safer for C++ environments)
-    vec_env = DummyVecEnv(env_fns)
+    # Use SubprocVecEnv for parallel execution when num_envs > 1
+    if num_envs > 1:
+        vec_env = SubprocVecEnv(env_fns, start_method='spawn')
+    else:
+        vec_env = DummyVecEnv(env_fns)
 
     # Wrap with VecMonitor for episode statistics
     vec_env = VecMonitor(vec_env, filename=log_dir)

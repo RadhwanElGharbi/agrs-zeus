@@ -115,6 +115,7 @@ class PIRLNativeEnvironmentUS(gym.Env):
     _quiet_mode: bool = False
     _stats_tracker: Optional[EpisodeStatsTracker] = None
     _routes_tracker: Optional["TopRoutesTracker"] = None
+    _closest_tracker: Optional["ClosestRoutesTracker"] = None
 
     @classmethod
     def set_quiet_mode(cls, quiet: bool = False, batch_size: int = 50):
@@ -301,9 +302,14 @@ class PIRLNativeEnvironmentUS(gym.Env):
             is_success = reason.startswith('SUCCESS')
 
             # Save successful routes if tracking enabled
+            # Track successful routes by reward
             if is_success and self._routes_tracker is not None:
                 total_reward = reward_info_dict['total_reward'] if reward_info_dict else reward
                 self._routes_tracker.maybe_save_route(total_reward, self.current_episode, self)
+            
+            # Track closest routes (even failures) by distance to goal
+            if self._closest_tracker is not None:
+                self._closest_tracker.maybe_save_route(distance_from_goal, self.current_episode, self)
 
             # Quiet mode: batch episode summaries
             if self._quiet_mode and self._stats_tracker is not None:
@@ -315,7 +321,7 @@ class PIRLNativeEnvironmentUS(gym.Env):
                     is_success=is_success,
                     distance_from_goal=distance_from_goal
                 )
-                if summary:
+                if False and summary:  # Disabled batch summaries
                     logger.info(summary)
 
             else:
@@ -417,6 +423,25 @@ class PIRLNativeEnvironmentUS(gym.Env):
             avg_slope = sum(slopes) / len(slopes) if slopes else 0.0
             max_slope = max(slopes) if slopes else 0.0
             
+            # Calculate efficiency metrics
+            if trajectory.segments:
+                start_seg = trajectory.segments[0]
+                end_seg = trajectory.segments[-1]
+                straight_line_m = ((end_seg.end_x - start_seg.start_x)**2 + 
+                                   (end_seg.end_y - start_seg.start_y)**2)**0.5
+                length_efficiency = straight_line_m / trajectory.total_length_m if trajectory.total_length_m > 0 else 0
+            else:
+                straight_line_m = 0
+                length_efficiency = 0
+            
+            # A* baseline comparison (baseline: 8370.7m, 3.87% avg slope, 14.92% max slope)
+            ASTAR_LENGTH = 8370.7
+            ASTAR_AVG_SLOPE = 3.87
+            ASTAR_MAX_SLOPE = 14.92
+            
+            vs_astar_length = (ASTAR_LENGTH - trajectory.total_length_m) / ASTAR_LENGTH * 100 if trajectory.total_length_m > 0 else 0
+            vs_astar_slope = (ASTAR_AVG_SLOPE - avg_slope) / ASTAR_AVG_SLOPE * 100 if avg_slope > 0 else 0
+            
             full_route_feature = {
                 "type": "Feature",
                 "geometry": {
@@ -432,6 +457,10 @@ class PIRLNativeEnvironmentUS(gym.Env):
                     "success": trajectory.success,
                     "average_slope_percent": round(avg_slope, 2),
                     "max_slope_percent": round(max_slope, 2),
+                    "straight_line_m": round(straight_line_m, 2),
+                    "length_efficiency": round(length_efficiency * 100, 2),
+                    "vs_astar_length_pct": round(vs_astar_length, 2),
+                    "vs_astar_slope_pct": round(vs_astar_slope, 2),
                     "generation_timestamp": datetime.now().isoformat()
                 }
             }
@@ -455,6 +484,10 @@ class PIRLNativeEnvironmentUS(gym.Env):
                     "total_segments": len(trajectory.segments),
                     "average_slope_percent": round(avg_slope, 2),
                     "max_slope_percent": round(max_slope, 2),
+                    "straight_line_m": round(straight_line_m, 2),
+                    "length_efficiency_pct": round(length_efficiency * 100, 2),
+                    "vs_astar_length_pct": round(vs_astar_length, 2),
+                    "vs_astar_slope_pct": round(vs_astar_slope, 2),
                     "crs": crs
                 },
                 "features": features
@@ -483,18 +516,21 @@ class PIRLNativeEnvironmentUS(gym.Env):
         return f"PIRLNativeEnvironmentUS(config={self.config_path.name}, env_id={self.env_id})"
 
 
-def make_env(config_path: str, env_id: int = 0):
+def make_env(config_path: str, env_id: int = 0, quiet: bool = False):
     """
     Factory function to create US_PIPELINE PIRL native environment.
 
     Args:
         config_path: Path to YAML configuration file
         env_id: Environment ID for multi-env training
+        quiet: Enable quiet mode (reduced logging)
 
     Returns:
         Callable that creates the environment
     """
     def _init():
+        # Set quiet mode before creating env (works in subprocesses)
+        PIRLNativeEnvironmentUS.set_quiet_mode(quiet)
         return PIRLNativeEnvironmentUS(config_path, env_id=env_id)
     return _init
 
@@ -540,4 +576,48 @@ class TopRoutesTracker:
                 pass
         
         logger.info(f"🏆 Saved top route: ep{episode} reward={reward:.1f} ({len(self.top_routes)}/{self.max_routes})")
+        return True
+
+
+class ClosestRoutesTracker:
+    """Track and save top N routes by closest distance to goal (even if failed)."""
+    
+    def __init__(self, output_dir: str, max_routes: int = 3):
+        self.output_dir = Path(output_dir) / "closest_routes"
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+        self.max_routes = max_routes
+        self.closest_routes: List[Tuple[float, int, str]] = []  # (distance, episode, filepath)
+    
+    def maybe_save_route(self, distance_to_goal: float, episode: int, env) -> bool:
+        """
+        Check if route is among closest to goal and save if so.
+        Returns True if saved.
+        """
+        # Check if this route qualifies (lower distance = better)
+        if len(self.closest_routes) >= self.max_routes:
+            max_dist = max(r[0] for r in self.closest_routes)
+            if distance_to_goal >= max_dist:
+                return False
+        
+        # Save the route
+        filepath = self.output_dir / f"closest_ep{episode}_dist{distance_to_goal:.0f}m.geojson"
+        try:
+            env.render(mode="geojson", output_path=str(filepath), reward=0)
+        except Exception as e:
+            logger.warning(f"Failed to save closest route: {e}")
+            return False
+        
+        # Add to tracking list
+        self.closest_routes.append((distance_to_goal, episode, str(filepath)))
+        
+        # If over limit, remove worst (furthest) and delete its file
+        if len(self.closest_routes) > self.max_routes:
+            self.closest_routes.sort(key=lambda x: x[0])  # Sort by distance ascending
+            worst = self.closest_routes.pop()
+            try:
+                Path(worst[2]).unlink()
+            except:
+                pass
+        
+        logger.info(f"📍 Saved closest route: ep{episode} dist={distance_to_goal:.0f}m ({len(self.closest_routes)}/{self.max_routes})")
         return True

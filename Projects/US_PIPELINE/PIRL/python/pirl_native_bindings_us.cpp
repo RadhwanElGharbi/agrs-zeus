@@ -125,7 +125,7 @@ PYBIND11_MODULE(pirl_native_us, m) {
             bool terminated = env.is_done() && 
                             (reward_info.termination_reason == "SUCCESS_GOAL_REACHED" ||
                              reward_info.termination_reason == "OUT_OF_BOUNDS" ||
-                             reward_info.termination_reason == "SLOPE_VIOLATION_50%");
+                             reward_info.termination_reason == "SLOPE_VIOLATION_30%");
             bool truncated = env.is_done() && 
                            (reward_info.termination_reason == "MAX_STEPS_5000");
             
