@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { Map as MapLibreMap } from 'maplibre-gl'
+import type { Map as MapLibreMap, MapOptions } from 'maplibre-gl'
 import { ZoomIn, ZoomOut, Maximize2, Loader2, RefreshCw, Layers, Mountain } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useProject } from '@/lib/context/ProjectContext'
@@ -308,7 +308,7 @@ export function MapViewer() {
         const maplibreModule = await import('maplibre-gl')
         if (cancelled) return
 
-        const mapInstance = new maplibreModule.Map({
+        const mapOptions: MapOptions & { fieldOfView?: number } = {
           container: mapContainerRef.current,
           style: {
             version: 8,
@@ -327,11 +327,14 @@ export function MapViewer() {
           center: [-80.5449, 43.4723], // University of Waterloo
           zoom: 14.5,
           maxPitch: 85,
+          fieldOfView: (85 * Math.PI) / 180,
           attributionControl: false,
           failIfMajorPerformanceCaveat: false,
           preserveDrawingBuffer: true,
           antialias: true // Enable antialias for better quality
-        })
+        }
+
+        const mapInstance = new maplibreModule.Map(mapOptions as MapOptions)
 
         mapInstance.on('load', () => {
           if (cancelled) return
@@ -944,6 +947,13 @@ export function MapViewer() {
   }, [loadProjectLayers, mapReady])
 
   useEffect(() => {
+    if (!mapReady) return
+    imageryFailedRef.current = false
+    addBaseLayers()
+    setFallbackOpacity(BASEMAP_FALLBACK_DEFAULT_OPACITY)
+  }, [addBaseLayers, mapReady, setFallbackOpacity, currentProject])
+
+  useEffect(() => {
     if (!mapReady || !mapRef.current) return
     const map = mapRef.current
     map.setTerrain(null)
@@ -1154,8 +1164,9 @@ export function MapViewer() {
   }
 
   const handleRefreshAll = () => {
-    const map = mapRef.current
-    removeBasemapLayers({ includeFallback: true })
+    imageryFailedRef.current = false
+    setFallbackOpacity(BASEMAP_FALLBACK_DEFAULT_OPACITY)
+    removeBasemapLayers()
     addBaseLayers()
     loadProjectLayers()
   }

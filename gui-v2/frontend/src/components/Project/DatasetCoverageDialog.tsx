@@ -101,16 +101,9 @@ export function DatasetCoverageDialog({ open, onClose }: DatasetCoverageDialogPr
               </div>
             )}
           </div>
-          <div className="flex items-center gap-2">
-            {data?.protocol_reference && (
-              <div className="text-[11px] text-muted-foreground text-right">
-                Fetch workflow: <span className="font-mono text-foreground">{data.protocol_reference}</span>
-              </div>
-            )}
-            <Button variant="ghost" size="sm" onClick={onClose}>
-              Close
-            </Button>
-          </div>
+          <Button variant="ghost" size="sm" onClick={onClose}>
+            Close
+          </Button>
         </header>
 
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4 text-sm">

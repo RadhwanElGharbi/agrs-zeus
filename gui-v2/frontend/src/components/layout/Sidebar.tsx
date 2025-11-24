@@ -15,6 +15,7 @@ import {
 import { cn } from '@/lib/utils'
 import { ProjectSelector } from '@/components/Project/ProjectSelector'
 import { DatasetCoverageDialog } from '@/components/Project/DatasetCoverageDialog'
+import { ZeusLoadingDialog } from '@/components/shared/ZeusLoadingDialog'
 
 interface SidebarProps {
   className?: string
@@ -23,10 +24,20 @@ interface SidebarProps {
 export function Sidebar({ className }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false)
   const [showDatasets, setShowDatasets] = useState(false)
+  const [isZeusAnalyzing, setIsZeusAnalyzing] = useState(false)
+
+  const handleDatasetsClick = () => {
+    setIsZeusAnalyzing(true)
+  }
+
+  const handleAnalysisComplete = () => {
+    setIsZeusAnalyzing(false)
+    setShowDatasets(true)
+  }
 
   const navigationItems = [
     { icon: Map, label: 'Map View', active: true },
-    { icon: Layers, label: 'Datasets', onClick: () => setShowDatasets(true) },
+    { icon: Layers, label: 'Datasets', onClick: handleDatasetsClick },
     { icon: Activity, label: 'PIRL Training' },
     { icon: Database, label: 'Data Catalog' },
     { icon: Settings, label: 'Settings' },
@@ -130,6 +141,11 @@ export function Sidebar({ className }: SidebarProps) {
         )}
       </div>
 
+      <ZeusLoadingDialog 
+        open={isZeusAnalyzing} 
+        onComplete={handleAnalysisComplete} 
+      />
+      
       <DatasetCoverageDialog open={showDatasets} onClose={() => setShowDatasets(false)} />
     </div>
   )
