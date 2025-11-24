@@ -247,14 +247,14 @@ export function LayerManager({
                   </div>
                   <button
                     onClick={() => onOpenTable(selectedLayer.id)}
-                    className="text-xs font-medium flex items-center gap-1 text-primary hover:underline"
+                    className="text-xs font-medium flex items-center gap-1 text-foreground hover:underline"
                   >
                     Open full table
                     <ExternalLink className="w-3 h-3" />
                   </button>
                   <button
                     onClick={() => onOpenStyle(selectedLayer.id)}
-                    className="text-xs font-medium flex items-center gap-1 text-primary hover:underline"
+                    className="text-xs font-medium flex items-center gap-1 text-foreground hover:underline"
                   >
                     Style layer
                     <Paintbrush className="w-3 h-3" />

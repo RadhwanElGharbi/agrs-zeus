@@ -2,10 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Map as MapLibreMap } from 'maplibre-gl'
-import { ZoomIn, ZoomOut, Maximize2, Loader2, RefreshCw, Layers } from 'lucide-react'
+import { ZoomIn, ZoomOut, Maximize2, Loader2, RefreshCw, Layers, Mountain } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useProject } from '@/lib/context/ProjectContext'
-import { fetchVectorData, getTileUrl, type DatasetInfo } from '@/lib/api/dataClient'
+import { fetchVectorData, getTileUrl, getTerrainTileUrl, getAoiFileUrl, type DatasetInfo } from '@/lib/api/dataClient'
 import {
   ManagedLayer,
   VectorDetail,
@@ -47,6 +47,7 @@ export function MapViewer() {
 
   const [mapReady, setMapReady] = useState(false)
   const [mapLoaded, setMapLoaded] = useState(false)
+  const [isBuffering, setIsBuffering] = useState(false)
   const [zoom, setZoom] = useState(4)
   const [managedLayers, setManagedLayers] = useState<ManagedLayer[]>([])
   const [selectedLayerId, setSelectedLayerId] = useState<string | null>(null)
@@ -58,6 +59,7 @@ export function MapViewer() {
   const [fullTableDocked, setFullTableDocked] = useState(false)
   const [dockHeight, setDockHeight] = useState(45)
   const [sortConfig, setSortConfig] = useState<{ column: string | null; direction: 'asc' | 'desc' }>({ column: null, direction: 'asc' })
+  const [terrainEnabled, setTerrainEnabled] = useState(false)
   const [styleLayerId, setStyleLayerId] = useState<string | null>(null)
   const [styleDraft, setStyleDraft] = useState<LayerStyleOptions>({})
   const [styleOverrides, setStyleOverrides] = useState<Record<string, LayerStyleOptions>>({})
@@ -65,7 +67,110 @@ export function MapViewer() {
   const dockContainerRef = useRef<HTMLDivElement | null>(null)
   const highlightSourceId = useRef('selected-feature-source')
   const highlightLayerIds = useRef<string[]>(['selected-feature-fill', 'selected-feature-line', 'selected-feature-point'])
+  const terrainSourceIdRef = useRef<string | null>(null)
   const imageryFailedRef = useRef(false)
+  const demLayerName = useMemo(() => {
+    if (!datasets?.rasters?.length) return null
+    const hints = ['dem', 'elevation', 'terrain', 'dtm', 'dsm']
+    const match = datasets.rasters.find((raster) => {
+      const name = raster.name.toLowerCase()
+      return hints.some((hint) => name.includes(hint))
+    })
+    return match?.name ?? null
+  }, [datasets])
+
+  const removeTerrainSource = useCallback(() => {
+    const map = mapRef.current
+    if (!map) return
+    const sourceId = terrainSourceIdRef.current
+    if (sourceId && map.getSource(sourceId)) {
+      try {
+        map.removeSource(sourceId)
+      } catch {
+        // ignore
+      }
+    }
+    terrainSourceIdRef.current = null
+  }, [])
+
+  const ensureTerrainSource = useCallback(() => {
+    if (!mapRef.current || !currentProject || !demLayerName) return null
+    const map = mapRef.current
+    const sourceId = `terrain-${demLayerName}`
+    if (!map.getSource(sourceId)) {
+      map.addSource(
+        sourceId,
+        {
+          type: 'raster-dem',
+          tiles: [getTerrainTileUrl(currentProject, demLayerName)],
+          tileSize: 256,
+          maxzoom: 14,
+          encoding: 'mapbox'
+        } as any
+      )
+    }
+    terrainSourceIdRef.current = sourceId
+    return sourceId
+  }, [currentProject, demLayerName])
+
+  const applySkyBackdrop = useCallback(() => {
+    const map = mapRef.current
+    if (!map) return
+
+    const getBeforeId = () => {
+      const layers = map.getStyle()?.layers
+      return layers && layers.length > 0 ? layers[0].id : undefined
+    }
+
+    const addLayerSafely = (layer: any) => {
+      const beforeId = getBeforeId()
+      if (beforeId) {
+        map.addLayer(layer, beforeId)
+      } else {
+        map.addLayer(layer)
+      }
+    }
+
+    const ensureGradientSky = () => {
+      if (map.getLayer('space-sky-fallback')) return
+      const fallbackLayer: any = {
+        id: 'space-sky-fallback',
+        type: 'sky',
+        paint: {
+          'sky-type': 'gradient',
+          'sky-gradient': [
+            'interpolate',
+            ['linear'],
+            ['sky-radial-progress'],
+            0.0, 'rgba(1,4,12,1)',
+            1.0, 'rgba(4,9,24,1)'
+          ],
+          'sky-opacity': 1
+        }
+      }
+      addLayerSafely(fallbackLayer)
+    }
+
+    try {
+      // Use simple gradient sky
+      ensureGradientSky()
+      
+      // Add fog for atmospheric perspective
+      if ((map as any).setFog) {
+        ;(map as any).setFog({
+          range: [-1, 3],
+          color: 'rgba(3,6,18,0.9)',
+          'horizon-blend': 0.3,
+          'high-color': '#040b20',
+          'space-color': '#010409',
+          'star-intensity': 0.9
+        } as any)
+      }
+    } catch (error) {
+      console.warn('Sky backdrop unavailable on this platform:', error)
+      ensureGradientSky()
+    }
+  }, [])
 
   const addBaseLayers = useCallback(() => {
     const map = mapRef.current
@@ -127,8 +232,10 @@ export function MapViewer() {
     map.setLayoutProperty('basemap-reference', 'visibility', 'visible')
     map.setLayoutProperty('basemap-fallback', 'visibility', 'visible')
     map.setPaintProperty('basemap-imagery', 'raster-opacity', 1)
+    map.setPaintProperty('basemap-imagery', 'raster-fade-duration', 400)
     map.setPaintProperty('basemap-reference', 'raster-opacity', 0.8)
-  }, [])
+    applySkyBackdrop()
+  }, [applySkyBackdrop])
 
   /**
    * Initialize MapLibre map instance (client side only)
@@ -150,7 +257,8 @@ export function MapViewer() {
           style: {
             version: 8,
             sources: {},
-            layers: []
+            layers: [],
+            glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf' // Ensure glyphs are available if needed
           },
           center: [-80.5449, 43.4723], // University of Waterloo
           zoom: 14.5,
@@ -158,7 +266,7 @@ export function MapViewer() {
           attributionControl: false,
           failIfMajorPerformanceCaveat: false,
           preserveDrawingBuffer: true,
-          antialias: false
+          antialias: true // Enable antialias for better quality
         })
 
         mapInstance.on('load', () => {
@@ -171,6 +279,9 @@ export function MapViewer() {
         mapInstance.on('zoom', () => {
           setZoom(Number(mapInstance.getZoom().toFixed(1)))
         })
+
+        mapInstance.on('dataloading', () => setIsBuffering(true))
+        mapInstance.on('idle', () => setIsBuffering(false))
 
         mapInstance.on('error', (event) => {
           const e = event as any
@@ -458,6 +569,73 @@ export function MapViewer() {
     [currentProject]
   )
 
+  const addPointMarkerLayer = useCallback(
+    (
+      layerId: string,
+      coordinates: [number, number],
+      options: { label: string; color: string }
+    ) => {
+      if (!mapRef.current) return null
+      const map = mapRef.current
+      const sourceId = `${layerId}-source`
+      const circleLayerId = `${layerId}-circle`
+      const labelLayerId = `${layerId}-label`
+
+      if (map.getLayer(circleLayerId)) map.removeLayer(circleLayerId)
+      if (map.getLayer(labelLayerId)) map.removeLayer(labelLayerId)
+      if (map.getSource(sourceId)) map.removeSource(sourceId)
+
+      const feature = {
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates },
+        properties: { title: options.label }
+      }
+
+      map.addSource(sourceId, {
+        type: 'geojson',
+        data: {
+          type: 'FeatureCollection',
+          features: [feature]
+        } as any
+      })
+
+      map.addLayer({
+        id: circleLayerId,
+        type: 'circle',
+        source: sourceId,
+        paint: {
+          'circle-radius': 8,
+          'circle-color': options.color,
+          'circle-stroke-width': 2,
+          'circle-stroke-color': '#ffffff'
+        }
+      })
+
+      map.addLayer({
+        id: labelLayerId,
+        type: 'symbol',
+        source: sourceId,
+        layout: {
+          'text-field': options.label,
+          'text-offset': [0, 1.5],
+          'text-size': 12,
+          'text-anchor': 'top'
+        },
+        paint: {
+          'text-color': '#ffffff',
+          'text-halo-color': '#000000',
+          'text-halo-width': 2
+        }
+      })
+
+      dynamicSourceIdsRef.current.push(sourceId)
+      dynamicLayerIdsRef.current.push(circleLayerId, labelLayerId)
+
+      return { sourceId, layerIds: [circleLayerId, labelLayerId], feature }
+    },
+    []
+  )
+
   /**
    * Load project rasters + vectors following AGRS project structure
    */
@@ -486,8 +664,8 @@ export function MapViewer() {
         const added = addRasterLayer(raster)
         if (added) {
           const bounds = getRasterBounds(raster.metadata)
-          if (bounds) {
             const isDem = raster.name.toLowerCase().includes('dem')
+          if (bounds) {
             if (!focusBounds || isDem) {
               focusBounds = bounds
             }
@@ -529,20 +707,20 @@ export function MapViewer() {
     for (const vector of datasets.vectors) {
       const isAoi = AOI_LAYER_HINTS.some(hint => vector.name.toLowerCase().includes(hint))
       const layerId = `vector-${vector.name}`
-      nextLayers.push({
-        id: layerId,
-        name: vector.name,
-        type: 'vector',
-        status: 'loading',
-        sourceId: layerId,
-        layerIds: [],
-        visible: true,
-        opacity: isAoi ? 0.6 : 0.9,
-        order: order,
-        path: vector.path,
-        metadata: vector.metadata,
-        isAoi
-      })
+          nextLayers.push({
+            id: layerId,
+            name: vector.name,
+            type: 'vector',
+            status: 'loading',
+            sourceId: layerId,
+            layerIds: [],
+            visible: true,
+            opacity: isAoi ? 0.6 : 0.9,
+            order: order,
+            path: vector.path,
+            metadata: vector.metadata,
+            isAoi
+          })
 
       try {
         const added = await addVectorLayer(vector, isAoi)
@@ -582,6 +760,107 @@ export function MapViewer() {
       order += 1
     }
 
+    // Load start/end AOI points as managed vector layers
+    if (currentProject) {
+      try {
+        const resp = await fetch(getAoiFileUrl(currentProject, 'project_aoi.json'))
+        if (resp.ok) {
+          const data = await resp.json()
+          const pointConfigs = [
+            {
+              key: 'start_point',
+              id: 'start-point',
+              name: 'Start Point',
+              label: 'START',
+              color: '#22c55e'
+            },
+            {
+              key: 'end_point',
+              id: 'end-point',
+              name: 'End Point',
+              label: 'END',
+              color: '#ef4444'
+            }
+          ] as const
+
+          for (const config of pointConfigs) {
+            const point = data?.[config.key]
+            if (!point || typeof point.longitude !== 'number' || typeof point.latitude !== 'number') {
+              continue
+            }
+
+            const added = addPointMarkerLayer(config.id, [point.longitude, point.latitude], {
+              label: config.label,
+              color: config.color
+            })
+
+            if (!added) continue
+
+            const vectorDetail: VectorDetail = {
+              properties: ['Label', 'Longitude', 'Latitude'],
+              sample: [
+                {
+                  Label: config.label,
+                  Longitude: point.longitude,
+                  Latitude: point.latitude
+                }
+              ],
+              rows: [
+                {
+                  Label: config.label,
+                  Longitude: point.longitude,
+                  Latitude: point.latitude
+                }
+              ],
+              features: [
+                {
+                  type: 'Feature',
+                  geometry: { type: 'Point', coordinates: [point.longitude, point.latitude] },
+                  properties: {
+                    Label: config.label,
+                    Longitude: point.longitude,
+                    Latitude: point.latitude
+                  }
+                }
+              ]
+            }
+
+            setVectorDetails(prev => ({
+              ...prev,
+              [config.id]: vectorDetail
+            }))
+            setPreloadedTables(prev => ({
+              ...prev,
+              [config.id]: vectorDetail
+            }))
+
+            nextLayers.push({
+              id: config.id,
+              name: config.name,
+              type: 'vector',
+              status: 'ready',
+              sourceId: added.sourceId,
+              layerIds: added.layerIds,
+              visible: true,
+              opacity: 1,
+              order: order++,
+              path: getAoiFileUrl(currentProject, 'project_aoi.json'),
+              metadata: {
+                description: `${config.name} from AOI`,
+                longitude: point.longitude,
+                latitude: point.latitude
+              },
+              geometryType: 'point',
+              featureCount: 1,
+              isAoi: true
+            })
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to load AOI point markers:', error)
+      }
+    }
+
     const ordered = nextLayers.map((layer, idx) => ({ ...layer, order: idx }))
     setManagedLayers(ordered)
     if (focusBounds) {
@@ -593,7 +872,7 @@ export function MapViewer() {
     }
     applyLayerOrder(ordered)
     setLoadingMessage(null)
-  }, [addRasterLayer, addVectorLayer, applyLayerOrder, clearDynamicLayers, currentProject, datasets, mapReady])
+  }, [addPointMarkerLayer, addRasterLayer, addVectorLayer, applyLayerOrder, clearDynamicLayers, currentProject, datasets, mapReady])
 
   useEffect(() => {
     if (!mapReady) return
@@ -601,8 +880,44 @@ export function MapViewer() {
   }, [loadProjectLayers, mapReady])
 
   useEffect(() => {
+    if (!mapReady || !mapRef.current) return
+    const map = mapRef.current
+    map.setTerrain(null)
+  }, [mapReady])
+
+  useEffect(() => {
     selectedLayerIdRef.current = selectedLayerId
   }, [selectedLayerId])
+
+  useEffect(() => {
+    setTerrainEnabled(false)
+    removeTerrainSource()
+  }, [currentProject, demLayerName, removeTerrainSource])
+
+  useEffect(() => {
+    if (!mapReady || !mapRef.current) return
+    const map = mapRef.current
+
+    if (terrainEnabled) {
+      const sourceId = ensureTerrainSource()
+      if (!sourceId) return
+      map.setTerrain({ source: sourceId, exaggeration: 1.2 })
+      if (map.getPitch() < 55) {
+        map.easeTo({ pitch: 55, duration: 900 })
+      }
+    } else {
+      map.setTerrain(null)
+      if (map.getPitch() > 0) {
+        map.easeTo({ pitch: 0, duration: 700 })
+      }
+    }
+  }, [terrainEnabled, ensureTerrainSource, mapReady])
+
+  useEffect(() => {
+    return () => {
+      removeTerrainSource()
+    }
+  }, [removeTerrainSource])
 
   /**
    * Custom interaction bindings
@@ -1091,7 +1406,7 @@ export function MapViewer() {
   }, [addBaseLayers, mapReady])
 
   return (
-    <div className="relative w-full h-full" style={{ minHeight: '100%', width: '100%', height: '100%', position: 'relative' }}>
+    <div className="relative w-full h-full" style={{ minHeight: '100%', width: '100%', height: '100%', position: 'relative', backgroundColor: '#02040a' }}>
       <div
         ref={mapContainerRef}
         style={{
@@ -1101,7 +1416,8 @@ export function MapViewer() {
           right: 0,
           bottom: 0,
           width: '100%',
-          height: '100%'
+          height: '100%',
+          backgroundColor: '#02040a' // Safety background
         }}
       />
 
@@ -1112,6 +1428,12 @@ export function MapViewer() {
       >
         <RefreshCw className="w-4 h-4" />
       </button>
+
+      {isBuffering && (
+        <div className="absolute bottom-3 left-14 z-20 h-9 w-9 rounded-full bg-card/80 border border-border shadow-md flex items-center justify-center backdrop-blur-sm pointer-events-none">
+          <Loader2 className="w-5 h-5 animate-spin text-primary" />
+        </div>
+      )}
 
       {/* Map Controls */}
       <div className="absolute top-4 left-4 z-10 space-y-2">
@@ -1144,6 +1466,18 @@ export function MapViewer() {
           <Button variant="ghost" size="sm" onClick={handleResetView} className="w-full justify-start">
             <Maximize2 className="w-4 h-4 mr-2" />
             Reset View
+          </Button>
+          <div className="h-px bg-border my-1" />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setTerrainEnabled(prev => !prev)} 
+            className={`w-full justify-start ${terrainEnabled ? 'bg-accent text-accent-foreground' : ''}`}
+            disabled={!demLayerName}
+            title={!demLayerName ? 'No DEM layer found in project' : 'Toggle 3D terrain using DEM'}
+          >
+            <Mountain className="w-4 h-4 mr-2" />
+            3D Terrain
           </Button>
         </div>
       </div>
@@ -1193,20 +1527,19 @@ export function MapViewer() {
              setStyleLayerId(null)
           }}
           onReset={() => {
-             const target = styleLayerId
-             if (!target) return
-             setStyleOverrides((prev) => {
-               const next = { ...prev }
-               delete next[target]
-               return next
-             })
-             applyStyleToMapLayer(target, { opacity: 1 })
-             setStyleLayerId(null)
-          }}
+                    const target = styleLayerId
+                    if (!target) return
+                    setStyleOverrides((prev) => {
+                      const next = { ...prev }
+                      delete next[target]
+                      return next
+                    })
+                    applyStyleToMapLayer(target, { opacity: 1 })
+                    setStyleLayerId(null)
+                  }}
           onCancel={() => setStyleLayerId(null)}
         />
       )}
     </div>
   )
 }
-

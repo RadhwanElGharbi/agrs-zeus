@@ -175,15 +175,23 @@ export function formatMetadata(metadata: any | undefined): { label: string, valu
   const num = (val: any, digits = 2) => (typeof val === 'number' ? Number(val).toFixed(digits) : val)
   const asMB = (bytes: any) => (typeof bytes === 'number' ? `${(bytes / (1024 * 1024)).toFixed(2)} MB` : bytes)
 
-  if (metadata.dataset_name) rows.push({ label: 'Dataset', value: metadata.dataset_name })
+  const name = metadata.dataset_name || metadata.name
+  if (name) rows.push({ label: 'Dataset', value: name })
+
   if (metadata.format) rows.push({ label: 'Format', value: metadata.format })
-  if (metadata.data_type) rows.push({ label: 'Type', value: metadata.data_type })
-  if (metadata.target_crs_name || metadata.target_crs) {
+
+  const type = metadata.data_type || metadata.type
+  if (type) rows.push({ label: 'Type', value: type })
+
+  const crsName = metadata.target_crs_name || metadata.crs_name
+  const crsCode = metadata.target_crs || metadata.crs
+  if (crsName || crsCode) {
     rows.push({
       label: 'CRS',
-      value: `${metadata.target_crs_name ?? ''}${metadata.target_crs ? ` (${metadata.target_crs})` : ''}`.trim()
+      value: `${crsName ?? ''}${crsCode ? ` (${crsCode})` : ''}`.trim()
     })
   }
+
   if (metadata.resolution_m) rows.push({ label: 'Resolution', value: `${metadata.resolution_m} m` })
   if (metadata.file_size_bytes) rows.push({ label: 'Size', value: asMB(metadata.file_size_bytes) })
   if (metadata.nodata_value !== undefined) rows.push({ label: 'NoData', value: String(metadata.nodata_value) })
@@ -191,13 +199,13 @@ export function formatMetadata(metadata: any | undefined): { label: string, valu
   if (metadata.extent && metadata.extent.minx !== undefined) {
     rows.push({
       label: 'Extent (proj)',
-      value: `min(${metadata.extent.minx}, ${metadata.extent.miny}) · max(${metadata.extent.maxx}, ${metadata.extent.maxy})`
+      value: `min(${num(metadata.extent.minx)}, ${num(metadata.extent.miny)}) · max(${num(metadata.extent.maxx)}, ${num(metadata.extent.maxy)})`
     })
   }
   if (metadata.bbox_wgs84) {
     rows.push({
       label: 'Extent (WGS84)',
-      value: `W:${metadata.bbox_wgs84.west} E:${metadata.bbox_wgs84.east} S:${metadata.bbox_wgs84.south} N:${metadata.bbox_wgs84.north}`
+      value: `W:${num(metadata.bbox_wgs84.west)} E:${num(metadata.bbox_wgs84.east)} S:${num(metadata.bbox_wgs84.south)} N:${num(metadata.bbox_wgs84.north)}`
     })
   }
 
@@ -209,12 +217,20 @@ export function formatMetadata(metadata: any | undefined): { label: string, valu
     })
   }
 
-  if (Array.isArray(metadata.operations_applied) && metadata.operations_applied.length > 0) {
+  const operations = metadata.operations_applied || metadata.processing_steps
+  if (Array.isArray(operations) && operations.length > 0) {
+    const values = operations.map((op: any) => {
+      if (typeof op === 'string') return op
+      return op.operation || ''
+    }).filter(Boolean)
     rows.push({
       label: 'Operations',
-      value: metadata.operations_applied.map((op: any) => op.operation || '').filter(Boolean).join(', ')
+      value: values.join(', ')
     })
   }
+
+  if (metadata.source) rows.push({ label: 'Source', value: metadata.source })
+  if (metadata.provider) rows.push({ label: 'Provider', value: metadata.provider })
 
   if (Array.isArray(metadata.source_files) && metadata.source_files.length > 0) {
     rows.push({
@@ -223,7 +239,9 @@ export function formatMetadata(metadata: any | undefined): { label: string, valu
     })
   }
 
-  if (metadata.processing_date) rows.push({ label: 'Processed on', value: metadata.processing_date })
+  const date = metadata.processing_date || metadata.date_acquired
+  if (date) rows.push({ label: 'Date', value: date })
+
   if (metadata.validation_status) {
     rows.push({
       label: 'Validation',

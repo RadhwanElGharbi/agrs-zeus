@@ -1,15 +1,16 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { 
   Map, 
   Layers, 
   Database, 
   Settings, 
-  FolderOpen, 
   Activity,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Flame
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ProjectSelector } from '@/components/Project/ProjectSelector'
@@ -33,39 +34,51 @@ export function Sidebar({ className }: SidebarProps) {
     <div 
       className={cn(
         "relative flex flex-col bg-card border-r border-border transition-all duration-300",
-        collapsed ? "w-16" : "w-64",
+        collapsed ? "w-20" : "w-72",
         className
       )}
       data-sidebar="main"
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-border">
-        {!collapsed && (
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-              <span className="text-white font-bold text-sm">AZ</span>
-            </div>
-            <div>
-              <h1 className="text-sm font-semibold">AGRS ZEUS</h1>
-              <p className="text-xs text-muted-foreground">v2.0.0</p>
+      <div className="flex items-center justify-between px-4 py-5 border-b border-border h-[80px]">
+        {!collapsed ? (
+          <div className="relative h-14 w-full max-w-[180px]">
+            <Image
+              src="/logo.png"
+              alt="Artemis Global Research"
+              fill
+              className="object-contain object-left"
+              priority
+            />
+          </div>
+        ) : (
+          <div className="w-full flex justify-center">
+            <div className="relative h-8 w-8">
+              <Image
+                src="/logo_torch.png"
+                alt="Artemis"
+                fill
+                className="object-contain"
+                title="Artemis"
+              />
             </div>
           </div>
         )}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="p-1 rounded hover:bg-accent transition-colors"
+          className="p-1.5 rounded-md hover:bg-accent text-muted-foreground hover:text-foreground transition-colors absolute right-[-12px] top-8 border border-border bg-card shadow-sm z-50"
         >
           {collapsed ? (
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-3 h-3" />
           ) : (
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="w-3 h-3" />
           )}
         </button>
       </div>
 
       {/* Project Selector */}
       {!collapsed && (
-        <div className="p-3 border-b border-border">
+        <div className="p-3 border-b border-border bg-muted/30">
           <ProjectSelector />
         </div>
       )}
@@ -78,10 +91,10 @@ export function Sidebar({ className }: SidebarProps) {
             <button
               key={index}
               className={cn(
-                "w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors",
+                "w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200",
                 item.active 
-                  ? "bg-primary text-primary-foreground" 
-                  : "hover:bg-accent hover:text-accent-foreground"
+                  ? "bg-primary text-primary-foreground shadow-md shadow-red-900/20" 
+                  : "hover:bg-accent hover:text-accent-foreground text-muted-foreground"
               )}
               title={collapsed ? item.label : undefined}
             >
@@ -95,21 +108,21 @@ export function Sidebar({ className }: SidebarProps) {
       </nav>
 
       {/* Footer */}
-      <div className="p-4 border-t border-border">
+      <div className="p-4 border-t border-border bg-muted/10">
         {!collapsed ? (
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-xs">
-              <div className="w-2 h-2 rounded-full bg-green-500" />
-              <span className="text-muted-foreground">System Operational</span>
+              <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+              <span className="text-muted-foreground font-medium">System Operational</span>
             </div>
-            <div className="text-xs text-muted-foreground">
-              <div>API: Connected</div>
-              <div>Backend: Active</div>
+            <div className="text-xs text-muted-foreground/70 flex justify-between">
+              <span>v2.0.0</span>
+              <span>AGRS Inc.</span>
             </div>
           </div>
         ) : (
           <div className="flex justify-center">
-            <div className="w-2 h-2 rounded-full bg-green-500" />
+            <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
           </div>
         )}
       </div>

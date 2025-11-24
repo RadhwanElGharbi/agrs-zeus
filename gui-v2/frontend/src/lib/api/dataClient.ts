@@ -210,6 +210,20 @@ export function getTileUrl(project: string, layer: string): string {
 }
 
 /**
+ * Get terrain tile URL for DEM layers (Mapbox Terrain-RGB encoding)
+ */
+export function getTerrainTileUrl(project: string, layer: string): string {
+  return `${getApiBaseSync()}/terrain/${project}/${layer}/{z}/{x}/{y}.png`;
+}
+
+/**
+ * Get AOI file URL
+ */
+export function getAoiFileUrl(project: string, filename: string): string {
+  return `${getApiBaseSync()}/data/${project}/aoi/${filename}`;
+}
+
+/**
  * Clear the backend GeoJSON cache
  */
 export async function clearCache(): Promise<void> {

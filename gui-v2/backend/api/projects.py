@@ -109,16 +109,15 @@ async def list_project_datasets(project_name: str):
             # Look for .tif files (symlinks or regular files)
             if item.suffix == '.tif':
                 dataset_name = item.stem
-                metadata_file = item.with_suffix('.tif.json')
-                if not metadata_file.exists():
-                    # check resolved target for sidecar (handles symlinks)
-                    try:
-                        resolved = item.resolve()
-                        alt_metadata = resolved.with_suffix('.tif.json')
-                        if alt_metadata.exists():
-                            metadata_file = alt_metadata
-                    except Exception:
-                        pass
+                
+                # Resolve symlink to find the actual file (likely in processed/)
+                # This handles the requirement to pull metadata from /processed folders
+                try:
+                    real_path = item.resolve()
+                    metadata_file = real_path.with_name(f"{real_path.name}.json")
+                except Exception:
+                    # Fallback to sidecar next to the link if resolve fails
+                    metadata_file = item.with_name(f"{item.name}.json")
                 
                 dataset_info = DatasetInfo(
                     name=dataset_name,
@@ -138,15 +137,14 @@ async def list_project_datasets(project_name: str):
             # Look for .gpkg files (symlinks or regular files)
             if item.suffix == '.gpkg':
                 dataset_name = item.stem
-                metadata_file = item.with_suffix('.gpkg.json')
-                if not metadata_file.exists():
-                    try:
-                        resolved = item.resolve()
-                        alt_metadata = resolved.with_suffix('.gpkg.json')
-                        if alt_metadata.exists():
-                            metadata_file = alt_metadata
-                    except Exception:
-                        pass
+                
+                # Resolve symlink to find the actual file (likely in processed/)
+                try:
+                    real_path = item.resolve()
+                    metadata_file = real_path.with_name(f"{real_path.name}.json")
+                except Exception:
+                     # Fallback to sidecar next to the link if resolve fails
+                    metadata_file = item.with_name(f"{item.name}.json")
                 
                 dataset_info = DatasetInfo(
                     name=dataset_name,
@@ -161,4 +159,5 @@ async def list_project_datasets(project_name: str):
                 vectors.append(dataset_info)
     
     return ProjectDatasets(rasters=rasters, vectors=vectors)
+
 

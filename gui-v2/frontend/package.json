@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "concurrently \"npm run dev:next\" \"npm run dev:electron\"",
     "dev:next": "next dev -H 0.0.0.0",
-    "dev:electron": "wait-on http://localhost:3000 && electron .",
+    "dev:electron": "wait-on http://localhost:3000 && electron . --no-sandbox",
     "build": "next build",
     "build:electron": "npm run build && electron-builder",
     "electron-pack": "electron-builder --linux --x64",
