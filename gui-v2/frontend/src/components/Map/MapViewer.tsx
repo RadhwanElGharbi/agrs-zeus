@@ -23,6 +23,8 @@ import { LayerManager } from './LayerManager'
 import { AttributeTable } from './AttributeTable'
 import { StyleEditor } from './StyleEditor'
 
+const BASEMAP_FALLBACK_DEFAULT_OPACITY = 0.75
+
 export function MapViewer() {
   const { currentProject, datasets } = useProject()
   const mapContainerRef = useRef<HTMLDivElement>(null)
@@ -119,7 +121,9 @@ export function MapViewer() {
 
     const getBeforeId = () => {
       const layers = map.getStyle()?.layers
-      return layers && layers.length > 0 ? layers[0].id : undefined
+      // Insert before the first non-background layer
+      const target = layers?.find(l => l.id !== 'background')
+      return target?.id
     }
 
     const addLayerSafely = (layer: any) => {
@@ -172,6 +176,46 @@ export function MapViewer() {
     }
   }, [])
 
+  const setFallbackOpacity = useCallback((opacity: number) => {
+    const map = mapRef.current
+    if (!map) return
+    if (map.getLayer('basemap-fallback')) {
+      map.setPaintProperty('basemap-fallback', 'raster-opacity', opacity)
+    }
+  }, [])
+
+  const removeBasemapLayers = useCallback((options?: { includeFallback?: boolean }) => {
+    const map = mapRef.current
+    if (!map) return
+    const includeFallback = options?.includeFallback ?? false
+
+    const layersToRemove = ['basemap-imagery', 'basemap-reference']
+    if (includeFallback) layersToRemove.push('basemap-fallback')
+
+    const sourcesToRemove = ['esriImagery', 'esriLabels']
+    if (includeFallback) sourcesToRemove.push('osmFallback')
+
+    layersToRemove.forEach((layerId) => {
+      if (map.getLayer(layerId)) {
+        try {
+          map.removeLayer(layerId)
+        } catch (error) {
+          console.warn(`Failed to remove layer ${layerId}`, error)
+        }
+      }
+    })
+
+    sourcesToRemove.forEach((sourceId) => {
+      if (map.getSource(sourceId)) {
+        try {
+          map.removeSource(sourceId)
+        } catch (error) {
+          console.warn(`Failed to remove source ${sourceId}`, error)
+        }
+      }
+    })
+  }, [])
+
   const addBaseLayers = useCallback(() => {
     const map = mapRef.current
     if (!map) return
@@ -207,7 +251,7 @@ export function MapViewer() {
         id: 'basemap-fallback',
         type: 'raster',
         source: 'osmFallback',
-        paint: { 'raster-opacity': 0.4 }
+        paint: { 'raster-opacity': BASEMAP_FALLBACK_DEFAULT_OPACITY }
       })
     }
     if (!map.getLayer('basemap-imagery')) {
@@ -234,8 +278,20 @@ export function MapViewer() {
     map.setPaintProperty('basemap-imagery', 'raster-opacity', 1)
     map.setPaintProperty('basemap-imagery', 'raster-fade-duration', 400)
     map.setPaintProperty('basemap-reference', 'raster-opacity', 0.8)
+    setFallbackOpacity(imageryFailedRef.current ? 1 : BASEMAP_FALLBACK_DEFAULT_OPACITY)
     applySkyBackdrop()
-  }, [applySkyBackdrop])
+  }, [applySkyBackdrop, setFallbackOpacity])
+
+  const handleBasemapFailure = useCallback(() => {
+    imageryFailedRef.current = true
+    setFallbackOpacity(1)
+    removeBasemapLayers({ includeFallback: false })
+    // Retry after short delay to avoid thrashing if the service is temporarily offline
+    setTimeout(() => {
+      if (!mapRef.current) return
+      addBaseLayers()
+    }, 1500)
+  }, [addBaseLayers, removeBasemapLayers, setFallbackOpacity])
 
   /**
    * Initialize MapLibre map instance (client side only)
@@ -257,7 +313,15 @@ export function MapViewer() {
           style: {
             version: 8,
             sources: {},
-            layers: [],
+            layers: [
+              {
+                id: 'background',
+                type: 'background',
+                paint: {
+                  'background-color': '#02040a'
+                }
+              }
+            ],
             glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf' // Ensure glyphs are available if needed
           },
           center: [-80.5449, 43.4723], // University of Waterloo
@@ -286,7 +350,7 @@ export function MapViewer() {
         mapInstance.on('error', (event) => {
           const e = event as any
           if (e?.sourceId && (e.sourceId === 'esriImagery' || e.sourceId === 'esriLabels')) {
-            imageryFailedRef.current = true
+            handleBasemapFailure()
           }
         })
 
@@ -1091,14 +1155,7 @@ export function MapViewer() {
 
   const handleRefreshAll = () => {
     const map = mapRef.current
-    if (map) {
-      ;['basemap-imagery', 'basemap-reference', 'basemap-fallback'].forEach((layerId) => {
-        if (map.getLayer(layerId)) map.removeLayer(layerId)
-      })
-      ;['esriImagery', 'esriLabels', 'osmFallback'].forEach((sourceId) => {
-        if (map.getSource(sourceId)) map.removeSource(sourceId)
-      })
-    }
+    removeBasemapLayers({ includeFallback: true })
     addBaseLayers()
     loadProjectLayers()
   }

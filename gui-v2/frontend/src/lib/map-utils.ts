@@ -239,8 +239,14 @@ export function formatMetadata(metadata: any | undefined): { label: string, valu
     })
   }
 
-  const date = metadata.processing_date || metadata.date_acquired
-  if (date) rows.push({ label: 'Date', value: date })
+  const dateAcquired = metadata.date_acquired || metadata.capture_date
+  if (dateAcquired) {
+    rows.push({ label: 'Date acquired', value: dateAcquired })
+  } else if (metadata.processing_date) {
+    rows.push({ label: 'Processing Date', value: metadata.processing_date })
+  } else if (metadata.date) {
+    rows.push({ label: 'Date', value: metadata.date })
+  }
 
   if (metadata.validation_status) {
     rows.push({

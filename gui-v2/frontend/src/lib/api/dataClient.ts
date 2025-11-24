@@ -96,6 +96,26 @@ export interface ProjectDatasets {
   vectors: DatasetInfo[];
 }
 
+export interface DatasetCoverageEntry {
+  dataset: string;
+  source?: string | null;
+  data_type?: string | null;
+  access?: string | null;
+  coverage?: string | null;
+  temporal_start?: string | null;
+  temporal_end?: string | null;
+  frequency?: string | null;
+  applies_globally: boolean;
+}
+
+export interface DatasetCoverageResponse {
+  iso3: string;
+  country?: string | null;
+  entries: DatasetCoverageEntry[];
+  summary?: string | null;
+  protocol_reference: string;
+}
+
 export interface RouteMetadata {
   filename: string;
   total_reward?: number;
@@ -197,6 +217,23 @@ export async function fetchPIRLRoute(project: string, routeName: string): Promis
   
   if (!response.ok) {
     throw new Error(`Failed to fetch route ${routeName}: ${response.statusText}`);
+  }
+  
+  return response.json();
+}
+
+/**
+ * Fetch dataset coverage catalog for the project's AOI
+ */
+export async function fetchDatasetCoverage(project: string): Promise<DatasetCoverageResponse> {
+  if (!project) {
+    throw new Error('Project name is required to load dataset coverage');
+  }
+  const base = await getApiBaseAsync()
+  const response = await fetch(`${base}/projects/${project}/dataset-coverage`);
+  
+  if (!response.ok) {
+    throw new Error(`Failed to fetch dataset coverage for ${project}: ${response.statusText}`);
   }
   
   return response.json();

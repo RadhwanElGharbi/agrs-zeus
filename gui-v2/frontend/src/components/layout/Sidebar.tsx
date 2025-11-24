@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ProjectSelector } from '@/components/Project/ProjectSelector'
+import { DatasetCoverageDialog } from '@/components/Project/DatasetCoverageDialog'
 
 interface SidebarProps {
   className?: string
@@ -21,10 +22,11 @@ interface SidebarProps {
 
 export function Sidebar({ className }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false)
+  const [showDatasets, setShowDatasets] = useState(false)
 
   const navigationItems = [
     { icon: Map, label: 'Map View', active: true },
-    { icon: Layers, label: 'Datasets' },
+    { icon: Layers, label: 'Datasets', onClick: () => setShowDatasets(true) },
     { icon: Activity, label: 'PIRL Training' },
     { icon: Database, label: 'Data Catalog' },
     { icon: Settings, label: 'Settings' },
@@ -97,6 +99,7 @@ export function Sidebar({ className }: SidebarProps) {
                   : "hover:bg-accent hover:text-accent-foreground text-muted-foreground"
               )}
               title={collapsed ? item.label : undefined}
+              onClick={item.onClick}
             >
               <Icon className="w-5 h-5 flex-shrink-0" />
               {!collapsed && (
@@ -126,6 +129,8 @@ export function Sidebar({ className }: SidebarProps) {
           </div>
         )}
       </div>
+
+      <DatasetCoverageDialog open={showDatasets} onClose={() => setShowDatasets(false)} />
     </div>
   )
 }

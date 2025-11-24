@@ -8,11 +8,12 @@ import io
 import json
 import math
 import os
+import shutil
 import subprocess
 import tempfile
 from functools import lru_cache
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Tuple
 from urllib.request import urlopen
 
 import numpy as np
@@ -27,6 +28,7 @@ router = APIRouter()
 
 # Cache for converted GeoJSON files
 GEOJSON_CACHE = {}
+TILE_CACHE_ROOT = Path(os.getenv("AGRS_TILE_CACHE_DIR", "/opt/agrs/gui-v2/backend/.tile_cache"))
 _terrain_source_env = os.getenv("GLOBAL_TERRAIN_TILE_URL")
 GLOBAL_TERRAIN_TILE_SOURCES = [
     src for src in [
@@ -46,6 +48,163 @@ def get_project_path_or_404(project: str) -> Path:
             detail=f"Project '{project}' not found (missing project_metadata.json or pipeline_specs.json)"
         )
     return project_path
+
+
+def _safe_segment(value: str) -> str:
+    sanitized = value.replace("..", "__").replace("/", "_").strip()
+    return sanitized or "default"
+
+
+def _ensure_cache_root() -> None:
+    TILE_CACHE_ROOT.mkdir(parents=True, exist_ok=True)
+
+
+def _purge_directory_contents(directory: Path) -> None:
+    if not directory.exists():
+        return
+    for child in directory.iterdir():
+        if child.is_dir():
+            shutil.rmtree(child, ignore_errors=True)
+        else:
+            try:
+                child.unlink()
+            except FileNotFoundError:
+                continue
+
+
+def _ensure_version_dir(base_dir: Path, version: str) -> Path:
+    """
+    Ensure a cache directory exists for the current dataset version and
+    drop stale versions to keep disk usage bounded.
+    """
+    _ensure_cache_root()
+    version_dir = base_dir / version
+    if version_dir.exists():
+        return version_dir
+
+    base_dir.mkdir(parents=True, exist_ok=True)
+    _purge_directory_contents(base_dir)
+    version_dir.mkdir(parents=True, exist_ok=True)
+    return version_dir
+
+
+def _write_cache_file(path: Path, data: bytes) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp_path = path.with_suffix(path.suffix + ".tmp")
+    with open(tmp_path, "wb") as tmp_file:
+        tmp_file.write(data)
+    os.replace(tmp_path, path)
+
+
+def _tile_cache_path(kind: str, project: str, layer: str, mtime_ns: int, z: int, x: int, y: int) -> Path:
+    base_dir = TILE_CACHE_ROOT / kind / _safe_segment(project) / _safe_segment(layer)
+    version_dir = _ensure_version_dir(base_dir, str(int(mtime_ns)))
+    tile_dir = version_dir / str(z) / str(x)
+    tile_dir.mkdir(parents=True, exist_ok=True)
+    return tile_dir / f"{y}.png"
+
+
+def _vector_cache_file(project: str, layer: str, mtime_ns: int) -> Path:
+    base_dir = TILE_CACHE_ROOT / "vectors" / _safe_segment(project) / _safe_segment(layer)
+    return base_dir / f"{int(mtime_ns)}.geojson"
+
+
+def _dataset_mtime(path: Path) -> Tuple[float, int]:
+    stat_info = path.stat()
+    mtime = stat_info.st_mtime
+    mtime_ns = getattr(stat_info, "st_mtime_ns", int(mtime * 1_000_000_000))
+    return mtime, int(mtime_ns)
+
+
+def _dataset_latlon_bounds(path: Path) -> Tuple[float, float, float, float]:
+    """
+    Return dataset bounds in WGS84 (min_lon, min_lat, max_lon, max_lat).
+    """
+    result = subprocess.run(["gdalinfo", "-json", str(path)], capture_output=True, text=True)
+    if result.returncode != 0:
+        raise RuntimeError(f"gdalinfo failed for {path}: {result.stderr}")
+
+    metadata = json.loads(result.stdout)
+    corners = metadata.get("cornerCoordinates")
+    if corners:
+        lons = [corner[0] for corner in corners.values()]
+        lats = [corner[1] for corner in corners.values()]
+        return min(lons), min(lats), max(lons), max(lats)
+
+    extent_coords = (
+        metadata.get("wgs84Extent", {})
+        .get("coordinates", [[]])
+    )
+    if extent_coords and extent_coords[0]:
+        lons = [pt[0] for pt in extent_coords[0]]
+        lats = [pt[1] for pt in extent_coords[0]]
+        return min(lons), min(lats), max(lons), max(lats)
+
+    # Fallback: entire world
+    return -180.0, -85.0, 180.0, 85.0
+
+
+def _lonlat_to_tile(lon: float, lat: float, zoom: int) -> Tuple[int, int]:
+    lat = max(min(lat, 85.05112878), -85.05112878)
+    n = 2 ** zoom
+    x_tile = int((lon + 180.0) / 360.0 * n)
+    lat_rad = math.radians(lat)
+    y_tile = int((1.0 - math.log(math.tan(lat_rad) + 1 / math.cos(lat_rad)) / math.pi) / 2.0 * n)
+    x_tile = min(max(x_tile, 0), n - 1)
+    y_tile = min(max(y_tile, 0), n - 1)
+    return x_tile, y_tile
+
+
+def _tile_range_for_bounds(bounds: Tuple[float, float, float, float], zoom: int) -> Tuple[int, int, int, int]:
+    min_lon, min_lat, max_lon, max_lat = bounds
+    x_min, y_max = _lonlat_to_tile(min_lon, min_lat, zoom)
+    x_max, y_min = _lonlat_to_tile(max_lon, max_lat, zoom)
+    if x_min > x_max:
+        x_min, x_max = x_max, x_min
+    if y_min > y_max:
+        y_min, y_max = y_max, y_min
+    return x_min, x_max, y_min, y_max
+
+
+def precache_tiles(project: str, layer: str, min_zoom: int, max_zoom: int, *, terrain: bool = False) -> None:
+    """
+    Pre-generate tile PNGs for a given dataset and zoom range,
+    storing them in the persistent tile cache.
+    """
+    if min_zoom > max_zoom:
+        raise ValueError("min_zoom must be <= max_zoom")
+
+    project_path = get_project_path_or_404(project)
+    raster_file = project_path / "data" / "rasters" / f"{layer}.tif"
+    if not raster_file.exists():
+        raise FileNotFoundError(f"Raster layer '{layer}' not found for project '{project}'")
+
+    bounds = _dataset_latlon_bounds(raster_file)
+    mtime, mtime_ns = _dataset_mtime(raster_file)
+    cache_kind = "terrain" if terrain else "rasters"
+    total_tiles = 0
+
+    for zoom in range(min_zoom, max_zoom + 1):
+        x_min, x_max, y_min, y_max = _tile_range_for_bounds(bounds, zoom)
+        zoom_tiles = (x_max - x_min + 1) * (y_max - y_min + 1)
+        print(f"[precache] z={zoom}: generating up to {zoom_tiles} tiles for {layer}")
+        for x in range(x_min, x_max + 1):
+            for y in range(y_min, y_max + 1):
+                cache_path = _tile_cache_path(cache_kind, project, layer, mtime_ns, zoom, x, y)
+                if cache_path.exists():
+                    continue
+                try:
+                    if terrain:
+                        tile_bytes = _cached_terrain_tile(str(raster_file), zoom, x, y, mtime)
+                    else:
+                        tile_bytes = _cached_raster_tile(str(raster_file), zoom, x, y, mtime)
+                    _write_cache_file(cache_path, tile_bytes)
+                except Exception as exc:
+                    print(f"[precache] failed tile z={zoom} x={x} y={y}: {exc}")
+                    continue
+                total_tiles += 1
+
+    print(f"[precache] completed for {project}/{layer}: {total_tiles} tiles written to cache.")
 
 
 def mercator_tile_bounds(z: int, x: int, y: int) -> tuple[float, float, float, float]:
@@ -155,10 +314,24 @@ async def get_vector_layer(project: str, layer: str):
     if not vector_file.exists():
         raise HTTPException(status_code=404, detail=f"Vector layer '{layer}' not found in project '{project}'")
     
-    # Check cache
     cache_key = f"{project}:{layer}"
+    vector_mtime, vector_mtime_ns = _dataset_mtime(vector_file)
+
+    # In-memory cache
     if cache_key in GEOJSON_CACHE:
         return JSONResponse(content=GEOJSON_CACHE[cache_key])
+
+    # Persistent cache
+    cache_file = _vector_cache_file(project, layer, vector_mtime_ns)
+    if cache_file.exists():
+        try:
+            with open(cache_file, "r", encoding="utf-8") as cached:
+                geojson_data = json.load(cached)
+            GEOJSON_CACHE[cache_key] = geojson_data
+            return JSONResponse(content=geojson_data)
+        except Exception:
+            # Fall through to regenerate if cache read fails
+            pass
     
     try:
         # Convert GPKG to GeoJSON using ogr2ogr
@@ -194,6 +367,18 @@ async def get_vector_layer(project: str, layer: str):
         
         # Cache the result
         GEOJSON_CACHE[cache_key] = geojson_data
+
+        if not cache_file.exists():
+            cache_dir = cache_file.parent
+            cache_dir.mkdir(parents=True, exist_ok=True)
+            _purge_directory_contents(cache_dir)
+            cache_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            with open(cache_file, "w", encoding="utf-8") as cached:
+                json.dump(geojson_data, cached)
+        except Exception:
+            # Disk cache failures should not impact response
+            pass
         
         return JSONResponse(content=geojson_data)
         
@@ -399,7 +584,18 @@ async def get_raster_tile(project: str, layer: str, z: int, x: int, y: int):
         raise HTTPException(status_code=404, detail=f"Raster layer '{layer}' not found in project '{project}'")
 
     try:
-        tile_bytes = _cached_raster_tile(str(raster_file), z, x, y, raster_file.stat().st_mtime)
+        mtime, mtime_ns = _dataset_mtime(raster_file)
+        cache_path = _tile_cache_path("rasters", project, layer, mtime_ns, z, x, y)
+
+        if cache_path.exists():
+            with open(cache_path, "rb") as cached_tile:
+                return Response(content=cached_tile.read(), media_type="image/png")
+
+        tile_bytes = _cached_raster_tile(str(raster_file), z, x, y, mtime)
+        try:
+            _write_cache_file(cache_path, tile_bytes)
+        except Exception:
+            pass
         return Response(content=tile_bytes, media_type="image/png")
     except HTTPException:
         raise
@@ -419,7 +615,18 @@ async def get_terrain_tile(project: str, layer: str, z: int, x: int, y: int):
         raise HTTPException(status_code=404, detail=f"Raster layer '{layer}' not found in project '{project}'")
 
     try:
-        tile_bytes = _cached_terrain_tile(str(raster_file), z, x, y, raster_file.stat().st_mtime)
+        mtime, mtime_ns = _dataset_mtime(raster_file)
+        cache_path = _tile_cache_path("terrain", project, layer, mtime_ns, z, x, y)
+
+        if cache_path.exists():
+            with open(cache_path, "rb") as cached_tile:
+                return Response(content=cached_tile.read(), media_type="image/png")
+
+        tile_bytes = _cached_terrain_tile(str(raster_file), z, x, y, mtime)
+        try:
+            _write_cache_file(cache_path, tile_bytes)
+        except Exception:
+            pass
         return Response(content=tile_bytes, media_type="image/png")
     except HTTPException:
         raise
@@ -459,16 +666,23 @@ async def get_aoi_file(project: str, filename: str):
 @router.delete("/data/cache")
 async def clear_cache():
     """
-    Clear the GeoJSON conversion cache
-    
-    Useful for development or if datasets are updated.
+    Clear the GeoJSON conversion cache and on-disk tile caches.
     """
     global GEOJSON_CACHE
     cache_size = len(GEOJSON_CACHE)
     GEOJSON_CACHE = {}
+
+    disk_entries_removed = 0
+    if TILE_CACHE_ROOT.exists():
+        try:
+            disk_entries_removed = sum(1 for _ in TILE_CACHE_ROOT.iterdir())
+        except Exception:
+            disk_entries_removed = 0
+        shutil.rmtree(TILE_CACHE_ROOT, ignore_errors=True)
+    _ensure_cache_root()
     
     return {
-        "message": f"Cache cleared ({cache_size} entries removed)",
+        "message": f"Cache cleared ({cache_size} memory entries, {disk_entries_removed} disk namespaces)",
         "status": "success"
     }
 
