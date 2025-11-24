@@ -1,12 +1,12 @@
 'use client'
 
 import { MainLayout } from '@/components/layout/MainLayout'
-import { SimpleMapViewer } from '@/components/Map/SimpleMapViewer'
+import { MapViewer } from '@/components/Map/MapViewer'
 
 export default function Home() {
   return (
     <MainLayout>
-      <SimpleMapViewer />
+      <MapViewer />
     </MainLayout>
   )
 }

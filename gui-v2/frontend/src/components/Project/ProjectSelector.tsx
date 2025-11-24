@@ -34,9 +34,14 @@ export function ProjectSelector() {
     <div className="relative">
       {/* Dropdown Button */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
-        disabled={isLoading}
-        className="w-full flex items-center justify-between p-3 bg-card border border-border rounded-lg hover:bg-accent transition-colors disabled:opacity-50"
+        onClick={async () => {
+          const nextOpen = !isOpen
+          setIsOpen(nextOpen)
+          if (nextOpen) {
+            await refreshProjects()
+          }
+        }}
+        className="w-full flex items-center justify-between p-3 bg-card border border-border rounded-lg hover:bg-accent transition-colors"
       >
         <div className="flex items-center gap-2">
           <Folder className="w-4 h-4" />
@@ -51,12 +56,18 @@ export function ProjectSelector() {
             )}
           </div>
         </div>
-        <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <div className="flex items-center gap-2">
+          {isLoading && <div className="w-3 h-3 rounded-full border border-primary border-t-transparent animate-spin" />}
+          <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        </div>
       </button>
 
       {/* Dropdown Menu */}
       {isOpen && (
         <div className="absolute top-full mt-2 w-full bg-card border border-border rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
+          <div className="px-3 py-2 text-[11px] text-muted-foreground border-b border-border">
+            Auto-detected from /opt/agrs/Projects (folders containing project_metadata.json)
+          </div>
           {/* Refresh Button */}
           <div className="p-2 border-b border-border">
             <button
@@ -150,4 +161,5 @@ export function ProjectSelector() {
     </div>
   )
 }
+
 

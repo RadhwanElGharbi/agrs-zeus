@@ -1,0 +1,245 @@
+import type { GeoJSON } from '@/lib/api/dataClient'
+
+export type ManagedLayer = {
+  id: string
+  name: string
+  type: 'vector' | 'raster'
+  status: 'loading' | 'ready' | 'error'
+  message?: string
+  sourceId: string
+  layerIds: string[]
+  visible: boolean
+  opacity: number
+  order: number
+  path?: string
+  metadata?: any
+  geometryType?: string
+  featureCount?: number
+  isAoi?: boolean
+}
+
+export type VectorDetail = {
+  properties: string[]
+  sample: Record<string, any>[]
+  rows: Record<string, any>[]
+  features: any[]
+  sortedCache?: {
+    column: string
+    direction: 'asc' | 'desc'
+    pairs: { row: Record<string, any>; feature: any }[]
+  }
+}
+
+export type LayerStyleOptions = {
+  fillColor?: string
+  lineColor?: string
+  lineWidth?: number
+  pointColor?: string
+  pointSize?: number
+  opacity?: number
+}
+
+export type LngLatBounds = [[number, number], [number, number]]
+
+export const AOI_LAYER_HINTS = ['aoi', 'area_of_interest']
+export const SAMPLE_ROWS = 25
+export const COLOR_PALETTE = ['#22d3ee', '#fb7185', '#a78bfa', '#f97316', '#22c55e', '#eab308', '#38bdf8']
+
+export function colorForLayer(name: string): string {
+  const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
+  return COLOR_PALETTE[hash % COLOR_PALETTE.length]
+}
+
+export function getGeoJSONBounds(geojson: GeoJSON): [[number, number], [number, number]] | null {
+  let minX = Infinity
+  let minY = Infinity
+  let maxX = -Infinity
+  let maxY = -Infinity
+
+  const updateBounds = (coords: number[]) => {
+    if (!Array.isArray(coords) || coords.length < 2) return
+    const [x, y] = coords
+    if (typeof x !== 'number' || typeof y !== 'number') return
+    minX = Math.min(minX, x)
+    minY = Math.min(minY, y)
+    maxX = Math.max(maxX, x)
+    maxY = Math.max(maxY, y)
+  }
+
+  const processCoordinates = (coords: any) => {
+    if (!coords) return
+    if (typeof coords[0] === 'number') {
+      updateBounds(coords)
+    } else {
+      coords.forEach(processCoordinates)
+    }
+  }
+
+  const processGeometry = (geometry: any) => {
+    if (!geometry) return
+    switch (geometry.type) {
+      case 'Point':
+      case 'LineString':
+      case 'MultiPoint':
+      case 'MultiLineString':
+      case 'Polygon':
+      case 'MultiPolygon':
+        processCoordinates(geometry.coordinates)
+        break
+      case 'GeometryCollection':
+        geometry.geometries?.forEach(processGeometry)
+        break
+      default:
+        break
+    }
+  }
+
+  if ((geojson as any).type === 'FeatureCollection') {
+    (geojson as any).features?.forEach((feature: any) => processGeometry(feature.geometry))
+  } else if ((geojson as any).type === 'Feature') {
+    processGeometry((geojson as any).geometry)
+  } else {
+    processGeometry(geojson)
+  }
+
+  if (minX === Infinity) {
+    return null
+  }
+
+  return [
+    [minX, minY],
+    [maxX, maxY]
+  ]
+}
+
+export function inferGeometryType(geojson: GeoJSON): 'polygon' | 'line' | 'point' | 'mixed' {
+  const features = (geojson as any).features || []
+  let hasPolygon = false
+  let hasLine = false
+  let hasPoint = false
+
+  for (const feature of features) {
+    const geomType = feature?.geometry?.type
+    if (!geomType) continue
+    if (geomType.includes('Polygon')) hasPolygon = true
+    if (geomType.includes('Line')) hasLine = true
+    if (geomType.includes('Point')) hasPoint = true
+  }
+
+  const flags = [hasPolygon, hasLine, hasPoint].filter(Boolean).length
+  if (flags > 1) return 'mixed'
+  if (hasPolygon) return 'polygon'
+  if (hasLine) return 'line'
+  if (hasPoint) return 'point'
+  return 'mixed'
+}
+
+export function buildPropertySummary(geojson: GeoJSON): VectorDetail {
+  const features = (geojson as any).features || []
+  const propertiesSet = new Set<string>()
+  const sample: Record<string, any>[] = []
+
+  for (const feature of features.slice(0, SAMPLE_ROWS)) {
+    const props = feature?.properties || {}
+    Object.keys(props || {}).forEach(key => propertiesSet.add(key))
+    sample.push(props)
+  }
+
+  return {
+    properties: Array.from(propertiesSet),
+    sample,
+    rows: [], // Will be filled later if needed
+    features: [] // Will be filled later if needed
+  }
+}
+
+export function getRasterBounds(metadata: any | undefined): LngLatBounds | null {
+  if (!metadata) return null
+  const bbox = metadata.bbox_wgs84
+  if (
+    bbox &&
+    [bbox.west, bbox.south, bbox.east, bbox.north].every((v: any) => typeof v === 'number')
+  ) {
+    return [
+      [bbox.west, bbox.south],
+      [bbox.east, bbox.north]
+    ]
+  }
+  return null
+}
+
+export function formatMetadata(metadata: any | undefined): { label: string, value: string }[] {
+  if (!metadata || typeof metadata !== 'object') return []
+  const rows: { label: string, value: string }[] = []
+
+  const num = (val: any, digits = 2) => (typeof val === 'number' ? Number(val).toFixed(digits) : val)
+  const asMB = (bytes: any) => (typeof bytes === 'number' ? `${(bytes / (1024 * 1024)).toFixed(2)} MB` : bytes)
+
+  if (metadata.dataset_name) rows.push({ label: 'Dataset', value: metadata.dataset_name })
+  if (metadata.format) rows.push({ label: 'Format', value: metadata.format })
+  if (metadata.data_type) rows.push({ label: 'Type', value: metadata.data_type })
+  if (metadata.target_crs_name || metadata.target_crs) {
+    rows.push({
+      label: 'CRS',
+      value: `${metadata.target_crs_name ?? ''}${metadata.target_crs ? ` (${metadata.target_crs})` : ''}`.trim()
+    })
+  }
+  if (metadata.resolution_m) rows.push({ label: 'Resolution', value: `${metadata.resolution_m} m` })
+  if (metadata.file_size_bytes) rows.push({ label: 'Size', value: asMB(metadata.file_size_bytes) })
+  if (metadata.nodata_value !== undefined) rows.push({ label: 'NoData', value: String(metadata.nodata_value) })
+
+  if (metadata.extent && metadata.extent.minx !== undefined) {
+    rows.push({
+      label: 'Extent (proj)',
+      value: `min(${metadata.extent.minx}, ${metadata.extent.miny}) · max(${metadata.extent.maxx}, ${metadata.extent.maxy})`
+    })
+  }
+  if (metadata.bbox_wgs84) {
+    rows.push({
+      label: 'Extent (WGS84)',
+      value: `W:${metadata.bbox_wgs84.west} E:${metadata.bbox_wgs84.east} S:${metadata.bbox_wgs84.south} N:${metadata.bbox_wgs84.north}`
+    })
+  }
+
+  if (metadata.statistics) {
+    const stats = metadata.statistics
+    rows.push({
+      label: 'Statistics',
+      value: `min ${stats.min}, max ${stats.max}, mean ${num(stats.mean)}, stddev ${num(stats.stddev)}`
+    })
+  }
+
+  if (Array.isArray(metadata.operations_applied) && metadata.operations_applied.length > 0) {
+    rows.push({
+      label: 'Operations',
+      value: metadata.operations_applied.map((op: any) => op.operation || '').filter(Boolean).join(', ')
+    })
+  }
+
+  if (Array.isArray(metadata.source_files) && metadata.source_files.length > 0) {
+    rows.push({
+      label: 'Source files',
+      value: metadata.source_files.map((f: any) => f.filename || '').filter(Boolean).join(', ')
+    })
+  }
+
+  if (metadata.processing_date) rows.push({ label: 'Processed on', value: metadata.processing_date })
+  if (metadata.validation_status) {
+    rows.push({
+      label: 'Validation',
+      value: `${metadata.validation_status}${metadata.validation_date ? ` (${metadata.validation_date})` : ''}`
+    })
+  }
+  if (metadata.notes) rows.push({ label: 'Notes', value: String(metadata.notes) })
+  
+  return rows
+}
+
+export function featureBounds(feature: any): LngLatBounds | null {
+  if (!feature) return null
+  return getGeoJSONBounds({
+    type: 'FeatureCollection',
+    features: [feature]
+  } as any)
+}
+

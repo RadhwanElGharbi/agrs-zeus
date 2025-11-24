@@ -62,3 +62,5 @@ echo ""
 cd "$SCRIPT_DIR/frontend"
 npm run dev
 
+
+

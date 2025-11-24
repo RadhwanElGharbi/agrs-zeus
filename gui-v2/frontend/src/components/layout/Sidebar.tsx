@@ -23,7 +23,6 @@ export function Sidebar({ className }: SidebarProps) {
 
   const navigationItems = [
     { icon: Map, label: 'Map View', active: true },
-    { icon: FolderOpen, label: 'Projects' },
     { icon: Layers, label: 'Datasets' },
     { icon: Activity, label: 'PIRL Training' },
     { icon: Database, label: 'Data Catalog' },
@@ -37,6 +36,7 @@ export function Sidebar({ className }: SidebarProps) {
         collapsed ? "w-16" : "w-64",
         className
       )}
+      data-sidebar="main"
     >
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-border">
@@ -116,4 +116,3 @@ export function Sidebar({ className }: SidebarProps) {
     </div>
   )
 }
-

@@ -3,18 +3,16 @@ Project Discovery API Endpoints
 
 Provides endpoints to discover and manage projects following the AGRS standard structure.
 """
-
-import os
-import json
-from pathlib import Path
 from typing import List, Dict, Any, Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+from .project_utils import (
+    discover_project_paths,
+    resolve_project_path,
+    load_json_file,
+)
 
 router = APIRouter()
-
-# Base projects directory
-PROJECTS_ROOT = Path("/opt/agrs/Projects")
 
 
 class ProjectMetadata(BaseModel):
@@ -44,45 +42,26 @@ class ProjectDatasets(BaseModel):
     vectors: List[DatasetInfo]
 
 
-def is_valid_project(project_path: Path) -> bool:
-    """Check if a directory is a valid AGRS project"""
-    metadata_file = project_path / "project_metadata.json"
-    return metadata_file.exists()
-
-
-def load_json_file(file_path: Path) -> Optional[Dict[str, Any]]:
-    """Load a JSON file safely"""
-    try:
-        with open(file_path, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    except Exception as e:
-        print(f"Error loading {file_path}: {e}")
-        return None
-
-
 @router.get("/projects", response_model=List[ProjectMetadata])
 async def list_projects():
     """
     Discover and list all valid projects in /opt/agrs/Projects/
     
-    A valid project must have a project_metadata.json file.
+    A valid project must have a project_metadata.json or pipeline_specs.json file.
     """
     projects = []
-    
-    if not PROJECTS_ROOT.exists():
-        return projects
-    
-    for project_dir in PROJECTS_ROOT.iterdir():
-        if not project_dir.is_dir():
-            continue
-        
-        if is_valid_project(project_dir):
-            metadata_file = project_dir / "project_metadata.json"
-            metadata = load_json_file(metadata_file)
-            
-            if metadata:
-                projects.append(ProjectMetadata(**metadata))
-    
+
+    project_dirs = discover_project_paths()
+    for _, project_dir in sorted(project_dirs.items()):
+        metadata_file = project_dir / "project_metadata.json"
+        metadata = load_json_file(metadata_file) if metadata_file.exists() else None
+
+        if metadata:
+            projects.append(ProjectMetadata(**metadata))
+        else:
+            # Minimal response if metadata is missing
+            projects.append(ProjectMetadata(project_name=project_dir.name))
+
     return projects
 
 
@@ -91,16 +70,13 @@ async def get_project_metadata(project_name: str):
     """
     Get full metadata for a specific project
     """
-    project_path = PROJECTS_ROOT / project_name
+    project_path = resolve_project_path(project_name)
     
-    if not project_path.exists():
-        raise HTTPException(status_code=404, detail=f"Project '{project_name}' not found")
-    
-    if not is_valid_project(project_path):
-        raise HTTPException(status_code=400, detail=f"Invalid project structure for '{project_name}'")
+    if not project_path or not project_path.exists():
+        raise HTTPException(status_code=404, detail=f"Project '{project_name}' not found (missing project_metadata.json or pipeline_specs.json)")
     
     metadata_file = project_path / "project_metadata.json"
-    metadata = load_json_file(metadata_file)
+    metadata = load_json_file(metadata_file) if metadata_file.exists() else None
     
     if not metadata:
         raise HTTPException(status_code=500, detail=f"Failed to load metadata for '{project_name}'")
@@ -116,10 +92,10 @@ async def list_project_datasets(project_name: str):
     Scans data/rasters/ and data/vectors/ directories for symlinks and files.
     Reads metadata from .json sidecars if available.
     """
-    project_path = PROJECTS_ROOT / project_name
+    project_path = resolve_project_path(project_name)
     
-    if not project_path.exists():
-        raise HTTPException(status_code=404, detail=f"Project '{project_name}' not found")
+    if not project_path or not project_path.exists():
+        raise HTTPException(status_code=404, detail=f"Project '{project_name}' not found (missing project root with project_metadata.json or pipeline_specs.json)")
     
     rasters_dir = project_path / "data" / "rasters"
     vectors_dir = project_path / "data" / "vectors"
@@ -134,6 +110,15 @@ async def list_project_datasets(project_name: str):
             if item.suffix == '.tif':
                 dataset_name = item.stem
                 metadata_file = item.with_suffix('.tif.json')
+                if not metadata_file.exists():
+                    # check resolved target for sidecar (handles symlinks)
+                    try:
+                        resolved = item.resolve()
+                        alt_metadata = resolved.with_suffix('.tif.json')
+                        if alt_metadata.exists():
+                            metadata_file = alt_metadata
+                    except Exception:
+                        pass
                 
                 dataset_info = DatasetInfo(
                     name=dataset_name,
@@ -154,6 +139,14 @@ async def list_project_datasets(project_name: str):
             if item.suffix == '.gpkg':
                 dataset_name = item.stem
                 metadata_file = item.with_suffix('.gpkg.json')
+                if not metadata_file.exists():
+                    try:
+                        resolved = item.resolve()
+                        alt_metadata = resolved.with_suffix('.gpkg.json')
+                        if alt_metadata.exists():
+                            metadata_file = alt_metadata
+                    except Exception:
+                        pass
                 
                 dataset_info = DatasetInfo(
                     name=dataset_name,
