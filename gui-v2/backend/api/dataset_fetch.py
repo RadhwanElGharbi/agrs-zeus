@@ -2580,8 +2580,19 @@ def _execute_dataset(defn: DatasetDefinition, ctx: FetchContext, job: DatasetJob
         else:
             _process_vector(defn, ctx, raw_path, job)
 
+    # Verify raw file exists
     if not raw_path.exists() or raw_path.stat().st_size == 0:
         raise RuntimeError("Raw dataset missing or empty after fetch")
+    
+    # If agent completed but processed file is missing/empty, run processing as fallback
+    if not processed_path.exists() or processed_path.stat().st_size == 0:
+        _log_to_job(job, ctx, f"Processed file missing after agent completion, running native processing for {defn.label}")
+        if defn.dataset_type == "raster":
+            _process_raster(defn, ctx, raw_path, job)
+        else:
+            _process_vector(defn, ctx, raw_path, job)
+    
+    # Final validation
     if not processed_path.exists() or processed_path.stat().st_size == 0:
         raise RuntimeError("Processed dataset missing or empty after processing")
 

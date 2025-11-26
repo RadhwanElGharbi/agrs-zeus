@@ -129,53 +129,11 @@ def _parse_hstore(hstore_str: str) -> dict:
 
 def _expand_other_tags(geojson_data: dict) -> dict:
     """
-    Expand the 'other_tags' hstore column from OSM data into proper attribute columns.
-    This ensures the attribute table displays individual columns instead of a single hstore string.
+    Previously expanded the 'other_tags' hstore column from OSM data into individual columns.
+    Now disabled to preserve the original attribute structure as requested by the user.
+    The attributes table should display exactly as the raw data is structured.
     """
-    if not geojson_data or "features" not in geojson_data:
-        return geojson_data
-    
-    features = geojson_data.get("features", [])
-    if not features:
-        return geojson_data
-    
-    # Check if any feature has 'other_tags'
-    has_other_tags = any(
-        f.get("properties", {}).get("other_tags") 
-        for f in features
-    )
-    
-    if not has_other_tags:
-        return geojson_data
-    
-    # Collect all unique keys from other_tags across all features
-    all_keys = set()
-    parsed_tags = []
-    for feature in features:
-        props = feature.get("properties", {})
-        other_tags = props.get("other_tags", "")
-        parsed = _parse_hstore(other_tags) if other_tags else {}
-        parsed_tags.append(parsed)
-        all_keys.update(parsed.keys())
-    
-    # Expand other_tags into individual columns for each feature
-    for i, feature in enumerate(features):
-        props = feature.get("properties", {})
-        parsed = parsed_tags[i]
-        
-        # Add each parsed tag as a new column
-        for key in all_keys:
-            # Only add if not already present as a column
-            if key not in props:
-                props[key] = parsed.get(key, None)
-        
-        # Remove the other_tags column since we've expanded it
-        if "other_tags" in props:
-            del props["other_tags"]
-        
-        feature["properties"] = props
-    
-    geojson_data["features"] = features
+    # Return data unchanged - preserve original attribute structure
     return geojson_data
 
 
