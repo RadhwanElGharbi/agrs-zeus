@@ -52,9 +52,9 @@ _AGENT_FLAG = os.getenv("ZEUS_AGENT_ENABLED", "1").strip().lower()
 AGENT_ENABLED = _AGENT_FLAG not in {"0", "false", "no"}
 AGENT_MODEL = os.getenv("ZEUS_AGENT_MODEL", "claude-opus-4-5-20251101")
 try:
-    AGENT_MAX_STEPS = max(1, int(os.getenv("ZEUS_AGENT_MAX_STEPS", "150")))
+    AGENT_MAX_STEPS = max(1, int(os.getenv("ZEUS_AGENT_MAX_STEPS", "500")))
 except ValueError:
-    AGENT_MAX_STEPS = 150
+    AGENT_MAX_STEPS = 500
 try:
     AGENT_MAX_RETRIES = max(1, int(os.getenv("ZEUS_AGENT_MAX_RETRIES", "8")))
 except ValueError:
