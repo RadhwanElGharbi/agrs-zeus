@@ -1,5 +1,7 @@
 {
     "aoi_file": "/opt/agrs/Projects/test_project2/aoi/aoi.kmz",
+    "aoi_area_km2": 1505.19,
+    "aoi_countries": ["Italy"],
     "crs_epsg": 32633,
     "crs_name": "WGS 84 / UTM zone 33N",
     "end_point": {
