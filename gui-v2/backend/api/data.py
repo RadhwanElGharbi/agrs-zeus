@@ -109,6 +109,76 @@ def _vector_cache_file(project: str, layer: str, mtime_ns: int) -> Path:
     return base_dir / f"{int(mtime_ns)}.geojson"
 
 
+def _parse_hstore(hstore_str: str) -> dict:
+    """
+    Parse PostgreSQL/OSM hstore format string into a dictionary.
+    Format: "key1"=>"value1","key2"=>"value2"
+    """
+    if not hstore_str:
+        return {}
+    
+    result = {}
+    # Match "key"=>"value" pairs
+    import re
+    pattern = r'"([^"]+)"=>"([^"]*)"'
+    matches = re.findall(pattern, hstore_str)
+    for key, value in matches:
+        result[key] = value
+    return result
+
+
+def _expand_other_tags(geojson_data: dict) -> dict:
+    """
+    Expand the 'other_tags' hstore column from OSM data into proper attribute columns.
+    This ensures the attribute table displays individual columns instead of a single hstore string.
+    """
+    if not geojson_data or "features" not in geojson_data:
+        return geojson_data
+    
+    features = geojson_data.get("features", [])
+    if not features:
+        return geojson_data
+    
+    # Check if any feature has 'other_tags'
+    has_other_tags = any(
+        f.get("properties", {}).get("other_tags") 
+        for f in features
+    )
+    
+    if not has_other_tags:
+        return geojson_data
+    
+    # Collect all unique keys from other_tags across all features
+    all_keys = set()
+    parsed_tags = []
+    for feature in features:
+        props = feature.get("properties", {})
+        other_tags = props.get("other_tags", "")
+        parsed = _parse_hstore(other_tags) if other_tags else {}
+        parsed_tags.append(parsed)
+        all_keys.update(parsed.keys())
+    
+    # Expand other_tags into individual columns for each feature
+    for i, feature in enumerate(features):
+        props = feature.get("properties", {})
+        parsed = parsed_tags[i]
+        
+        # Add each parsed tag as a new column
+        for key in all_keys:
+            # Only add if not already present as a column
+            if key not in props:
+                props[key] = parsed.get(key, None)
+        
+        # Remove the other_tags column since we've expanded it
+        if "other_tags" in props:
+            del props["other_tags"]
+        
+        feature["properties"] = props
+    
+    geojson_data["features"] = features
+    return geojson_data
+
+
 def _dataset_mtime(path: Path) -> Tuple[float, int]:
     stat_info = path.stat()
     mtime = stat_info.st_mtime
@@ -236,17 +306,29 @@ def mercator_tile_bounds(z: int, x: int, y: int) -> tuple[float, float, float, f
 
 
 def read_nodata_from_sidecar(raster_file: Path) -> Optional[float]:
-    """Read nodata value from an optional .json sidecar next to the raster."""
+    """Read nodata value from metadata sidecar or fall back to GDAL metadata."""
     sidecar = raster_file.with_suffix(raster_file.suffix + ".json")
-    if not sidecar.exists():
-        return None
+    if sidecar.exists():
+        try:
+            with open(sidecar, "r", encoding="utf-8") as f:
+                meta = json.load(f)
+            nodata = meta.get("nodata_value")
+            if isinstance(nodata, (int, float)):
+                return float(nodata)
+        except Exception:
+            pass
 
+    # Fallback to gdalinfo metadata
     try:
-        with open(sidecar, "r", encoding="utf-8") as f:
-            meta = json.load(f)
-        nodata = meta.get("nodata_value")
-        if isinstance(nodata, (int, float)):
-            return float(nodata)
+        result = subprocess.run(["gdalinfo", "-json", str(raster_file)], capture_output=True, text=True, timeout=30)
+        if result.returncode != 0:
+            return None
+        metadata = json.loads(result.stdout)
+        bands = metadata.get("bands", [])
+        if bands:
+            nodata = bands[0].get("noDataValue")
+            if isinstance(nodata, (int, float)):
+                return float(nodata)
     except Exception:
         return None
     return None
@@ -255,7 +337,7 @@ def read_nodata_from_sidecar(raster_file: Path) -> Optional[float]:
 @lru_cache(maxsize=256)
 def get_raster_band_profile(path: str) -> dict:
     """
-    Inspect a raster once to determine band count and palette usage.
+    Inspect a raster once to determine band count, data type, and palette usage.
     Cached per file path to avoid repeated gdalinfo calls.
     """
     result = subprocess.run(["gdalinfo", "-json", path], capture_output=True, text=True)
@@ -266,11 +348,62 @@ def get_raster_band_profile(path: str) -> dict:
     bands = metadata.get("bands", [])
     color_interps = [band.get("colorInterpretation", "") for band in bands]
     has_palette = any(ci.lower() == "palette" for ci in color_interps)
+    
+    # Get data type from first band
+    data_type = "Byte"
+    if bands:
+        data_type = bands[0].get("type", "Byte")
+    
     return {
         "band_count": len(bands),
         "color_interps": color_interps,
         "has_palette": has_palette,
+        "data_type": data_type,
     }
+
+
+@lru_cache(maxsize=256)
+def _get_raster_statistics(path: str) -> Tuple[Optional[float], Optional[float]]:
+    """
+    Get global min/max statistics for a raster.
+    Uses gdalinfo -stats to compute or retrieve statistics.
+    Returns (min, max) tuple or (None, None) if unavailable.
+    """
+    try:
+        # First try to get stats from existing metadata
+        result = subprocess.run(
+            ["gdalinfo", "-json", "-stats", path], 
+            capture_output=True, 
+            text=True,
+            timeout=60
+        )
+        if result.returncode != 0:
+            return None, None
+        
+        metadata = json.loads(result.stdout)
+        bands = metadata.get("bands", [])
+        if not bands:
+            return None, None
+        
+        band = bands[0]
+        
+        # Try to get min/max from statistics
+        stat_min = band.get("minimum")
+        stat_max = band.get("maximum")
+        
+        if stat_min is not None and stat_max is not None:
+            return float(stat_min), float(stat_max)
+        
+        # Try computedMin/computedMax
+        stat_min = band.get("computedMin")
+        stat_max = band.get("computedMax")
+        
+        if stat_min is not None and stat_max is not None:
+            return float(stat_min), float(stat_max)
+        
+        return None, None
+    except Exception:
+        return None, None
 
 
 @lru_cache(maxsize=1024)
@@ -297,6 +430,85 @@ def fetch_global_terrain(z: int, x: int, y: int) -> Optional[np.ndarray]:
     return None
 
 
+def _build_display_name_from_metadata(metadata: dict, fallback_name: str) -> str:
+    """
+    Build display name from metadata JSON sidecar.
+    Format: {category}_{dataset_name}_{target_crs}_processed
+    Where dataset_name has spaces replaced with hyphens.
+    target_crs is formatted as EPSGnumber (no colon).
+    """
+    category = metadata.get("category", "")
+    dataset_name = metadata.get("dataset_name", "")
+    target_crs = metadata.get("target_crs", "")
+    
+    # Clean up dataset_name - remove "(Processed)" suffix if present
+    if dataset_name.endswith(" (Processed)"):
+        dataset_name = dataset_name[:-12]
+    
+    # Replace spaces with hyphens
+    dataset_name = dataset_name.replace(" ", "-")
+    
+    # Format CRS as EPSGnumber (remove colon)
+    # e.g., "EPSG:32633" -> "EPSG32633"
+    target_crs = target_crs.replace(":", "")
+    
+    # Build the display name
+    if category and dataset_name and target_crs:
+        return f"{category}_{dataset_name}_{target_crs}_processed"
+    
+    # Fallback to the filename-based approach
+    return fallback_name
+
+
+def _find_vector_file(project_path: Path, layer: str) -> Optional[Path]:
+    """
+    Find a vector file by layer name (display name or filename-based name).
+    Checks processed/ first, then legacy location.
+    """
+    import re
+    vectors_processed_dir = project_path / "data" / "vectors" / "processed"
+    vectors_dir = project_path / "data" / "vectors"
+    
+    # Try processed/ first (canonical location)
+    if vectors_processed_dir.exists():
+        # Try exact filename match
+        candidate = vectors_processed_dir / f"{layer}.gpkg"
+        if candidate.exists():
+            return candidate
+        
+        # Search by display name (from metadata) or filename pattern
+        for item in vectors_processed_dir.iterdir():
+            if item.suffix == '.gpkg':
+                # Check metadata-based display name
+                metadata_file = item.with_name(f"{item.name}.json")
+                if metadata_file.exists():
+                    try:
+                        with open(metadata_file, 'r') as f:
+                            metadata = json.load(f)
+                        raw_name = item.stem
+                        fallback = re.sub(r'_epsg\d+_processed$', '', raw_name, flags=re.IGNORECASE)
+                        fallback = re.sub(r'_processed$', '', fallback, flags=re.IGNORECASE)
+                        display_name = _build_display_name_from_metadata(metadata, fallback)
+                        if display_name == layer:
+                            return item
+                    except Exception:
+                        pass
+                
+                # Also check filename-based pattern
+                raw_name = item.stem
+                fallback_name = re.sub(r'_epsg\d+_processed$', '', raw_name, flags=re.IGNORECASE)
+                fallback_name = re.sub(r'_processed$', '', fallback_name, flags=re.IGNORECASE)
+                if fallback_name == layer:
+                    return item
+    
+    # Fallback to legacy location
+    legacy_file = vectors_dir / f"{layer}.gpkg"
+    if legacy_file.exists():
+        return legacy_file
+    
+    return None
+
+
 @router.get("/data/{project}/vectors/{layer}")
 async def get_vector_layer(project: str, layer: str):
     """
@@ -304,14 +516,16 @@ async def get_vector_layer(project: str, layer: str):
     
     Converts GeoPackage to GeoJSON on-the-fly using ogr2ogr.
     Results are cached for performance.
+    
+    Looks in data/vectors/processed/ first (canonical location),
+    then falls back to data/vectors/ for legacy symlinks.
+    Matches by display name (from metadata) or filename pattern.
     """
     project_path = get_project_path_or_404(project)
     
-    # Look for the vector file (symlink or regular file)
-    vectors_dir = project_path / "data" / "vectors"
-    vector_file = vectors_dir / f"{layer}.gpkg"
+    vector_file = _find_vector_file(project_path, layer)
     
-    if not vector_file.exists():
+    if vector_file is None or not vector_file.exists():
         raise HTTPException(status_code=404, detail=f"Vector layer '{layer}' not found in project '{project}'")
     
     cache_key = f"{project}:{layer}"
@@ -365,6 +579,9 @@ async def get_vector_layer(project: str, layer: str):
         # Clean up temp file
         os.unlink(tmp_path)
         
+        # Expand other_tags hstore column into proper attributes (for OSM data)
+        geojson_data = _expand_other_tags(geojson_data)
+        
         # Cache the result
         GEOJSON_CACHE[cache_key] = geojson_data
 
@@ -387,28 +604,26 @@ async def get_vector_layer(project: str, layer: str):
 
 
 def render_raster_tile(raster_file: Path, z: int, x: int, y: int) -> bytes:
-    """Render a single raster tile as PNG using gdalwarp and gdal_translate."""
+    """Render a single raster tile as PNG using gdalwarp and numpy for color mapping."""
     min_x, min_y, max_x, max_y = mercator_tile_bounds(z, x, y)
 
-    # Create two temp files: one for warp, one for PNG
+    # Create temp file for warp
     with tempfile.NamedTemporaryFile(suffix=".tif", delete=False) as warp_tmp:
         warp_path = Path(warp_tmp.name)
-    
-    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as png_tmp:
-        png_path = Path(png_tmp.name)
 
     nodata_value = read_nodata_from_sidecar(raster_file)
     band_profile = get_raster_band_profile(str(raster_file))
     band_count = band_profile["band_count"]
     has_palette = band_profile["has_palette"]
+    data_type = band_profile.get("data_type", "Byte")
     
-    # Determine if we need to add an alpha channel
-    # We add alpha for 1-band (Gray) and 3-band (RGB) to ensure transparency outside bounds
-    # We skip for 2-band (Gray+Alpha) and 4-band (RGBA) as they already have alpha
-    # We skip for palette images as we handle them with -expand rgba
-    add_alpha = False
-    if not has_palette and (band_count == 1 or band_count == 3):
-        add_alpha = True
+    # Check if this is a continuous data raster (like DEM) that needs color scaling
+    # Float32/Float64 single-band rasters are typically DEMs or other continuous data
+    is_continuous_data = (
+        band_count == 1 
+        and not has_palette 
+        and data_type in ("Float32", "Float64", "Int16", "Int32", "UInt16", "UInt32")
+    )
 
     try:
         # Step 1: Warp to Web Mercator extent
@@ -420,10 +635,8 @@ def render_raster_tile(raster_file: Path, z: int, x: int, y: int) -> bytes:
             "-ts", "256", "256",
             "-r", "bilinear",
             "-of", "GTiff",
+            "-dstalpha",
         ]
-
-        if add_alpha:
-            warp_cmd.append("-dstalpha")
 
         if nodata_value is not None:
             nodata_str = str(nodata_value)
@@ -436,47 +649,195 @@ def render_raster_tile(raster_file: Path, z: int, x: int, y: int) -> bytes:
         if result.returncode != 0:
             raise HTTPException(status_code=500, detail=f"gdalwarp failed: {result.stderr}")
 
-        # Step 2: Convert to RGBA PNG using gdal_translate
-        translate_cmd = [
-            "gdal_translate",
-            "-of", "PNG",
-            "-outsize", "256", "256",
-        ]
+        alpha_mask = _read_alpha_mask(warp_path)
 
-        if has_palette:
-            translate_cmd.extend(["-expand", "rgba"])
-        else:
-            # If we added an alpha channel in Step 1, we must include it in the output
-            # The alpha channel will be the last band in the warped file
-            effective_band_count = band_count + 1 if add_alpha else band_count
-            
-            # Limit to 4 bands (RGBA) for PNG
-            max_bands = max(1, min(effective_band_count, 4))
-            
-            for band_index in range(1, max_bands + 1):
-                translate_cmd.extend(["-b", str(band_index)])
+        # For continuous data (DEMs, etc.), use numpy for proper color scaling
+        if is_continuous_data:
+            global_min, global_max = _get_raster_statistics(str(raster_file))
+            return _render_continuous_raster_tile(
+                warp_path, nodata_value, global_min, global_max, alpha_mask
+            )
+
+        # For palette or multi-band rasters, use gdal_translate
+        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as png_tmp:
+            png_path = Path(png_tmp.name)
         
-        # Add nodata metadata for grayscale/standard rasters (skip palette expansions)
-        if nodata_value is not None and not has_palette:
-            translate_cmd.extend(["-a_nodata", str(nodata_value)])
-        
-        translate_cmd.extend([str(warp_path), str(png_path)])
+        try:
+            # Determine if we need to add an alpha channel
+            add_alpha = not has_palette and (band_count == 1 or band_count == 3)
+            
+            if add_alpha:
+                # Re-warp with alpha
+                warp_cmd_alpha = warp_cmd[:-2] + ["-dstalpha"] + warp_cmd[-2:]
+                result = subprocess.run(warp_cmd_alpha, capture_output=True)
+            
+            translate_cmd = [
+                "gdal_translate",
+                "-of", "PNG",
+                "-outsize", "256", "256",
+            ]
 
-        result = subprocess.run(translate_cmd, capture_output=True)
+            if has_palette:
+                translate_cmd.extend(["-expand", "rgba"])
+            else:
+                total_bands = band_count + 1  # extra alpha band
+                max_bands = max(1, min(total_bands, 4))
+                for band_index in range(1, max_bands + 1):
+                    translate_cmd.extend(["-b", str(band_index)])
 
-        if result.returncode != 0:
-            raise HTTPException(status_code=500, detail=f"gdal_translate failed: {result.stderr}")
+            if nodata_value is not None and not has_palette:
+                translate_cmd.extend(["-a_nodata", str(nodata_value)])
+            
+            translate_cmd.extend([str(warp_path), str(png_path)])
 
-        # Read the PNG
-        with open(png_path, "rb") as f:
-            return f.read()
+            result = subprocess.run(translate_cmd, capture_output=True)
+
+            if result.returncode != 0:
+                raise HTTPException(status_code=500, detail=f"gdal_translate failed: {result.stderr}")
+
+            tile_bytes = _apply_alpha_mask_to_png(png_path, alpha_mask)
+            return tile_bytes
+        finally:
+            if png_path.exists():
+                os.unlink(png_path)
             
     finally:
-        # Cleanup temp files
         if warp_path.exists():
             os.unlink(warp_path)
-        if png_path.exists():
-            os.unlink(png_path)
+
+
+def _render_continuous_raster_tile(
+    warp_path: Path,
+    nodata_value: Optional[float],
+    global_min: Optional[float] = None,
+    global_max: Optional[float] = None,
+    alpha_mask: Optional[np.ndarray] = None,
+) -> bytes:
+    """
+    Render a continuous data raster (DEM, etc.) with proper color scaling.
+    Uses a terrain color ramp for elevation-like data.
+    
+    If global_min/global_max are provided, uses those for normalization
+    to ensure consistent colors across all tiles.
+    """
+    # Read the warped tile
+    with tifffile.TiffFile(warp_path) as tif:
+        arr = tif.asarray()
+
+    # Handle alpha band if present
+    alpha_band = None
+    if arr.ndim == 3:
+        if arr.shape[0] <= 4 and arr.shape[0] < arr.shape[-1]:
+            data = arr[0].astype(np.float32)
+            alpha_band = arr[-1]
+        else:
+            data = arr[:, :, 0].astype(np.float32)
+            if arr.shape[2] > 1:
+                alpha_band = arr[:, :, -1]
+    elif arr.ndim == 2:
+        data = arr.astype(np.float32)
+    else:
+        data = arr[0].astype(np.float32)
+    
+    # Create mask for valid data
+    mask = np.ones_like(data, dtype=bool)
+    if alpha_mask is None and alpha_band is not None:
+        alpha_mask = alpha_band
+    if alpha_mask is not None:
+        mask &= alpha_mask > 0
+
+    if nodata_value is not None:
+        mask &= data != nodata_value
+    mask &= ~np.isnan(data)
+    mask &= ~np.isinf(data)
+    
+    # If no valid data, return transparent tile
+    if not mask.any():
+        rgba = np.zeros((256, 256, 4), dtype=np.uint8)
+        buffer = io.BytesIO()
+        Image.fromarray(rgba, mode="RGBA").save(buffer, format="PNG", compress_level=6)
+        return buffer.getvalue()
+    
+    # Use global min/max if provided, otherwise compute from tile
+    if global_min is not None and global_max is not None:
+        data_min = global_min
+        data_max = global_max
+    else:
+        valid_data = data[mask]
+        data_min = float(np.min(valid_data))
+        data_max = float(np.max(valid_data))
+    
+    # Avoid division by zero
+    if data_max == data_min:
+        data_max = data_min + 1.0
+    
+    # Normalize to 0-1 using global range
+    normalized = np.zeros_like(data)
+    normalized[mask] = (data[mask] - data_min) / (data_max - data_min)
+    normalized = np.clip(normalized, 0, 1)
+    
+    # Apply grayscale mapping (ArcGIS default style)
+    # Low elevation = Black (0), High elevation = White (255)
+    gray = (normalized * 255).astype(np.uint8)
+    
+    height, width = normalized.shape
+    rgba = np.zeros((height, width, 4), dtype=np.uint8)
+    
+    rgba[:, :, 0] = gray
+    rgba[:, :, 1] = gray
+    rgba[:, :, 2] = gray
+    rgba[:, :, 3] = np.where(mask, 255, 0).astype(np.uint8)
+    
+    buffer = io.BytesIO()
+    Image.fromarray(rgba, mode="RGBA").save(buffer, format="PNG", compress_level=6)
+    return buffer.getvalue()
+
+
+def _read_alpha_mask(warp_path: Path) -> Optional[np.ndarray]:
+    try:
+        with tifffile.TiffFile(warp_path) as tif:
+            arr = tif.asarray()
+    except Exception:
+        return None
+
+    mask = None
+    if arr.ndim == 3:
+        if arr.shape[0] <= 4 and arr.shape[0] < arr.shape[-1]:
+            mask = arr[-1]
+        else:
+            mask = arr[:, :, -1]
+    elif arr.ndim == 2:
+        mask = np.full(arr.shape, 255, dtype=np.uint8)
+    else:
+        mask = arr[-1]
+
+    if mask is None:
+        return None
+
+    mask = np.clip(mask, 0, 255).astype(np.uint8)
+    return mask
+
+
+def _apply_alpha_mask_to_png(png_path: Path, mask: Optional[np.ndarray]) -> bytes:
+    with open(png_path, "rb") as f:
+        png_bytes = f.read()
+
+    if mask is None:
+        return png_bytes
+
+    img = Image.open(io.BytesIO(png_bytes)).convert("RGBA")
+    rgba = np.array(img)
+
+    if mask.shape != rgba.shape[:2]:
+        mask_img = Image.fromarray(mask)
+        mask = np.array(mask_img.resize((rgba.shape[1], rgba.shape[0]), Image.NEAREST))
+
+    new_alpha = (rgba[:, :, 3].astype(np.uint16) * mask.astype(np.uint16) // 255).astype(np.uint8)
+    rgba[:, :, 3] = new_alpha
+
+    buffer = io.BytesIO()
+    Image.fromarray(rgba, mode="RGBA").save(buffer, format="PNG", compress_level=6)
+    return buffer.getvalue()
 
 
 def encode_mapbox_terrain(elevation: np.ndarray, nodata_value: float) -> np.ndarray:
@@ -570,17 +931,67 @@ def _cached_terrain_tile(path: str, z: int, x: int, y: int, mtime: float) -> byt
     return render_terrain_tile(Path(path), z, x, y)
 
 
+def _find_raster_file(project_path: Path, layer: str) -> Optional[Path]:
+    """
+    Find a raster file by layer name (display name or filename-based name).
+    Checks processed/ first, then legacy location.
+    """
+    import re
+    rasters_processed_dir = project_path / "data" / "rasters" / "processed"
+    rasters_dir = project_path / "data" / "rasters"
+    
+    # Try processed/ first (canonical location)
+    if rasters_processed_dir.exists():
+        # Try exact filename match
+        candidate = rasters_processed_dir / f"{layer}.tif"
+        if candidate.exists():
+            return candidate
+        
+        # Search by display name (from metadata) or filename pattern
+        for item in rasters_processed_dir.iterdir():
+            if item.suffix == '.tif':
+                # Check metadata-based display name
+                metadata_file = item.with_name(f"{item.name}.json")
+                if metadata_file.exists():
+                    try:
+                        with open(metadata_file, 'r') as f:
+                            metadata = json.load(f)
+                        raw_name = item.stem
+                        fallback = re.sub(r'_epsg\d+_processed$', '', raw_name, flags=re.IGNORECASE)
+                        fallback = re.sub(r'_processed$', '', fallback, flags=re.IGNORECASE)
+                        display_name = _build_display_name_from_metadata(metadata, fallback)
+                        if display_name == layer:
+                            return item
+                    except Exception:
+                        pass
+                
+                # Also check filename-based pattern
+                raw_name = item.stem
+                fallback_name = re.sub(r'_epsg\d+_processed$', '', raw_name, flags=re.IGNORECASE)
+                fallback_name = re.sub(r'_processed$', '', fallback_name, flags=re.IGNORECASE)
+                if fallback_name == layer:
+                    return item
+    
+    # Fallback to legacy location
+    legacy_file = rasters_dir / f"{layer}.tif"
+    if legacy_file.exists():
+        return legacy_file
+    
+    return None
+
+
 @router.get("/tiles/{project}/{layer}/{z}/{x}/{y}.png")
 async def get_raster_tile(project: str, layer: str, z: int, x: int, y: int):
     """
     Serve map tiles for raster datasets.
 
     Tiles are rendered on the fly in Web Mercator to align with MapLibre.
+    Looks in data/rasters/processed/ first (canonical), then legacy location.
     """
     project_path = get_project_path_or_404(project)
-    raster_file = project_path / "data" / "rasters" / f"{layer}.tif"
+    raster_file = _find_raster_file(project_path, layer)
 
-    if not raster_file.exists():
+    if raster_file is None or not raster_file.exists():
         raise HTTPException(status_code=404, detail=f"Raster layer '{layer}' not found in project '{project}'")
 
     try:
@@ -607,11 +1018,12 @@ async def get_raster_tile(project: str, layer: str, z: int, x: int, y: int):
 async def get_terrain_tile(project: str, layer: str, z: int, x: int, y: int):
     """
     Serve terrain tiles encoded as Mapbox Terrain-RGB for DEM layers.
+    Looks in data/rasters/processed/ first (canonical), then legacy location.
     """
     project_path = get_project_path_or_404(project)
-    raster_file = project_path / "data" / "rasters" / f"{layer}.tif"
+    raster_file = _find_raster_file(project_path, layer)
 
-    if not raster_file.exists():
+    if raster_file is None or not raster_file.exists():
         raise HTTPException(status_code=404, detail=f"Raster layer '{layer}' not found in project '{project}'")
 
     try:

@@ -1,11 +1,13 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { Map as MapLibreMap, MapOptions } from 'maplibre-gl'
+import type { AnyLayer, Map as MapLibreMap, MapMouseEvent, MapOptions } from 'maplibre-gl'
 import { ZoomIn, ZoomOut, Maximize2, Loader2, RefreshCw, Layers, Mountain } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 import { useProject } from '@/lib/context/ProjectContext'
 import { fetchVectorData, getTileUrl, getTerrainTileUrl, getAoiFileUrl, type DatasetInfo } from '@/lib/api/dataClient'
+import { TerrainSampler } from '@/lib/terrainSampler'
 import {
   ManagedLayer,
   VectorDetail,
@@ -22,11 +24,19 @@ import {
 import { LayerManager } from './LayerManager'
 import { AttributeTable } from './AttributeTable'
 import { StyleEditor } from './StyleEditor'
+import { Compass } from './Compass'
 
 const BASEMAP_FALLBACK_DEFAULT_OPACITY = 0.75
 
+type CursorElevationStatus = 'idle' | 'loading' | 'ready' | 'unavailable' | 'error' | 'no-dem'
+
+type CursorElevationState = {
+  value: number | null
+  status: CursorElevationStatus
+}
+
 export function MapViewer() {
-  const { currentProject, datasets } = useProject()
+  const { currentProject, datasets, isProjectLoading } = useProject()
   const mapContainerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
   const dynamicLayerIdsRef = useRef<string[]>([])
@@ -46,6 +56,8 @@ export function MapViewer() {
     around: [number, number]
   } | null>(null)
   const rotateMarkerIdRef = useRef<string | null>(null)
+  const terrainSamplerRef = useRef<TerrainSampler | null>(null)
+  const elevationRequestIdRef = useRef(0)
 
   const [mapReady, setMapReady] = useState(false)
   const [mapLoaded, setMapLoaded] = useState(false)
@@ -65,6 +77,8 @@ export function MapViewer() {
   const [styleLayerId, setStyleLayerId] = useState<string | null>(null)
   const [styleDraft, setStyleDraft] = useState<LayerStyleOptions>({})
   const [styleOverrides, setStyleOverrides] = useState<Record<string, LayerStyleOptions>>({})
+  const [cursorPosition, setCursorPosition] = useState<{ lng: number; lat: number } | null>(null)
+  const [cursorElevation, setCursorElevation] = useState<CursorElevationState>({ value: null, status: 'idle' })
   const dockHeightRef = useRef(dockHeight)
   const dockContainerRef = useRef<HTMLDivElement | null>(null)
   const highlightSourceId = useRef('selected-feature-source')
@@ -80,6 +94,29 @@ export function MapViewer() {
     })
     return match?.name ?? null
   }, [datasets])
+  const demAvailable = Boolean(currentProject && demLayerName)
+
+  useEffect(() => {
+    if (demAvailable && currentProject && demLayerName) {
+      const template = getTerrainTileUrl(currentProject, demLayerName)
+      if (terrainSamplerRef.current) {
+        terrainSamplerRef.current.updateTemplate(template)
+      } else {
+        terrainSamplerRef.current = new TerrainSampler(template)
+      }
+      setCursorElevation({ value: null, status: 'idle' })
+    } else {
+      terrainSamplerRef.current?.dispose()
+      terrainSamplerRef.current = null
+      setCursorElevation({ value: null, status: 'no-dem' })
+    }
+  }, [currentProject, demAvailable, demLayerName])
+
+  useEffect(() => {
+    return () => {
+      terrainSamplerRef.current?.dispose()
+    }
+  }, [])
 
   const removeTerrainSource = useCallback(() => {
     const map = mapRef.current
@@ -136,9 +173,11 @@ export function MapViewer() {
     }
 
     const ensureGradientSky = () => {
-      if (map.getLayer('space-sky-fallback')) return
-      const fallbackLayer: any = {
-        id: 'space-sky-fallback',
+      if (map.getLayer('sky-gradient-layer')) return
+      // Google Earth / ArcGIS style sky gradient
+      // Light blue at horizon, deeper blue at zenith
+      const skyLayer: any = {
+        id: 'sky-gradient-layer',
         type: 'sky',
         paint: {
           'sky-type': 'gradient',
@@ -146,28 +185,35 @@ export function MapViewer() {
             'interpolate',
             ['linear'],
             ['sky-radial-progress'],
-            0.0, 'rgba(1,4,12,1)',
-            1.0, 'rgba(4,9,24,1)'
+            0.0, '#87CEEB',   // Horizon: Sky blue
+            0.1, '#7EC8E3',   // Light sky blue
+            0.3, '#5DADE2',   // Medium sky blue
+            0.5, '#3498DB',   // Deeper blue
+            0.7, '#2980B9',   // Rich blue
+            0.85, '#1F618D',  // Deep blue
+            1.0, '#154360'    // Zenith: Dark blue
           ],
+          'sky-gradient-center': [0, 0],
+          'sky-gradient-radius': 90,
           'sky-opacity': 1
         }
       }
-      addLayerSafely(fallbackLayer)
+      addLayerSafely(skyLayer)
     }
 
     try {
-      // Use simple gradient sky
+      // Use atmospheric sky gradient
       ensureGradientSky()
       
-      // Add fog for atmospheric perspective
+      // Add fog for atmospheric perspective (subtle haze effect)
       if ((map as any).setFog) {
         ;(map as any).setFog({
-          range: [-1, 3],
-          color: 'rgba(3,6,18,0.9)',
-          'horizon-blend': 0.3,
-          'high-color': '#040b20',
-          'space-color': '#010409',
-          'star-intensity': 0.9
+          range: [0.5, 10],
+          color: 'rgba(186, 210, 235, 0.4)',  // Light blue haze
+          'horizon-blend': 0.08,
+          'high-color': '#B4D7E8',  // Light sky color at horizon
+          'space-color': '#1A5276', // Deep blue for upper atmosphere
+          'star-intensity': 0.0     // No stars for daytime sky
         } as any)
       }
     } catch (error) {
@@ -318,7 +364,7 @@ export function MapViewer() {
                 id: 'background',
                 type: 'background',
                 paint: {
-                  'background-color': '#02040a'
+                  'background-color': '#87CEEB'  // Sky blue - matches horizon color
                 }
               }
             ],
@@ -442,23 +488,30 @@ export function MapViewer() {
     const map = mapRef.current
     if (!map) return
 
-    if (layer.type === 'raster') {
-      layer.layerIds.forEach((layerId) => {
-        if (map.getLayer(layerId)) {
-          map.setPaintProperty(layerId, 'raster-opacity', opacity)
-        }
-      })
-      return
-    }
-
     layer.layerIds.forEach((layerId) => {
-      if (!map.getLayer(layerId)) return
-      if (layerId.includes('fill')) {
-        map.setPaintProperty(layerId, 'fill-opacity', opacity)
-      } else if (layerId.includes('line') || layerId.includes('outline')) {
-        map.setPaintProperty(layerId, 'line-opacity', opacity)
-      } else if (layerId.includes('circle')) {
-        map.setPaintProperty(layerId, 'circle-opacity', opacity)
+      const mapLayer = map.getLayer(layerId) as AnyLayer | undefined
+      if (!mapLayer) return
+
+      switch (mapLayer.type ?? layer.type) {
+        case 'raster':
+          map.setPaintProperty(layerId, 'raster-opacity', opacity)
+          break
+        case 'fill':
+          map.setPaintProperty(layerId, 'fill-opacity', opacity)
+          break
+        case 'line':
+        case 'fill-extrusion':
+          map.setPaintProperty(layerId, 'line-opacity', opacity)
+          break
+        case 'circle':
+          map.setPaintProperty(layerId, 'circle-opacity', opacity)
+          break
+        case 'symbol':
+          map.setPaintProperty(layerId, 'icon-opacity', opacity)
+          map.setPaintProperty(layerId, 'text-opacity', opacity)
+          break
+        default:
+          break
       }
     })
   }, [])
@@ -749,7 +802,8 @@ export function MapViewer() {
             opacity: 0.6,
             order: order++,
             path: raster.path,
-            metadata: raster.metadata
+            metadata: raster.metadata,
+            bounds: bounds || undefined
           })
         }
       } catch (error) {
@@ -798,7 +852,8 @@ export function MapViewer() {
             sourceId: added.sourceId,
             layerIds: added.layerIds,
             geometryType: added.geometryType,
-            featureCount: added.featureCount
+            featureCount: added.featureCount,
+            bounds: added.bounds || undefined
           }
 
           if (added.bounds && isAoi) {
@@ -959,6 +1014,38 @@ export function MapViewer() {
     map.setTerrain(null)
   }, [mapReady])
 
+  const requestElevationSample = useCallback(
+    (lng: number, lat: number, zoomLevel: number) => {
+      if (!terrainSamplerRef.current) {
+        setCursorElevation(prev => ({
+          value: prev.value,
+          status: demAvailable ? 'idle' : 'no-dem'
+        }))
+        return
+      }
+      const sampler = terrainSamplerRef.current
+      const requestId = ++elevationRequestIdRef.current
+      setCursorElevation(prev => ({
+        value: prev.value,
+        status: prev.status === 'ready' ? 'ready' : 'loading'
+      }))
+      sampler
+        .sample(lng, lat, zoomLevel)
+        .then(value => {
+          if (requestId !== elevationRequestIdRef.current) return
+          setCursorElevation({
+            value: value ?? null,
+            status: value === null ? 'unavailable' : 'ready'
+          })
+        })
+        .catch(() => {
+          if (requestId !== elevationRequestIdRef.current) return
+          setCursorElevation({ value: null, status: 'error' })
+        })
+    },
+    [demAvailable]
+  )
+
   useEffect(() => {
     selectedLayerIdRef.current = selectedLayerId
   }, [selectedLayerId])
@@ -986,6 +1073,33 @@ export function MapViewer() {
       }
     }
   }, [terrainEnabled, ensureTerrainSource, mapReady])
+
+  useEffect(() => {
+    if (!mapReady || !mapRef.current) return
+    const map = mapRef.current
+
+    const handlePointerMove = (event: MapMouseEvent) => {
+      const { lng, lat } = event.lngLat
+      setCursorPosition({ lng, lat })
+      requestElevationSample(lng, lat, map.getZoom())
+    }
+
+    const handleMouseOut = () => {
+      setCursorPosition(null)
+      setCursorElevation(prev => ({
+        value: prev.value,
+        status: demAvailable ? 'idle' : 'no-dem'
+      }))
+    }
+
+    map.on('mousemove', handlePointerMove)
+    map.on('mouseout', handleMouseOut)
+
+    return () => {
+      map.off('mousemove', handlePointerMove)
+      map.off('mouseout', handleMouseOut)
+    }
+  }, [demAvailable, mapReady, requestElevationSample])
 
   useEffect(() => {
     return () => {
@@ -1203,6 +1317,17 @@ export function MapViewer() {
       updated.splice(targetIndex, 0, removed)
 
       return updated.map((layer, idx) => ({ ...layer, order: idx }))
+    })
+  }
+
+  const handleZoomToLayer = (layerId: string) => {
+    const layer = managedLayers.find(l => l.id === layerId)
+    if (!layer || !layer.bounds || !mapRef.current) return
+    
+    mapRef.current.fitBounds(layer.bounds as any, {
+        padding: 80,
+        duration: 900,
+        maxZoom: 16
     })
   }
 
@@ -1473,8 +1598,44 @@ export function MapViewer() {
     return () => clearInterval(interval)
   }, [addBaseLayers, mapReady])
 
+  const latDisplay = cursorPosition
+    ? `${Math.abs(cursorPosition.lat).toFixed(4)} deg ${cursorPosition.lat >= 0 ? 'N' : 'S'}`
+    : '--'
+  const lonDisplay = cursorPosition
+    ? `${Math.abs(cursorPosition.lng).toFixed(4)} deg ${cursorPosition.lng >= 0 ? 'E' : 'W'}`
+    : '--'
+
+  const elevationDisplay = (() => {
+    switch (cursorElevation.status) {
+      case 'ready':
+        return cursorElevation.value !== null ? `${cursorElevation.value.toFixed(1)} m` : 'Elevation —'
+      case 'loading':
+        return cursorElevation.value !== null ? `${cursorElevation.value.toFixed(1)} m` : 'Loading...'
+      case 'unavailable':
+        return 'No data'
+      case 'error':
+        return 'Elevation error'
+      case 'no-dem':
+        return 'DEM unavailable'
+      default:
+        return 'Elevation --'
+    }
+  })()
+
+  const elevationLoading = cursorElevation.status === 'loading'
+  const demDisplay = demLayerName ?? 'None'
+
   return (
-    <div className="relative w-full h-full" style={{ minHeight: '100%', width: '100%', height: '100%', position: 'relative', backgroundColor: '#02040a' }}>
+    <div 
+      className="relative w-full h-full" 
+      style={{ 
+        minHeight: '100%', 
+        width: '100%', 
+        height: '100%', 
+        position: 'relative', 
+        background: 'linear-gradient(to bottom, #154360 0%, #1F618D 20%, #2980B9 40%, #3498DB 60%, #5DADE2 80%, #87CEEB 100%)'
+      }}
+    >
       <div
         ref={mapContainerRef}
         style={{
@@ -1485,68 +1646,139 @@ export function MapViewer() {
           bottom: 0,
           width: '100%',
           height: '100%',
-          backgroundColor: '#02040a' // Safety background
+          background: 'transparent' // Let parent gradient show through during load
         }}
       />
 
+      {/* Project Loading Overlay */}
+      {isProjectLoading && (
+        <div className="absolute inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-md transition-all duration-300">
+          <div className="flex flex-col items-center gap-4">
+            <div className="relative">
+              <div className="w-16 h-16 rounded-full border-4 border-primary/30 border-t-primary animate-spin" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-full bg-primary/20" />
+              </div>
+            </div>
+            <div className="text-center">
+              <p className="text-lg font-semibold text-white">Loading</p>
+              <p className="text-sm text-white/70">Preparing project layers...</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <Compass map={mapRef.current} className="bottom-16 left-4" />
+
       <button
         onClick={handleRefreshAll}
-        className="absolute bottom-3 left-3 z-20 h-9 w-9 rounded-full bg-card border border-border shadow-md flex items-center justify-center hover:bg-accent"
-        title="Refresh basemap and datasets"
+        className="absolute bottom-3 left-3 z-20 h-9 w-9 bg-black/60 backdrop-blur-sm border border-white/10 rounded-sm flex items-center justify-center hover:bg-primary/20 hover:border-primary/50 transition-all group shadow-[0_0_10px_rgba(0,0,0,0.5)]"
+        title="Refresh System"
       >
-        <RefreshCw className="w-4 h-4" />
+        <RefreshCw className="w-4 h-4 text-white/70 group-hover:text-primary group-hover:rotate-180 transition-all duration-500" />
       </button>
 
       {isBuffering && (
-        <div className="absolute bottom-3 left-14 z-20 h-9 w-9 rounded-full bg-card/80 border border-border shadow-md flex items-center justify-center backdrop-blur-sm pointer-events-none">
-          <Loader2 className="w-5 h-5 animate-spin text-primary" />
+        <div className="absolute bottom-3 left-14 z-20 h-9 px-3 bg-black/60 backdrop-blur-sm border border-white/10 rounded-sm flex items-center gap-2 pointer-events-none shadow-[0_0_10px_rgba(0,0,0,0.5)]">
+          <Loader2 className="w-3 h-3 animate-spin text-primary" />
+          <span className="text-[10px] font-mono text-white/70 uppercase tracking-wider">Buffering...</span>
         </div>
       )}
 
       {/* Map Controls */}
-      <div className="absolute top-4 left-4 z-10 space-y-2">
-        <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <Layers className="w-4 h-4" />
-              <span className="text-sm font-medium">Hybrid Satellite</span>
+      <div className="absolute top-4 left-4 z-10 space-y-3">
+        {/* Status HUD */}
+        <div className="bg-black/60 backdrop-blur-md border border-white/10 p-4 rounded-sm shadow-[0_0_20px_-5px_rgba(0,0,0,0.5)] w-[240px] relative overflow-hidden group">
+            {/* Scan line effect */}
+            <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-50" />
+            
+            {/* Corner Markers */}
+            <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-white/30" />
+            <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-white/30" />
+            <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-white/30" />
+            <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-white/30" />
+
+            <div className="space-y-3 relative z-10">
+                <div className="flex items-center gap-2 border-b border-white/10 pb-2">
+                    <div className="p-1 bg-primary/10 rounded-sm">
+                        <Layers className="w-3 h-3 text-primary" />
+                    </div>
+                    <span className="text-xs font-bold text-white uppercase tracking-wider">Hybrid Satellite</span>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-x-2 gap-y-3">
+                     <div className="space-y-0.5">
+                         <span className="text-[9px] text-white/40 font-mono uppercase block tracking-widest">Zoom Level</span>
+                         <span className="text-sm font-mono font-bold text-white/90">{zoom.toFixed(2)}x</span>
+                     </div>
+                     <div className="space-y-0.5">
+                         <span className="text-[9px] text-white/40 font-mono uppercase block tracking-widest">System</span>
+                         <div className="flex items-center gap-1.5 h-5">
+                             {mapLoaded ? (
+                                 <>
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_5px_rgba(16,185,129,0.8)]" />
+                                    <span className="text-[10px] font-mono text-emerald-500 tracking-wide">READY</span>
+                                 </>
+                             ) : (
+                                 <>
+                                    <Loader2 className="w-3 h-3 animate-spin text-yellow-500" />
+                                    <span className="text-[10px] font-mono text-yellow-500 tracking-wide">INIT</span>
+                                 </>
+                             )}
+                         </div>
+                     </div>
+                </div>
+
+                <div className="border-t border-white/10 pt-2">
+                    <span className="text-[9px] text-white/40 font-mono uppercase block tracking-widest mb-0.5">Active Project</span>
+                    <div className="text-[10px] font-mono text-white/70 uppercase truncate">
+                        {projectSummary || 'NO DATA STREAM'}
+                    </div>
+                </div>
             </div>
-            <div className="text-xs text-muted-foreground">
-              Zoom: {zoom.toFixed(1)}x
-            </div>
-            <div className="text-xs text-muted-foreground flex items-center gap-1">
-              {mapLoaded ? <span className="text-emerald-400">●</span> : <Loader2 className="w-3 h-3 animate-spin" />}
-              {mapLoaded ? 'Map ready' : 'Loading basemap...'}
-            </div>
-            <div className="text-xs text-muted-foreground">{projectSummary}</div>
-          </div>
         </div>
 
-        <div className="bg-card border border-border rounded-lg p-2 shadow-lg space-y-1">
-          <Button variant="ghost" size="sm" onClick={handleZoomIn} className="w-full justify-start">
-            <ZoomIn className="w-4 h-4 mr-2" />
-            Zoom In
-          </Button>
-          <Button variant="ghost" size="sm" onClick={handleZoomOut} className="w-full justify-start">
-            <ZoomOut className="w-4 h-4 mr-2" />
-            Zoom Out
-          </Button>
-          <Button variant="ghost" size="sm" onClick={handleResetView} className="w-full justify-start">
-            <Maximize2 className="w-4 h-4 mr-2" />
-            Reset View
-          </Button>
-          <div className="h-px bg-border my-1" />
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setTerrainEnabled(prev => !prev)} 
-            className={`w-full justify-start ${terrainEnabled ? 'bg-accent text-accent-foreground' : ''}`}
-            disabled={!demLayerName}
-            title={!demLayerName ? 'No DEM layer found in project' : 'Toggle 3D terrain using DEM'}
-          >
-            <Mountain className="w-4 h-4 mr-2" />
-            3D Terrain
-          </Button>
+        {/* Control Module */}
+        <div className="flex flex-col gap-1">
+           {[
+             { icon: ZoomIn, label: "ZOOM IN", onClick: handleZoomIn },
+             { icon: ZoomOut, label: "ZOOM OUT", onClick: handleZoomOut },
+             { icon: Maximize2, label: "RESET VIEW", onClick: handleResetView },
+           ].map((btn, i) => (
+             <button
+                key={i}
+                onClick={btn.onClick}
+                className="group w-[240px] flex items-center gap-3 px-4 py-2 bg-black/40 backdrop-blur-sm border border-white/5 hover:border-white/20 hover:bg-white/5 rounded-sm transition-all duration-200"
+             >
+                <btn.icon className="w-3 h-3 text-white/50 group-hover:text-primary transition-colors" />
+                <span className="text-[10px] font-mono text-white/70 group-hover:text-white tracking-widest uppercase">{btn.label}</span>
+             </button>
+           ))}
+           
+           {/* Terrain Toggle */}
+           <button
+             onClick={() => setTerrainEnabled(prev => !prev)}
+             disabled={!demLayerName}
+             className={cn(
+               "group w-[240px] flex items-center gap-3 px-4 py-2 mt-1 backdrop-blur-sm border rounded-sm transition-all duration-200",
+               terrainEnabled 
+                 ? "bg-primary/10 border-primary/30 text-white" 
+                 : "bg-black/40 border-white/5 hover:border-white/20 hover:bg-white/5 text-white/70",
+               !demLayerName && "opacity-50 cursor-not-allowed"
+             )}
+             title={!demLayerName ? 'No DEM layer found in project' : 'Toggle 3D terrain using DEM'}
+           >
+              <Mountain className={cn("w-3 h-3 transition-colors", terrainEnabled ? "text-primary" : "text-white/50 group-hover:text-primary")} />
+              <div className="flex flex-col items-start">
+                  <span className={cn(
+                    "text-[10px] font-mono tracking-widest uppercase",
+                    terrainEnabled ? "text-white" : "group-hover:text-white"
+                  )}>3D Terrain</span>
+              </div>
+              {terrainEnabled && (
+                  <div className="ml-auto w-1.5 h-1.5 bg-primary rounded-full shadow-[0_0_5px_rgba(var(--primary),0.8)]" />
+              )}
+           </button>
         </div>
       </div>
 
@@ -1562,6 +1794,7 @@ export function MapViewer() {
         onMoveLayer={handleMoveLayer}
         onOpenTable={handleOpenTable}
         onOpenStyle={handleOpenStyle}
+        onZoomToLayer={handleZoomToLayer}
       />
 
       {fullTableLayer && fullTableDetails && (
@@ -1608,6 +1841,32 @@ export function MapViewer() {
           onCancel={() => setStyleLayerId(null)}
         />
       )}
+
+      <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-30 px-4 pb-2">
+        <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center justify-center gap-x-6 gap-y-1 rounded-md border border-border bg-card/90 px-4 py-2 text-xs shadow-lg backdrop-blur">
+          <div className="flex w-28 items-center gap-1 font-medium text-muted-foreground">
+            Lat:
+            <span className="font-mono font-normal text-foreground tabular-nums">{latDisplay}</span>
+          </div>
+          <div className="flex w-28 items-center gap-1 font-medium text-muted-foreground">
+            Lon:
+            <span className="font-mono font-normal text-foreground tabular-nums">{lonDisplay}</span>
+          </div>
+          <div className="flex w-32 items-center gap-1 font-medium text-muted-foreground">
+            Elev:
+            <span className="min-w-[4rem] font-mono font-normal text-foreground tabular-nums text-right">
+              {elevationDisplay}
+            </span>
+            <div className="h-3 w-3 flex-shrink-0">
+              {elevationLoading && <Loader2 className="h-3 w-3 animate-spin text-primary" />}
+            </div>
+          </div>
+          <div className="flex items-center gap-1 font-medium text-muted-foreground">
+            DEM:
+            <span className="font-normal text-foreground">{demDisplay}</span>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

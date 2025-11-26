@@ -26,8 +26,10 @@ interface ProjectContextType {
   projectMetadata: ProjectMetadata | null;
   datasets: ProjectDatasets | null;
   isLoading: boolean;
+  isProjectLoading: boolean;  // True while loading project data (for map overlay)
   error: string | null;
   refreshProjects: () => Promise<void>;
+  refreshProjectData: () => Promise<void>;
 }
 
 // ============================================================================
@@ -44,30 +46,46 @@ interface ProjectProviderProps {
   children: ReactNode;
 }
 
+const PROJECTS_CACHE_KEY = 'agrs_projects_cache'
+
+const parseProjectsCache = (value: string | null): ProjectMetadata[] => {
+  if (!value) return []
+  try {
+    const parsed = JSON.parse(value)
+    if (Array.isArray(parsed)) {
+      return parsed.filter((entry): entry is ProjectMetadata => typeof entry?.project_name === 'string')
+    }
+  } catch (error) {
+    console.warn('Failed to parse cached projects', error)
+  }
+  return []
+}
+
 export function ProjectProvider({ children }: ProjectProviderProps) {
   const [currentProject, setCurrentProjectState] = useState<string | null>(null)
   const [projects, setProjects] = useState<ProjectMetadata[]>([])
   const [projectMetadata, setProjectMetadata] = useState<ProjectMetadata | null>(null)
   const [datasets, setDatasets] = useState<ProjectDatasets | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [isProjectLoading, setIsProjectLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Seed projects from cache (if available) before hitting API
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const cached = parseProjectsCache(localStorage.getItem(PROJECTS_CACHE_KEY))
+    if (cached.length > 0) {
+      setProjects((prev) => (prev.length === 0 ? cached : prev))
+    }
+  }, [])
 
   // Load projects on mount
   useEffect(() => {
     loadProjects()
   }, [])
 
-  // Load saved project from localStorage on mount
-  useEffect(() => {
-    const savedProject = localStorage.getItem('agrs_current_project')
-    if (savedProject && projects.length > 0) {
-      // Verify project still exists
-      const projectExists = projects.some(p => p.project_name === savedProject)
-      if (projectExists) {
-        setCurrentProjectState(savedProject)
-      }
-    }
-  }, [projects])
+  // NOTE: We no longer auto-load from localStorage.
+  // User must explicitly select a project via the ProjectSelectionDialog.
 
   // Load project metadata and datasets when current project changes
   useEffect(() => {
@@ -89,14 +107,24 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
     try {
       const projectsList = await fetchProjects()
       setProjects(projectsList)
-
-      // If no project is selected and projects exist, select the first one
-      if (!currentProject && projectsList.length > 0) {
-        setCurrentProjectState(projectsList[0].project_name)
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem(PROJECTS_CACHE_KEY, JSON.stringify(projectsList))
+        } catch (storageError) {
+          console.warn('Failed to cache projects list', storageError)
+        }
       }
+      // NOTE: We no longer auto-select the first project.
+      // User must explicitly select via ProjectSelectionDialog.
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load projects')
       console.error('Failed to load projects:', err)
+      if (typeof window !== 'undefined') {
+        const cached = parseProjectsCache(localStorage.getItem(PROJECTS_CACHE_KEY))
+        if (cached.length > 0) {
+          setProjects(cached)
+        }
+      }
     } finally {
       setIsLoading(false)
     }
@@ -107,6 +135,7 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
    */
   const loadProjectData = async (projectName: string) => {
     setIsLoading(true)
+    setIsProjectLoading(true)  // Signal that project is loading (for map overlay)
     setError(null)
 
     try {
@@ -122,7 +151,13 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
       console.error(`Failed to load project data for ${projectName}:`, err)
     } finally {
       setIsLoading(false)
+      setIsProjectLoading(false)
     }
+  }
+
+  const refreshProjectData = async () => {
+    if (!currentProject) return
+    await loadProjectData(currentProject)
   }
 
   /**
@@ -152,8 +187,10 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
     projectMetadata,
     datasets,
     isLoading,
+    isProjectLoading,
     error,
-    refreshProjects
+    refreshProjects,
+    refreshProjectData
   }
 
   return (

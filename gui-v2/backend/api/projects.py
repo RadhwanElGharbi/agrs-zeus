@@ -116,79 +116,126 @@ async def get_project_metadata(project_name: str):
     return ProjectMetadata(**metadata)
 
 
+def _build_display_name_from_metadata(metadata: dict, fallback_name: str) -> str:
+    """
+    Build display name from metadata JSON sidecar.
+    Format: {category}_{dataset_name}_{target_crs}_processed
+    Where dataset_name has spaces replaced with hyphens.
+    target_crs is formatted as EPSGnumber (no colon).
+    """
+    category = metadata.get("category", "")
+    dataset_name = metadata.get("dataset_name", "")
+    target_crs = metadata.get("target_crs", "")
+    
+    # Clean up dataset_name - remove "(Processed)" suffix if present
+    if dataset_name.endswith(" (Processed)"):
+        dataset_name = dataset_name[:-12]
+    
+    # Replace spaces with hyphens
+    dataset_name = dataset_name.replace(" ", "-")
+    
+    # Format CRS as EPSGnumber (remove colon)
+    # e.g., "EPSG:32633" -> "EPSG32633"
+    target_crs = target_crs.replace(":", "")
+    
+    # Build the display name
+    if category and dataset_name and target_crs:
+        return f"{category}_{dataset_name}_{target_crs}_processed"
+    
+    # Fallback to the filename-based approach
+    return fallback_name
+
+
 @router.get("/projects/{project_name}/datasets", response_model=ProjectDatasets)
 async def list_project_datasets(project_name: str):
     """
     List all available datasets for a project
     
-    Scans data/rasters/ and data/vectors/ directories for symlinks and files.
+    Scans data/rasters/processed/ and data/vectors/processed/ directories directly.
+    This is the canonical source - symlinks in parent folders are deprecated.
     Reads metadata from .json sidecars if available.
+    
+    Display names follow the format: {category}_{dataset_name}_{target_crs}_processed
+    where dataset_name has spaces replaced with hyphens.
     """
     project_path = resolve_project_path(project_name)
     
     if not project_path or not project_path.exists():
         raise HTTPException(status_code=404, detail=f"Project '{project_name}' not found (missing project root with project_metadata.json or pipeline_specs.json)")
     
-    rasters_dir = project_path / "data" / "rasters"
-    vectors_dir = project_path / "data" / "vectors"
+    rasters_processed_dir = project_path / "data" / "rasters" / "processed"
+    vectors_processed_dir = project_path / "data" / "vectors" / "processed"
     
     rasters = []
     vectors = []
     
-    # Scan rasters directory
-    if rasters_dir.exists():
-        for item in rasters_dir.iterdir():
-            # Look for .tif files (symlinks or regular files)
-            if item.suffix == '.tif':
-                dataset_name = item.stem
+    # Scan rasters/processed directory
+    if rasters_processed_dir.exists():
+        for item in rasters_processed_dir.iterdir():
+            # Look for .tif files (processed rasters)
+            if item.suffix == '.tif' and not item.name.endswith('.json'):
+                # Metadata sidecar is next to the file
+                metadata_file = item.with_name(f"{item.name}.json")
+                metadata = {}
                 
-                # Resolve symlink to find the actual file (likely in processed/)
-                # This handles the requirement to pull metadata from /processed folders
-                try:
-                    real_path = item.resolve()
-                    metadata_file = real_path.with_name(f"{real_path.name}.json")
-                except Exception:
-                    # Fallback to sidecar next to the link if resolve fails
-                    metadata_file = item.with_name(f"{item.name}.json")
+                # Load metadata if available
+                if metadata_file.exists():
+                    metadata = load_json_file(metadata_file)
+                
+                # Build display name from metadata or fallback to filename
+                import re
+                raw_name = item.stem
+                fallback_name = re.sub(r'_epsg\d+_processed$', '', raw_name, flags=re.IGNORECASE)
+                fallback_name = re.sub(r'_processed$', '', fallback_name, flags=re.IGNORECASE)
+                
+                display_name = _build_display_name_from_metadata(metadata, fallback_name)
                 
                 dataset_info = DatasetInfo(
-                    name=dataset_name,
+                    name=display_name,
                     type='raster',
                     path=str(item.relative_to(project_path))
                 )
                 
-                # Load metadata if available
-                if metadata_file.exists():
-                    dataset_info.metadata = load_json_file(metadata_file)
+                if metadata:
+                    dataset_info.metadata = metadata
                 
                 rasters.append(dataset_info)
     
-    # Scan vectors directory
-    if vectors_dir.exists():
-        for item in vectors_dir.iterdir():
-            # Look for .gpkg files (symlinks or regular files)
-            if item.suffix == '.gpkg':
-                dataset_name = item.stem
+    # Scan vectors/processed directory
+    if vectors_processed_dir.exists():
+        for item in vectors_processed_dir.iterdir():
+            # Look for .gpkg files (processed vectors)
+            if item.suffix == '.gpkg' and not item.name.endswith('.json'):
+                # Metadata sidecar is next to the file
+                metadata_file = item.with_name(f"{item.name}.json")
+                metadata = {}
                 
-                # Resolve symlink to find the actual file (likely in processed/)
-                try:
-                    real_path = item.resolve()
-                    metadata_file = real_path.with_name(f"{real_path.name}.json")
-                except Exception:
-                     # Fallback to sidecar next to the link if resolve fails
-                    metadata_file = item.with_name(f"{item.name}.json")
+                # Load metadata if available
+                if metadata_file.exists():
+                    metadata = load_json_file(metadata_file)
+                
+                # Build display name from metadata or fallback to filename
+                import re
+                raw_name = item.stem
+                fallback_name = re.sub(r'_epsg\d+_processed$', '', raw_name, flags=re.IGNORECASE)
+                fallback_name = re.sub(r'_processed$', '', fallback_name, flags=re.IGNORECASE)
+                
+                display_name = _build_display_name_from_metadata(metadata, fallback_name)
                 
                 dataset_info = DatasetInfo(
-                    name=dataset_name,
+                    name=display_name,
                     type='vector',
                     path=str(item.relative_to(project_path))
                 )
                 
-                # Load metadata if available
-                if metadata_file.exists():
-                    dataset_info.metadata = load_json_file(metadata_file)
+                if metadata:
+                    dataset_info.metadata = metadata
                 
                 vectors.append(dataset_info)
+    
+    # Sort by name for consistent ordering
+    rasters.sort(key=lambda x: x.name.lower())
+    vectors.sort(key=lambda x: x.name.lower())
     
     return ProjectDatasets(rasters=rasters, vectors=vectors)
 

@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Brain, Database, Globe } from 'lucide-react'
+import { createPortal } from 'react-dom'
+import { Brain, Database, Globe, Cpu, Zap } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface ZeusLoadingDialogProps {
@@ -10,14 +11,14 @@ interface ZeusLoadingDialogProps {
 }
 
 const LOADING_MESSAGES = [
-  "ZEUS agent is analyzing the terrain...",
-  "ZEUS agent is mapping dataset availability...",
-  "ZEUS agent is preparing fetching and geoprocessing operations...",
-  "ZEUS agent is querying global catalog...",
-  "ZEUS agent is resolving coordinate reference systems...",
-  "ZEUS agent is validating network topology...",
-  "ZEUS agent is optimizing spatial indices...",
-  "ZEUS agent is verifying data integrity..."
+  "ANALYZING TERRAIN TOPOLOGY...",
+  "MAPPING DATASET AVAILABILITY MATRIX...",
+  "PREPARING GEOPROCESSING KERNELS...",
+  "QUERYING GLOBAL CATALOG INDEX...",
+  "RESOLVING SPATIAL REFERENCE SYSTEMS...",
+  "VALIDATING NETWORK TOPOLOGY...",
+  "OPTIMIZING SPATIAL INDICES...",
+  "VERIFYING DATA INTEGRITY CHECKS..."
 ]
 
 const TERMINAL_LOGS = [
@@ -46,6 +47,7 @@ export function ZeusLoadingDialog({ open, onComplete }: ZeusLoadingDialogProps) 
   const [messageIndex, setMessageIndex] = useState(0)
   const [stage, setStage] = useState<'initializing' | 'processing' | 'finalizing'>('initializing')
   const [logLines, setLogLines] = useState<string[]>([])
+  const [mounted, setMounted] = useState(false)
 
   const progressRef = useRef(0)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -53,6 +55,10 @@ export function ZeusLoadingDialog({ open, onComplete }: ZeusLoadingDialogProps) 
   const startTimeRef = useRef(0)
   const durationRef = useRef(0)
   const finalHoldRef = useRef(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const clearTimers = () => {
     if (timeoutRef.current) {
@@ -165,103 +171,91 @@ export function ZeusLoadingDialog({ open, onComplete }: ZeusLoadingDialogProps) 
   }, [open, onComplete])
 
   // Don't render if not open
-  if (!open) return null
+  if (!open || !mounted) return null
 
-  return (
+  return createPortal(
     <>
-      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-        <div className="w-[500px] bg-card border border-border rounded-xl shadow-2xl p-8 flex flex-col gap-6 relative overflow-hidden">
-        
-        {/* Animated Background Glow */}
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent animate-pulse" />
-        
-        {/* Icon Header */}
-        <div className="flex justify-center">
-          <div className="relative">
-            <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full animate-pulse" />
-            <div className="relative bg-background border border-border p-4 rounded-full">
-              <Brain className={cn(
-                "w-8 h-8 text-primary transition-all duration-500",
-                stage === 'processing' && "animate-pulse"
-              )} />
-            </div>
-            
-            {/* Orbiting Icons */}
-            <div className="absolute -inset-1 animate-spin-slow [animation-duration:3s]">
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                <Globe className="w-4 h-4 text-muted-foreground/50" />
-              </div>
-            </div>
-            <div className="absolute -inset-1 animate-spin-slow [animation-duration:4s] [animation-direction:reverse]">
-              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2">
-                <Database className="w-4 h-4 text-muted-foreground/50" />
-              </div>
-            </div>
-          </div>
-        </div>
+      <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 backdrop-blur-xl">
+        {/* Background Effects */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(var(--primary),0.1),transparent_70%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px]" />
 
-        {/* Status Text */}
-        <div className="text-center space-y-2">
-          <h3 className="text-lg font-semibold tracking-tight">
-            AGRS ZEUS Agent
-          </h3>
-          <div className="h-6 flex items-center justify-center overflow-hidden">
-            <p className="text-sm text-muted-foreground animate-in fade-in slide-in-from-bottom-2 duration-300 key-[messageIndex]">
-              {LOADING_MESSAGES[messageIndex]}
-            </p>
-          </div>
-        </div>
+        <div className="relative w-[600px] bg-black/40 border border-white/10 rounded-sm p-8 flex flex-col gap-8 overflow-hidden shadow-[0_0_100px_-20px_rgba(var(--primary),0.3)]">
+          
+          {/* Central HUD Graphic */}
+          <div className="relative h-32 flex items-center justify-center">
+             {/* Rotating Rings */}
+             <div className="absolute w-32 h-32 border border-primary/20 rounded-full animate-spin-slow [animation-duration:10s]" />
+             <div className="absolute w-24 h-24 border border-primary/40 rounded-full border-dashed animate-spin-slow [animation-duration:15s] [animation-direction:reverse]" />
+             
+             {/* Core */}
+             <div className="relative z-10 bg-black/50 border border-primary/50 p-4 rounded-full shadow-[0_0_30px_rgba(var(--primary),0.5)] animate-pulse">
+                <Brain className="w-10 h-10 text-primary" />
+             </div>
 
-        {/* Progress Bar */}
-        <div className="space-y-2">
-          <div className="flex justify-between text-xs text-muted-foreground px-1">
-            <span>Analysis</span>
-            <span>{Math.round(progress)}%</span>
-          </div>
-          <div className="h-2 bg-secondary rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-primary transition-all duration-200 ease-linear"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-        </div>
-
-        {/* Terminal-like Log (Decoration) */}
-        <div className="mt-2 p-3 bg-muted/30 rounded-lg border border-border/50 font-mono text-[10px] text-muted-foreground/70 h-24 flex flex-col justify-end">
-          <div
-            className="space-y-1 overflow-y-auto pr-2 zeus-log-scroll"
-          >
-            {logLines.map((line, index) => {
-              const isActive = index === logLines.length - 1
-              const opacity = isActive ? 1 : Math.min(0.85, 0.45 + index * 0.08)
-              return (
-                <div
-                  key={`${line}-${index}`}
-                  className={cn(
-                    'transition-opacity duration-300',
-                    isActive ? 'text-primary/80' : 'text-muted-foreground/70'
-                  )}
-                  style={{ opacity }}
-                >
-                  {line}
+             {/* Orbiting Data */}
+             <div className="absolute w-40 h-40 animate-spin-slow [animation-duration:8s]">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black border border-white/20 p-1 rounded-sm">
+                    <Database className="w-3 h-3 text-white/50" />
                 </div>
-              )
-            })}
+             </div>
+             <div className="absolute w-40 h-40 animate-spin-slow [animation-duration:12s] [animation-direction:reverse]">
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 bg-black border border-white/20 p-1 rounded-sm">
+                    <Globe className="w-3 h-3 text-white/50" />
+                </div>
+             </div>
           </div>
-        </div>
 
+          {/* Text & Progress */}
+          <div className="space-y-4 text-center">
+             <div>
+                <h3 className="text-xl font-bold text-white tracking-[0.2em] uppercase">
+                    AGRS ZEUS <span className="text-primary">AI AGENT</span>
+                </h3>
+                <div className="flex items-center justify-center gap-2 text-[10px] text-white/40 font-mono mt-1 uppercase tracking-widest">
+                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-ping" />
+                    Processing Request Sequence
+                </div>
+             </div>
+
+             <div className="h-8 flex items-center justify-center">
+                <p className="text-xs font-mono text-primary/80 uppercase tracking-wider animate-pulse">
+                    {LOADING_MESSAGES[messageIndex]}
+                </p>
+             </div>
+
+             <div className="space-y-1">
+                <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                    <div 
+                        className="h-full bg-primary shadow-[0_0_10px_rgba(var(--primary),0.8)] transition-all duration-200 ease-linear"
+                        style={{ width: `${progress}%` }}
+                    />
+                </div>
+                <div className="flex justify-between text-[9px] font-mono text-white/30 uppercase">
+                    <span>Sequence Progress</span>
+                    <span>{Math.round(progress)}%</span>
+                </div>
+             </div>
+          </div>
+
+          {/* Terminal Output */}
+          <div className="border-t border-white/10 pt-4">
+             <div className="bg-black/50 p-3 rounded-sm border border-white/5 h-24 overflow-hidden font-mono text-[10px] text-left">
+                <div className="flex flex-col justify-end h-full space-y-1">
+                    {logLines.slice(-5).map((line, i) => (
+                        <div key={i} className="text-white/60 truncate">
+                            <span className="text-primary/50 mr-2">{'>'}</span>
+                            {line}
+                        </div>
+                    ))}
+                    <div className="animate-pulse text-primary">_</div>
+                </div>
+             </div>
+          </div>
+
+        </div>
       </div>
-    </div>
-      <style jsx>{`
-        .zeus-log-scroll {
-          scrollbar-width: none;
-          -ms-overflow-style: none;
-        }
-        .zeus-log-scroll::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
-    </>
+    </>,
+    document.body
   )
 }
-

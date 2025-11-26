@@ -16,6 +16,7 @@ export type ManagedLayer = {
   geometryType?: string
   featureCount?: number
   isAoi?: boolean
+  bounds?: LngLatBounds
 }
 
 export type VectorDetail = {

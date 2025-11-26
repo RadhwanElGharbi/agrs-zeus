@@ -58,6 +58,16 @@ echo ""
 echo "=============================================="
 echo ""
 
+# Load environment variables (e.g., OPENAI_API_KEY) if .env exists
+if [ -f "$SCRIPT_DIR/.env" ]; then
+    echo "🔐 Loading environment variables from .env"
+    set -a
+    # shellcheck disable=SC1090
+    source "$SCRIPT_DIR/.env"
+    set +a
+    echo ""
+fi
+
 # Start frontend (which will auto-start backend via Electron)
 cd "$SCRIPT_DIR/frontend"
 npm run dev
