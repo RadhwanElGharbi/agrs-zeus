@@ -22,24 +22,24 @@ const LOADING_MESSAGES = [
 ]
 
 const TERMINAL_LOGS = [
-  '> init_sequence_alpha()',
-  '> loading_modules: [geo, dem, hydro]',
-  '> verifying_api_handshake... OK',
-  '> establishing_secure_channel...',
-  '> scanning_project_aoi()',
-  '> generating_dense_waypoints()',
-  '> compiling_route_constraints()',
-  '> hydrology_kernel.ready = true',
-  '> resolving_epsg_mismatch...',
-  '> buffering_vector_layers()',
-  '> fetching_catalog_metadata()',
-  '> prioritizing_local_sources()',
-  '> computing_cost_surface()',
-  '> aggregating_rl_metrics()',
-  '> validating_dataset_checksums()',
-  '> seeding_geoprocess_graph()',
-  '> evaluating_nodata_thresholds()',
-  '> processing_request...'
+  'init_sequence_alpha()',
+  'loading_modules: [geo, dem, hydro]',
+  'verifying_api_handshake... OK',
+  'establishing_secure_channel...',
+  'scanning_project_aoi()',
+  'generating_dense_waypoints()',
+  'compiling_route_constraints()',
+  'hydrology_kernel.ready = true',
+  'resolving_epsg_mismatch...',
+  'buffering_vector_layers()',
+  'fetching_catalog_metadata()',
+  'prioritizing_local_sources()',
+  'computing_cost_surface()',
+  'aggregating_rl_metrics()',
+  'validating_dataset_checksums()',
+  'seeding_geoprocess_graph()',
+  'evaluating_nodata_thresholds()',
+  'processing_request...'
 ]
 
 export function ZeusLoadingDialog({ open, onComplete }: ZeusLoadingDialogProps) {
@@ -240,15 +240,21 @@ export function ZeusLoadingDialog({ open, onComplete }: ZeusLoadingDialogProps) 
 
           {/* Terminal Output */}
           <div className="border-t border-white/10 pt-4">
-             <div className="bg-black/50 p-3 rounded-sm border border-white/5 h-24 overflow-hidden font-mono text-[10px] text-left">
-                <div className="flex flex-col justify-end h-full space-y-1">
-                    {logLines.slice(-5).map((line, i) => (
-                        <div key={i} className="text-white/60 truncate">
-                            <span className="text-primary/50 mr-2">{'>'}</span>
+             <div className="bg-black/50 p-4 rounded-sm border border-white/5 h-36 font-mono text-[10px] text-left relative overflow-hidden">
+                {/* Top fade mask */}
+                <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-black/80 to-transparent z-10 pointer-events-none" />
+                
+                <div className="flex flex-col justify-end h-full space-y-1.5 relative z-0">
+                    {logLines.slice(-7).map((line, i) => (
+                        <div key={i} className="text-white/60 truncate flex items-center animate-in slide-in-from-bottom-2 duration-300 fade-in">
+                            <span className="text-primary/50 mr-2 shrink-0">{'>'}</span>
                             {line}
                         </div>
                     ))}
-                    <div className="animate-pulse text-primary">_</div>
+                    <div className="flex items-center">
+                        <span className="text-primary/50 mr-2">{'>'}</span>
+                        <span className="w-2 h-4 bg-primary/50 animate-pulse" />
+                    </div>
                 </div>
              </div>
           </div>
