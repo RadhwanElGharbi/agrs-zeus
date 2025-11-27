@@ -1,0 +1,80 @@
+{
+  "test_project2": {
+    "job_id": "ef17d64bfd8a408dafa80d094477b7e3",
+    "status": "succeeded",
+    "duration_sec": 60.04128909111023,
+    "categories": {
+      "dem": {
+        "raw_missing": [],
+        "processed_missing": []
+      },
+      "landcover": {
+        "raw_missing": [],
+        "processed_missing": []
+      },
+      "soil": {
+        "raw_missing": [],
+        "processed_missing": []
+      },
+      "geohazard": {
+        "raw_missing": [],
+        "processed_missing": []
+      },
+      "roads": {
+        "raw_missing": [],
+        "processed_missing": []
+      },
+      "railways": {
+        "raw_missing": [],
+        "processed_missing": []
+      },
+      "powerlines": {
+        "raw_missing": [],
+        "processed_missing": []
+      },
+      "waterways": {
+        "raw_missing": [],
+        "processed_missing": []
+      },
+      "pipelines": {
+        "raw_missing": [],
+        "processed_missing": []
+      }
+    }
+  },
+  "US_PIPELINE": {
+    "job_id": "5c794aa331f54344a8b463aad9efad1f",
+    "status": "succeeded",
+    "duration_sec": 30.025625467300415,
+    "categories": {
+      "dem": {
+        "raw_missing": [],
+        "processed_missing": []
+      },
+      "landcover": {
+        "raw_missing": [],
+        "processed_missing": []
+      },
+      "soil": {
+        "raw_missing": [],
+        "processed_missing": []
+      },
+      "geohazard": {
+        "raw_missing": [],
+        "processed_missing": []
+      },
+      "roads": {
+        "raw_missing": [],
+        "processed_missing": []
+      },
+      "waterways": {
+        "raw_missing": [],
+        "processed_missing": []
+      },
+      "pipelines": {
+        "raw_missing": [],
+        "processed_missing": []
+      }
+    }
+  }
+}

@@ -1,0 +1,4 @@
+---
+alwaysApply: true
+---
+The agent will never do a github action without explicit immediate instruction from me in the immediate prompt.

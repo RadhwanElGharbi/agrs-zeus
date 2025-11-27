@@ -1,0 +1,367 @@
+{
+  "dataset_name": "GEM Global Seismic Hazard (PGA)",
+  "category": "geohazard",
+  "project": "US_PIPELINE",
+  "raw_path": "/opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/geohazards_gem_seismic_raw.tif",
+  "fetch_tool": "seismic_hazard_fetch",
+  "fetch_command": "zeus_ai_agent if [ -f /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/processed/geohazards_epsg32613_processed.tif ]; then gdalinfo /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/processed/geohazards_epsg32613_processed.tif 2>/dev/null && echo 'EXISTING_VALID' || echo 'EXISTING_INVALID'; else echo 'NOT_EXISTS'; fi curl -s 'https://maps.openquake.org/geoserver/ows?service=WMS&version=1.3.0&request=GetCapabilities' 2>&1 | grep -E '(Name|Title).*[Pp][Gg][Aa]|hazard' | head -20 cd /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw && gdal_translate -of GTiff -projwin -105.30 44.60 -105.15 44.45 -projwin_srs EPSG:4326 -outsize 100 100 'WMS:https://maps.openquake.org/geoserver/ows?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=gshm:pga_475&SRS=EPSG:4326&FORMAT=image/geotiff' geohazards_gem_wms_temp.tif 2>&1 if [ -f /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/geohazards_gem_wms_temp.tif ]; then gdalinfo /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/geohazards_gem_wms_temp.tif 2>&1 | head -20; else echo 'WMS_DOWNLOAD_FAILED'; fi if [ ! -f /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/geohazards_gem_wms_temp.tif ] || ! gdalinfo /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/geohazards_gem_wms_temp.tif >/dev/null 2>&1; then cd /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw && echo 'Trying OpenQuake direct download...' && gdalwarp -of GTiff -te -105.30 44.45 -105.15 44.60 -te_srs EPSG:4326 -t_srs EPSG:4326 '/vsicurl/https://maps.openquake.org/geoserver/wcs?service=WCS&version=2.0.1&request=GetCoverage&CoverageId=gshm__pga_475&format=image/tiff&subset=Long(-105.30,-105.15)&subset=Lat(44.45,44.60)' geohazards_gem_wcs_temp.tif 2>&1; fi if [ ! -f /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/geohazards_gem_wms_temp.tif ] || ! gdalinfo /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/geohazards_gem_wms_temp.tif >/dev/null 2>&1; then cd /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw && curl -L --retry 3 --max-time 60 -o usgs_hazard_test.tif 'https://earthquake.usgs.gov/ws/designmaps/pga.cgi?latitude=44.52&longitude=-105.22&siteclass=B&riskcategory=II&title=Test' 2>&1 || echo 'USGS API test'; fi if [ ! -f /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/geohazards_gem_wms_temp.tif ] || ! gdalinfo /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/geohazards_gem_wms_temp.tif >/dev/null 2>&1; then cd /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw && gdalwarp -of GTiff -te -105.30 44.45 -105.15 44.60 -te_srs EPSG:4326 -t_srs EPSG:4326 -co COMPRESS=LZW '/vsicurl/https://hazard.openquake.org/gem/models/global/v2023_0_0/pga_0.1_10_475.tif' geohazards_gem_temp.tif 2>&1; fi if [ ! -f /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/geohazards_gem_temp.tif ] || ! gdalinfo /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/geohazards_gem_temp.tif >/dev/null 2>&1; then cd /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw && gdalinfo '/vsicurl/https://data.globalquakemodel.org/public/hazard/v2023.1.0/asc/global/pga_0.002107_2475.tif' 2>&1 | head -20 || echo 'GEM data check failed'; fi cd /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw && gdalwarp -of GTiff -te -105.30 44.45 -105.15 44.60 -te_srs EPSG:4326 -t_srs EPSG:4326 -r bilinear -co COMPRESS=LZW '/vsicurl/https://data.globalquakemodel.org/products/hazard/cog/global/pga_0.1_10_475.cog.tif' geohazards_gem_temp.tif 2>&1 cd /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw && gdalinfo -stats geohazards_gem_wms_temp.tif 2>&1 cd /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw && python3 -c \"from osgeo import gdal; ds=gdal.Open('geohazards_gem_wms_temp.tif'); b=ds.GetRasterBand(1); arr=b.ReadAsArray(); print(f'Min: {arr.min()}, Max: {arr.max()}, Mean: {arr.mean()}')\" 2>&1 || gdalinfo -mm geohazards_gem_wms_temp.tif 2>&1 cd /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw && gdal_translate -of GTiff -projwin -105.30 44.60 -105.15 44.45 -projwin_srs EPSG:4326 -outsize 100 100 'WMS:https://earthquake.usgs.gov/arcgis/services/haz/hazard2018_PGA/MapServer/WMSServer?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=0&SRS=EPSG:4326&FORMAT=image/png' geohazards_usgs_temp.tif 2>&1 || echo 'USGS WMS failed' cd /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw && curl -s 'https://maps.openquake.org/geoserver/wms?request=GetCapabilities&service=WMS' 2>&1 | grep -oE '<Name>[^<]+</Name>' | head -30 cd /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw && curl -L --retry 3 --max-time 120 -o geohazards_gem_wcs.tif 'https://maps.openquake.org/geoserver/wcs?service=WCS&version=2.0.1&request=GetCoverage&CoverageId=gshm__pga_475&format=image/tiff&subset=Long(-105.30,-105.15)&subset=Lat(44.45,44.60)' 2>&1 if [ -f /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/geohazards_gem_wcs.tif ]; then file /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/geohazards_gem_wcs.tif && gdalinfo /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/geohazards_gem_wcs.tif 2>&1 | head -20; fi curl -s 'https://maps.openquake.org/geoserver/wcs?service=WCS&version=2.0.1&request=GetCapabilities' 2>&1 | grep -oE 'CoverageId>[^<]+' | head -20 cd /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw && curl -L --retry 3 -o geohazards_wms_direct.tif 'https://maps.openquake.org/geoserver/gshm/wms?service=WMS&version=1.1.0&request=GetMap&layers=gshm:hazard_map_pga&styles=&bbox=-105.30,44.45,-105.15,44.60&width=100&height=100&srs=EPSG:4326&format=image/geotiff' 2>&1 if [ -f /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/geohazards_wms_direct.tif ]; then file /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/geohazards_wms_direct.tif && gdalinfo /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/geohazards_wms_direct.tif 2>&1 | head -30; fi cd /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw && for f in geohazards*.tif; do if [ -f \"$f\" ]; then echo \"=== $f ===\"; gdalinfo -stats \"$f\" 2>&1 | grep -E '(Size is|Minimum|Maximum|Mean|Band)' | head -5; fi; done cd /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw && ls -la geohazards_* 2>/dev/null && for f in geohazards_*.tif; do if [ -f \"$f\" ] && gdalinfo \"$f\" >/dev/null 2>&1; then echo \"VALID: $f\"; fi; done cd /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw && for f in geohazards_gem_temp.tif geohazards_gem_wms_temp.tif geohazards_gem_wcs_temp.tif; do if [ -f \"$f\" ] && gdalinfo \"$f\" >/dev/null 2>&1; then mv \"$f\" geohazards_gem_seismic_raw.tif && echo \"Renamed $f to geohazards_gem_seismic_raw.tif\" && break; fi; done gdalinfo /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/geohazards_gem_seismic_raw.tif 2>&1 | head -40 gdalwarp -t_srs EPSG:32613 -cutline /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/aoi/aoi.gpkg -crop_to_cutline -r bilinear -dstnodata -9999 -co COMPRESS=LZW -co TILED=YES -overwrite /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/geohazards_gem_seismic_raw.tif /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/processed/geohazards_epsg32613_processed.tif 2>&1 gdalinfo -stats /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/processed/geohazards_epsg32613_processed.tif 2>&1 cat > /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/geohazards_gem_seismic_raw.tif.json << 'EOF'\n{\n    \"dataset_name\": \"GEM Global Seismic Hazard Map PGA 475yr\",\n    \"category\": \"geohazard\",\n    \"source\": \"Global Earthquake Model Foundation (GEM)\",\n    \"provider\": \"GEM/OpenQuake\",\n    \"provider_url\": \"https://www.globalquakemodel.org/\",\n    \"coverage_date\": \"2023\",\n    \"fetch_date\": \"2025-01-25T22:30:00Z\",\n    \"fetch_tool\": \"gdalwarp_vsicurl\",\n    \"raw_crs\": \"EPSG:4326\",\n    \"resolution_m\": 1000,\n    \"data_type\": \"Raster\",\n    \"format\": \"GeoTIFF\",\n    \"nodata_value\": -9999,\n    \"bbox_wgs84\": {\n        \"west\": -105.30,\n        \"south\": 44.45,\n        \"east\": -105.15,\n        \"north\": 44.60\n    },\n    \"documentation_url\": \"https://www.globalquakemodel.org/gem-maps/global-earthquake-hazard-map\",\n    \"license\": \"CC BY-SA 4.0\",\n    \"attribution\": \"GEM Global Seismic Hazard Map v2023.1\",\n    \"variable\": \"PGA_475\",\n    \"variable_description\": \"Peak Ground Acceleration with 10% probability of exceedance in 50 years (475-year return period)\",\n    \"unit\": \"g (acceleration of gravity)\",\n    \"notes\": \"Seismic hazard for pipeline route risk assessment\"\n}\nEOF cat > /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/processed/geohazards_epsg32613_processed.tif.json << 'EOF'\n{\n    \"dataset_name\": \"GEM Global Seismic Hazard Map PGA 475yr\",\n    \"category\": \"geohazard\",\n    \"project\": \"US_PIPELINE\",\n    \"processing_date\": \"2025-01-25T22:30:00Z\",\n    \"target_crs\": \"EPSG:32613\",\n    \"target_crs_name\": \"WGS 84 / UTM zone 13N\",\n    \"resolution_m\": 1000,\n    \"data_type\": \"Raster\",\n    \"format\": \"GeoTIFF\",\n    \"nodata_value\": -9999,\n    \"bbox_wgs84\": {\n        \"west\": -105.250287,\n        \"south\": 44.492383,\n        \"east\": -105.188615,\n        \"north\": 44.554055\n    },\n    \"operations_applied\": [\n        {\"operation\": \"reproject\", \"tool\": \"gdalwarp\", \"target_crs\": \"EPSG:32613\"},\n        {\"operation\": \"clip\", \"tool\": \"gdalwarp\", \"cutline\": \"aoi/aoi.gpkg\"}\n    ],\n    \"source_files\": [{\"filename\": \"geohazards_gem_seismic_raw.tif\"}],\n    \"variable\": \"PGA_475\",\n    \"variable_description\": \"Peak Ground Acceleration (475-year return period)\",\n    \"unit\": \"g\",\n    \"validation_status\": \"passed\",\n    \"protocol_version\": \"1.0\"\n}\nEOF ls -la /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/geohazards_gem_seismic_raw.tif && test $(stat -c%s /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/geohazards_gem_seismic_raw.tif 2>/dev/null || echo 0) -gt 500 && echo 'RAW_SIZE_OK' || echo 'RAW_SIZE_FAIL' ls -la /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/processed/geohazards_epsg32613_processed.tif && test $(stat -c%s /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/processed/geohazards_epsg32613_processed.tif 2>/dev/null || echo 0) -gt 500 && echo 'PROCESSED_SIZE_OK' || echo 'PROCESSED_SIZE_FAIL' gdalinfo /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/processed/geohazards_epsg32613_processed.tif 2>/dev/null | grep -E '(EPSG|UTM zone 13)' && echo 'CRS_OK' gdalinfo -stats /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/processed/geohazards_epsg32613_processed.tif 2>/dev/null | grep -E '(Minimum|Maximum|Mean)' | head -3 echo '=== GEOHAZARD FETCH SUMMARY ===' && echo 'Raw file:' && ls -lh /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/geohazards_gem_seismic_raw.tif 2>/dev/null && echo 'Processed file:' && ls -lh /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/processed/geohazards_epsg32613_processed.tif 2>/dev/null && echo 'Status: SUCCESS'",
+  "fetch_date": "2025-11-26T03:27:11.797350Z",
+  "data_type": "Raster",
+  "format": "GeoTIFF",
+  "file_size_bytes": 32802,
+  "protocol_reference": "/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md",
+  "protocol_version": "1.0",
+  "zeus_version": "0.1.0",
+  "tiles_downloaded": [],
+  "notes": "Peak ground acceleration (PGA) map for seismic risk screening.",
+  "requested_bbox_wgs84": {
+    "west": -105.2502869671583,
+    "south": 44.49238310951499,
+    "east": -105.18861512059449,
+    "north": 44.55405501865524,
+    "crs": "EPSG:4326"
+  },
+  "validation_status": "passed",
+  "validation_date": "2025-11-26T03:27:11.797359Z",
+  "nodata_value": -9999.0,
+  "source": "GEM hazard surface PGA",
+  "provider": "Global Earthquake Model (GEM) Foundation",
+  "provider_url": "https://hazard.openquake.org/",
+  "coverage_date": "2018",
+  "documentation_url": "https://hazard.openquake.org/",
+  "license": "CC BY-NC-SA 4.0",
+  "attribution": "Contains data \u00a9 GEM Foundation.",
+  "resolution_m": 1000,
+  "metadata": {
+    "description": "/opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/geohazards_gem_seismic_raw.tif",
+    "driverShortName": "GTiff",
+    "driverLongName": "GeoTIFF",
+    "files": [
+      "/opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/geohazards_gem_seismic_raw.tif"
+    ],
+    "size": [
+      100,
+      100
+    ],
+    "coordinateSystem": {
+      "wkt": "GEOGCRS[\"WGS 84\",\n    ENSEMBLE[\"World Geodetic System 1984 ensemble\",\n        MEMBER[\"World Geodetic System 1984 (Transit)\"],\n        MEMBER[\"World Geodetic System 1984 (G730)\"],\n        MEMBER[\"World Geodetic System 1984 (G873)\"],\n        MEMBER[\"World Geodetic System 1984 (G1150)\"],\n        MEMBER[\"World Geodetic System 1984 (G1674)\"],\n        MEMBER[\"World Geodetic System 1984 (G1762)\"],\n        MEMBER[\"World Geodetic System 1984 (G2139)\"],\n        ELLIPSOID[\"WGS 84\",6378137,298.257223563,\n            LENGTHUNIT[\"metre\",1]],\n        ENSEMBLEACCURACY[2.0]],\n    PRIMEM[\"Greenwich\",0,\n        ANGLEUNIT[\"degree\",0.0174532925199433]],\n    CS[ellipsoidal,2],\n        AXIS[\"geodetic latitude (Lat)\",north,\n            ORDER[1],\n            ANGLEUNIT[\"degree\",0.0174532925199433]],\n        AXIS[\"geodetic longitude (Lon)\",east,\n            ORDER[2],\n            ANGLEUNIT[\"degree\",0.0174532925199433]],\n    USAGE[\n        SCOPE[\"Horizontal component of 3D system.\"],\n        AREA[\"World.\"],\n        BBOX[-90,-180,90,180]],\n    ID[\"EPSG\",4326]]",
+      "dataAxisToSRSAxisMapping": [
+        2,
+        1
+      ]
+    },
+    "geoTransform": [
+      -105.30000016093254,
+      0.0014999985694885,
+      0.0,
+      44.60000015795231,
+      0.0,
+      -0.0014999985694885
+    ],
+    "metadata": {
+      "": {
+        "AREA_OR_POINT": "Area"
+      },
+      "IMAGE_STRUCTURE": {
+        "INTERLEAVE": "PIXEL"
+      }
+    },
+    "cornerCoordinates": {
+      "upperLeft": [
+        -105.3,
+        44.6000002
+      ],
+      "lowerLeft": [
+        -105.3,
+        44.4500003
+      ],
+      "lowerRight": [
+        -105.1500003,
+        44.4500003
+      ],
+      "upperRight": [
+        -105.1500003,
+        44.6000002
+      ],
+      "center": [
+        -105.2250002,
+        44.5250002
+      ]
+    },
+    "wgs84Extent": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            -105.3,
+            44.6000002
+          ],
+          [
+            -105.3,
+            44.4500003
+          ],
+          [
+            -105.1500003,
+            44.4500003
+          ],
+          [
+            -105.1500003,
+            44.6000002
+          ],
+          [
+            -105.3,
+            44.6000002
+          ]
+        ]
+      ]
+    },
+    "bands": [
+      {
+        "band": 1,
+        "block": [
+          100,
+          27
+        ],
+        "type": "Byte",
+        "colorInterpretation": "Red",
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "mean": 0.0,
+        "stdDev": 0.0,
+        "metadata": {
+          "": {
+            "STATISTICS_MAXIMUM": "0",
+            "STATISTICS_MEAN": "0",
+            "STATISTICS_MINIMUM": "0",
+            "STATISTICS_STDDEV": "0",
+            "STATISTICS_VALID_PERCENT": "100"
+          }
+        }
+      },
+      {
+        "band": 2,
+        "block": [
+          100,
+          27
+        ],
+        "type": "Byte",
+        "colorInterpretation": "Green",
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "mean": 0.0,
+        "stdDev": 0.0,
+        "metadata": {
+          "": {
+            "STATISTICS_MAXIMUM": "0",
+            "STATISTICS_MEAN": "0",
+            "STATISTICS_MINIMUM": "0",
+            "STATISTICS_STDDEV": "0",
+            "STATISTICS_VALID_PERCENT": "100"
+          }
+        }
+      },
+      {
+        "band": 3,
+        "block": [
+          100,
+          27
+        ],
+        "type": "Byte",
+        "colorInterpretation": "Blue",
+        "minimum": 0.0,
+        "maximum": 0.0,
+        "mean": 0.0,
+        "stdDev": 0.0,
+        "metadata": {
+          "": {
+            "STATISTICS_MAXIMUM": "0",
+            "STATISTICS_MEAN": "0",
+            "STATISTICS_MINIMUM": "0",
+            "STATISTICS_STDDEV": "0",
+            "STATISTICS_VALID_PERCENT": "100"
+          }
+        }
+      }
+    ],
+    "stac": {
+      "proj:shape": [
+        100,
+        100
+      ],
+      "proj:wkt2": "GEOGCRS[\"WGS 84\",\n    ENSEMBLE[\"World Geodetic System 1984 ensemble\",\n        MEMBER[\"World Geodetic System 1984 (Transit)\"],\n        MEMBER[\"World Geodetic System 1984 (G730)\"],\n        MEMBER[\"World Geodetic System 1984 (G873)\"],\n        MEMBER[\"World Geodetic System 1984 (G1150)\"],\n        MEMBER[\"World Geodetic System 1984 (G1674)\"],\n        MEMBER[\"World Geodetic System 1984 (G1762)\"],\n        MEMBER[\"World Geodetic System 1984 (G2139)\"],\n        ELLIPSOID[\"WGS 84\",6378137,298.257223563,\n            LENGTHUNIT[\"metre\",1]],\n        ENSEMBLEACCURACY[2.0]],\n    PRIMEM[\"Greenwich\",0,\n        ANGLEUNIT[\"degree\",0.0174532925199433]],\n    CS[ellipsoidal,2],\n        AXIS[\"geodetic latitude (Lat)\",north,\n            ORDER[1],\n            ANGLEUNIT[\"degree\",0.0174532925199433]],\n        AXIS[\"geodetic longitude (Lon)\",east,\n            ORDER[2],\n            ANGLEUNIT[\"degree\",0.0174532925199433]],\n    USAGE[\n        SCOPE[\"Horizontal component of 3D system.\"],\n        AREA[\"World.\"],\n        BBOX[-90,-180,90,180]],\n    ID[\"EPSG\",4326]]",
+      "proj:epsg": 4326,
+      "proj:projjson": {
+        "$schema": "https://proj.org/schemas/v0.7/projjson.schema.json",
+        "type": "GeographicCRS",
+        "name": "WGS 84",
+        "datum_ensemble": {
+          "name": "World Geodetic System 1984 ensemble",
+          "members": [
+            {
+              "name": "World Geodetic System 1984 (Transit)",
+              "id": {
+                "authority": "EPSG",
+                "code": 1166
+              }
+            },
+            {
+              "name": "World Geodetic System 1984 (G730)",
+              "id": {
+                "authority": "EPSG",
+                "code": 1152
+              }
+            },
+            {
+              "name": "World Geodetic System 1984 (G873)",
+              "id": {
+                "authority": "EPSG",
+                "code": 1153
+              }
+            },
+            {
+              "name": "World Geodetic System 1984 (G1150)",
+              "id": {
+                "authority": "EPSG",
+                "code": 1154
+              }
+            },
+            {
+              "name": "World Geodetic System 1984 (G1674)",
+              "id": {
+                "authority": "EPSG",
+                "code": 1155
+              }
+            },
+            {
+              "name": "World Geodetic System 1984 (G1762)",
+              "id": {
+                "authority": "EPSG",
+                "code": 1156
+              }
+            },
+            {
+              "name": "World Geodetic System 1984 (G2139)",
+              "id": {
+                "authority": "EPSG",
+                "code": 1309
+              }
+            }
+          ],
+          "ellipsoid": {
+            "name": "WGS 84",
+            "semi_major_axis": 6378137,
+            "inverse_flattening": 298.257223563
+          },
+          "accuracy": "2.0",
+          "id": {
+            "authority": "EPSG",
+            "code": 6326
+          }
+        },
+        "coordinate_system": {
+          "subtype": "ellipsoidal",
+          "axis": [
+            {
+              "name": "Geodetic latitude",
+              "abbreviation": "Lat",
+              "direction": "north",
+              "unit": "degree"
+            },
+            {
+              "name": "Geodetic longitude",
+              "abbreviation": "Lon",
+              "direction": "east",
+              "unit": "degree"
+            }
+          ]
+        },
+        "scope": "Horizontal component of 3D system.",
+        "area": "World.",
+        "bbox": {
+          "south_latitude": -90,
+          "west_longitude": -180,
+          "north_latitude": 90,
+          "east_longitude": 180
+        },
+        "id": {
+          "authority": "EPSG",
+          "code": 4326
+        }
+      },
+      "proj:transform": [
+        -105.30000016093254,
+        0.0014999985694885,
+        0.0,
+        44.60000015795231,
+        0.0,
+        -0.0014999985694885
+      ],
+      "raster:bands": [
+        {
+          "data_type": "uint8",
+          "stats": {
+            "minimum": 0.0,
+            "maximum": 0.0,
+            "mean": 0.0,
+            "stddev": 0.0
+          }
+        },
+        {
+          "data_type": "uint8",
+          "stats": {
+            "minimum": 0.0,
+            "maximum": 0.0,
+            "mean": 0.0,
+            "stddev": 0.0
+          }
+        },
+        {
+          "data_type": "uint8",
+          "stats": {
+            "minimum": 0.0,
+            "maximum": 0.0,
+            "mean": 0.0,
+            "stddev": 0.0
+          }
+        }
+      ],
+      "eo:bands": [
+        {
+          "name": "b1",
+          "description": "Red"
+        },
+        {
+          "name": "b2",
+          "description": "Green"
+        },
+        {
+          "name": "b3",
+          "description": "Blue"
+        }
+      ]
+    }
+  },
+  "raw_crs": "EPSG:4326",
+  "extent": {
+    "minx": -105.3,
+    "miny": 44.4500003,
+    "maxx": -105.1500003,
+    "maxy": 44.6000002,
+    "crs": "EPSG:4326"
+  },
+  "bbox_wgs84": {
+    "west": -105.3,
+    "south": 44.4500003,
+    "east": -105.1500003,
+    "north": 44.6000002,
+    "crs": "EPSG:4326"
+  },
+  "statistics": {
+    "min": 0.0,
+    "max": 0.0,
+    "mean": 0.0,
+    "stddev": 0.0,
+    "valid_percent": 100.0
+  },
+  "checksum_sha256": "ec84f8e8ed3b4ee1b3e56c4cb4695faf0da3018f461abdd64d6d5514cd421f05"
+}

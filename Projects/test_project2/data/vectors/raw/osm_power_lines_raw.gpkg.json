@@ -1,37 +1,65 @@
 {
-  "attributes": {
-    "cables": "Number of cables/conductors",
-    "crossing_cost": "Estimated crossing complexity: very_high/high/medium/unknown",
-    "name": "Power line name",
-    "operator": "Operating company",
-    "osm_id": "OpenStreetMap way ID",
-    "power": "Power infrastructure type",
-    "voltage": "Voltage as tagged in OSM",
-    "voltage_class": "Classification: high(>=100kV)/medium(35-100kV)/low(<35kV)/unknown",
-    "voltage_kv": "Voltage in kilovolts (calculated)",
-    "voltage_v": "Voltage in volts (parsed)"
+  "dataset_name": "OpenStreetMap Power Network Extract",
+  "category": "powerlines",
+  "project": "test_project2",
+  "raw_path": "/opt/agrs/Projects/test_project2/data/vectors/raw/osm_power_lines_raw.gpkg",
+  "fetch_tool": "osm_power_overpass",
+  "fetch_command": "zeus_ai_agent ls -la /opt/agrs/Projects/test_project2/data/vectors/raw/osm_power* 2>/dev/null || echo 'No existing raw power lines data'; ls -la /opt/agrs/Projects/test_project2/data/vectors/processed/osm_power* 2>/dev/null || echo 'No existing processed power lines data' curl -X POST --max-time 180 -o /tmp/osm_power.osm \\\n  'https://overpass-api.de/api/interpreter' \\\n  -d 'data=[out:xml][timeout:120][bbox:42.845421,13.445100,43.450523,13.948448];\n(\n  way[\"power\"~\"line|minor_line|cable\"];\n);\nout body;\n>;\nout skel qt;' ls -la /tmp/osm_power.osm && head -40 /tmp/osm_power.osm OSM_USE_CUSTOM_INDEXING=NO ogr2ogr -f GPKG /tmp/osm_power_temp.gpkg /tmp/osm_power.osm lines -nln power_lines -overwrite && echo 'Conversion complete' ogrinfo -so /tmp/osm_power_temp.gpkg power_lines 2>&1 | head -40 source /opt/agrs/python/pirl_venv/bin/activate\npython3 << 'PYEOF'\nimport sqlite3\nimport re\nimport shutil\n\ndef parse_hstore(hstore_str):\n    if not hstore_str:\n        return {}\n    result = {}\n    pattern = r'\"([^\"]+)\"=>\"([^\"]*)\"'\n    for match in re.finditer(pattern, hstore_str):\n        key, value = match.groups()\n        result[key] = value if value else ''\n    return result\n\n# Copy temp file to raw location\nshutil.copy('/tmp/osm_power_temp.gpkg', '/opt/agrs/Projects/test_project2/data/vectors/raw/osm_power_lines_raw.gpkg')\nprint('Copied temp file to raw location')\n\nconn = sqlite3.connect('/opt/agrs/Projects/test_project2/data/vectors/raw/osm_power_lines_raw.gpkg')\ncursor = conn.cursor()\n\n# Check existing columns\ncursor.execute(\"PRAGMA table_info(power_lines)\")\ncolumns = [col[1] for col in cursor.fetchall()]\nprint(f\"Existing columns: {columns}\")\n\n# Add power line specific columns\nnew_cols = ['power', 'voltage', 'cables', 'wires', 'operator', 'ref_tag', 'frequency', 'circuits', 'line']\nfor col in new_cols:\n    if col not in columns:\n        try:\n            cursor.execute(f\"ALTER TABLE power_lines ADD COLUMN {col} TEXT\")\n            print(f\"Added column: {col}\")\n        except:\n            pass\n\nconn.commit()\n\n# Parse other_tags and update columns\nif 'other_tags' in columns:\n    cursor.execute(\"SELECT fid, other_tags FROM power_lines WHERE other_tags IS NOT NULL\")\n    rows = cursor.fetchall()\n    print(f\"Processing {len(rows)} rows with other_tags...\")\n    \n    tag_mapping = {\n        'power': 'power',\n        'voltage': 'voltage',\n        'cables': 'cables',\n        'wires': 'wires',\n        'operator': 'operator',\n        'ref': 'ref_tag',\n        'frequency': 'frequency',\n        'circuits': 'circuits',\n        'line': 'line'\n    }\n    \n    update_count = 0\n    for fid, other_tags in rows:\n        tags = parse_hstore(other_tags)\n        for osm_key, col_name in tag_mapping.items():\n            if osm_key in tags and tags[osm_key]:\n                cursor.execute(f\"UPDATE power_lines SET {col_name} = ? WHERE fid = ?\", (tags[osm_key], fid))\n                update_count += 1\n    \n    conn.commit()\n    print(f\"Updated {update_count} tag values\")\n\n# Stats\ncursor.execute(\"SELECT COUNT(*) FROM power_lines\")\nprint(f\"Total power lines: {cursor.fetchone()[0]}\")\n\ncursor.execute(\"SELECT voltage, COUNT(*) FROM power_lines WHERE voltage IS NOT NULL GROUP BY voltage ORDER BY COUNT(*) DESC LIMIT 10\")\nprint(\"Voltage levels:\")\nfor row in cursor.fetchall():\n    print(f\"  {row[0]}V: {row[1]}\")\n\nconn.close()\nprint(\"Done!\")\nPYEOF\ndeactivate ogrinfo -so /opt/agrs/Projects/test_project2/data/vectors/raw/osm_power_lines_raw.gpkg power_lines | head -50 ogrinfo -sql \"SELECT COUNT(*) FROM power_lines\" /opt/agrs/Projects/test_project2/data/vectors/raw/osm_power_lines_raw.gpkg cat > /opt/agrs/Projects/test_project2/data/vectors/raw/osm_power_lines_raw.gpkg.json << 'EOF'\n{\n  \"dataset_name\": \"OpenStreetMap Power Lines\",\n  \"source\": \"OpenStreetMap via Overpass API\",\n  \"provider\": \"OpenStreetMap Contributors\",\n  \"provider_url\": \"https://www.openstreetmap.org/\",\n  \"coverage_date\": \"2025-11-25\",\n  \"fetch_date\": \"2025-11-25T21:10:00Z\",\n  \"fetch_tool\": \"Overpass API + ogr2ogr + Python tag expansion\",\n  \"raw_crs\": \"EPSG:4326\",\n  \"data_type\": \"Vector\",\n  \"geometry_type\": \"LineString\",\n  \"format\": \"GeoPackage\",\n  \"bbox_wgs84\": {\n    \"west\": 13.445100,\n    \"south\": 42.845421,\n    \"east\": 13.948448,\n    \"north\": 43.450523\n  },\n  \"attributes\": [\n    \"osm_id\", \"name\", \"power\", \"voltage\", \"cables\", \"wires\",\n    \"operator\", \"ref_tag\", \"frequency\", \"circuits\"\n  ],\n  \"documentation_url\": \"https://wiki.openstreetmap.org/wiki/Key:power\",\n  \"license\": \"ODbL 1.0\",\n  \"attribution\": \"\u00a9 OpenStreetMap contributors\",\n  \"notes\": \"Power transmission lines with expanded voltage, cables, wires tags\"\n}\nEOF ogr2ogr -f GPKG \\\n  -t_srs EPSG:32633 \\\n  -clipsrc /opt/agrs/Projects/test_project2/data/vectors/aoi.gpkg \\\n  -nln power_lines \\\n  -overwrite \\\n  /opt/agrs/Projects/test_project2/data/vectors/processed/osm_power_lines_epsg32633_processed.gpkg \\\n  /opt/agrs/Projects/test_project2/data/vectors/raw/osm_power_lines_raw.gpkg power_lines ogrinfo -so /opt/agrs/Projects/test_project2/data/vectors/processed/osm_power_lines_epsg32633_processed.gpkg power_lines ogrinfo -sql \"SELECT COUNT(*) FROM power_lines\" /opt/agrs/Projects/test_project2/data/vectors/processed/osm_power_lines_epsg32633_processed.gpkg cat > /opt/agrs/Projects/test_project2/data/vectors/processed/osm_power_lines_epsg32633_processed.gpkg.json << 'EOF'\n{\n  \"dataset_name\": \"OpenStreetMap Power Lines (Processed)\",\n  \"processing_date\": \"2025-11-25T21:10:00Z\",\n  \"target_crs\": \"EPSG:32633\",\n  \"target_crs_name\": \"WGS 84 / UTM zone 33N\",\n  \"data_type\": \"Vector\",\n  \"geometry_type\": \"LineString\",\n  \"format\": \"GeoPackage\",\n  \"operations_applied\": [\n    {\"operation\": \"reproject\", \"source_crs\": \"EPSG:4326\", \"target_crs\": \"EPSG:32633\"},\n    {\"operation\": \"clip\", \"clip_source\": \"aoi.gpkg\"}\n  ],\n  \"validation_status\": \"passed\"\n}\nEOF ln -sf /opt/agrs/Projects/test_project2/data/vectors/processed/osm_power_lines_epsg32633_processed.gpkg /opt/agrs/Projects/test_project2/data/vectors/power_lines.gpkg rm -f /tmp/osm_power.osm /tmp/osm_power_temp.gpkg test -s /opt/agrs/Projects/test_project2/data/vectors/raw/osm_power_lines_raw.gpkg && echo 'Raw data: OK' || echo 'Raw data: MISSING' test -s /opt/agrs/Projects/test_project2/data/vectors/processed/osm_power_lines_epsg32633_processed.gpkg && echo 'Processed data: OK' || echo 'Processed data: MISSING' test -L /opt/agrs/Projects/test_project2/data/vectors/power_lines.gpkg && test -e /opt/agrs/Projects/test_project2/data/vectors/power_lines.gpkg && echo 'Symlink: OK' || echo 'Symlink: BROKEN' ogrinfo -so /opt/agrs/Projects/test_project2/data/vectors/processed/osm_power_lines_epsg32633_processed.gpkg power_lines 2>/dev/null | grep -q '32633\\|UTM zone 33N' && echo 'CRS: OK' || echo 'CRS: CHECK' ogrinfo -so /opt/agrs/Projects/test_project2/data/vectors/processed/osm_power_lines_epsg32633_processed.gpkg power_lines 2>/dev/null | grep -E 'voltage|cables' && echo 'Columns: OK' || echo 'Columns: CHECK'",
+  "fetch_date": "2025-11-26T01:44:26.941658Z",
+  "data_type": "Vector",
+  "format": "GeoPackage",
+  "file_size_bytes": 266240,
+  "protocol_reference": "/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md",
+  "protocol_version": "1.0",
+  "zeus_version": "0.1.0",
+  "tiles_downloaded": [],
+  "notes": "Transmission + distribution assets for clearance buffers.",
+  "requested_bbox_wgs84": {
+    "west": 13.44509971845132,
+    "south": 42.84542075700422,
+    "east": 13.94844832354258,
+    "north": 43.45052255391387,
+    "crs": "EPSG:4326"
   },
-  "features": {
-    "crs": "EPSG:4326",
-    "geometry": "LineString",
-    "types": [
-      "line",
-      "minor_line",
-      "cable"
+  "validation_status": "passed",
+  "validation_date": "2025-11-26T01:44:26.941674Z",
+  "source": "OpenStreetMap (power)",
+  "provider": "OpenStreetMap Contributors",
+  "provider_url": "https://www.openstreetmap.org",
+  "coverage_date": "Current (live OSM)",
+  "documentation_url": "https://wiki.openstreetmap.org/wiki/Overpass_API",
+  "license": "ODbL 1.0",
+  "attribution": "\u00a9 OpenStreetMap contributors.",
+  "selected_override": "OpenInfraMap / OpenStreetMap Utilities",
+  "metadata": {
+    "description": "/opt/agrs/Projects/test_project2/data/vectors/raw/osm_power_lines_raw.gpkg",
+    "driverShortName": "GPKG",
+    "driverLongName": "GeoPackage",
+    "layers": [
+      {
+        "name": "power_lines",
+        "metadata": {}
+      }
     ],
-    "voltage_filter": "All voltages included, high voltage (>100kV) prioritized"
+    "metadata": {},
+    "domains": {},
+    "relationships": {}
   },
-  "query": {
-    "aoi_file": "",
-    "bbox": "13.514053,42.898254,13.877811,43.388493"
+  "feature_count": 0,
+  "raw_crs": "EPSG:4326",
+  "extent": {
+    "minx": 13.44509971845132,
+    "miny": 42.84542075700422,
+    "maxx": 13.94844832354258,
+    "maxy": 43.45052255391387,
+    "crs": "EPSG:4326"
   },
-  "source": {
-    "api": "Overpass API",
-    "attribution": "© OpenStreetMap contributors",
-    "endpoint": "https://overpass-api.de/api/interpreter",
-    "license": "ODbL 1.0",
-    "provider": "OpenStreetMap"
+  "bbox_wgs84": {
+    "west": 13.44509971845132,
+    "south": 42.84542075700422,
+    "east": 13.94844832354258,
+    "north": 43.45052255391387,
+    "crs": "EPSG:4326"
   },
-  "timestamp": "2025-10-30T22:56:16Z",
-  "tool": "osm_power_fetch"
+  "checksum_sha256": "82cff8046e628885c2d79923d495c604b46fd436c5b057d1a35b0a1566f2a925"
 }

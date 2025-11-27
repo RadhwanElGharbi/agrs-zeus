@@ -1,0 +1,81 @@
+[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+[0;34mUS_PIPELINE Dataset Processing[0m
+[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+Target CRS: EPSG:32613
+Project: /opt/agrs/Projects/US_PIPELINE
+
+[2025-11-20 18:48:42] [INFO] ========== Processing started ==========
+[2025-11-20 18:48:42] [INFO] Reading target CRS from project metadata...
+[0;32m✓[0m Target CRS: EPSG:32613
+[2025-11-20 18:48:42] [INFO] Target CRS set to EPSG:32613
+[2025-11-20 18:48:42] [INFO] Converting AOI KMZ to GeoPackage...
+[0;32m✓[0m AOI converted to GeoPackage in EPSG:32613
+[2025-11-20 18:48:42] [INFO] AOI converted: /opt/agrs/Projects/US_PIPELINE/aoi/aoi.gpkg
+
+[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+[0;34mProcessing Rasters[0m
+[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+
+[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+[0;34mProcessing Vectors[0m
+[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+[2025-11-20 18:48:42] [INFO] Processing vector: osm_railways
+
+[0;34mProcessing:[0m osm_railways
+  Source CRS: 
+  Target CRS: EPSG:32613
+  Processing...
+[0;32m✓[0m Processed: /opt/agrs/Projects/US_PIPELINE/data/vectors/processed/osm_railways_epsg32613_processed.gpkg
+[2025-11-20 18:48:42] [INFO] Vector processed: /opt/agrs/Projects/US_PIPELINE/data/vectors/processed/osm_railways_epsg32613_processed.gpkg
+[0;32m✓[0m Metadata generated: osm_railways_epsg32613_processed.gpkg.json
+  Validating...
+  Features: 
+./process_all_datasets.sh: line 364: [: : integer expression expected
+[0;32m✓[0m Validation passed
+[2025-11-20 18:48:42] [INFO] Processing vector: osm_roads
+
+[0;34mProcessing:[0m osm_roads
+  Source CRS: 
+  Target CRS: EPSG:32613
+  Processing...
+[0;32m✓[0m Processed: /opt/agrs/Projects/US_PIPELINE/data/vectors/processed/osm_roads_epsg32613_processed.gpkg
+[2025-11-20 18:48:42] [INFO] Vector processed: /opt/agrs/Projects/US_PIPELINE/data/vectors/processed/osm_roads_epsg32613_processed.gpkg
+[0;32m✓[0m Metadata generated: osm_roads_epsg32613_processed.gpkg.json
+  Validating...
+  Features: 
+./process_all_datasets.sh: line 364: [: : integer expression expected
+[0;32m✓[0m Validation passed
+[2025-11-20 18:48:42] [INFO] Processing vector: osm_waterways
+
+[0;34mProcessing:[0m osm_waterways
+  Source CRS: 
+  Target CRS: EPSG:32613
+  Processing...
+[0;32m✓[0m Processed: /opt/agrs/Projects/US_PIPELINE/data/vectors/processed/osm_waterways_epsg32613_processed.gpkg
+[2025-11-20 18:48:42] [INFO] Vector processed: /opt/agrs/Projects/US_PIPELINE/data/vectors/processed/osm_waterways_epsg32613_processed.gpkg
+[0;32m✓[0m Metadata generated: osm_waterways_epsg32613_processed.gpkg.json
+  Validating...
+  Features: 
+./process_all_datasets.sh: line 364: [: : integer expression expected
+[0;32m✓[0m Validation passed
+[2025-11-20 18:48:42] [INFO] Creating convenience symlinks...
+
+[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+[0;34mCreating Symlinks[0m
+[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+[0;32m✓[0m Linked: vectors/osm_railways.gpkg
+[0;32m✓[0m Linked: vectors/osm_roads.gpkg
+[0;32m✓[0m Linked: vectors/osm_waterways.gpkg
+
+[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+[0;34mProcessing Complete[0m
+[0;34m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[0m
+[2025-11-20 18:48:42] [INFO] ========== Processing completed ==========
+
+[0;32m✓ All datasets processed successfully![0m
+
+Processed datasets are in:
+  - Rasters:  /opt/agrs/Projects/US_PIPELINE/data/rasters/processed
+  - Vectors:  /opt/agrs/Projects/US_PIPELINE/data/vectors/processed
+
+Log file: /opt/agrs/Projects/US_PIPELINE/data/processing_log.txt

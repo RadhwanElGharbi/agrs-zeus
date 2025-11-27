@@ -93,7 +93,34 @@ Environment variables (optional):
 API_HOST=127.0.0.1
 API_PORT=8000
 API_RELOAD=true
+AGRS_TILE_CACHE_DIR=/opt/agrs/gui-v2/backend/.tile_cache
 ```
+
+`AGRS_TILE_CACHE_DIR` controls where the persistent raster/vector tile cache is stored. Cached tiles are reused across process restarts to eliminate repeated `gdalwarp`/`ogr2ogr` work. Call `DELETE /api/data/cache` (or remove the directory manually) whenever you need to flush the cache after updating source datasets.
+
+## Pre-rendering Tiles
+
+To match ArcGIS-like performance, pre-generate raster or terrain tiles ahead of time:
+
+```bash
+cd backend
+source venv/bin/activate
+python scripts/precache_tiles.py \
+  --project test_project2 \
+  --layer soil \
+  --min-zoom 8 \
+  --max-zoom 14
+
+# Terrain tiles (Mapbox Terrain-RGB):
+python scripts/precache_tiles.py \
+  --project test_project2 \
+  --layer dem \
+  --min-zoom 8 \
+  --max-zoom 14 \
+  --terrain
+```
+
+The script writes PNGs into `AGRS_TILE_CACHE_DIR`. On subsequent map loads, the API serves those cached files instantly with no GDAL processing. Re-run the script after underlying rasters change or when you expand zoom coverage.
 
 ## Development
 
@@ -138,4 +165,6 @@ app.add_middleware(
 ## License
 
 Proprietary - Artemis Global Research Solutions Inc.
+
+
 

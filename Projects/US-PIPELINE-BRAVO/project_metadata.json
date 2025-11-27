@@ -1,0 +1,18 @@
+{
+    "project_name": "US-PIPELINE-BRAVO",
+    "project_id": "AGRS_US_PIPELINE_BRAVO_USA_2025_001",
+    "date_created": "2025-11-27T12:18:50Z",
+    "status": "active",
+    "project_creator": "Radwan El Gharbi",
+    "collaborators": [],
+    "organization": "AGRS",
+    "country": "United States",
+    "iso3": "USA",
+    "measurement_system": "SI",
+    "crs": {
+        "epsg": 32617,
+        "name": "WGS 84 / UTM zone 17N"
+    },
+    "crs_epsg": 32617,
+    "crs_name": "WGS 84 / UTM zone 17N"
+}

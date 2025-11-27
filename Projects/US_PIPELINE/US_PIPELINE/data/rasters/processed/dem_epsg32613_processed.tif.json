@@ -1,55 +1,75 @@
 {
-  "dataset_name": "USGS 3DEP 10m DEM (Processed)",
-  "processing_date": "2025-11-21T05:19:00Z",
+  "dataset_name": "USGS 3DEP LiDAR DEM 1m (Processed)",
+  "category": "dem",
+  "project": "US_PIPELINE",
+  "processing_date": "2025-11-26T04:27:42.188850Z",
   "target_crs": "EPSG:32613",
   "target_crs_name": "WGS 84 / UTM zone 13N",
-  "resolution_m": 8.82,
   "data_type": "Raster",
   "format": "GeoTIFF",
-  "extent": {
-    "minx": 480194.86,
-    "miny": 4926712.40,
-    "maxx": 484924.86,
-    "maxy": 4933311.94,
-    "crs": "EPSG:32613"
-  },
-  "bbox_wgs84": {
-    "west": -105.2491667,
-    "south": 44.4936111,
-    "east": -105.1899074,
-    "north": 44.5528704
-  },
+  "processed_path": "/opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/processed/dem_epsg32613_processed.tif",
+  "raw_path": "/opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/dem_global_30m_raw.tif",
+  "raw_metadata_file": "/opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/dem_global_30m_raw.tif.json",
+  "source_files": [
+    {
+      "filename": "dem_global_30m_raw.tif",
+      "metadata": "dem_global_30m_raw.tif.json"
+    }
+  ],
   "operations_applied": [
     {
       "operation": "reproject",
       "tool": "gdalwarp",
-      "source_crs": "EPSG:4269",
-      "target_crs": "EPSG:32613",
-      "resampling": "bilinear",
-      "timestamp": "2025-11-21T05:19:00Z"
+      "target_epsg": 32613
     },
     {
       "operation": "clip",
-      "tool": "gdalwarp",
-      "cutline": "aoi/aoi.kmz",
-      "timestamp": "2025-11-21T05:19:00Z"
+      "tool": "AOI cutline",
+      "source": "/opt/agrs/Projects/US_PIPELINE/US_PIPELINE/aoi/aoi.gpkg"
     }
   ],
-  "source_files": [
-    {
-      "filename": "dem_usgs_3dep_10m_raw.tif",
-      "metadata": "dem_usgs_3dep_10m_raw.tif.json"
-    }
-  ],
-  "file_size_bytes": 1606656,
-  "nodata_value": -32768,
-  "statistics": {
-    "min": 1159.6,
-    "max": 1240.7,
-    "mean": 1196.3,
-    "stddev": 15.4
-  },
+  "file_size_bytes": 94205165,
   "validation_status": "passed",
-  "validation_date": "2025-11-21T05:19:00Z",
-  "notes": "High-resolution 10m DEM from USGS 3DEP 1/3 arc-second seamless dataset"
+  "validation_date": "2025-11-26T04:27:42.188944Z",
+  "protocol_reference": "/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md",
+  "protocol_version": "1.0",
+  "zeus_version": "0.1.0",
+  "notes": "Highest quality national elevation data for the US. LiDAR-derived bare-earth DEM with vertical accuracy typically better than 10cm RMSE.",
+  "source": "USGS 3D Elevation Program (3DEP) LiDAR",
+  "provider": "U.S. Geological Survey",
+  "provider_url": "https://www.usgs.gov/3d-elevation-program",
+  "coverage_date": "Current (continuously updated)",
+  "documentation_url": "https://www.usgs.gov/3d-elevation-program",
+  "license": "Public Domain (US Government Work)",
+  "attribution": "U.S. Geological Survey 3D Elevation Program (3DEP).",
+  "resolution_m": {
+    "x": 1.0000003053900002,
+    "y": 0.9999353402258941
+  },
+  "selected_override": "USGS 3DEP 1m LiDAR",
+  "dimensions": {
+    "width": 4730,
+    "height": 6600
+  },
+  "extent": {
+    "minx": 480194.856,
+    "miny": 4926712.369,
+    "maxx": 484924.858,
+    "maxy": 4933311.942,
+    "crs": "EPSG:4326"
+  },
+  "bbox_wgs84": {
+    "west": -105.2493538,
+    "south": 44.4934552,
+    "east": -105.189609,
+    "north": 44.552983,
+    "crs": "EPSG:4326"
+  },
+  "statistics": {
+    "min": 1158.4147949219,
+    "max": 1242.1120605469,
+    "mean": 1196.3508759499,
+    "stddev": 15.391789490897,
+    "valid_percent": 99.43
+  }
 }

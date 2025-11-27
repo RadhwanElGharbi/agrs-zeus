@@ -7,6 +7,7 @@
 #include <cmath>
 #include <fstream>
 #include <iostream>
+#include <iomanip>
 #include <algorithm>
 #include <filesystem>
 #include <sstream>
@@ -524,47 +525,37 @@ RewardInfo PipelineEnvironment::calculate_reward(const State& prev_state,
     double curr_dist = new_state.goal_distance;
     double progress = prev_dist - curr_dist;
     
-    // OLD (distance-based, caused imbalance for 20-25% slopes):
-    // info.progress_reward = progress * 0.5;  // REDUCED from 2.0 to 0.5
-    
-    // NEW (Option 2 - Fixed per segment, journey-scaled):
-    info.progress_reward = 50.0;  // Fixed reward per segment, independent of step size
+    // REVISED: Progress-based reward with step cost to encourage efficiency
+    // - Reward: +10 per 100m of progress toward goal
+    // - Step cost: -5 per step (penalizes circuitous routes)
+    // - Net: Only profitable if making ~50m+ progress per step
+    double progress_reward_component = (progress / 100.0) * 10.0;  // +10 per 100m progress
+    double step_cost = -2.0;  // Reduced step cost for better exploration  // Fixed cost per step
+    info.progress_reward = progress_reward_component + step_cost;
     info.total_reward += info.progress_reward;
     
-    // 2. Slope reward/penalty - HEAVILY FAVOR LOW SLOPES
+    // 2. Slope reward/penalty - BALANCED with 25% hard limit
     double slope = new_state.slope;
     double slope_reward = 0.0;
     
     if (slope <= 5.0) {
-        // Excellent terrain (0-5%): STRONG reward - highly desirable
-        slope_reward = 50.0;
+        // Excellent terrain (0-5%): Strong reward - A* baseline territory
+        slope_reward = 80.0;
     } else if (slope <= 10.0) {
-        // Very good terrain (5-10%): Good reward with linear decrease
-        slope_reward = 50.0 - (slope - 5.0) * 4.0;  // 50 → 30
+        // Good terrain (5-10%): Positive, encouraging
+        slope_reward = 80.0 - (slope - 5.0) * 10.0;  // 80 → 30
     } else if (slope <= 15.0) {
-        // Good terrain (10-15%): Moderate reward
-        slope_reward = 30.0 - (slope - 10.0) * 4.0;  // 30 → 10
+        // Acceptable terrain (10-15%): Small positive to neutral
+        slope_reward = 30.0 - (slope - 10.0) * 6.0;  // 30 → 0
     } else if (slope <= 20.0) {
-        // Acceptable terrain (15-20%): Small reward to neutral
-        slope_reward = 10.0 - (slope - 15.0) * 2.0;  // 10 → 0
+        // Marginal terrain (15-20%): Slight penalty
+        slope_reward = -(slope - 15.0) * 10.0;  // 0 → -50
     } else if (slope <= 25.0) {
-        // Marginal terrain (20-25%): Light penalty
-        slope_reward = -(slope - 20.0) * 10.0;  // 0 → -50
-    } else if (slope <= 30.0) {
-        // Bad terrain (25-30%): Moderate penalty
-        slope_reward = -50.0 - (slope - 25.0) * 20.0;  // -50 → -150
-    } else if (slope <= 35.0) {
-        // Very bad terrain (30-35%): Heavy penalty
-        slope_reward = -150.0 - (slope - 30.0) * 30.0;  // -150 → -300
-    } else if (slope <= 40.0) {
-        // Extreme terrain (35-40%): Severe penalty
-        slope_reward = -300.0 - (slope - 35.0) * 40.0;  // -300 → -500
-    } else if (slope <= 50.0) {
-        // Near-terminal terrain (40-50%): Catastrophic penalty
-        slope_reward = -500.0 - (slope - 40.0) * 50.0;  // -500 → -1000
+        // Near-limit terrain (20-25%): Strong penalty before termination
+        slope_reward = -50.0 - (slope - 20.0) * 30.0;  // -50 → -200
     } else {
-        // Terminal violation (>50%)
-        slope_reward = -1000.0;
+        // Terminal violation (>25%) - should not reach here due to termination
+        slope_reward = -500.0;
     }
     
     info.slope_violation = slope_reward;
@@ -592,7 +583,7 @@ RewardInfo PipelineEnvironment::calculate_reward(const State& prev_state,
         // info.goal_bonus = 2000.0;  // Increased from 1000.0 for stronger goal-seeking
         
         // NEW (Option 2 - 10× base reward of 100):
-        info.goal_bonus = 1000.0;  // Scaled for journey length, 10× base per-segment reward
+        info.goal_bonus = 4000.0;  // Balanced: reward goal but also care about path quality  // Scaled for journey length, 10× base per-segment reward
         info.total_reward += info.goal_bonus;
     } else {
         info.goal_bonus = 0.0;
@@ -605,21 +596,42 @@ bool PipelineEnvironment::check_termination(const State& state, std::string& rea
     // 1. Out of bounds
     if (!gis_->is_within_aoi(state.x, state.y)) {
         reason = "OUT_OF_BOUNDS";
-        std::cout << "🚫 " << reason << std::endl;
+        // std::cout << "🚫 " << reason << std::endl;  // Silenced for quiet training
         return true;
     }
     
-    // 2. Slope termination (50%)
-    if (state.slope > 50.0) {
-        reason = "SLOPE_VIOLATION_50%";
-        std::cout << "⛰️  " << reason << " (slope: " << state.slope << "%)" << std::endl;
+    // 2. Slope termination (25%)
+    if (state.slope > 30.0) {
+        reason = "SLOPE_VIOLATION_30%";
+        // std::cout << "⛰️  " << reason << " (slope: " << state.slope << "%)" << std::endl;  // Silenced for quiet training
         return true;
     }
     
-    // 3. Goal reached
+    // 3. Goal reached - print detailed route stats
     if (state.goal_distance < 50.0) {
         reason = "SUCCESS_GOAL_REACHED";
-        std::cout << "✅ " << reason << " (distance: " << state.goal_distance << "m)" << std::endl;
+        
+        // Calculate route stats
+        double total_length = cumulative_distance_;
+        double max_slope = 0.0;
+        double sum_slope = 0.0;
+        for (const auto& seg : trajectory_) {
+            if (seg.max_slope_percent > max_slope) max_slope = seg.max_slope_percent;
+            sum_slope += seg.max_slope_percent;
+        }
+        double avg_slope = trajectory_.empty() ? 0.0 : sum_slope / trajectory_.size();
+        
+        // A* baseline: 8370.7m length, 3.87% avg slope, 14.92% max slope
+        double efficiency = (7347.0 / total_length) * 100.0;  // straight line / actual
+        double vs_astar_len = ((8370.7 - total_length) / 8370.7) * 100.0;
+        double vs_astar_slope = ((3.87 - avg_slope) / 3.87) * 100.0;
+        
+        std::cout << "✅ GOAL | len = " << std::fixed << std::setprecision(3) << (total_length / 1000.0) 
+                  << "km | avg_slope = " << std::setprecision(1) << avg_slope 
+                  << "% | max_slope = " << max_slope 
+                  << "% | eff = " << std::setprecision(0) << efficiency 
+                  << "% | vs_A*: " << std::setprecision(1) << std::showpos << vs_astar_len << "% len, "
+                  << vs_astar_slope << "% slope" << std::noshowpos << std::endl;
         return true;
     }
     

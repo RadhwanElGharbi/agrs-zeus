@@ -37,5 +37,5 @@ echo ""
 # --no-sandbox: Required for AppImage on some systems
 # --disable-gpu: Disable hardware acceleration (helps with GPU issues)
 # --disable-software-rasterizer: Use software rendering
-"$APPIMAGE" --no-sandbox --disable-gpu --disable-software-rasterizer "$@"
+"$APPIMAGE" --appimage-extract-and-run --no-sandbox --disable-gpu --disable-software-rasterizer "$@"
 

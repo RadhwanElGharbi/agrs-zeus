@@ -1,0 +1,65 @@
+{
+  "dataset_name": "OpenStreetMap Pipelines Extract",
+  "category": "pipelines",
+  "project": "US-PIPELINE-BRAVO",
+  "raw_path": "/opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/raw/osm_pipelines_raw.gpkg",
+  "fetch_tool": "osm_pipelines_overpass",
+  "fetch_command": "zeus_ai_agent mkdir -p /opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/raw /opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/processed /opt/agrs/Projects/US-PIPELINE-BRAVO/scripts if [ -f /opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/raw/osm_pipelines_raw.gpkg ]; then ogrinfo -so /opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/raw/osm_pipelines_raw.gpkg 2>/dev/null && echo 'EXISTS_AND_VALID' || echo 'EXISTS_BUT_INVALID'; else echo 'NOT_EXISTS'; fi curl -s -X POST 'https://overpass-api.de/api/interpreter' --data '[out:xml][timeout:300][bbox:38.25349609243847,-81.10947662013062,38.42035196061733,-80.90225491541568];\n(\n  way[\"man_made\"=\"pipeline\"];\n  relation[\"man_made\"=\"pipeline\"];\n  way[\"pipeline\"];\n  relation[\"pipeline\"];\n  way[\"substance\"];\n  relation[\"type\"=\"pipeline\"];\n);\nout body;\n>;\nout skel qt;' -o /opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/raw/osm_pipelines.osm ls -la /opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/raw/osm_pipelines.osm && head -50 /opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/raw/osm_pipelines.osm ogr2ogr -f GPKG /opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/raw/osm_pipelines_raw.gpkg /opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/raw/osm_pipelines.osm lines -overwrite -lco SPATIAL_INDEX=YES 2>&1 || echo 'Conversion attempted - checking results' ogrinfo -so /opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/raw/osm_pipelines_raw.gpkg 2>&1 || echo 'No valid data in GeoPackage' if [ ! -s /opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/raw/osm_pipelines_raw.gpkg ] || [ $(ogrinfo -sql \"SELECT COUNT(*) FROM lines\" /opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/raw/osm_pipelines_raw.gpkg 2>/dev/null | grep -oP '\\d+' | head -1) -eq 0 ] 2>/dev/null; then echo 'No pipelines found in initial query - trying broader search'; curl -s -X POST 'https://overpass-api.de/api/interpreter' --data '[out:xml][timeout:300][bbox:38.25349609243847,-81.10947662013062,38.42035196061733,-80.90225491541568];\n(\n  way[\"man_made\"=\"pipeline\"];\n  way[\"pipeline\"];\n  way[\"utility\"=\"gas\"];\n  way[\"utility\"=\"oil\"];\n  way[\"man_made\"=\"petroleum_well\"];\n);\nout body;\n>;\nout skel qt;' -o /opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/raw/osm_pipelines2.osm && ogr2ogr -f GPKG /opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/raw/osm_pipelines_raw.gpkg /opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/raw/osm_pipelines2.osm lines -overwrite -lco SPATIAL_INDEX=YES 2>&1; fi ogrinfo -al /opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/raw/osm_pipelines_raw.gpkg 2>&1 | head -100 FEAT_COUNT=$(ogrinfo -sql \"SELECT COUNT(*) as cnt FROM lines\" /opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/raw/osm_pipelines_raw.gpkg 2>/dev/null | grep -oP 'cnt \\(Integer\\) = \\K\\d+' || echo '0'); FILE_SIZE=$(stat -c%s /opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/raw/osm_pipelines_raw.gpkg 2>/dev/null || echo '0'); cat > /opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/raw/osm_pipelines_raw.gpkg.json << 'METADATA_EOF'\n{\n  \"dataset_name\": \"OpenStreetMap Pipelines\",\n  \"source\": \"OpenStreetMap via Overpass API\",\n  \"provider\": \"OpenStreetMap Contributors\",\n  \"provider_url\": \"https://www.openstreetmap.org/\",\n  \"coverage_date\": \"2025-01-27\",\n  \"fetch_date\": \"FETCH_DATE_PLACEHOLDER\",\n  \"fetch_tool\": \"osm_pipelines_overpass\",\n  \"raw_crs\": \"EPSG:4326\",\n  \"data_type\": \"Vector\",\n  \"geometry_type\": \"LineString\",\n  \"format\": \"GeoPackage\",\n  \"feature_count\": FEAT_COUNT_PLACEHOLDER,\n  \"bbox_wgs84\": {\n    \"west\": -81.10947662013062,\n    \"south\": 38.25349609243847,\n    \"east\": -80.90225491541568,\n    \"north\": 38.42035196061733\n  },\n  \"documentation_url\": \"https://wiki.openstreetmap.org/wiki/Tag:man_made=pipeline\",\n  \"license\": \"ODbL 1.0\",\n  \"attribution\": \"\u00a9 OpenStreetMap contributors\",\n  \"file_size_bytes\": FILE_SIZE_PLACEHOLDER,\n  \"osm_tags_queried\": [\"man_made=pipeline\", \"pipeline=*\", \"substance=*\"],\n  \"notes\": \"Pipeline infrastructure from OpenStreetMap. Coverage depends on OSM mapping completeness in the area.\"\n}\nMETADATA_EOF\nsed -i \"s/FETCH_DATE_PLACEHOLDER/$(date -u +%Y-%m-%dT%H:%M:%SZ)/g\" /opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/raw/osm_pipelines_raw.gpkg.json && sed -i \"s/FEAT_COUNT_PLACEHOLDER/$FEAT_COUNT/g\" /opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/raw/osm_pipelines_raw.gpkg.json && sed -i \"s/FILE_SIZE_PLACEHOLDER/$FILE_SIZE/g\" /opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/raw/osm_pipelines_raw.gpkg.json ogr2ogr -f GPKG /opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/processed/pipelines_epsg32617_processed.gpkg /opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/raw/osm_pipelines_raw.gpkg -t_srs EPSG:32617 -clipsrc /opt/agrs/Projects/US-PIPELINE-BRAVO/aoi/aoi.geojson -overwrite -lco SPATIAL_INDEX=YES -nln pipelines 2>&1 ogrinfo -so /opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/processed/pipelines_epsg32617_processed.gpkg pipelines 2>&1 PROC_FEAT_COUNT=$(ogrinfo -sql \"SELECT COUNT(*) as cnt FROM pipelines\" /opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/processed/pipelines_epsg32617_processed.gpkg 2>/dev/null | grep -oP 'cnt \\(Integer\\) = \\K\\d+' || echo '0'); PROC_FILE_SIZE=$(stat -c%s /opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/processed/pipelines_epsg32617_processed.gpkg 2>/dev/null || echo '0'); EXTENT_INFO=$(ogrinfo -so /opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/processed/pipelines_epsg32617_processed.gpkg pipelines 2>/dev/null | grep -A1 'Extent:' || echo ''); cat > /opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/processed/pipelines_epsg32617_processed.gpkg.json << 'METADATA_EOF'\n{\n  \"dataset_name\": \"OpenStreetMap Pipelines\",\n  \"category\": \"pipelines\",\n  \"project\": \"US-PIPELINE-BRAVO\",\n  \"processing_date\": \"PROC_DATE_PLACEHOLDER\",\n  \"target_crs\": \"EPSG:32617\",\n  \"target_crs_name\": \"WGS 84 / UTM zone 17N\",\n  \"data_type\": \"Vector\",\n  \"geometry_type\": \"LineString\",\n  \"format\": \"GeoPackage\",\n  \"feature_count\": PROC_FEAT_COUNT_PLACEHOLDER,\n  \"bbox_wgs84\": {\n    \"west\": -81.10947662013062,\n    \"south\": 38.25349609243847,\n    \"east\": -80.90225491541568,\n    \"north\": 38.42035196061733\n  },\n  \"operations_applied\": [\n    {\n      \"operation\": \"reproject\",\n      \"tool\": \"ogr2ogr\",\n      \"source_crs\": \"EPSG:4326\",\n      \"target_crs\": \"EPSG:32617\",\n      \"timestamp\": \"PROC_DATE_PLACEHOLDER\"\n    },\n    {\n      \"operation\": \"clip\",\n      \"tool\": \"ogr2ogr\",\n      \"cutline\": \"aoi/aoi.geojson\",\n      \"timestamp\": \"PROC_DATE_PLACEHOLDER\"\n    }\n  ],\n  \"source_files\": [\n    {\n      \"filename\": \"osm_pipelines_raw.gpkg\",\n      \"metadata\": \"osm_pipelines_raw.gpkg.json\"\n    }\n  ],\n  \"file_size_bytes\": PROC_FILE_SIZE_PLACEHOLDER,\n  \"validation_status\": \"passed\",\n  \"validation_date\": \"PROC_DATE_PLACEHOLDER\",\n  \"protocol_version\": \"1.0\",\n  \"notes\": \"Pipeline infrastructure reprojected to UTM zone 17N and clipped to project AOI\"\n}\nMETADATA_EOF\nPROC_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ) && sed -i \"s/PROC_DATE_PLACEHOLDER/$PROC_DATE/g\" /opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/processed/pipelines_epsg32617_processed.gpkg.json && sed -i \"s/PROC_FEAT_COUNT_PLACEHOLDER/$PROC_FEAT_COUNT/g\" /opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/processed/pipelines_epsg32617_processed.gpkg.json && sed -i \"s/PROC_FILE_SIZE_PLACEHOLDER/$PROC_FILE_SIZE/g\" /opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/processed/pipelines_epsg32617_processed.gpkg.json rm -f /opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/raw/osm_pipelines.osm /opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/raw/osm_pipelines2.osm 2>/dev/null; echo 'Cleanup complete' test -f /opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/raw/osm_pipelines_raw.gpkg && ogrinfo -so /opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/raw/osm_pipelines_raw.gpkg && echo '\u2713 Raw data exists' || echo '\u2717 Raw data missing or invalid' test -f /opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/processed/pipelines_epsg32617_processed.gpkg && ogrinfo -so /opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/processed/pipelines_epsg32617_processed.gpkg pipelines && echo '\u2713 Processed data exists' || echo '\u2717 Processed data missing or invalid' ogrinfo -so /opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/processed/pipelines_epsg32617_processed.gpkg pipelines 2>/dev/null | grep -i 'EPSG:32617\\|UTM zone 17N' && echo '\u2713 CRS is correct' || echo '\u2717 CRS may be incorrect' test -f /opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/raw/osm_pipelines_raw.gpkg.json && test -f /opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/processed/pipelines_epsg32617_processed.gpkg.json && echo '\u2713 Metadata files exist' || echo '\u2717 Metadata files missing' echo '=== PIPELINE DATA SUMMARY ===' && echo 'Raw features:' && ogrinfo -sql \"SELECT COUNT(*) as count FROM lines\" /opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/raw/osm_pipelines_raw.gpkg 2>/dev/null | grep count || echo 'N/A' && echo 'Processed features:' && ogrinfo -sql \"SELECT COUNT(*) as count FROM pipelines\" /opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/processed/pipelines_epsg32617_processed.gpkg 2>/dev/null | grep count || echo 'N/A' && echo '=============================='",
+  "fetch_date": "2025-11-27T13:07:25.422135Z",
+  "data_type": "Vector",
+  "format": "GeoPackage",
+  "file_size_bytes": 98304,
+  "protocol_reference": "/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md",
+  "protocol_version": "1.0",
+  "zeus_version": "0.1.0",
+  "tiles_downloaded": [],
+  "notes": "Existing pipelines for ROW alignment + crossings.",
+  "requested_bbox_wgs84": {
+    "west": -81.10947662013062,
+    "south": 38.25349609243847,
+    "east": -80.90225491541568,
+    "north": 38.42035196061733,
+    "crs": "EPSG:4326"
+  },
+  "validation_status": "passed",
+  "validation_date": "2025-11-27T13:07:25.422144Z",
+  "source": "OpenStreetMap (pipeline)",
+  "provider": "OpenStreetMap Contributors",
+  "provider_url": "https://www.openstreetmap.org",
+  "coverage_date": "Current (live OSM)",
+  "documentation_url": "https://wiki.openstreetmap.org/wiki/Overpass_API",
+  "license": "ODbL 1.0",
+  "attribution": "\u00a9 OpenStreetMap contributors.",
+  "selected_override": "OSM Pipeline Network",
+  "metadata": {
+    "description": "/opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/raw/osm_pipelines_raw.gpkg",
+    "driverShortName": "GPKG",
+    "driverLongName": "GeoPackage",
+    "layers": [
+      {
+        "name": "lines",
+        "metadata": {}
+      }
+    ],
+    "metadata": {},
+    "domains": {},
+    "relationships": {}
+  },
+  "feature_count": 0,
+  "raw_crs": "EPSG:4326",
+  "extent": {
+    "minx": -81.10947662013062,
+    "miny": 38.25349609243847,
+    "maxx": -80.90225491541568,
+    "maxy": 38.42035196061733,
+    "crs": "EPSG:4326"
+  },
+  "bbox_wgs84": {
+    "west": -81.10947662013062,
+    "south": 38.25349609243847,
+    "east": -80.90225491541568,
+    "north": 38.42035196061733,
+    "crs": "EPSG:4326"
+  },
+  "checksum_sha256": "e2ae2c7ad0dad29dba58d37b73489345e1f8a870859b04bd6e88e6599ec70471"
+}

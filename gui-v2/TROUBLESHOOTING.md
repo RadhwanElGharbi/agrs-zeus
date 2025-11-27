@@ -380,3 +380,6 @@ sudo pacman -S gtk3 nss libxss
 
 **Last Updated**: November 21, 2025
 
+
+
+

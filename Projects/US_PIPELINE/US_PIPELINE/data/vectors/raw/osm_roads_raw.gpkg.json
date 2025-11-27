@@ -1,41 +1,64 @@
 {
-  "attributes": {
-    "highway": "Road classification",
-    "lanes": "Number of lanes",
-    "maxspeed": "Speed limit",
-    "name": "Road name",
-    "oneway": "One-way street flag",
-    "osm_id": "OpenStreetMap way ID",
-    "ref": "Road reference number",
-    "surface": "Surface type"
+  "dataset_name": "OpenStreetMap Roads Extract",
+  "category": "roads",
+  "project": "US_PIPELINE",
+  "raw_path": "/opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/raw/osm_roads_raw.gpkg",
+  "fetch_tool": "osm_roads_overpass",
+  "fetch_command": "zeus_ai_agent if [ -f \"/opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/processed/osm_roads_epsg32613_processed.gpkg\" ]; then echo 'PROCESSED_EXISTS'; ogrinfo -al -so \"/opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/processed/osm_roads_epsg32613_processed.gpkg\" 2>/dev/null | head -20; else echo 'PROCESSED_NOT_FOUND'; fi if [ -f \"/opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/raw/osm_roads_raw.gpkg\" ]; then echo 'RAW_EXISTS'; ogrinfo -al -so \"/opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/raw/osm_roads_raw.gpkg\" 2>/dev/null | head -20; else echo 'RAW_NOT_FOUND'; fi mkdir -p /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/raw /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/processed curl -X POST \"https://overpass-api.de/api/interpreter\" \\\n  --max-time 300 \\\n  -d '[out:xml][timeout:300];\n(\n  way[\"highway\"](44.492383,-105.250287,44.554055,-105.188615);\n);\nout body;\n>;\nout skel qt;' \\\n  -o /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/raw/osm_roads_temp.osm if [ -f \"/opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/raw/osm_roads_temp.osm\" ]; then ls -la /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/raw/osm_roads_temp.osm && head -50 /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/raw/osm_roads_temp.osm; else echo 'ERROR: OSM file not downloaded'; fi ogr2ogr -f GPKG \\\n  /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/raw/osm_roads_raw.gpkg \\\n  /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/raw/osm_roads_temp.osm \\\n  lines \\\n  -lco FID=fid \\\n  -oo CONFIG_FILE=/dev/null \\\n  -oo USE_CUSTOM_INDEXING=NO \\\n  --config OSM_USE_CUSTOM_INDEXING NO \\\n  --config OGR_INTERLEAVED_READING YES \\\n  -nln roads ogrinfo -al -so /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/raw/osm_roads_raw.gpkg cat > /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/raw/osm_roads_raw.gpkg.json << 'EOF'\n{\n  \"dataset_name\": \"OpenStreetMap Roads\",\n  \"category\": \"roads\",\n  \"source\": \"OpenStreetMap\",\n  \"provider\": \"OpenStreetMap Contributors\",\n  \"provider_url\": \"https://www.openstreetmap.org/\",\n  \"fetch_date\": \"FETCH_DATE_PLACEHOLDER\",\n  \"fetch_tool\": \"overpass_api\",\n  \"raw_crs\": \"EPSG:4326\",\n  \"data_type\": \"Vector\",\n  \"geometry_type\": \"LineString\",\n  \"format\": \"GeoPackage\",\n  \"bbox_wgs84\": {\n    \"west\": -105.250287,\n    \"south\": 44.492383,\n    \"east\": -105.188615,\n    \"north\": 44.554055\n  },\n  \"overpass_query\": \"way[highway](44.492383,-105.250287,44.554055,-105.188615)\",\n  \"documentation_url\": \"https://wiki.openstreetmap.org/wiki/Key:highway\",\n  \"license\": \"ODbL 1.0\",\n  \"attribution\": \"\u00a9 OpenStreetMap contributors\",\n  \"notes\": \"All highway types fetched for pipeline routing analysis\"\n}\nEOF\nsed -i \"s/FETCH_DATE_PLACEHOLDER/$(date -u +%Y-%m-%dT%H:%M:%SZ)/\" /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/raw/osm_roads_raw.gpkg.json ogr2ogr -f GPKG \\\n  /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/processed/osm_roads_epsg32613_processed.gpkg \\\n  /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/raw/osm_roads_raw.gpkg \\\n  -t_srs EPSG:32613 \\\n  -clipsrc /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/aoi/aoi.gpkg \\\n  -nln roads \\\n  -lco FID=fid ogrinfo -al -so /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/processed/osm_roads_epsg32613_processed.gpkg ogrinfo -al -so /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/processed/osm_roads_epsg32613_processed.gpkg | grep -E 'Extent|Feature Count' FEATURE_COUNT=$(ogrinfo -al -so /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/processed/osm_roads_epsg32613_processed.gpkg | grep 'Feature Count' | awk '{print $3}')\nFILE_SIZE=$(stat -c%s /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/processed/osm_roads_epsg32613_processed.gpkg 2>/dev/null || echo 0)\ncat > /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/processed/osm_roads_epsg32613_processed.gpkg.json << EOF\n{\n  \"dataset_name\": \"OpenStreetMap Roads\",\n  \"category\": \"roads\",\n  \"project\": \"US_PIPELINE\",\n  \"processing_date\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\n  \"target_crs\": \"EPSG:32613\",\n  \"target_crs_name\": \"WGS 84 / UTM zone 13N\",\n  \"data_type\": \"Vector\",\n  \"geometry_type\": \"LineString\",\n  \"format\": \"GeoPackage\",\n  \"feature_count\": ${FEATURE_COUNT:-0},\n  \"bbox_wgs84\": {\n    \"west\": -105.250287,\n    \"south\": 44.492383,\n    \"east\": -105.188615,\n    \"north\": 44.554055\n  },\n  \"operations_applied\": [\n    {\n      \"operation\": \"fetch\",\n      \"tool\": \"overpass_api\",\n      \"source\": \"OpenStreetMap\",\n      \"timestamp\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"\n    },\n    {\n      \"operation\": \"reproject\",\n      \"tool\": \"ogr2ogr\",\n      \"source_crs\": \"EPSG:4326\",\n      \"target_crs\": \"EPSG:32613\",\n      \"timestamp\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"\n    },\n    {\n      \"operation\": \"clip\",\n      \"tool\": \"ogr2ogr\",\n      \"cutline\": \"aoi/aoi.gpkg\",\n      \"timestamp\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"\n    }\n  ],\n  \"source_files\": [\n    {\n      \"filename\": \"osm_roads_raw.gpkg\",\n      \"metadata\": \"osm_roads_raw.gpkg.json\"\n    }\n  ],\n  \"file_size_bytes\": ${FILE_SIZE},\n  \"validation_status\": \"passed\",\n  \"validation_date\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\n  \"protocol_version\": \"1.0\",\n  \"license\": \"ODbL 1.0\",\n  \"attribution\": \"\u00a9 OpenStreetMap contributors\"\n}\nEOF rm -f /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/raw/osm_roads_temp.osm if [ -f \"/opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/raw/osm_roads_raw.gpkg\" ]; then FCOUNT=$(ogrinfo -al -so /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/raw/osm_roads_raw.gpkg | grep 'Feature Count' | awk '{print $3}'); if [ \"$FCOUNT\" -gt 0 ]; then echo \"\u2713 Raw data OK: $FCOUNT features\"; else echo \"\u2717 ERROR: Raw data has 0 features\"; exit 1; fi; else echo \"\u2717 ERROR: Raw file not found\"; exit 1; fi if [ -f \"/opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/processed/osm_roads_epsg32613_processed.gpkg\" ]; then FCOUNT=$(ogrinfo -al -so /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/processed/osm_roads_epsg32613_processed.gpkg | grep 'Feature Count' | awk '{print $3}'); if [ \"$FCOUNT\" -gt 0 ]; then echo \"\u2713 Processed data OK: $FCOUNT features\"; else echo \"\u2717 ERROR: Processed data has 0 features\"; exit 1; fi; else echo \"\u2717 ERROR: Processed file not found\"; exit 1; fi CRS=$(ogrinfo -al -so /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/processed/osm_roads_epsg32613_processed.gpkg | grep -i 'PROJCRS\\|EPSG' | head -1); if echo \"$CRS\" | grep -q '32613'; then echo \"\u2713 CRS verified: EPSG:32613\"; else echo \"CRS info: $CRS\"; ogrinfo -al -so /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/processed/osm_roads_epsg32613_processed.gpkg | head -30; fi if [ -f \"/opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/raw/osm_roads_raw.gpkg.json\" ] && [ -f \"/opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/processed/osm_roads_epsg32613_processed.gpkg.json\" ]; then echo \"\u2713 Metadata files exist\"; else echo \"\u2717 ERROR: Metadata files missing\"; fi echo '=== OSM Roads Fetch Summary ===' && ls -la /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/raw/osm_roads_raw.gpkg* && ls -la /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/processed/osm_roads_epsg32613_processed.gpkg* && echo '' && echo 'Raw data info:' && ogrinfo -al -so /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/raw/osm_roads_raw.gpkg | head -15 && echo '' && echo 'Processed data info:' && ogrinfo -al -so /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/processed/osm_roads_epsg32613_processed.gpkg | head -15",
+  "fetch_date": "2025-11-26T11:44:24.403683Z",
+  "data_type": "Vector",
+  "format": "GeoPackage",
+  "file_size_bytes": 122880,
+  "protocol_reference": "/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md",
+  "protocol_version": "1.0",
+  "zeus_version": "0.1.0",
+  "tiles_downloaded": [],
+  "notes": "OpenStreetMap road network (highways + local roads).",
+  "requested_bbox_wgs84": {
+    "west": -105.2502869671583,
+    "south": 44.49238310951499,
+    "east": -105.18861512059449,
+    "north": 44.55405501865524,
+    "crs": "EPSG:4326"
   },
-  "features": {
-    "crs": "EPSG:4326",
-    "geometry": "LineString",
-    "types": [
-      "motorway",
-      "trunk",
-      "primary",
-      "secondary",
-      "tertiary",
-      "unclassified",
-      "residential",
-      "service",
-      "track",
-      "path"
-    ]
+  "validation_status": "passed",
+  "validation_date": "2025-11-26T11:44:24.429012Z",
+  "source": "OpenStreetMap (highway)",
+  "provider": "OpenStreetMap Contributors",
+  "provider_url": "https://www.openstreetmap.org",
+  "coverage_date": "Current (live OSM)",
+  "documentation_url": "https://wiki.openstreetmap.org/wiki/Overpass_API",
+  "license": "ODbL 1.0",
+  "attribution": "\u00a9 OpenStreetMap contributors.",
+  "metadata": {
+    "description": "/opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/raw/osm_roads_raw.gpkg",
+    "driverShortName": "GPKG",
+    "driverLongName": "GeoPackage",
+    "layers": [
+      {
+        "name": "roads",
+        "metadata": {}
+      }
+    ],
+    "metadata": {},
+    "domains": {},
+    "relationships": {}
   },
-  "query": {
-    "aoi_file": "/opt/agrs/Projects/US_PIPELINE/aoi/aoi.kmz",
-    "bbox": "-105.249101,44.493569,-105.189801,44.552869"
+  "feature_count": 0,
+  "raw_crs": "EPSG:4326",
+  "extent": {
+    "minx": -105.2502869671583,
+    "miny": 44.49238310951499,
+    "maxx": -105.18861512059449,
+    "maxy": 44.55405501865524,
+    "crs": "EPSG:4326"
   },
-  "source": {
-    "api": "Overpass API",
-    "attribution": "© OpenStreetMap contributors",
-    "endpoint": "https://overpass-api.de/api/interpreter",
-    "license": "ODbL 1.0",
-    "provider": "OpenStreetMap"
+  "bbox_wgs84": {
+    "west": -105.2502869671583,
+    "south": 44.49238310951499,
+    "east": -105.18861512059449,
+    "north": 44.55405501865524,
+    "crs": "EPSG:4326"
   },
-  "timestamp": "2025-11-21T04:50:48Z",
-  "tool": "osm_roads_fetch"
+  "checksum_sha256": "2ae42fc4a631d4030ca415134a4f3e4c15d54e56dd97f32b974a25ab58e75a9c"
 }

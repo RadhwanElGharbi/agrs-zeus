@@ -1,0 +1,75 @@
+{
+  "dataset_name": "GEM Global Seismic Hazard (PGA) (Processed)",
+  "category": "geohazard",
+  "project": "US-PIPELINE-BRAVO",
+  "processing_date": "2025-11-27T13:05:34.244750Z",
+  "target_crs": "EPSG:32617",
+  "target_crs_name": "WGS 84 / UTM zone 17N",
+  "data_type": "Raster",
+  "format": "GeoTIFF",
+  "processed_path": "/opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/processed/geohazards_epsg32617_processed.tif",
+  "raw_path": "/opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/geohazards_gem_seismic_raw.tif",
+  "raw_metadata_file": "/opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/geohazards_gem_seismic_raw.tif.json",
+  "source_files": [
+    {
+      "filename": "geohazards_gem_seismic_raw.tif",
+      "metadata": "geohazards_gem_seismic_raw.tif.json"
+    }
+  ],
+  "operations_applied": [
+    {
+      "operation": "reproject",
+      "tool": "gdalwarp",
+      "target_epsg": 32617
+    },
+    {
+      "operation": "clip",
+      "tool": "AOI cutline",
+      "source": "/opt/agrs/Projects/US-PIPELINE-BRAVO/aoi/aoi.geojson"
+    }
+  ],
+  "file_size_bytes": 1776,
+  "validation_status": "passed",
+  "validation_date": "2025-11-27T13:05:34.244817Z",
+  "protocol_reference": "/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md",
+  "protocol_version": "1.0",
+  "zeus_version": "0.1.0",
+  "notes": "Peak ground acceleration (PGA) map for seismic risk screening.",
+  "source": "GEM hazard surface PGA",
+  "provider": "Global Earthquake Model (GEM) Foundation",
+  "provider_url": "https://hazard.openquake.org/",
+  "coverage_date": "2018",
+  "documentation_url": "https://hazard.openquake.org/",
+  "license": "CC BY-NC-SA 4.0",
+  "attribution": "Contains data \u00a9 GEM Foundation.",
+  "resolution_m": {
+    "x": 5804.128826948407,
+    "y": 5933.772974550103
+  },
+  "selected_override": "National Seismic Hazard Model (NSHM)[64][65][66]",
+  "dimensions": {
+    "width": 3,
+    "height": 3
+  },
+  "extent": {
+    "minx": 490789.882,
+    "miny": 4234301.418,
+    "maxx": 508202.268,
+    "maxy": 4252102.737,
+    "crs": "EPSG:4326"
+  },
+  "bbox_wgs84": {
+    "west": -81.1055024,
+    "south": 38.2566922,
+    "east": -80.9060426,
+    "north": 38.4171341,
+    "crs": "EPSG:4326"
+  },
+  "statistics": {
+    "min": 0.031647592987489,
+    "max": 0.032816522744602,
+    "mean": 0.032207002303474,
+    "stddev": 0.00039878290547128,
+    "valid_percent": 100.0
+  }
+}

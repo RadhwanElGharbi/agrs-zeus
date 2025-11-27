@@ -1,0 +1,327 @@
+{
+  "dataset_name": "USGS 3DEP LiDAR DEM 1m",
+  "category": "dem",
+  "project": "US_PIPELINE",
+  "raw_path": "/opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/dem_global_30m_raw.tif",
+  "fetch_tool": "dem_fetch",
+  "fetch_command": "zeus_ai_agent ls -la /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/ 2>/dev/null | grep -i dem || echo 'No existing DEM raw data found'; ls -la /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/processed/ 2>/dev/null | grep -i dem || echo 'No existing DEM processed data found' mkdir -p /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/processed /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/scripts curl -s 'https://tnmaccess.nationalmap.gov/api/v1/products?datasets=Digital%20Elevation%20Model%20(DEM)%201%20meter&bbox=-105.2502869671583,44.49238310951499,-105.18861512059449,44.55405501865524&max=10' | jq '.items | length' 2>/dev/null || echo '0' curl -s 'https://tnmaccess.nationalmap.gov/api/v1/products?datasets=Digital%20Elevation%20Model%20(DEM)%201%20meter&bbox=-105.2502869671583,44.49238310951499,-105.18861512059449,44.55405501865524&max=20' | jq -r '.items[] | {title: .title, url: .downloadURL, format: .format, size: .sizeInBytes}' 2>/dev/null | head -100 cat > /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/scripts/fetch_dem_3dep.py << 'PYEOF'\nimport requests\nimport json\nimport os\nimport subprocess\nimport sys\n\n# AOI parameters\nwest = -105.2502869671583\nsouth = 44.49238310951499\neast = -105.18861512059449\nnorth = 44.55405501865524\nbbox = f\"{west},{south},{east},{north}\"\n\nraw_output = \"/opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/dem_3dep_1m_raw.tif\"\nraw_output_30m = \"/opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/dem_copernicus_30m_raw.tif\"\nraw_output_final = \"/opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/dem_global_30m_raw.tif\"\n\nprint(f\"[INFO] Attempting to fetch USGS 3DEP 1m LiDAR DEM for bbox: {bbox}\")\n\n# Step 1: Try TNM API for 3DEP 1m\ntnm_url = f\"https://tnmaccess.nationalmap.gov/api/v1/products?datasets=Digital%20Elevation%20Model%20(DEM)%201%20meter&bbox={bbox}&max=50\"\n\ntry:\n    resp = requests.get(tnm_url, timeout=60)\n    resp.raise_for_status()\n    data = resp.json()\n    items = data.get('items', [])\n    print(f\"[INFO] TNM API returned {len(items)} products\")\n    \n    if items:\n        # Download all tiles and mosaic\n        downloaded = []\n        for i, item in enumerate(items):\n            url = item.get('downloadURL')\n            title = item.get('title', f'tile_{i}')\n            if url and url.endswith('.tif'):\n                # Direct GeoTIFF\n                local_file = f\"/opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/dem_3dep_tile_{i}.tif\"\n                print(f\"[INFO] Downloading: {title}\")\n                print(f\"[INFO] URL: {url}\")\n                result = subprocess.run(['curl', '-L', '-o', local_file, '-f', '--connect-timeout', '30', '--max-time', '300', url], capture_output=True)\n                if result.returncode == 0 and os.path.exists(local_file) and os.path.getsize(local_file) > 1000:\n                    # Verify it's a valid GeoTIFF\n                    check = subprocess.run(['gdalinfo', local_file], capture_output=True)\n                    if check.returncode == 0:\n                        downloaded.append(local_file)\n                        print(f\"[INFO] Successfully downloaded tile {i+1}\")\n                    else:\n                        os.remove(local_file)\n                        print(f\"[WARNING] Invalid GeoTIFF, skipping tile {i+1}\")\n        \n        if downloaded:\n            print(f\"[INFO] Downloaded {len(downloaded)} valid tiles, creating mosaic...\")\n            # Create VRT mosaic\n            vrt_file = \"/opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/dem_3dep_mosaic.vrt\"\n            cmd = ['gdalbuildvrt', vrt_file] + downloaded\n            subprocess.run(cmd, check=True)\n            \n            # Convert VRT to GeoTIFF\n            subprocess.run(['gdal_translate', '-co', 'COMPRESS=LZW', vrt_file, raw_output], check=True)\n            \n            if os.path.exists(raw_output) and os.path.getsize(raw_output) > 1000:\n                print(f\"[SUCCESS] 3DEP 1m DEM saved to: {raw_output}\")\n                # Create symlink to expected filename\n                if os.path.exists(raw_output_final):\n                    os.remove(raw_output_final)\n                os.symlink(raw_output, raw_output_final)\n                print(f\"[SUCCESS] Linked to: {raw_output_final}\")\n                sys.exit(0)\n            else:\n                print(\"[WARNING] Failed to create valid mosaic\")\nexcept Exception as e:\n    print(f\"[WARNING] TNM API approach failed: {e}\")\n\nprint(\"[INFO] Falling back to Copernicus DEM 30m...\")\n\n# Step 2: Try Copernicus DEM 30m via STAC\ntry:\n    stac_url = \"https://earth-search.aws.element84.com/v1/search\"\n    stac_payload = {\n        \"collections\": [\"cop-dem-glo-30\"],\n        \"bbox\": [west, south, east, north],\n        \"limit\": 10\n    }\n    resp = requests.post(stac_url, json=stac_payload, timeout=60)\n    resp.raise_for_status()\n    stac_data = resp.json()\n    features = stac_data.get('features', [])\n    print(f\"[INFO] STAC returned {len(features)} Copernicus DEM tiles\")\n    \n    if features:\n        # Get the first tile's URL\n        for feature in features:\n            assets = feature.get('assets', {})\n            data_asset = assets.get('data', {})\n            url = data_asset.get('href')\n            if url:\n                print(f\"[INFO] Downloading Copernicus DEM from: {url}\")\n                # Use GDAL with /vsicurl/ to directly access and crop\n                cmd = [\n                    'gdalwarp',\n                    '-te', str(west), str(south), str(east), str(north),\n                    '-co', 'COMPRESS=LZW',\n                    f'/vsicurl/{url}',\n                    raw_output_30m\n                ]\n                result = subprocess.run(cmd, capture_output=True, text=True)\n                if result.returncode == 0 and os.path.exists(raw_output_30m) and os.path.getsize(raw_output_30m) > 1000:\n                    print(f\"[SUCCESS] Copernicus DEM 30m saved to: {raw_output_30m}\")\n                    # Copy to expected filename\n                    if os.path.exists(raw_output_final):\n                        os.remove(raw_output_final)\n                    subprocess.run(['cp', raw_output_30m, raw_output_final], check=True)\n                    print(f\"[SUCCESS] Copied to: {raw_output_final}\")\n                    sys.exit(0)\n                else:\n                    print(f\"[WARNING] gdalwarp failed: {result.stderr}\")\nexcept Exception as e:\n    print(f\"[WARNING] STAC approach failed: {e}\")\n\n# Step 3: Direct S3 access to Copernicus DEM\nprint(\"[INFO] Trying direct Copernicus DEM S3 access...\")\ntry:\n    # Calculate tile name: N44_W106 (tiles are 1x1 degree)\n    lat_tile = 44  # floor of latitude\n    lon_tile = -106  # floor of longitude (westernmost)\n    \n    tile_name = f\"Copernicus_DSM_COG_10_N{lat_tile:02d}_00_W{abs(lon_tile):03d}_00_DEM\"\n    s3_url = f\"https://copernicus-dem-30m.s3.eu-central-1.amazonaws.com/{tile_name}/{tile_name}.tif\"\n    \n    print(f\"[INFO] Trying Copernicus tile: {tile_name}\")\n    print(f\"[INFO] URL: {s3_url}\")\n    \n    cmd = [\n        'gdalwarp',\n        '-te', str(west), str(south), str(east), str(north),\n        '-co', 'COMPRESS=LZW',\n        f'/vsicurl/{s3_url}',\n        raw_output_final\n    ]\n    result = subprocess.run(cmd, capture_output=True, text=True)\n    if result.returncode == 0 and os.path.exists(raw_output_final) and os.path.getsize(raw_output_final) > 1000:\n        print(f\"[SUCCESS] Copernicus DEM 30m saved to: {raw_output_final}\")\n        sys.exit(0)\n    else:\n        print(f\"[WARNING] Direct S3 access failed: {result.stderr}\")\nexcept Exception as e:\n    print(f\"[WARNING] Direct S3 approach failed: {e}\")\n\nprint(\"[ERROR] All DEM fetch methods failed\")\nsys.exit(1)\nPYEOF\nchmod +x /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/scripts/fetch_dem_3dep.py cd /opt/agrs/Projects/US_PIPELINE/US_PIPELINE && python3 scripts/fetch_dem_3dep.py gdalinfo /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/dem_global_30m_raw.tif 2>/dev/null | head -40 gdalwarp -t_srs EPSG:32613 -cutline /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/aoi/aoi.gpkg -crop_to_cutline -r bilinear -co COMPRESS=LZW -co TILED=YES -dstnodata -9999 /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/dem_global_30m_raw.tif /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/processed/dem_epsg32613_processed.tif gdalinfo -stats /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/processed/dem_epsg32613_processed.tif 2>/dev/null | head -50 python3 << 'PYEOF'\nimport json\nimport os\nimport subprocess\nfrom datetime import datetime\n\nraw_file = \"/opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/dem_global_30m_raw.tif\"\n\n# Get GDAL info\nresult = subprocess.run(['gdalinfo', '-json', raw_file], capture_output=True, text=True)\nif result.returncode == 0:\n    gdal_info = json.loads(result.stdout)\n    \n    # Determine source\n    source = \"Copernicus DEM GLO-30\" if \"copernicus\" in raw_file.lower() or os.path.getsize(raw_file) < 10000000 else \"USGS 3DEP 1m\"\n    resolution = 30 if \"30m\" in raw_file or \"Copernicus\" in source else 1\n    \n    metadata = {\n        \"dataset_name\": f\"{source}\",\n        \"category\": \"dem\",\n        \"source\": source,\n        \"provider\": \"Copernicus/ESA\" if \"Copernicus\" in source else \"USGS\",\n        \"provider_url\": \"https://spacedata.copernicus.eu/\" if \"Copernicus\" in source else \"https://www.usgs.gov/3d-elevation-program\",\n        \"fetch_date\": datetime.utcnow().strftime(\"%Y-%m-%dT%H:%M:%SZ\"),\n        \"raw_crs\": gdal_info.get(\"coordinateSystem\", {}).get(\"wkt\", \"\")[:100] + \"...\",\n        \"raw_crs_epsg\": \"EPSG:4326\" if \"WGS 84\" in str(gdal_info.get(\"coordinateSystem\", {})) else \"Unknown\",\n        \"resolution_m\": resolution,\n        \"data_type\": \"Raster\",\n        \"format\": \"GeoTIFF\",\n        \"extent\": {\n            \"minx\": gdal_info.get(\"cornerCoordinates\", {}).get(\"lowerLeft\", [None])[0],\n            \"miny\": gdal_info.get(\"cornerCoordinates\", {}).get(\"lowerLeft\", [None, None])[1],\n            \"maxx\": gdal_info.get(\"cornerCoordinates\", {}).get(\"upperRight\", [None])[0],\n            \"maxy\": gdal_info.get(\"cornerCoordinates\", {}).get(\"upperRight\", [None, None])[1]\n        },\n        \"bbox_wgs84\": {\n            \"west\": -105.2502869671583,\n            \"south\": 44.49238310951499,\n            \"east\": -105.18861512059449,\n            \"north\": 44.55405501865524\n        },\n        \"file_size_bytes\": os.path.getsize(raw_file),\n        \"license\": \"Open Data\" if \"Copernicus\" in source else \"Public Domain\",\n        \"protocol_version\": \"1.0\"\n    }\n    \n    with open(f\"{raw_file}.json\", 'w') as f:\n        json.dump(metadata, f, indent=2)\n    print(f\"[SUCCESS] Created metadata: {raw_file}.json\")\nelse:\n    print(f\"[ERROR] Could not get GDAL info: {result.stderr}\")\nPYEOF python3 << 'PYEOF'\nimport json\nimport os\nimport subprocess\nfrom datetime import datetime\n\nprocessed_file = \"/opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/processed/dem_epsg32613_processed.tif\"\nraw_file = \"/opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/dem_global_30m_raw.tif\"\n\n# Get GDAL info with stats\nresult = subprocess.run(['gdalinfo', '-json', '-stats', processed_file], capture_output=True, text=True)\nif result.returncode == 0:\n    gdal_info = json.loads(result.stdout)\n    \n    # Get statistics from bands\n    stats = {}\n    for band in gdal_info.get(\"bands\", []):\n        if \"minimum\" in band:\n            stats = {\n                \"min\": band.get(\"minimum\"),\n                \"max\": band.get(\"maximum\"),\n                \"mean\": band.get(\"mean\"),\n                \"stddev\": band.get(\"stdDev\")\n            }\n            break\n    \n    # Read raw metadata to get source info\n    raw_meta = {}\n    raw_meta_file = f\"{raw_file}.json\"\n    if os.path.exists(raw_meta_file):\n        with open(raw_meta_file) as f:\n            raw_meta = json.load(f)\n    \n    metadata = {\n        \"dataset_name\": raw_meta.get(\"dataset_name\", \"DEM\"),\n        \"category\": \"dem\",\n        \"project\": \"US_PIPELINE\",\n        \"processing_date\": datetime.utcnow().strftime(\"%Y-%m-%dT%H:%M:%SZ\"),\n        \"target_crs\": \"EPSG:32613\",\n        \"target_crs_name\": \"WGS 84 / UTM zone 13N\",\n        \"resolution_m\": raw_meta.get(\"resolution_m\", 30),\n        \"data_type\": \"Raster\",\n        \"format\": \"GeoTIFF\",\n        \"extent\": {\n            \"minx\": gdal_info.get(\"cornerCoordinates\", {}).get(\"lowerLeft\", [None])[0],\n            \"miny\": gdal_info.get(\"cornerCoordinates\", {}).get(\"lowerLeft\", [None, None])[1],\n            \"maxx\": gdal_info.get(\"cornerCoordinates\", {}).get(\"upperRight\", [None])[0],\n            \"maxy\": gdal_info.get(\"cornerCoordinates\", {}).get(\"upperRight\", [None, None])[1],\n            \"crs\": \"EPSG:32613\"\n        },\n        \"bbox_wgs84\": {\n            \"west\": -105.2502869671583,\n            \"south\": 44.49238310951499,\n            \"east\": -105.18861512059449,\n            \"north\": 44.55405501865524\n        },\n        \"operations_applied\": [\n            {\n                \"operation\": \"reproject\",\n                \"tool\": \"gdalwarp\",\n                \"source_crs\": raw_meta.get(\"raw_crs_epsg\", \"EPSG:4326\"),\n                \"target_crs\": \"EPSG:32613\",\n                \"resampling\": \"bilinear\",\n                \"timestamp\": datetime.utcnow().strftime(\"%Y-%m-%dT%H:%M:%SZ\")\n            },\n            {\n                \"operation\": \"clip\",\n                \"tool\": \"gdalwarp\",\n                \"cutline\": \"/opt/agrs/Projects/US_PIPELINE/US_PIPELINE/aoi/aoi.gpkg\",\n                \"timestamp\": datetime.utcnow().strftime(\"%Y-%m-%dT%H:%M:%SZ\")\n            }\n        ],\n        \"source_files\": [\n            {\n                \"filename\": os.path.basename(raw_file),\n                \"metadata\": os.path.basename(raw_file) + \".json\"\n            }\n        ],\n        \"file_size_bytes\": os.path.getsize(processed_file),\n        \"nodata_value\": -9999,\n        \"statistics\": stats,\n        \"validation_status\": \"passed\" if stats.get(\"min\") is not None else \"pending\",\n        \"validation_date\": datetime.utcnow().strftime(\"%Y-%m-%dT%H:%M:%SZ\"),\n        \"protocol_version\": \"1.0\"\n    }\n    \n    with open(f\"{processed_file}.json\", 'w') as f:\n        json.dump(metadata, f, indent=2)\n    print(f\"[SUCCESS] Created metadata: {processed_file}.json\")\nelse:\n    print(f\"[ERROR] Could not get GDAL info: {result.stderr}\")\nPYEOF test -f /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/dem_global_30m_raw.tif && test $(stat -f%z /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/dem_global_30m_raw.tif 2>/dev/null || stat -c%s /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/dem_global_30m_raw.tif) -gt 1000 && echo 'RAW DEM: OK' || echo 'RAW DEM: FAILED' test -f /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/processed/dem_epsg32613_processed.tif && test $(stat -f%z /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/processed/dem_epsg32613_processed.tif 2>/dev/null || stat -c%s /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/processed/dem_epsg32613_processed.tif) -gt 1000 && echo 'PROCESSED DEM: OK' || echo 'PROCESSED DEM: FAILED' gdalsrsinfo -o epsg /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/processed/dem_epsg32613_processed.tif 2>/dev/null | grep -q '32613' && echo 'CRS CHECK: OK (EPSG:32613)' || echo 'CRS CHECK: FAILED' python3 -c \"import subprocess; import json; r=subprocess.run(['gdalinfo','-json','-stats','/opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/processed/dem_epsg32613_processed.tif'],capture_output=True,text=True); d=json.loads(r.stdout); b=d['bands'][0]; mn,mx=b.get('minimum'),b.get('maximum'); print(f'Elevation range: {mn:.1f}m to {mx:.1f}m'); exit(0 if mn!=mx and mn>-1000 and mx<9000 else 1)\" && echo 'DATA VALIDATION: OK' || echo 'DATA VALIDATION: FAILED - May be placeholder data' test -f /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/dem_global_30m_raw.tif.json && test -f /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/processed/dem_epsg32613_processed.tif.json && echo 'METADATA FILES: OK' || echo 'METADATA FILES: MISSING' echo '=== DEM FETCH SUMMARY ===' && ls -lh /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/dem*.tif 2>/dev/null && ls -lh /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/processed/dem*.tif 2>/dev/null && echo '========================'",
+  "fetch_date": "2025-11-26T04:27:33.925923Z",
+  "data_type": "Raster",
+  "format": "GeoTIFF",
+  "file_size_bytes": 531410022,
+  "protocol_reference": "/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md",
+  "protocol_version": "1.0",
+  "zeus_version": "0.1.0",
+  "tiles_downloaded": [],
+  "notes": "Highest quality national elevation data for the US. LiDAR-derived bare-earth DEM with vertical accuracy typically better than 10cm RMSE.",
+  "requested_bbox_wgs84": {
+    "west": -105.2502869671583,
+    "south": 44.49238310951499,
+    "east": -105.18861512059449,
+    "north": 44.55405501865524,
+    "crs": "EPSG:4326"
+  },
+  "validation_status": "passed",
+  "validation_date": "2025-11-26T04:27:33.960389Z",
+  "nodata_value": -32768.0,
+  "source": "USGS 3D Elevation Program (3DEP) LiDAR",
+  "provider": "U.S. Geological Survey",
+  "provider_url": "https://www.usgs.gov/3d-elevation-program",
+  "coverage_date": "Current (continuously updated)",
+  "documentation_url": "https://www.usgs.gov/3d-elevation-program",
+  "license": "Public Domain (US Government Work)",
+  "attribution": "U.S. Geological Survey 3D Elevation Program (3DEP).",
+  "resolution_m": 1,
+  "selected_override": "USGS 3DEP 1m LiDAR",
+  "metadata": {
+    "description": "/opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/dem_global_30m_raw.tif",
+    "driverShortName": "GTiff",
+    "driverLongName": "GeoTIFF",
+    "files": [
+      "/opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/dem_global_30m_raw.tif"
+    ],
+    "size": [
+      10012,
+      20012
+    ],
+    "coordinateSystem": {
+      "wkt": "PROJCRS[\"NAD83 / UTM zone 13N\",\n    BASEGEOGCRS[\"NAD83\",\n        DATUM[\"North American Datum 1983\",\n            ELLIPSOID[\"GRS 1980\",6378137,298.257222101,\n                LENGTHUNIT[\"metre\",1]]],\n        PRIMEM[\"Greenwich\",0,\n            ANGLEUNIT[\"degree\",0.0174532925199433]],\n        ID[\"EPSG\",4269]],\n    CONVERSION[\"UTM zone 13N\",\n        METHOD[\"Transverse Mercator\",\n            ID[\"EPSG\",9807]],\n        PARAMETER[\"Latitude of natural origin\",0,\n            ANGLEUNIT[\"degree\",0.0174532925199433],\n            ID[\"EPSG\",8801]],\n        PARAMETER[\"Longitude of natural origin\",-105,\n            ANGLEUNIT[\"degree\",0.0174532925199433],\n            ID[\"EPSG\",8802]],\n        PARAMETER[\"Scale factor at natural origin\",0.9996,\n            SCALEUNIT[\"unity\",1],\n            ID[\"EPSG\",8805]],\n        PARAMETER[\"False easting\",500000,\n            LENGTHUNIT[\"metre\",1],\n            ID[\"EPSG\",8806]],\n        PARAMETER[\"False northing\",0,\n            LENGTHUNIT[\"metre\",1],\n            ID[\"EPSG\",8807]]],\n    CS[Cartesian,2],\n        AXIS[\"(E)\",east,\n            ORDER[1],\n            LENGTHUNIT[\"metre\",1]],\n        AXIS[\"(N)\",north,\n            ORDER[2],\n            LENGTHUNIT[\"metre\",1]],\n    USAGE[\n        SCOPE[\"Engineering survey, topographic mapping.\"],\n        AREA[\"North America - between 108\u00b0W and 102\u00b0W - onshore and offshore. Canada - Northwest Territories; Nunavut; Saskatchewan. United States (USA) - Colorado; Montana; Nebraska; New Mexico; North Dakota; Oklahoma; South Dakota; Texas; Wyoming.\"],\n        BBOX[28.98,-108,84,-102]],\n    ID[\"EPSG\",26913]]",
+      "dataAxisToSRSAxisMapping": [
+        1,
+        2
+      ]
+    },
+    "geoTransform": [
+      479994.0000077173,
+      1.0,
+      0.0,
+      4940006.0000323625,
+      0.0,
+      -1.0
+    ],
+    "metadata": {
+      "": {
+        "AREA_OR_POINT": "Area"
+      },
+      "IMAGE_STRUCTURE": {
+        "COMPRESSION": "LZW",
+        "INTERLEAVE": "BAND"
+      }
+    },
+    "cornerCoordinates": {
+      "upperLeft": [
+        479994.0,
+        4940006.0
+      ],
+      "lowerLeft": [
+        479994.0,
+        4919994.0
+      ],
+      "lowerRight": [
+        490006.0,
+        4919994.0
+      ],
+      "upperRight": [
+        490006.0,
+        4940006.0
+      ],
+      "center": [
+        485000.0,
+        4930000.0
+      ]
+    },
+    "wgs84Extent": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            -105.252143,
+            44.6131262
+          ],
+          [
+            -105.2513671,
+            44.4329662
+          ],
+          [
+            -105.1255709,
+            44.4331738
+          ],
+          [
+            -105.1259585,
+            44.613335
+          ],
+          [
+            -105.252143,
+            44.6131262
+          ]
+        ]
+      ]
+    },
+    "bands": [
+      {
+        "band": 1,
+        "block": [
+          10012,
+          1
+        ],
+        "type": "Float32",
+        "colorInterpretation": "Gray",
+        "minimum": 1152.75,
+        "maximum": 1345.5,
+        "mean": 1230.455,
+        "stdDev": 34.033,
+        "noDataValue": -999999.0,
+        "metadata": {
+          "": {
+            "STATISTICS_MAXIMUM": "1345.5",
+            "STATISTICS_MEAN": "1230.4550688774",
+            "STATISTICS_MINIMUM": "1152.75",
+            "STATISTICS_STDDEV": "34.033404266208",
+            "STATISTICS_VALID_PERCENT": "100"
+          }
+        }
+      }
+    ],
+    "stac": {
+      "proj:shape": [
+        10012,
+        20012
+      ],
+      "proj:wkt2": "PROJCRS[\"NAD83 / UTM zone 13N\",\n    BASEGEOGCRS[\"NAD83\",\n        DATUM[\"North American Datum 1983\",\n            ELLIPSOID[\"GRS 1980\",6378137,298.257222101,\n                LENGTHUNIT[\"metre\",1]]],\n        PRIMEM[\"Greenwich\",0,\n            ANGLEUNIT[\"degree\",0.0174532925199433]],\n        ID[\"EPSG\",4269]],\n    CONVERSION[\"UTM zone 13N\",\n        METHOD[\"Transverse Mercator\",\n            ID[\"EPSG\",9807]],\n        PARAMETER[\"Latitude of natural origin\",0,\n            ANGLEUNIT[\"degree\",0.0174532925199433],\n            ID[\"EPSG\",8801]],\n        PARAMETER[\"Longitude of natural origin\",-105,\n            ANGLEUNIT[\"degree\",0.0174532925199433],\n            ID[\"EPSG\",8802]],\n        PARAMETER[\"Scale factor at natural origin\",0.9996,\n            SCALEUNIT[\"unity\",1],\n            ID[\"EPSG\",8805]],\n        PARAMETER[\"False easting\",500000,\n            LENGTHUNIT[\"metre\",1],\n            ID[\"EPSG\",8806]],\n        PARAMETER[\"False northing\",0,\n            LENGTHUNIT[\"metre\",1],\n            ID[\"EPSG\",8807]]],\n    CS[Cartesian,2],\n        AXIS[\"(E)\",east,\n            ORDER[1],\n            LENGTHUNIT[\"metre\",1]],\n        AXIS[\"(N)\",north,\n            ORDER[2],\n            LENGTHUNIT[\"metre\",1]],\n    USAGE[\n        SCOPE[\"Engineering survey, topographic mapping.\"],\n        AREA[\"North America - between 108\u00b0W and 102\u00b0W - onshore and offshore. Canada - Northwest Territories; Nunavut; Saskatchewan. United States (USA) - Colorado; Montana; Nebraska; New Mexico; North Dakota; Oklahoma; South Dakota; Texas; Wyoming.\"],\n        BBOX[28.98,-108,84,-102]],\n    ID[\"EPSG\",26913]]",
+      "proj:epsg": 26913,
+      "proj:projjson": {
+        "$schema": "https://proj.org/schemas/v0.7/projjson.schema.json",
+        "type": "ProjectedCRS",
+        "name": "NAD83 / UTM zone 13N",
+        "base_crs": {
+          "name": "NAD83",
+          "datum": {
+            "type": "GeodeticReferenceFrame",
+            "name": "North American Datum 1983",
+            "ellipsoid": {
+              "name": "GRS 1980",
+              "semi_major_axis": 6378137,
+              "inverse_flattening": 298.257222101
+            }
+          },
+          "coordinate_system": {
+            "subtype": "ellipsoidal",
+            "axis": [
+              {
+                "name": "Geodetic latitude",
+                "abbreviation": "Lat",
+                "direction": "north",
+                "unit": "degree"
+              },
+              {
+                "name": "Geodetic longitude",
+                "abbreviation": "Lon",
+                "direction": "east",
+                "unit": "degree"
+              }
+            ]
+          },
+          "id": {
+            "authority": "EPSG",
+            "code": 4269
+          }
+        },
+        "conversion": {
+          "name": "UTM zone 13N",
+          "method": {
+            "name": "Transverse Mercator",
+            "id": {
+              "authority": "EPSG",
+              "code": 9807
+            }
+          },
+          "parameters": [
+            {
+              "name": "Latitude of natural origin",
+              "value": 0,
+              "unit": "degree",
+              "id": {
+                "authority": "EPSG",
+                "code": 8801
+              }
+            },
+            {
+              "name": "Longitude of natural origin",
+              "value": -105,
+              "unit": "degree",
+              "id": {
+                "authority": "EPSG",
+                "code": 8802
+              }
+            },
+            {
+              "name": "Scale factor at natural origin",
+              "value": 0.9996,
+              "unit": "unity",
+              "id": {
+                "authority": "EPSG",
+                "code": 8805
+              }
+            },
+            {
+              "name": "False easting",
+              "value": 500000,
+              "unit": "metre",
+              "id": {
+                "authority": "EPSG",
+                "code": 8806
+              }
+            },
+            {
+              "name": "False northing",
+              "value": 0,
+              "unit": "metre",
+              "id": {
+                "authority": "EPSG",
+                "code": 8807
+              }
+            }
+          ]
+        },
+        "coordinate_system": {
+          "subtype": "Cartesian",
+          "axis": [
+            {
+              "name": "Easting",
+              "abbreviation": "E",
+              "direction": "east",
+              "unit": "metre"
+            },
+            {
+              "name": "Northing",
+              "abbreviation": "N",
+              "direction": "north",
+              "unit": "metre"
+            }
+          ]
+        },
+        "scope": "Engineering survey, topographic mapping.",
+        "area": "North America - between 108\u00b0W and 102\u00b0W - onshore and offshore. Canada - Northwest Territories; Nunavut; Saskatchewan. United States (USA) - Colorado; Montana; Nebraska; New Mexico; North Dakota; Oklahoma; South Dakota; Texas; Wyoming.",
+        "bbox": {
+          "south_latitude": 28.98,
+          "west_longitude": -108,
+          "north_latitude": 84,
+          "east_longitude": -102
+        },
+        "id": {
+          "authority": "EPSG",
+          "code": 26913
+        }
+      },
+      "proj:transform": [
+        479994.0000077173,
+        1.0,
+        0.0,
+        4940006.0000323625,
+        0.0,
+        -1.0
+      ],
+      "raster:bands": [
+        {
+          "data_type": "float32",
+          "stats": {
+            "minimum": 1152.75,
+            "maximum": 1345.5,
+            "mean": 1230.455,
+            "stddev": 34.033
+          },
+          "nodata": null
+        }
+      ],
+      "eo:bands": [
+        {
+          "name": "b1",
+          "description": "Gray"
+        }
+      ]
+    }
+  },
+  "raw_crs": "EPSG:4269",
+  "extent": {
+    "minx": 479994.0,
+    "miny": 4919994.0,
+    "maxx": 490006.0,
+    "maxy": 4940006.0,
+    "crs": "EPSG:4326"
+  },
+  "bbox_wgs84": {
+    "west": -105.252143,
+    "south": 44.4329662,
+    "east": -105.1255709,
+    "north": 44.613335,
+    "crs": "EPSG:4326"
+  },
+  "statistics": {
+    "min": 1152.75,
+    "max": 1345.5,
+    "mean": 1230.4550688774,
+    "stddev": 34.033404266208,
+    "valid_percent": 100.0
+  },
+  "checksum_sha256": "df5f47d0ff4b6aa7f81040a6ec0e0c5b00bb93c2c968a0f11e7bb86f85adf9cd"
+}

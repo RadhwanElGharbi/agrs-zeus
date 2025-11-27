@@ -2,7 +2,7 @@
 API Routes for AGRS ZEUS GUI v2
 """
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from pydantic import BaseModel
 from typing import List, Dict, Any
 import datetime
@@ -15,13 +15,6 @@ class HealthResponse(BaseModel):
     timestamp: str
     version: str
     services: Dict[str, str]
-
-class ProjectInfo(BaseModel):
-    id: str
-    name: str
-    description: str
-    created_at: str
-    status: str
 
 class ConfigResponse(BaseModel):
     mapbox_token: str
@@ -45,30 +38,6 @@ async def health_check():
         }
     )
 
-# Projects Endpoint
-@router.get("/projects", response_model=List[ProjectInfo])
-async def get_projects():
-    """
-    Get list of all projects (placeholder data for now)
-    """
-    # TODO: Integrate with C++ core to get real project data
-    return [
-        ProjectInfo(
-            id="test_project2",
-            name="Test Project 2",
-            description="Test project with PIRL training",
-            created_at="2025-01-15T10:00:00Z",
-            status="active"
-        ),
-        ProjectInfo(
-            id="US_PIPELINE",
-            name="US Pipeline Project",
-            description="US pipeline routing optimization",
-            created_at="2025-11-20T14:30:00Z",
-            status="active"
-        )
-    ]
-
 # Configuration Endpoint
 @router.get("/config", response_model=ConfigResponse)
 async def get_config():
@@ -86,24 +55,5 @@ async def get_config():
         ]
     )
 
-# Project Details Endpoint
-@router.get("/projects/{project_id}")
-async def get_project_details(project_id: str):
-    """
-    Get detailed information about a specific project
-    """
-    # TODO: Integrate with C++ core
-    if project_id not in ["test_project2", "US_PIPELINE"]:
-        raise HTTPException(status_code=404, detail="Project not found")
-    
-    return {
-        "id": project_id,
-        "name": project_id.replace("_", " ").title(),
-        "description": f"Details for {project_id}",
-        "metadata": {
-            "datasets": [],
-            "routes": [],
-            "pirl_models": []
-        }
-    }
+
 

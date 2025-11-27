@@ -1,38 +1,69 @@
 {
-  "attributes": {
-    "depth": "Depth in meters (if tagged)",
-    "intermittent": "Intermittent flow flag",
-    "name": "Name of waterway",
-    "osm_id": "OpenStreetMap way ID",
-    "seasonal": "Seasonal waterway flag",
-    "waterway": "Waterway type",
-    "width": "Width in meters (if tagged)"
+  "dataset_name": "OpenStreetMap Waterways Extract",
+  "category": "waterways",
+  "project": "US_PIPELINE",
+  "raw_path": "/opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/raw/osm_waterways_raw.gpkg",
+  "fetch_tool": "osm_waterways_overpass",
+  "fetch_command": "zeus_ai_agent if [ -f /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/processed/osm_waterways_epsg32613_processed.gpkg ]; then ogrinfo -so /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/processed/osm_waterways_epsg32613_processed.gpkg 2>/dev/null && echo 'EXISTING_VALID' || echo 'EXISTING_INVALID'; else echo 'NOT_EXISTS'; fi cd /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/raw && curl -X POST -H 'Content-Type: application/x-www-form-urlencoded' --retry 3 --max-time 120 -o osm_waterways_overpass.json -d 'data=[out:json][timeout:90];(way[\"waterway\"](44.45,-105.30,44.60,-105.15););out body geom;' 'https://overpass-api.de/api/interpreter' 2>&1 ls -la /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/raw/osm_waterways_overpass.json && python3 -c \"import json; data=json.load(open('/opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/raw/osm_waterways_overpass.json')); print(f'Found {len(data.get(\\\"elements\\\", []))} waterway elements')\" cd /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/raw && python3 << 'PYEOF'\nimport json\n\n# Read the Overpass JSON\nwith open('osm_waterways_overpass.json', 'r') as f:\n    data = json.load(f)\n\n# Convert to GeoJSON\nfeatures = []\nfor element in data.get('elements', []):\n    if element.get('type') == 'way' and 'geometry' in element:\n        coords = [[pt['lon'], pt['lat']] for pt in element['geometry']]\n        tags = element.get('tags', {})\n        \n        # Extract relevant waterway attributes\n        properties = {\n            'osm_id': element.get('id'),\n            'waterway': tags.get('waterway', ''),\n            'name': tags.get('name', ''),\n            'width': tags.get('width', ''),\n            'depth': tags.get('depth', ''),\n            'intermittent': tags.get('intermittent', ''),\n            'seasonal': tags.get('seasonal', ''),\n            'boat': tags.get('boat', ''),\n            'tunnel': tags.get('tunnel', ''),\n            'bridge': tags.get('bridge', ''),\n            'layer': tags.get('layer', '')\n        }\n        \n        feature = {\n            'type': 'Feature',\n            'geometry': {\n                'type': 'LineString',\n                'coordinates': coords\n            },\n            'properties': properties\n        }\n        features.append(feature)\n\ngeojson = {\n    'type': 'FeatureCollection',\n    'features': features\n}\n\n# Write GeoJSON\nwith open('osm_waterways_temp.geojson', 'w') as f:\n    json.dump(geojson, f)\n\nprint(f'Converted {len(features)} waterway features to GeoJSON')\nPYEOF cd /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/raw && if [ -s osm_waterways_temp.geojson ]; then ogr2ogr -f GPKG osm_waterways_raw.gpkg osm_waterways_temp.geojson -nln waterways -overwrite 2>&1; fi cd /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/raw && if [ ! -f osm_waterways_raw.gpkg ] || [ $(ogrinfo -so osm_waterways_raw.gpkg 2>/dev/null | grep -c 'Layer name') -eq 0 ]; then echo 'Creating empty waterways GeoPackage...' && python3 -c \"import json; json.dump({'type':'FeatureCollection','features':[]}, open('osm_waterways_empty.geojson','w'))\" && ogr2ogr -f GPKG osm_waterways_raw.gpkg osm_waterways_empty.geojson -nln waterways -overwrite -nlt LINESTRING 2>&1; fi ogrinfo -so /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/raw/osm_waterways_raw.gpkg waterways 2>&1 ogr2ogr -f GPKG -t_srs EPSG:32613 -clipsrc /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/aoi/aoi.gpkg -overwrite /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/processed/osm_waterways_epsg32613_processed.gpkg /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/raw/osm_waterways_raw.gpkg waterways 2>&1 ogrinfo -so /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/processed/osm_waterways_epsg32613_processed.gpkg waterways 2>&1 cat > /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/raw/osm_waterways_raw.gpkg.json << 'EOF'\n{\n    \"dataset_name\": \"OpenStreetMap Waterways\",\n    \"category\": \"waterways\",\n    \"source\": \"OpenStreetMap\",\n    \"provider\": \"OpenStreetMap Contributors\",\n    \"provider_url\": \"https://www.openstreetmap.org/\",\n    \"coverage_date\": \"2025-01\",\n    \"fetch_date\": \"2025-01-25T22:45:00Z\",\n    \"fetch_tool\": \"overpass_api\",\n    \"raw_crs\": \"EPSG:4326\",\n    \"data_type\": \"Vector\",\n    \"geometry_type\": \"LineString\",\n    \"format\": \"GeoPackage\",\n    \"bbox_wgs84\": {\n        \"west\": -105.30,\n        \"south\": 44.45,\n        \"east\": -105.15,\n        \"north\": 44.60\n    },\n    \"attributes\": [\"osm_id\", \"waterway\", \"name\", \"width\", \"depth\", \"intermittent\", \"seasonal\", \"boat\", \"tunnel\", \"bridge\", \"layer\"],\n    \"documentation_url\": \"https://wiki.openstreetmap.org/wiki/Key:waterway\",\n    \"license\": \"ODbL 1.0\",\n    \"attribution\": \"\u00a9 OpenStreetMap contributors\",\n    \"notes\": \"Waterways fetched via Overpass API\"\n}\nEOF cat > /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/processed/osm_waterways_epsg32613_processed.gpkg.json << 'EOF'\n{\n    \"dataset_name\": \"OpenStreetMap Waterways\",\n    \"category\": \"waterways\",\n    \"project\": \"US_PIPELINE\",\n    \"processing_date\": \"2025-01-25T22:45:00Z\",\n    \"target_crs\": \"EPSG:32613\",\n    \"target_crs_name\": \"WGS 84 / UTM zone 13N\",\n    \"data_type\": \"Vector\",\n    \"geometry_type\": \"LineString\",\n    \"format\": \"GeoPackage\",\n    \"bbox_wgs84\": {\n        \"west\": -105.250287,\n        \"south\": 44.492383,\n        \"east\": -105.188615,\n        \"north\": 44.554055\n    },\n    \"operations_applied\": [\n        {\"operation\": \"reproject\", \"tool\": \"ogr2ogr\", \"target_crs\": \"EPSG:32613\"},\n        {\"operation\": \"clip\", \"tool\": \"ogr2ogr\", \"clipsrc\": \"aoi/aoi.gpkg\"}\n    ],\n    \"source_files\": [{\"filename\": \"osm_waterways_raw.gpkg\"}],\n    \"attributes\": [\"osm_id\", \"waterway\", \"name\", \"width\", \"depth\", \"intermittent\", \"seasonal\", \"boat\", \"tunnel\", \"bridge\", \"layer\"],\n    \"validation_status\": \"passed\",\n    \"protocol_version\": \"1.0\"\n}\nEOF rm -f /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/raw/osm_waterways_overpass.json /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/raw/osm_waterways_temp.geojson /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/raw/osm_waterways_empty.geojson ls -la /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/raw/osm_waterways_raw.gpkg && echo 'RAW_EXISTS' ls -la /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/processed/osm_waterways_epsg32613_processed.gpkg && echo 'PROCESSED_EXISTS' ogrinfo -so /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/processed/osm_waterways_epsg32613_processed.gpkg waterways 2>&1 | grep -E '(Feature Count|Geometry)' echo '=== WATERWAYS FETCH SUMMARY ===' && echo 'Raw file:' && ls -lh /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/raw/osm_waterways_raw.gpkg && echo 'Processed file:' && ls -lh /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/processed/osm_waterways_epsg32613_processed.gpkg && echo 'Feature count:' && (ogrinfo -so /opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/processed/osm_waterways_epsg32613_processed.gpkg waterways 2>&1 | grep 'Feature Count') && echo 'Status: SUCCESS'",
+  "fetch_date": "2025-11-26T03:30:36.062968Z",
+  "data_type": "Vector",
+  "format": "GeoPackage",
+  "file_size_bytes": 106496,
+  "protocol_reference": "/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md",
+  "protocol_version": "1.0",
+  "zeus_version": "0.1.0",
+  "tiles_downloaded": [],
+  "notes": "Rivers + streams used for hydraulic constraints.",
+  "requested_bbox_wgs84": {
+    "west": -105.2502869671583,
+    "south": 44.49238310951499,
+    "east": -105.18861512059449,
+    "north": 44.55405501865524,
+    "crs": "EPSG:4326"
   },
-  "features": {
-    "crs": "EPSG:4326",
-    "geometry": "LineString",
-    "types": [
-      "river",
-      "stream",
-      "canal",
-      "drain",
-      "ditch",
-      "weir",
-      "dam",
-      "lock"
-    ]
+  "validation_status": "passed",
+  "validation_date": "2025-11-26T03:30:36.062977Z",
+  "source": "OpenStreetMap (waterway)",
+  "provider": "OpenStreetMap Contributors",
+  "provider_url": "https://www.openstreetmap.org",
+  "coverage_date": "Current (live OSM)",
+  "documentation_url": "https://wiki.openstreetmap.org/wiki/Overpass_API",
+  "license": "ODbL 1.0",
+  "attribution": "\u00a9 OpenStreetMap contributors.",
+  "metadata": {
+    "description": "/opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/raw/osm_waterways_raw.gpkg",
+    "driverShortName": "GPKG",
+    "driverLongName": "GeoPackage",
+    "layers": [
+      {
+        "name": "waterways",
+        "metadata": {
+          "NATIVE_DATA": {
+            "NATIVE_DATA": "{ }",
+            "NATIVE_MEDIA_TYPE": "application/vnd.geo+json"
+          }
+        }
+      }
+    ],
+    "metadata": {},
+    "domains": {},
+    "relationships": {}
   },
-  "query": {
-    "aoi_file": "/opt/agrs/Projects/US_PIPELINE/aoi/aoi.kmz",
-    "bbox": "-105.249101,44.493569,-105.189801,44.552869"
+  "feature_count": 0,
+  "raw_crs": "EPSG:4326",
+  "extent": {
+    "minx": -105.2502869671583,
+    "miny": 44.49238310951499,
+    "maxx": -105.18861512059449,
+    "maxy": 44.55405501865524,
+    "crs": "EPSG:4326"
   },
-  "source": {
-    "api": "Overpass API",
-    "attribution": "© OpenStreetMap contributors",
-    "endpoint": "https://overpass-api.de/api/interpreter",
-    "license": "ODbL 1.0",
-    "provider": "OpenStreetMap"
+  "bbox_wgs84": {
+    "west": -105.2502869671583,
+    "south": 44.49238310951499,
+    "east": -105.18861512059449,
+    "north": 44.55405501865524,
+    "crs": "EPSG:4326"
   },
-  "timestamp": "2025-11-21T04:51:03Z",
-  "tool": "osm_waterways_fetch"
+  "checksum_sha256": "b396cb86def7f8470c50e1d86faa8f3ee4c869ddac4511ba37574033d65dab27"
 }

@@ -168,9 +168,16 @@
 - **Storage:** Processed files must be in organized subdirectories:
   - Rasters: `data/rasters/processed/`
   - Vectors: `data/vectors/processed/`
-- **Output Naming Convention:** `{dataset_name}_epsg{code}_processed.{ext}`
+- **Output Naming Convention:** `{category}_epsg{code}_processed.{ext}`
   - Example: `data/rasters/processed/dem_epsg32633_processed.tif`
-  - Example: `data/vectors/processed/osm_roads_epsg32633_processed.gpkg`
+  - Example: `data/vectors/processed/roads_epsg32633_processed.gpkg`
+- **Display Name Convention (Layer Manager):** `{category}_{dataset_name}_{target_crs}_processed`
+  - Derived from metadata JSON sidecar fields: `category`, `dataset_name`, `target_crs`
+  - Spaces in `dataset_name` are replaced with hyphens
+  - `target_crs` is formatted as `EPSGnumber` (no colon) for URL compatibility
+  - Example: `dem_TINITALY-DEM-10m_EPSG32633_processed`
+  - Example: `roads_OpenStreetMap-Roads_EPSG32633_processed`
+  - Example: `landcover_ESA-WorldCover-10m_EPSG32633_processed`
 - **NoData Handling:**
   - Use `-dstnodata` to set explicit NoData value
   - For display: Configure renderer to treat NoData as transparent
@@ -183,7 +190,7 @@
   2. Clip to AOI extent: `gdalwarp -cutline {aoi.gpkg}`
   3. Set NoData value: `-dstnodata {value}`
   4. Apply compression
-  5. Save to processed directory: `data/rasters/processed/{dataset_name}_epsg{code}_processed.{ext}`
+  5. Save to processed directory: `data/rasters/processed/{category}_epsg{code}_processed.{ext}`
 - **Optimization:**
   - Use appropriate resampling method:
     - `bilinear` for continuous data (DEM, population)
@@ -194,13 +201,15 @@
 ### 4. Processed Dataset Metadata
 - **Requirement:** Create metadata JSON for each processed dataset
 - **Location:** Metadata files must be in the same directory as their associated dataset
-- **Filename:** `{dataset_name}_epsg{code}_processed.{ext}.json`
+- **Filename:** `{category}_epsg{code}_processed.{ext}.json`
   - Example: `data/rasters/processed/dem_epsg32633_processed.tif.json`
-  - Example: `data/vectors/processed/osm_roads_epsg32633_processed.gpkg.json`
+  - Example: `data/vectors/processed/roads_epsg32633_processed.gpkg.json`
 - **Required Fields:**
   ```json
   {
-    "dataset_name": "TINITALY DEM 10m (Processed)",
+    "dataset_name": "TINITALY DEM 10m",
+    "category": "dem",
+    "project": "project_name",
     "processing_date": "2025-10-28T04:10:33Z",
     "target_crs": "EPSG:32633",
     "target_crs_name": "WGS 84 / UTM zone 33N",
@@ -257,9 +266,16 @@
       "stddev": 312.1
     },
     "validation_status": "passed",
-    "validation_date": "2025-10-28T04:10:33Z"
+    "validation_date": "2025-10-28T04:10:33Z",
+    "protocol_version": "1.0",
+    "zeus_version": "0.1.0"
   }
   ```
+- **Display Name Derivation:** The Layer Manager builds display names from metadata:
+  - Format: `{category}_{dataset_name}_{target_crs}_processed`
+  - `dataset_name` has spaces replaced with hyphens
+  - `target_crs` is formatted as `EPSGnumber` (no colon)
+  - Example: `dem_TINITALY-DEM-10m_EPSG32633_processed`
 
 ### 5. Processed Dataset Validation
 - **Requirement:** Validate processed datasets to ensure data quality
@@ -295,39 +311,41 @@ project/
 │   │   │   ├── dem_tinitaly_10m_raw.tif.json
 │   │   │   ├── dem_tinitaly_10m_raw.tif.aux.xml  (auto-generated)
 │   │   │   └── ...
-│   │   ├── processed/                    # Reprojected, clipped rasters
-│   │   │   ├── dem_epsg32633_processed.tif
-│   │   │   ├── dem_epsg32633_processed.tif.json
-│   │   │   ├── dem_epsg32633_processed.tif.aux.xml  (auto-generated)
-│   │   │   └── ...
-│   │   ├── dem.tif -> processed/dem_epsg32633_processed.tif  (symlink)
-│   │   ├── landcover.tif -> processed/landcover_epsg32633_processed.tif
-│   │   └── ...
+│   │   └── processed/                    # Reprojected, clipped rasters (CANONICAL)
+│   │       ├── dem_epsg32633_processed.tif
+│   │       ├── dem_epsg32633_processed.tif.json
+│   │       ├── dem_epsg32633_processed.tif.aux.xml  (auto-generated)
+│   │       ├── landcover_epsg32633_processed.tif
+│   │       ├── landcover_epsg32633_processed.tif.json
+│   │       └── ...
 │   └── vectors/
 │       ├── raw/                          # Original fetched vectors
 │       │   ├── osm_roads_raw.gpkg
 │       │   ├── osm_roads_raw.gpkg.json
 │       │   └── ...
-│       ├── processed/                    # Reprojected vectors
-│       │   ├── osm_roads_epsg32633_processed.gpkg
-│       │   ├── osm_roads_epsg32633_processed.gpkg.json
-│       │   └── ...
-│       ├── roads.gpkg -> processed/osm_roads_epsg32633_processed.gpkg  (symlink)
-│       └── ...
+│       └── processed/                    # Reprojected vectors (CANONICAL)
+│           ├── roads_epsg32633_processed.gpkg
+│           ├── roads_epsg32633_processed.gpkg.json
+│           ├── railways_epsg32633_processed.gpkg
+│           ├── railways_epsg32633_processed.gpkg.json
+│           └── ...
 ```
 
 ### File Organization Rules
 
 1. **Raw Files:** All original, unmodified fetched datasets go in `raw/` subdirectories
 2. **Processed Files:** All reprojected, clipped datasets go in `processed/` subdirectories
+   - The `processed/` folder is the **CANONICAL** source for the Layer Manager
+   - Multiple datasets of the same category can coexist (e.g., two different DEM sources)
 3. **Metadata JSONs:** Always placed alongside their associated dataset files
+   - Must contain `category`, `dataset_name`, and `target_crs` fields for display name generation
 4. **Auxiliary Files (`.aux.xml`):** Auto-generated by GDAL, stored alongside parent files
    - Contain cached statistics and metadata
    - Safe to delete (will be regenerated when needed)
    - Should be in `.gitignore` but preserved locally for performance
-5. **Symlinks:** Created at `data/rasters/` and `data/vectors/` root level for convenient access
-   - Point to processed datasets with standardized names
-   - Used by PIRL and other tools expecting specific filenames
+5. **Symlinks (DEPRECATED):** No longer created or used
+   - Layer Manager reads directly from `processed/` folders
+   - Legacy symlinks may exist but are not required
 
 ---
 

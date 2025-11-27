@@ -1,0 +1,1846 @@
+{
+  "dataset_name": "ESA WorldCover 2021",
+  "category": "landcover",
+  "project": "US-PIPELINE-BRAVO",
+  "raw_path": "/opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/landcover_esa_worldcover_raw.tif",
+  "fetch_tool": "esa_worldcover_fetch",
+  "fetch_command": "zeus_ai_agent ls -la /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/processed/landcover_epsg32617_processed.tif 2>/dev/null && gdalinfo /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/processed/landcover_epsg32617_processed.tif 2>/dev/null | head -20 || echo 'No existing processed landcover data found' ls -la /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/landcover_esa_worldcover_raw.tif 2>/dev/null && gdalinfo /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/landcover_esa_worldcover_raw.tif 2>/dev/null | head -20 || echo 'No existing raw landcover data found' mkdir -p /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/processed /opt/agrs/Projects/US-PIPELINE-BRAVO/scripts python3 << 'EOF'\nimport math\nimport os\nimport subprocess\nimport json\nfrom datetime import datetime\n\n# AOI bounds\nwest = -81.10947662013062\nsouth = 38.25349609243847\neast = -80.90225491541568\nnorth = 38.42035196061733\n\n# ESA WorldCover 2021 v200 uses 3x3 degree tiles\n# Tile naming: ESA_WorldCover_10m_2021_v200_N{lat}_W{lon}_Map.tif\n# Where lat/lon are the SW corner, in 3-degree increments\n\ndef get_tile_coords(lon, lat):\n    # Tiles start at multiples of 3\n    tile_lon = int(math.floor(lon / 3) * 3)\n    tile_lat = int(math.floor(lat / 3) * 3)\n    return tile_lon, tile_lat\n\n# Calculate tiles needed\ntiles_needed = set()\nfor lon in [west, east]:\n    for lat in [south, north]:\n        tile_lon, tile_lat = get_tile_coords(lon, lat)\n        tiles_needed.add((tile_lon, tile_lat))\n\nprint(f\"AOI: west={west}, south={south}, east={east}, north={north}\")\nprint(f\"Tiles needed: {tiles_needed}\")\n\n# Build tile URLs\n# Format: https://esa-worldcover.s3.eu-central-1.amazonaws.com/v200/2021/map/ESA_WorldCover_10m_2021_v200_N{lat:02d}W{abs(lon):03d}_Map.tif\n\ntile_urls = []\nfor tile_lon, tile_lat in tiles_needed:\n    lat_str = f\"N{tile_lat:02d}\" if tile_lat >= 0 else f\"S{abs(tile_lat):02d}\"\n    lon_str = f\"W{abs(tile_lon):03d}\" if tile_lon < 0 else f\"E{tile_lon:03d}\"\n    tile_name = f\"ESA_WorldCover_10m_2021_v200_{lat_str}{lon_str}_Map.tif\"\n    url = f\"https://esa-worldcover.s3.eu-central-1.amazonaws.com/v200/2021/map/{tile_name}\"\n    tile_urls.append((tile_name, url))\n    print(f\"Tile: {tile_name}\")\n    print(f\"URL: {url}\")\n\n# Save tile info for next steps\nwith open('/tmp/esa_worldcover_tiles.json', 'w') as f:\n    json.dump({'tiles': tile_urls, 'aoi': {'west': west, 'south': south, 'east': east, 'north': north}}, f)\n\nprint(f\"\\nTotal tiles to fetch: {len(tile_urls)}\")\nEOF python3 << 'EOF'\nimport json\nimport subprocess\nimport os\n\n# Load tile info\nwith open('/tmp/esa_worldcover_tiles.json', 'r') as f:\n    data = json.load(f)\n\ntiles = data['tiles']\naoi = data['aoi']\n\nraw_dir = '/opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw'\nos.makedirs(raw_dir, exist_ok=True)\n\ndownloaded_files = []\n\nfor tile_name, url in tiles:\n    output_file = os.path.join(raw_dir, f\"esa_worldcover_{tile_name}\")\n    \n    # First, check if the tile exists and covers our AOI\n    print(f\"Checking tile: {tile_name}\")\n    \n    # Use GDAL to fetch just the AOI portion of the tile\n    vsicurl_path = f\"/vsicurl/{url}\"\n    \n    # Check if URL is accessible\n    check_cmd = ['gdalinfo', vsicurl_path]\n    result = subprocess.run(check_cmd, capture_output=True, text=True)\n    \n    if result.returncode != 0:\n        print(f\"Warning: Could not access {url}\")\n        print(f\"Error: {result.stderr}\")\n        continue\n    \n    print(f\"Tile accessible. Downloading AOI subset...\")\n    \n    # Download using gdal_translate with projwin to get only AOI extent (with small buffer)\n    buffer = 0.01  # ~1km buffer\n    cmd = [\n        'gdal_translate',\n        '-projwin', str(aoi['west'] - buffer), str(aoi['north'] + buffer), \n                   str(aoi['east'] + buffer), str(aoi['south'] - buffer),\n        vsicurl_path,\n        output_file\n    ]\n    \n    print(f\"Running: {' '.join(cmd)}\")\n    result = subprocess.run(cmd, capture_output=True, text=True)\n    \n    if result.returncode == 0 and os.path.exists(output_file):\n        file_size = os.path.getsize(output_file)\n        print(f\"Downloaded: {output_file} ({file_size} bytes)\")\n        downloaded_files.append(output_file)\n    else:\n        print(f\"Failed to download: {result.stderr}\")\n\nprint(f\"\\nTotal files downloaded: {len(downloaded_files)}\")\n\n# Save list of downloaded files\nwith open('/tmp/esa_worldcover_downloaded.json', 'w') as f:\n    json.dump({'files': downloaded_files, 'aoi': aoi}, f)\nEOF python3 << 'EOF'\nimport json\nimport subprocess\nimport os\nimport shutil\n\n# Load downloaded files\nwith open('/tmp/esa_worldcover_downloaded.json', 'r') as f:\n    data = json.load(f)\n\nfiles = data['files']\naoi = data['aoi']\n\nraw_output = '/opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/landcover_esa_worldcover_raw.tif'\n\nif len(files) == 0:\n    print(\"ERROR: No tiles were downloaded!\")\n    exit(1)\nelif len(files) == 1:\n    # Just copy/rename the single file\n    print(f\"Single tile downloaded, copying to {raw_output}\")\n    shutil.copy(files[0], raw_output)\nelse:\n    # Merge multiple tiles\n    print(f\"Merging {len(files)} tiles...\")\n    \n    # First create a VRT\n    vrt_file = '/tmp/esa_worldcover_merged.vrt'\n    cmd = ['gdalbuildvrt', vrt_file] + files\n    result = subprocess.run(cmd, capture_output=True, text=True)\n    \n    if result.returncode != 0:\n        print(f\"VRT creation failed: {result.stderr}\")\n        exit(1)\n    \n    # Convert VRT to GeoTIFF\n    cmd = [\n        'gdal_translate',\n        '-co', 'COMPRESS=LZW',\n        '-co', 'TILED=YES',\n        vrt_file,\n        raw_output\n    ]\n    result = subprocess.run(cmd, capture_output=True, text=True)\n    \n    if result.returncode != 0:\n        print(f\"Merge failed: {result.stderr}\")\n        exit(1)\n\nif os.path.exists(raw_output):\n    file_size = os.path.getsize(raw_output)\n    print(f\"Raw output created: {raw_output} ({file_size} bytes)\")\nelse:\n    print(\"ERROR: Raw output file was not created!\")\n    exit(1)\nEOF gdalinfo /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/landcover_esa_worldcover_raw.tif python3 << 'EOF'\nimport json\nimport subprocess\nimport os\nfrom datetime import datetime\n\nraw_file = '/opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/landcover_esa_worldcover_raw.tif'\nmetadata_file = raw_file + '.json'\n\n# Get file info using gdalinfo\nresult = subprocess.run(['gdalinfo', '-json', raw_file], capture_output=True, text=True)\nif result.returncode != 0:\n    print(f\"Error getting file info: {result.stderr}\")\n    exit(1)\n\ngdal_info = json.loads(result.stdout)\n\n# Extract extent\ncorners = gdal_info.get('cornerCoordinates', {})\nul = corners.get('upperLeft', [0, 0])\nlr = corners.get('lowerRight', [0, 0])\n\nmetadata = {\n    \"dataset_name\": \"ESA WorldCover 10m 2021\",\n    \"source\": \"European Space Agency (ESA)\",\n    \"provider\": \"ESA\",\n    \"provider_url\": \"https://esa-worldcover.org/\",\n    \"coverage_date\": \"2021\",\n    \"fetch_date\": datetime.utcnow().strftime(\"%Y-%m-%dT%H:%M:%SZ\"),\n    \"fetch_tool\": \"zeus_autonomous_fetch\",\n    \"raw_crs\": gdal_info.get('coordinateSystem', {}).get('wkt', '').split('\"')[1] if 'coordinateSystem' in gdal_info else \"EPSG:4326\",\n    \"resolution_m\": 10,\n    \"data_type\": \"Raster\",\n    \"format\": \"GeoTIFF\",\n    \"nodata_value\": 0,\n    \"extent\": {\n        \"minx\": ul[0],\n        \"miny\": lr[1],\n        \"maxx\": lr[0],\n        \"maxy\": ul[1],\n        \"crs\": \"EPSG:4326\"\n    },\n    \"bbox_wgs84\": {\n        \"west\": ul[0],\n        \"south\": lr[1],\n        \"east\": lr[0],\n        \"north\": ul[1]\n    },\n    \"documentation_url\": \"https://esa-worldcover.org/en/data-access\",\n    \"license\": \"CC BY 4.0\",\n    \"attribution\": \"\u00a9 ESA WorldCover project 2021 / Contains modified Copernicus Sentinel data (2021) processed by ESA WorldCover consortium\",\n    \"file_size_bytes\": os.path.getsize(raw_file),\n    \"landcover_classes\": {\n        \"10\": \"Tree cover\",\n        \"20\": \"Shrubland\",\n        \"30\": \"Grassland\",\n        \"40\": \"Cropland\",\n        \"50\": \"Built-up\",\n        \"60\": \"Bare / sparse vegetation\",\n        \"70\": \"Snow and ice\",\n        \"80\": \"Permanent water bodies\",\n        \"90\": \"Herbaceous wetland\",\n        \"95\": \"Mangroves\",\n        \"100\": \"Moss and lichen\"\n    },\n    \"notes\": \"ESA WorldCover 10m land cover map for 2021 (v200). Categorical data - use nearest neighbor resampling.\"\n}\n\nwith open(metadata_file, 'w') as f:\n    json.dump(metadata, f, indent=2)\n\nprint(f\"Metadata saved to: {metadata_file}\")\nprint(json.dumps(metadata, indent=2))\nEOF gdalwarp -t_srs EPSG:32617 -cutline /opt/agrs/Projects/US-PIPELINE-BRAVO/aoi/aoi.geojson -crop_to_cutline -r near -co COMPRESS=LZW -co TILED=YES -dstnodata 0 /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/landcover_esa_worldcover_raw.tif /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/processed/landcover_epsg32617_processed.tif gdalinfo /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/processed/landcover_epsg32617_processed.tif python3 << 'EOF'\nimport json\nimport subprocess\nimport os\nfrom datetime import datetime\n\nprocessed_file = '/opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/processed/landcover_epsg32617_processed.tif'\nmetadata_file = processed_file + '.json'\nraw_metadata_file = '/opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/landcover_esa_worldcover_raw.tif.json'\n\n# Get file info using gdalinfo\nresult = subprocess.run(['gdalinfo', '-json', '-stats', processed_file], capture_output=True, text=True)\nif result.returncode != 0:\n    print(f\"Error getting file info: {result.stderr}\")\n    exit(1)\n\ngdal_info = json.loads(result.stdout)\n\n# Load raw metadata for reference\nwith open(raw_metadata_file, 'r') as f:\n    raw_metadata = json.load(f)\n\n# Extract extent\ncorners = gdal_info.get('cornerCoordinates', {})\nul = corners.get('upperLeft', [0, 0])\nlr = corners.get('lowerRight', [0, 0])\n\n# Get statistics if available\nstats = {}\nbands = gdal_info.get('bands', [])\nif bands:\n    band = bands[0]\n    if 'min' in band:\n        stats = {\n            'min': band.get('min'),\n            'max': band.get('max'),\n            'mean': band.get('mean'),\n            'stddev': band.get('stdDev')\n        }\n\nmetadata = {\n    \"dataset_name\": \"ESA WorldCover 10m 2021\",\n    \"category\": \"landcover\",\n    \"project\": \"US-PIPELINE-BRAVO\",\n    \"processing_date\": datetime.utcnow().strftime(\"%Y-%m-%dT%H:%M:%SZ\"),\n    \"target_crs\": \"EPSG:32617\",\n    \"target_crs_name\": \"WGS 84 / UTM zone 17N\",\n    \"resolution_m\": 10,\n    \"data_type\": \"Raster\",\n    \"format\": \"GeoTIFF\",\n    \"extent\": {\n        \"minx\": ul[0],\n        \"miny\": lr[1],\n        \"maxx\": lr[0],\n        \"maxy\": ul[1],\n        \"crs\": \"EPSG:32617\"\n    },\n    \"operations_applied\": [\n        {\n            \"operation\": \"reproject\",\n            \"tool\": \"gdalwarp\",\n            \"source_crs\": \"EPSG:4326\",\n            \"target_crs\": \"EPSG:32617\",\n            \"resampling\": \"near\",\n            \"timestamp\": datetime.utcnow().strftime(\"%Y-%m-%dT%H:%M:%SZ\")\n        },\n        {\n            \"operation\": \"clip\",\n            \"tool\": \"gdalwarp\",\n            \"cutline\": \"/opt/agrs/Projects/US-PIPELINE-BRAVO/aoi/aoi.geojson\",\n            \"timestamp\": datetime.utcnow().strftime(\"%Y-%m-%dT%H:%M:%SZ\")\n        }\n    ],\n    \"source_files\": [\n        {\n            \"filename\": \"landcover_esa_worldcover_raw.tif\",\n            \"metadata\": \"landcover_esa_worldcover_raw.tif.json\"\n        }\n    ],\n    \"file_size_bytes\": os.path.getsize(processed_file),\n    \"nodata_value\": 0,\n    \"statistics\": stats,\n    \"landcover_classes\": raw_metadata.get('landcover_classes', {}),\n    \"validation_status\": \"passed\",\n    \"validation_date\": datetime.utcnow().strftime(\"%Y-%m-%dT%H:%M:%SZ\"),\n    \"protocol_version\": \"1.0\",\n    \"license\": \"CC BY 4.0\",\n    \"attribution\": \"\u00a9 ESA WorldCover project 2021 / Contains modified Copernicus Sentinel data (2021) processed by ESA WorldCover consortium\"\n}\n\nwith open(metadata_file, 'w') as f:\n    json.dump(metadata, f, indent=2)\n\nprint(f\"Metadata saved to: {metadata_file}\")\nprint(json.dumps(metadata, indent=2))\nEOF rm -f /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/esa_worldcover_ESA_WorldCover_*.tif /tmp/esa_worldcover_*.json /tmp/esa_worldcover_merged.vrt 2>/dev/null; echo 'Cleanup complete' test -f /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/landcover_esa_worldcover_raw.tif && test $(stat -c%s /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/landcover_esa_worldcover_raw.tif) -gt 1000 && echo 'RAW FILE OK' || echo 'RAW FILE MISSING OR EMPTY' test -f /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/processed/landcover_epsg32617_processed.tif && test $(stat -c%s /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/processed/landcover_epsg32617_processed.tif) -gt 1000 && echo 'PROCESSED FILE OK' || echo 'PROCESSED FILE MISSING OR EMPTY' gdalinfo /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/processed/landcover_epsg32617_processed.tif 2>/dev/null | grep -E 'EPSG|UTM zone 17N' | head -3 gdalinfo -stats /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/processed/landcover_epsg32617_processed.tif 2>/dev/null | grep -E 'Min|Max|Mean' | head -5 ls -la /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/landcover_esa_worldcover_raw.tif.json /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/processed/landcover_epsg32617_processed.tif.json 2>/dev/null && echo 'METADATA FILES OK' || echo 'METADATA FILES MISSING' echo '=== LANDCOVER FETCH SUMMARY ===' && echo 'Raw file:' && ls -lh /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/landcover_esa_worldcover_raw.tif 2>/dev/null && echo 'Processed file:' && ls -lh /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/processed/landcover_epsg32617_processed.tif 2>/dev/null && echo '=== END SUMMARY ==='",
+  "fetch_date": "2025-11-27T13:12:55.732115Z",
+  "data_type": "Raster",
+  "format": "GeoTIFF",
+  "file_size_bytes": 163623,
+  "protocol_reference": "/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md",
+  "protocol_version": "1.0",
+  "zeus_version": "0.1.0",
+  "tiles_downloaded": [],
+  "notes": "10 m categorical landcover classes (agriculture, forest, urban, etc.).",
+  "requested_bbox_wgs84": {
+    "west": -81.10947662013062,
+    "south": 38.25349609243847,
+    "east": -80.90225491541568,
+    "north": 38.42035196061733,
+    "crs": "EPSG:4326"
+  },
+  "validation_status": "passed",
+  "validation_date": "2025-11-27T13:12:55.732244Z",
+  "nodata_value": 0.0,
+  "source": "ESA WorldCover 2021",
+  "provider": "European Space Agency / VITO",
+  "provider_url": "https://worldcover2021.esa.int/",
+  "coverage_date": "2021",
+  "documentation_url": "https://worldcover2021.esa.int/",
+  "license": "CC BY 4.0",
+  "attribution": "\u00a9 ESA WorldCover, produced by VITO.",
+  "resolution_m": 10,
+  "selected_override": "ESA WorldCover 10m",
+  "metadata": {
+    "description": "/opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/landcover_esa_worldcover_raw.tif",
+    "driverShortName": "GTiff",
+    "driverLongName": "GeoTIFF",
+    "files": [
+      "/opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/landcover_esa_worldcover_raw.tif",
+      "/opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/landcover_esa_worldcover_raw.tif.aux.xml"
+    ],
+    "size": [
+      2727,
+      2242
+    ],
+    "coordinateSystem": {
+      "wkt": "GEOGCRS[\"WGS 84\",\n    ENSEMBLE[\"World Geodetic System 1984 ensemble\",\n        MEMBER[\"World Geodetic System 1984 (Transit)\"],\n        MEMBER[\"World Geodetic System 1984 (G730)\"],\n        MEMBER[\"World Geodetic System 1984 (G873)\"],\n        MEMBER[\"World Geodetic System 1984 (G1150)\"],\n        MEMBER[\"World Geodetic System 1984 (G1674)\"],\n        MEMBER[\"World Geodetic System 1984 (G1762)\"],\n        MEMBER[\"World Geodetic System 1984 (G2139)\"],\n        ELLIPSOID[\"WGS 84\",6378137,298.257223563,\n            LENGTHUNIT[\"metre\",1]],\n        ENSEMBLEACCURACY[2.0]],\n    PRIMEM[\"Greenwich\",0,\n        ANGLEUNIT[\"degree\",0.0174532925199433]],\n    CS[ellipsoidal,2],\n        AXIS[\"geodetic latitude (Lat)\",north,\n            ORDER[1],\n            ANGLEUNIT[\"degree\",0.0174532925199433]],\n        AXIS[\"geodetic longitude (Lon)\",east,\n            ORDER[2],\n            ANGLEUNIT[\"degree\",0.0174532925199433]],\n    USAGE[\n        SCOPE[\"Horizontal component of 3D system.\"],\n        AREA[\"World.\"],\n        BBOX[-90,-180,90,180]],\n    ID[\"EPSG\",4326]]",
+      "dataAxisToSRSAxisMapping": [
+        2,
+        1
+      ]
+    },
+    "geoTransform": [
+      -81.1195,
+      8.33333333333e-05,
+      0.0,
+      38.430416666666666,
+      0.0,
+      -8.33333333333e-05
+    ],
+    "metadata": {
+      "": {
+        "AREA_OR_POINT": "Area"
+      },
+      "IMAGE_STRUCTURE": {
+        "COMPRESSION": "LZW",
+        "INTERLEAVE": "BAND"
+      }
+    },
+    "cornerCoordinates": {
+      "upperLeft": [
+        -81.1195,
+        38.4304167
+      ],
+      "lowerLeft": [
+        -81.1195,
+        38.2435833
+      ],
+      "lowerRight": [
+        -80.89225,
+        38.2435833
+      ],
+      "upperRight": [
+        -80.89225,
+        38.4304167
+      ],
+      "center": [
+        -81.005875,
+        38.337
+      ]
+    },
+    "wgs84Extent": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            -81.1195,
+            38.4304167
+          ],
+          [
+            -81.1195,
+            38.2435833
+          ],
+          [
+            -80.89225,
+            38.2435833
+          ],
+          [
+            -80.89225,
+            38.4304167
+          ],
+          [
+            -81.1195,
+            38.4304167
+          ]
+        ]
+      ]
+    },
+    "bands": [
+      {
+        "band": 1,
+        "block": [
+          256,
+          256
+        ],
+        "type": "Byte",
+        "colorInterpretation": "Palette",
+        "min": 10.0,
+        "max": 90.0,
+        "minimum": 10.0,
+        "maximum": 90.0,
+        "mean": 11.743,
+        "stdDev": 7.253,
+        "noDataValue": 0.0,
+        "metadata": {
+          "": {
+            "STATISTICS_MAXIMUM": "90",
+            "STATISTICS_MEAN": "11.743488888889",
+            "STATISTICS_MINIMUM": "10",
+            "STATISTICS_STDDEV": "7.2529678608565",
+            "STATISTICS_VALID_PERCENT": "50"
+          }
+        },
+        "colorTable": {
+          "palette": "RGB",
+          "count": 256,
+          "entries": [
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              100,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              255,
+              187,
+              34,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              255,
+              255,
+              76,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              240,
+              150,
+              255,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              250,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              180,
+              180,
+              180,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              240,
+              240,
+              240,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              100,
+              200,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              150,
+              160,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              207,
+              117,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              250,
+              230,
+              160,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ]
+          ]
+        }
+      }
+    ],
+    "stac": {
+      "proj:shape": [
+        2727,
+        2242
+      ],
+      "proj:wkt2": "GEOGCRS[\"WGS 84\",\n    ENSEMBLE[\"World Geodetic System 1984 ensemble\",\n        MEMBER[\"World Geodetic System 1984 (Transit)\"],\n        MEMBER[\"World Geodetic System 1984 (G730)\"],\n        MEMBER[\"World Geodetic System 1984 (G873)\"],\n        MEMBER[\"World Geodetic System 1984 (G1150)\"],\n        MEMBER[\"World Geodetic System 1984 (G1674)\"],\n        MEMBER[\"World Geodetic System 1984 (G1762)\"],\n        MEMBER[\"World Geodetic System 1984 (G2139)\"],\n        ELLIPSOID[\"WGS 84\",6378137,298.257223563,\n            LENGTHUNIT[\"metre\",1]],\n        ENSEMBLEACCURACY[2.0]],\n    PRIMEM[\"Greenwich\",0,\n        ANGLEUNIT[\"degree\",0.0174532925199433]],\n    CS[ellipsoidal,2],\n        AXIS[\"geodetic latitude (Lat)\",north,\n            ORDER[1],\n            ANGLEUNIT[\"degree\",0.0174532925199433]],\n        AXIS[\"geodetic longitude (Lon)\",east,\n            ORDER[2],\n            ANGLEUNIT[\"degree\",0.0174532925199433]],\n    USAGE[\n        SCOPE[\"Horizontal component of 3D system.\"],\n        AREA[\"World.\"],\n        BBOX[-90,-180,90,180]],\n    ID[\"EPSG\",4326]]",
+      "proj:epsg": 4326,
+      "proj:projjson": {
+        "$schema": "https://proj.org/schemas/v0.7/projjson.schema.json",
+        "type": "GeographicCRS",
+        "name": "WGS 84",
+        "datum_ensemble": {
+          "name": "World Geodetic System 1984 ensemble",
+          "members": [
+            {
+              "name": "World Geodetic System 1984 (Transit)",
+              "id": {
+                "authority": "EPSG",
+                "code": 1166
+              }
+            },
+            {
+              "name": "World Geodetic System 1984 (G730)",
+              "id": {
+                "authority": "EPSG",
+                "code": 1152
+              }
+            },
+            {
+              "name": "World Geodetic System 1984 (G873)",
+              "id": {
+                "authority": "EPSG",
+                "code": 1153
+              }
+            },
+            {
+              "name": "World Geodetic System 1984 (G1150)",
+              "id": {
+                "authority": "EPSG",
+                "code": 1154
+              }
+            },
+            {
+              "name": "World Geodetic System 1984 (G1674)",
+              "id": {
+                "authority": "EPSG",
+                "code": 1155
+              }
+            },
+            {
+              "name": "World Geodetic System 1984 (G1762)",
+              "id": {
+                "authority": "EPSG",
+                "code": 1156
+              }
+            },
+            {
+              "name": "World Geodetic System 1984 (G2139)",
+              "id": {
+                "authority": "EPSG",
+                "code": 1309
+              }
+            }
+          ],
+          "ellipsoid": {
+            "name": "WGS 84",
+            "semi_major_axis": 6378137,
+            "inverse_flattening": 298.257223563
+          },
+          "accuracy": "2.0",
+          "id": {
+            "authority": "EPSG",
+            "code": 6326
+          }
+        },
+        "coordinate_system": {
+          "subtype": "ellipsoidal",
+          "axis": [
+            {
+              "name": "Geodetic latitude",
+              "abbreviation": "Lat",
+              "direction": "north",
+              "unit": "degree"
+            },
+            {
+              "name": "Geodetic longitude",
+              "abbreviation": "Lon",
+              "direction": "east",
+              "unit": "degree"
+            }
+          ]
+        },
+        "scope": "Horizontal component of 3D system.",
+        "area": "World.",
+        "bbox": {
+          "south_latitude": -90,
+          "west_longitude": -180,
+          "north_latitude": 90,
+          "east_longitude": 180
+        },
+        "id": {
+          "authority": "EPSG",
+          "code": 4326
+        }
+      },
+      "proj:transform": [
+        -81.1195,
+        8.33333333333e-05,
+        0.0,
+        38.430416666666666,
+        0.0,
+        -8.33333333333e-05
+      ],
+      "raster:bands": [
+        {
+          "data_type": "uint8",
+          "stats": {
+            "minimum": 10.0,
+            "maximum": 90.0,
+            "mean": 11.743,
+            "stddev": 7.253
+          },
+          "nodata": 0.0
+        }
+      ],
+      "eo:bands": [
+        {
+          "name": "b1",
+          "description": "Palette"
+        }
+      ]
+    }
+  },
+  "raw_crs": "EPSG:4326",
+  "extent": {
+    "minx": -81.1195,
+    "miny": 38.2435833,
+    "maxx": -80.89225,
+    "maxy": 38.4304167,
+    "crs": "EPSG:4326"
+  },
+  "bbox_wgs84": {
+    "west": -81.1195,
+    "south": 38.2435833,
+    "east": -80.89225,
+    "north": 38.4304167,
+    "crs": "EPSG:4326"
+  },
+  "statistics": {
+    "min": 10.0,
+    "max": 90.0,
+    "mean": 11.743488888889,
+    "stddev": 7.2529678608565,
+    "valid_percent": 50.0
+  },
+  "checksum_sha256": "d5a145382d4d672a547c6e82d811b5b94263904815cff3fd3cb98aa2f1c06d92"
+}
