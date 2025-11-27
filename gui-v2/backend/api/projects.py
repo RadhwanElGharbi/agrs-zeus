@@ -279,6 +279,127 @@ def _copy_template_if_exists(source: Path, destination: Path) -> None:
         shutil.copy(source, destination)
 
 
+def _process_aoi_to_gpkg(
+    aoi_geojson_path: Path,
+    output_dir: Path,
+    epsg: int,
+    date_acquired: str,
+) -> None:
+    """
+    Convert AOI GeoJSON to GeoPackage, reproject to project CRS,
+    and save to data/vectors/processed/ with metadata sidecar.
+    """
+    output_gpkg = output_dir / f"aoi_epsg{epsg}_processed.gpkg"
+    output_json = output_dir / f"aoi_epsg{epsg}_processed.gpkg.json"
+    
+    # Use ogr2ogr to convert and reproject
+    cmd = [
+        "ogr2ogr",
+        "-f", "GPKG",
+        "-t_srs", f"EPSG:{epsg}",
+        "-nln", "aoi",
+        str(output_gpkg),
+        str(aoi_geojson_path),
+    ]
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        # Log error but don't fail project creation
+        print(f"Warning: Failed to process AOI to GPKG: {result.stderr}")
+        return
+    
+    # Create metadata sidecar
+    metadata = {
+        "dataset_name": "Area of Interest",
+        "filename": output_gpkg.name,
+        "category": "aoi",
+        "type": "vector",
+        "format": "GeoPackage",
+        "geometry_type": "Polygon",
+        "source": {
+            "name": "User-provided AOI",
+            "provider": "Project initialization",
+        },
+        "spatial": {
+            "crs": {
+                "epsg": epsg,
+            },
+        },
+        "processing": {
+            "original_crs": "EPSG:4326",
+            "target_crs": f"EPSG:{epsg}",
+            "reprojected": True,
+        },
+        "acquisition": {
+            "date_fetched": date_acquired,
+            "method": "project_creation",
+        },
+        "metadata_version": "2.0",
+    }
+    _write_json(output_json, metadata)
+
+
+def _process_point_to_gpkg(
+    point_geojson_path: Path,
+    output_dir: Path,
+    epsg: int,
+    point_type: str,  # "start" or "end"
+    date_acquired: str,
+) -> None:
+    """
+    Convert point GeoJSON to GeoPackage, reproject to project CRS,
+    and save to data/vectors/processed/ with metadata sidecar.
+    """
+    layer_name = f"{point_type}_point"
+    output_gpkg = output_dir / f"{layer_name}_epsg{epsg}_processed.gpkg"
+    output_json = output_dir / f"{layer_name}_epsg{epsg}_processed.gpkg.json"
+    
+    # Use ogr2ogr to convert and reproject
+    cmd = [
+        "ogr2ogr",
+        "-f", "GPKG",
+        "-t_srs", f"EPSG:{epsg}",
+        "-nln", layer_name,
+        str(output_gpkg),
+        str(point_geojson_path),
+    ]
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"Warning: Failed to process {point_type} point to GPKG: {result.stderr}")
+        return
+    
+    # Create metadata sidecar
+    description = "Start Point from AOI" if point_type == "start" else "End Point from AOI"
+    metadata = {
+        "dataset_name": f"{point_type.capitalize()} Point",
+        "filename": output_gpkg.name,
+        "category": point_type,
+        "type": "vector",
+        "format": "GeoPackage",
+        "geometry_type": "Point",
+        "source": {
+            "name": f"User-provided {point_type} point",
+            "provider": "Project initialization",
+        },
+        "spatial": {
+            "crs": {
+                "epsg": epsg,
+            },
+        },
+        "processing": {
+            "original_crs": "EPSG:4326",
+            "target_crs": f"EPSG:{epsg}",
+            "reprojected": True,
+        },
+        "acquisition": {
+            "date_fetched": date_acquired,
+            "method": "project_creation",
+        },
+        "description": description,
+        "metadata_version": "2.0",
+    }
+    _write_json(output_json, metadata)
+
+
 def _create_readme_files(base: Path, project_name: str) -> None:
     """Create standard README files per PROJECT_STRUCTURE_STANDARD.md"""
     
@@ -1499,6 +1620,22 @@ async def create_project(
         templates_root / "pipeline_specs_hydraulics_defaults.json",
         project_dir / "PIRL" / "pipeline_specs_hydraulics_defaults.json",
     )
+
+    # Process AOI and points to data/vectors/processed/ for map display
+    date_acquired = datetime.utcnow().strftime("%Y-%m-%d")
+    vectors_processed_dir = project_dir / "data" / "vectors" / "processed"
+    
+    # Process AOI to GeoPackage
+    _process_aoi_to_gpkg(aoi_geojson_path, vectors_processed_dir, epsg, date_acquired)
+    
+    # Process start/end points to GeoPackage if provided
+    if sp_lat is not None and sp_lon is not None:
+        start_point_path = project_dir / "aoi" / "start_point.geojson"
+        _process_point_to_gpkg(start_point_path, vectors_processed_dir, epsg, "start", date_acquired)
+    
+    if ep_lat is not None and ep_lon is not None:
+        end_point_path = project_dir / "aoi" / "end_point.geojson"
+        _process_point_to_gpkg(end_point_path, vectors_processed_dir, epsg, "end", date_acquired)
 
     return {
         "status": "success",
