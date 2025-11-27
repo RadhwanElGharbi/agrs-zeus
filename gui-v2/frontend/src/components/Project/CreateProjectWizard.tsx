@@ -7,6 +7,8 @@ import MapboxDraw from '@mapbox/mapbox-gl-draw'
 import {
   AOIPreviewResponse,
   previewAoi,
+  previewPoint,
+  PointPreviewResponse,
   createProject,
   CreateProjectResponse,
   ProjectCRSRecommendation,
@@ -179,13 +181,15 @@ export function CreateProjectWizard({ open, onClose, onCreated }: CreateProjectW
     }
   }, [stepIndex, projectName, organization, projectCreator, aoiSummary, product, innerDiameter, outerDiameter])
 
-  const handleAoiPreview = async (options?: { geojson?: any }) => {
+  const handleAoiPreview = async (options?: { geojson?: any; file?: File }) => {
     setPreviewLoading(true)
     setPreviewError(null)
     try {
       const formData = new FormData()
       if (options?.geojson) {
         formData.append('drawn_geojson', JSON.stringify(options.geojson))
+      } else if (options?.file) {
+        formData.append('aoi_file', options.file)
       } else if (aoiFile) {
         formData.append('aoi_file', aoiFile)
       } else {
@@ -212,6 +216,36 @@ export function CreateProjectWizard({ open, onClose, onCreated }: CreateProjectW
     setAoiFile(null)
     setDrawOverlayOpen(false)
     void handleAoiPreview({ geojson: payload.geojson })
+  }
+
+  const handleStartPointFile = async (file: File | null) => {
+    setStartPointFile(file)
+    if (file) {
+      try {
+        const result = await previewPoint(file)
+        setStartPointCoords({ lat: result.latitude, lon: result.longitude })
+      } catch (error) {
+        console.error('Failed to parse start point file:', error)
+        setStartPointCoords(null)
+      }
+    } else {
+      setStartPointCoords(null)
+    }
+  }
+
+  const handleEndPointFile = async (file: File | null) => {
+    setEndPointFile(file)
+    if (file) {
+      try {
+        const result = await previewPoint(file)
+        setEndPointCoords({ lat: result.latitude, lon: result.longitude })
+      } catch (error) {
+        console.error('Failed to parse end point file:', error)
+        setEndPointCoords(null)
+      }
+    } else {
+      setEndPointCoords(null)
+    }
   }
 
   const handleSubmit = async () => {
@@ -375,15 +409,17 @@ export function CreateProjectWizard({ open, onClose, onCreated }: CreateProjectW
                   setAoiFile(file)
                   setDrawnAoi(null)
                   if (file) {
-                    void handleAoiPreview()
+                    void handleAoiPreview({ file })
                   } else {
                     setAoiSummary(null)
                   }
                 }}
                 startPointFile={startPointFile}
                 endPointFile={endPointFile}
-                onStartPointFile={(file) => setStartPointFile(file)}
-                onEndPointFile={(file) => setEndPointFile(file)}
+                startPointCoords={startPointCoords}
+                endPointCoords={endPointCoords}
+                onStartPointFile={handleStartPointFile}
+                onEndPointFile={handleEndPointFile}
                 summary={aoiSummary}
                 crsSelection={crsSelection}
                 onLaunchCrsSelector={() => setCrsDialogOpen(true)}
@@ -622,6 +658,8 @@ function AOIStep(props: {
   onFileChange: (file: File | null) => void
   startPointFile: File | null
   endPointFile: File | null
+  startPointCoords: { lat: number; lon: number } | null
+  endPointCoords: { lat: number; lon: number } | null
   onStartPointFile: (file: File | null) => void
   onEndPointFile: (file: File | null) => void
   summary: AOIPreviewResponse | null
@@ -699,6 +737,11 @@ function AOIStep(props: {
               <div className={cn("text-xs font-mono truncate", props.startPointFile ? "text-white" : "text-white/30")}>
                 {props.startPointFile ? props.startPointFile.name : "Optional .geojson/.kml"}
               </div>
+              {props.startPointCoords && (
+                <div className="mt-2 text-[11px] font-mono text-emerald-400/80">
+                  {props.startPointCoords.lat.toFixed(6)}°, {props.startPointCoords.lon.toFixed(6)}°
+                </div>
+              )}
               <input 
                 type="file"
                 accept=".geojson,.json,.gpkg,.kml,.kmz"
@@ -716,6 +759,11 @@ function AOIStep(props: {
               <div className={cn("text-xs font-mono truncate", props.endPointFile ? "text-white" : "text-white/30")}>
                 {props.endPointFile ? props.endPointFile.name : "Optional .geojson/.kml"}
               </div>
+              {props.endPointCoords && (
+                <div className="mt-2 text-[11px] font-mono text-red-400/80">
+                  {props.endPointCoords.lat.toFixed(6)}°, {props.endPointCoords.lon.toFixed(6)}°
+                </div>
+              )}
               <input 
                 type="file"
                 accept=".geojson,.json,.gpkg,.kml,.kmz"

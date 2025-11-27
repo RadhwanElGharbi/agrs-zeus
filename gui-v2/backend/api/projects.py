@@ -373,6 +373,24 @@ async def preview_aoi(
         )
 
 
+class PointPreviewResponse(BaseModel):
+    latitude: float
+    longitude: float
+
+
+@router.post("/projects/point/preview", response_model=PointPreviewResponse)
+async def preview_point(
+    point_file: UploadFile = File(...),
+):
+    """
+    Parse a point file (GeoJSON, KML, KMZ, GPKG) and return its coordinates.
+    """
+    with tempfile.TemporaryDirectory() as tmpdir:
+        temp_dir = Path(tmpdir)
+        lat, lon = _extract_point_from_file(point_file, temp_dir)
+        return PointPreviewResponse(latitude=lat, longitude=lon)
+
+
 @router.get("/projects", response_model=List[ProjectMetadata])
 async def list_projects():
     """

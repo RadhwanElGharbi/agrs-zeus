@@ -66,6 +66,7 @@ async function getApiBaseAsync(): Promise<string> {
 
 export interface ProjectMetadata {
   project_name: string;
+  project_id?: string;
   project_code?: string;
   client?: string;
   date_created?: string;
@@ -154,6 +155,48 @@ export interface DatasetStatusResponse {
   minimum_requirements_met: boolean;
   categories: DatasetCategoryStatus[];
   protocol_reference: string;
+}
+
+export interface ProjectCRSRecommendation {
+  epsg: number;
+  name: string;
+  reason: string;
+  utm_zone?: number;
+  hemisphere?: string;
+}
+
+export interface RegulatoryDoc {
+  name: string;
+  category: string;
+  path: string;
+  size_bytes?: number;
+  last_modified?: string;
+}
+
+export interface RegulatoryDocsResponse {
+  documents: RegulatoryDoc[];
+  index_content?: string;
+  sources_content?: string;
+}
+
+export interface AOIPreviewResponse {
+  area_km2: number;
+  countries: string[];
+  iso3?: string | null;
+  country?: string | null;
+  centroid: {
+    lat: number;
+    lon: number;
+  };
+  recommended_crs: ProjectCRSRecommendation;
+}
+
+export interface CreateProjectResponse {
+  status: string;
+  project_name: string;
+  project_id: string;
+  iso3?: string | null;
+  country?: string | null;
 }
 
 export interface DatasetStageState {
@@ -338,6 +381,40 @@ export async function fetchProjectDatasetStatus(project: string): Promise<Datase
 }
 
 /**
+ * Fetch recommended CRS for the project based on AOI
+ */
+export async function fetchRecommendedCRS(project: string): Promise<ProjectCRSRecommendation> {
+  if (!project) {
+    throw new Error('Project name is required to load CRS recommendation');
+  }
+  const base = await getApiBaseAsync();
+  const response = await fetch(`${base}/projects/${project}/crs/recommend`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch recommended CRS for ${project}: ${response.statusText}`);
+  }
+  return response.json();
+}
+
+/**
+ * Update project CRS
+ */
+export async function updateProjectCRS(project: string, epsg: number, name: string): Promise<{ status: string; epsg: number; name: string }> {
+  if (!project) {
+    throw new Error('Project name is required to update CRS');
+  }
+  const base = await getApiBaseAsync();
+  const response = await fetch(`${base}/projects/${project}/crs`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ epsg, name })
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to update CRS for ${project}: ${response.statusText}`);
+  }
+  return response.json();
+}
+
+/**
  * Launch dataset fetch pipeline for selected categories
  */
 export async function startDatasetFetch(
@@ -374,6 +451,73 @@ export async function startDatasetFetch(
   });
   if (!response.ok) {
     throw new Error(`Failed to start dataset fetch: ${response.statusText}`);
+  }
+  return response.json();
+}
+
+/**
+ * Fetch regulatory documents for a project
+ */
+export async function fetchRegulatoryDocs(project: string): Promise<RegulatoryDocsResponse> {
+  const base = await getApiBaseAsync();
+  const response = await fetch(`${base}/projects/${project}/regulatory-docs`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch regulatory documents for ${project}: ${response.statusText}`);
+  }
+  return response.json();
+}
+
+/**
+ * Preview AOI statistics from uploaded or drawn geometry
+ */
+export async function previewAoi(formData: FormData): Promise<AOIPreviewResponse> {
+  const base = await getApiBaseAsync();
+  const response = await fetch(`${base}/projects/aoi/preview`, {
+    method: 'POST',
+    body: formData
+  });
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(message || 'Failed to preview AOI');
+  }
+  return response.json();
+}
+
+export interface PointPreviewResponse {
+  latitude: number;
+  longitude: number;
+}
+
+/**
+ * Preview point coordinates from uploaded file
+ */
+export async function previewPoint(file: File): Promise<PointPreviewResponse> {
+  const base = await getApiBaseAsync();
+  const formData = new FormData();
+  formData.append('point_file', file);
+  const response = await fetch(`${base}/projects/point/preview`, {
+    method: 'POST',
+    body: formData
+  });
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(message || 'Failed to preview point');
+  }
+  return response.json();
+}
+
+/**
+ * Create a new project with the provided wizard payload
+ */
+export async function createProject(formData: FormData): Promise<CreateProjectResponse> {
+  const base = await getApiBaseAsync();
+  const response = await fetch(`${base}/projects/create`, {
+    method: 'POST',
+    body: formData
+  });
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(message || 'Failed to create project');
   }
   return response.json();
 }
