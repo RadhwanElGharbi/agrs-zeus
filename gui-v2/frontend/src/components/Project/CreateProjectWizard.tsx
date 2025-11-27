@@ -87,6 +87,8 @@ export function CreateProjectWizard({ open, onClose, onCreated }: CreateProjectW
   const [drawnAoi, setDrawnAoi] = useState<any>(null)
   const [startPointCoords, setStartPointCoords] = useState<{ lat: number; lon: number } | null>(null)
   const [endPointCoords, setEndPointCoords] = useState<{ lat: number; lon: number } | null>(null)
+  const [startPointError, setStartPointError] = useState<string | null>(null)
+  const [endPointError, setEndPointError] = useState<string | null>(null)
   const [aoiSummary, setAoiSummary] = useState<AOIPreviewResponse | null>(null)
   const [crsSelection, setCrsSelection] = useState<ProjectCRSRecommendation | null>(null)
   const [crsDialogOpen, setCrsDialogOpen] = useState(false)
@@ -121,11 +123,15 @@ export function CreateProjectWizard({ open, onClose, onCreated }: CreateProjectW
         setAoiSummary(null)
         setCrsSelection(null)
         setPreviewError(null)
+        setStartPointError(null)
+        setEndPointError(null)
         setSubmitState({ loading: false, error: null })
         setDrawnAoi(null)
         setStartPointCoords(null)
         setEndPointCoords(null)
         setAoiFile(null)
+        setStartPointFile(null)
+        setEndPointFile(null)
       }, 200)
     }
   }, [open])
@@ -239,6 +245,7 @@ export function CreateProjectWizard({ open, onClose, onCreated }: CreateProjectW
 
   const handleStartPointFile = async (file: File | null) => {
     setStartPointFile(file)
+    setStartPointError(null)
     if (file) {
       try {
         const result = await previewPoint(file)
@@ -251,6 +258,7 @@ export function CreateProjectWizard({ open, onClose, onCreated }: CreateProjectW
       } catch (error) {
         console.error('Failed to parse start point file:', error)
         setStartPointCoords(null)
+        setStartPointError(error instanceof Error ? error.message : 'Invalid file format')
       }
     } else {
       setStartPointCoords(null)
@@ -263,6 +271,7 @@ export function CreateProjectWizard({ open, onClose, onCreated }: CreateProjectW
 
   const handleEndPointFile = async (file: File | null) => {
     setEndPointFile(file)
+    setEndPointError(null)
     if (file) {
       try {
         const result = await previewPoint(file)
@@ -275,6 +284,7 @@ export function CreateProjectWizard({ open, onClose, onCreated }: CreateProjectW
       } catch (error) {
         console.error('Failed to parse end point file:', error)
         setEndPointCoords(null)
+        setEndPointError(error instanceof Error ? error.message : 'Invalid file format')
       }
     } else {
       setEndPointCoords(null)
@@ -455,6 +465,8 @@ export function CreateProjectWizard({ open, onClose, onCreated }: CreateProjectW
                 endPointFile={endPointFile}
                 startPointCoords={startPointCoords}
                 endPointCoords={endPointCoords}
+                startPointError={startPointError}
+                endPointError={endPointError}
                 onStartPointFile={handleStartPointFile}
                 onEndPointFile={handleEndPointFile}
                 summary={aoiSummary}
@@ -697,6 +709,8 @@ function AOIStep(props: {
   endPointFile: File | null
   startPointCoords: { lat: number; lon: number } | null
   endPointCoords: { lat: number; lon: number } | null
+  startPointError: string | null
+  endPointError: string | null
   onStartPointFile: (file: File | null) => void
   onEndPointFile: (file: File | null) => void
   summary: AOIPreviewResponse | null
@@ -726,10 +740,19 @@ function AOIStep(props: {
       </div>
 
       {props.mode === 'upload' ? (
-        <div className="border border-white/10 rounded-sm bg-black/40 overflow-hidden">
+        <div className={cn(
+          "border rounded-sm bg-black/40 overflow-hidden",
+          props.previewError ? "border-red-500/50" : "border-white/10"
+        )}>
           {/* Main AOI Upload */}
-          <div className="p-8 flex flex-col items-center justify-center text-center gap-4 hover:bg-white/5 transition-colors relative group">
-            <div className="p-4 rounded-full bg-primary/5 text-primary mb-2 group-hover:scale-110 transition-transform duration-500">
+          <div className={cn(
+            "p-8 flex flex-col items-center justify-center text-center gap-4 hover:bg-white/5 transition-colors relative group",
+            props.previewError && "bg-red-500/5"
+          )}>
+            <div className={cn(
+              "p-4 rounded-full mb-2 group-hover:scale-110 transition-transform duration-500",
+              props.previewError ? "bg-red-500/10 text-red-400" : "bg-primary/5 text-primary"
+            )}>
               <UploadCloud className="w-8 h-8" />
             </div>
             <div>
@@ -740,17 +763,28 @@ function AOIStep(props: {
             <div className="mt-2">
               <span className={cn(
                 "px-4 py-2 rounded-sm text-xs font-mono uppercase tracking-wider border transition-all inline-flex items-center gap-2",
-                props.aoiFile 
-                  ? "border-primary text-primary bg-primary/10" 
-                  : "border-white/20 text-white/60 group-hover:border-white/40 group-hover:text-white"
+                props.previewError 
+                  ? "border-red-500 text-red-400 bg-red-500/10"
+                  : props.aoiFile 
+                    ? "border-primary text-primary bg-primary/10" 
+                    : "border-white/20 text-white/60 group-hover:border-white/40 group-hover:text-white"
               )}>
-                {props.aoiFile ? (
+                {props.previewError ? (
+                  <><AlertTriangle className="w-3 h-3" /> {props.aoiFile?.name || "Invalid File"}</>
+                ) : props.aoiFile ? (
                   <><CheckCircle2 className="w-3 h-3" /> {props.aoiFile.name}</>
                 ) : (
                   "Select Geometry File"
                 )}
               </span>
             </div>
+
+            {props.previewError && (
+              <div className="text-[11px] font-mono text-red-400 flex items-center gap-1 mt-1">
+                <AlertTriangle className="w-3 h-3" />
+                {props.previewError}
+              </div>
+            )}
 
             <input 
               type="file"
@@ -768,16 +802,25 @@ function AOIStep(props: {
             {/* Start Point */}
             <div className={cn(
               "p-6 hover:bg-white/5 transition-colors relative group",
-              props.summary?.start_point_within === false && "bg-red-500/10 border-l-2 border-l-red-500"
+              props.startPointError && "bg-red-500/10 border-l-2 border-l-red-500",
+              !props.startPointError && props.summary?.start_point_within === false && "bg-red-500/10 border-l-2 border-l-red-500"
             )}>
               <div className="flex items-center gap-3 mb-2">
-                <MapPin className={cn("w-4 h-4", props.summary?.start_point_within === false ? "text-red-400" : "text-emerald-400")} />
+                <MapPin className={cn(
+                  "w-4 h-4", 
+                  props.startPointError ? "text-red-400" :
+                  props.summary?.start_point_within === false ? "text-red-400" : "text-emerald-400"
+                )} />
                 <span className="text-xs font-mono uppercase text-white/50 tracking-widest">Start Point</span>
               </div>
-              <div className={cn("text-xs font-mono truncate", props.startPointFile ? "text-white" : "text-white/30")}>
+              <div className={cn(
+                "text-xs font-mono truncate", 
+                props.startPointError ? "text-red-400" :
+                props.startPointFile ? "text-white" : "text-white/30"
+              )}>
                 {props.startPointFile ? props.startPointFile.name : "Optional .geojson/.kml"}
               </div>
-              {props.startPointCoords && (
+              {props.startPointCoords && !props.startPointError && (
                 <div className={cn(
                   "mt-2 text-[11px] font-mono",
                   props.summary?.start_point_within === false ? "text-red-400" : "text-emerald-400/80"
@@ -785,7 +828,13 @@ function AOIStep(props: {
                   {props.startPointCoords.lat.toFixed(6)}°, {props.startPointCoords.lon.toFixed(6)}°
                 </div>
               )}
-              {props.summary?.start_point_within === false && (
+              {props.startPointError && (
+                <div className="mt-2 text-[10px] font-mono text-red-400 flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3" />
+                  {props.startPointError}
+                </div>
+              )}
+              {!props.startPointError && props.summary?.start_point_within === false && (
                 <div className="mt-2 text-[10px] font-mono text-red-400 flex items-center gap-1">
                   <AlertTriangle className="w-3 h-3" />
                   Outside AOI boundary
@@ -802,16 +851,25 @@ function AOIStep(props: {
             {/* End Point */}
             <div className={cn(
               "p-6 hover:bg-white/5 transition-colors relative group",
-              props.summary?.end_point_within === false && "bg-red-500/10 border-r-2 border-r-red-500"
+              props.endPointError && "bg-red-500/10 border-r-2 border-r-red-500",
+              !props.endPointError && props.summary?.end_point_within === false && "bg-red-500/10 border-r-2 border-r-red-500"
             )}>
               <div className="flex items-center gap-3 mb-2">
-                <MapPin className={cn("w-4 h-4", props.summary?.end_point_within === false ? "text-red-400" : "text-red-400")} />
+                <MapPin className={cn(
+                  "w-4 h-4", 
+                  props.endPointError ? "text-red-400" :
+                  props.summary?.end_point_within === false ? "text-red-400" : "text-red-400"
+                )} />
                 <span className="text-xs font-mono uppercase text-white/50 tracking-widest">End Point</span>
               </div>
-              <div className={cn("text-xs font-mono truncate", props.endPointFile ? "text-white" : "text-white/30")}>
+              <div className={cn(
+                "text-xs font-mono truncate", 
+                props.endPointError ? "text-red-400" :
+                props.endPointFile ? "text-white" : "text-white/30"
+              )}>
                 {props.endPointFile ? props.endPointFile.name : "Optional .geojson/.kml"}
               </div>
-              {props.endPointCoords && (
+              {props.endPointCoords && !props.endPointError && (
                 <div className={cn(
                   "mt-2 text-[11px] font-mono",
                   props.summary?.end_point_within === false ? "text-red-400" : "text-red-400/80"
@@ -819,7 +877,13 @@ function AOIStep(props: {
                   {props.endPointCoords.lat.toFixed(6)}°, {props.endPointCoords.lon.toFixed(6)}°
                 </div>
               )}
-              {props.summary?.end_point_within === false && (
+              {props.endPointError && (
+                <div className="mt-2 text-[10px] font-mono text-red-400 flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3" />
+                  {props.endPointError}
+                </div>
+              )}
+              {!props.endPointError && props.summary?.end_point_within === false && (
                 <div className="mt-2 text-[10px] font-mono text-red-400 flex items-center gap-1">
                   <AlertTriangle className="w-3 h-3" />
                   Outside AOI boundary
@@ -853,13 +917,6 @@ function AOIStep(props: {
         <div className="text-xs font-mono text-white/50 uppercase tracking-widest flex items-center gap-2">
           <LoaderDots />
           Analyzing AOI...
-        </div>
-      )}
-
-      {props.previewError && (
-        <div className="text-xs text-red-300 font-mono flex items-center gap-2">
-          <AlertTriangle className="w-4 h-4" />
-          {props.previewError}
         </div>
       )}
 
