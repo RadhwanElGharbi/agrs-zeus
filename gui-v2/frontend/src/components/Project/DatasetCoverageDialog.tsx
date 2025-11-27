@@ -712,24 +712,26 @@ export function DatasetCoverageDialog({ open, onClose }: DatasetCoverageDialogPr
 
   return createPortal(
     <>
-      <div 
-        className={cn(
-          "fixed inset-0 bg-black/80 backdrop-blur-md z-[100]",
-          isClosing ? "animate-fade-out" : "animate-fade-in"
-        )} 
-        onClick={handleClose}
-      >
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
-            </div>
-      
-      <div className="fixed inset-0 z-[101] flex items-center justify-center p-4 pointer-events-none">
-        <div className={cn(
-          "relative z-10 w-[1000px] max-w-[95vw] max-h-[90vh] bg-[#0a0a0a]/95 border border-white/10 rounded-sm shadow-[0_0_50px_-10px_rgba(0,0,0,0.8)] flex flex-col pointer-events-auto overflow-hidden",
-          isClosing ? "animate-fade-out" : "animate-fade-in"
-        )}>
+      {!progressDialogOpen && (
+        <>
+          <div 
+            className={cn(
+              "fixed inset-0 bg-black/80 backdrop-blur-md z-[100]",
+              isClosing ? "animate-fade-out" : "animate-fade-in"
+            )} 
+            onClick={handleClose}
+          >
+            <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
+          </div>
           
-          {/* Header */}
-          <header className="px-6 py-5 border-b border-white/10 flex items-center justify-between bg-black/20 shrink-0">
+          <div className="fixed inset-0 z-[101] flex items-center justify-center p-4 pointer-events-none">
+            <div className={cn(
+              "relative z-10 w-[1000px] max-w-[95vw] max-h-[90vh] bg-[#0a0a0a]/95 border border-white/10 rounded-sm shadow-[0_0_50px_-10px_rgba(0,0,0,0.8)] flex flex-col pointer-events-auto overflow-hidden",
+              isClosing ? "animate-fade-out" : "animate-fade-in"
+            )}>
+              
+              {/* Header */}
+              <header className="px-6 py-5 border-b border-white/10 flex items-center justify-between bg-black/20 shrink-0">
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-2 text-[10px] text-white/40 uppercase tracking-[0.2em] font-mono">
                 <Database className="w-3 h-3" />
@@ -970,7 +972,9 @@ export function DatasetCoverageDialog({ open, onClose }: DatasetCoverageDialogPr
 
         </div>
       </div>
-      <DatasetFetchProgressDialog
+      </>
+    )}
+    <DatasetFetchProgressDialog
         jobId={jobId}
         open={progressDialogOpen && Boolean(jobId)}
         onClose={handleProgressDialogClose}

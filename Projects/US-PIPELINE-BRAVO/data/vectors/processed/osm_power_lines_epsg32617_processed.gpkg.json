@@ -1,0 +1,61 @@
+{
+  "dataset_name": "OpenStreetMap Power Network Extract (Processed)",
+  "category": "powerlines",
+  "project": "US-PIPELINE-BRAVO",
+  "processing_date": "2025-11-27T12:56:38.749586Z",
+  "target_crs": "EPSG:32617",
+  "target_crs_name": "WGS 84 / UTM zone 17N",
+  "data_type": "Vector",
+  "format": "GeoPackage",
+  "processed_path": "/opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/processed/osm_power_lines_epsg32617_processed.gpkg",
+  "raw_path": "/opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/raw/osm_power_lines_raw.gpkg",
+  "raw_metadata_file": "/opt/agrs/Projects/US-PIPELINE-BRAVO/data/vectors/raw/osm_power_lines_raw.gpkg.json",
+  "source_files": [
+    {
+      "filename": "osm_power_lines_raw.gpkg",
+      "metadata": "osm_power_lines_raw.gpkg.json"
+    }
+  ],
+  "operations_applied": [
+    {
+      "operation": "reproject",
+      "tool": "ogr2ogr",
+      "target_epsg": 32617
+    },
+    {
+      "operation": "clip",
+      "tool": "AOI cutline",
+      "source": "/opt/agrs/Projects/US-PIPELINE-BRAVO/aoi/aoi.geojson"
+    }
+  ],
+  "file_size_bytes": 98304,
+  "validation_status": "passed",
+  "validation_date": "2025-11-27T12:56:38.749652Z",
+  "protocol_reference": "/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md",
+  "protocol_version": "1.0",
+  "zeus_version": "0.1.0",
+  "notes": "Transmission + distribution assets for clearance buffers.",
+  "source": "OpenStreetMap (power)",
+  "provider": "OpenStreetMap Contributors",
+  "provider_url": "https://www.openstreetmap.org",
+  "coverage_date": "Current (live OSM)",
+  "documentation_url": "https://wiki.openstreetmap.org/wiki/Overpass_API",
+  "license": "ODbL 1.0",
+  "attribution": "\u00a9 OpenStreetMap contributors.",
+  "selected_override": "OpenInfraMap / OpenStreetMap Utilities",
+  "feature_count": 0,
+  "extent": {
+    "minx": -81.10947662013062,
+    "miny": 38.25349609243847,
+    "maxx": -80.90225491541568,
+    "maxy": 38.42035196061733,
+    "crs": "EPSG:4326"
+  },
+  "bbox_wgs84": {
+    "west": -81.10947662013062,
+    "south": 38.25349609243847,
+    "east": -80.90225491541568,
+    "north": 38.42035196061733,
+    "crs": "EPSG:4326"
+  }
+}

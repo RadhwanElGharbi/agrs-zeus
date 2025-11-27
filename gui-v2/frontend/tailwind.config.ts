@@ -91,6 +91,10 @@ const config: Config = {
           '0%': { opacity: '0', transform: 'translateY(10px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
+        heartbeat: {
+          '0%, 100%': { opacity: '0.4' },
+          '50%': { opacity: '0.7' },
+        },
       },
       animation: {
         scan: 'scan 2s linear infinite',
@@ -101,6 +105,7 @@ const config: Config = {
         'grid-flow': 'grid-flow 20s linear infinite',
         aurora: 'aurora 10s ease infinite',
         'slide-up-fade': 'slideUpFade 0.3s ease-out forwards',
+        heartbeat: 'heartbeat 4s ease-in-out infinite',
       },
     },
   },

@@ -117,17 +117,30 @@ export function DatasetFetchProgressDialog({ jobId, open, onClose, onJobFinished
   if (!open || !jobId || !mounted) return null
 
   return createPortal(
-    <>
-      <div className={cn(
-        "fixed inset-0 bg-black/80 backdrop-blur-md z-[100]",
-        isClosing ? "animate-fade-out" : "animate-fade-in"
-      )} />
-      
-      <div className="fixed inset-0 z-[101] flex items-center justify-center p-4">
-        <div className={cn(
-          "relative w-[900px] max-w-[95vw] max-h-[90vh] bg-[#0a0a0a]/95 border border-white/10 rounded-sm shadow-[0_0_60px_-15px_rgba(0,0,0,0.9)] flex flex-col overflow-hidden font-mono",
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+      <div 
+        className={cn(
+          "absolute inset-0 bg-black/90 backdrop-blur-xl overflow-hidden",
           isClosing ? "animate-fade-out" : "animate-fade-in"
-        )}>
+        )}
+        onClick={handleClose}
+      >
+        {/* Dynamic Aurora Background */}
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,#581c8733_0%,#1e3a8a33_20%,#064e3b33_40%,#14532d33_60%,#713f1233_80%,#7f1d1d33_100%)] bg-[length:200%_100%] animate-aurora" />
+        
+        {/* Moving Grid */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.1)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.1)_1px,transparent_1px)] bg-[size:40px_40px]" />
+        
+        {/* Vignette */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_10%,#000000_100%)]" />
+      </div>
+      
+      <div className={cn(
+        "relative z-10 w-[900px] max-w-[95vw] max-h-[90vh] bg-[#0a0a0a]/95 border border-white/10 rounded-sm shadow-[0_0_60px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden font-mono",
+        isClosing ? "animate-fade-out" : "animate-fade-in"
+      )}>
+        {/* Decorative Top Line */}
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
           
           {/* Header */}
           <header className="px-6 py-5 border-b border-white/10 bg-black/40 flex items-center justify-between">
@@ -275,9 +288,8 @@ export function DatasetFetchProgressDialog({ jobId, open, onClose, onJobFinished
               </div>
             </section>
           </div>
-        </div>
       </div>
-    </>,
+    </div>,
     document.body
   )
 }

@@ -1,0 +1,75 @@
+{
+  "dataset_name": "ESA WorldCover 2021 (Processed)",
+  "category": "landcover",
+  "project": "US-PIPELINE-BRAVO",
+  "processing_date": "2025-11-27T13:12:55.763538Z",
+  "target_crs": "EPSG:32617",
+  "target_crs_name": "WGS 84 / UTM zone 17N",
+  "data_type": "Raster",
+  "format": "GeoTIFF",
+  "processed_path": "/opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/processed/landcover_epsg32617_processed.tif",
+  "raw_path": "/opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/landcover_esa_worldcover_raw.tif",
+  "raw_metadata_file": "/opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/landcover_esa_worldcover_raw.tif.json",
+  "source_files": [
+    {
+      "filename": "landcover_esa_worldcover_raw.tif",
+      "metadata": "landcover_esa_worldcover_raw.tif.json"
+    }
+  ],
+  "operations_applied": [
+    {
+      "operation": "reproject",
+      "tool": "gdalwarp",
+      "target_epsg": 32617
+    },
+    {
+      "operation": "clip",
+      "tool": "AOI cutline",
+      "source": "/opt/agrs/Projects/US-PIPELINE-BRAVO/aoi/aoi.geojson"
+    }
+  ],
+  "file_size_bytes": 146709,
+  "validation_status": "passed",
+  "validation_date": "2025-11-27T13:12:55.763622Z",
+  "protocol_reference": "/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md",
+  "protocol_version": "1.0",
+  "zeus_version": "0.1.0",
+  "notes": "10 m categorical landcover classes (agriculture, forest, urban, etc.).",
+  "source": "ESA WorldCover 2021",
+  "provider": "European Space Agency / VITO",
+  "provider_url": "https://worldcover2021.esa.int/",
+  "coverage_date": "2021",
+  "documentation_url": "https://worldcover2021.esa.int/",
+  "license": "CC BY 4.0",
+  "attribution": "\u00a9 ESA WorldCover, produced by VITO.",
+  "resolution_m": {
+    "x": 8.260145389395266,
+    "y": 8.260472818399215
+  },
+  "selected_override": "ESA WorldCover 10m",
+  "dimensions": {
+    "width": 2108,
+    "height": 2155
+  },
+  "extent": {
+    "minx": 490789.882,
+    "miny": 4234301.418,
+    "maxx": 508202.268,
+    "maxy": 4252102.737,
+    "crs": "EPSG:4326"
+  },
+  "bbox_wgs84": {
+    "west": -81.1055024,
+    "south": 38.2566922,
+    "east": -80.9060426,
+    "north": 38.4171341,
+    "crs": "EPSG:4326"
+  },
+  "statistics": {
+    "min": 10.0,
+    "max": 90.0,
+    "mean": 12.810431730017,
+    "stddev": 7.5822082825714,
+    "valid_percent": 46.98
+  }
+}

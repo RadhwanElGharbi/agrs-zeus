@@ -50,6 +50,7 @@ export function MapViewer() {
     around: [number, number]
   } | null>(null)
   const isRightZoomingRef = useRef(false)
+  const hasMovedDuringRightClickRef = useRef(false)
   const zoomStartRef = useRef<{
     y: number
     zoom: number
@@ -78,7 +79,9 @@ export function MapViewer() {
   const [styleDraft, setStyleDraft] = useState<LayerStyleOptions>({})
   const [styleOverrides, setStyleOverrides] = useState<Record<string, LayerStyleOptions>>({})
   const [cursorPosition, setCursorPosition] = useState<{ lng: number; lat: number } | null>(null)
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; lat: number; lng: number } | null>(null)
   const [cursorElevation, setCursorElevation] = useState<CursorElevationState>({ value: null, status: 'idle' })
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' } | null>(null)
   const dockHeightRef = useRef(dockHeight)
   const dockContainerRef = useRef<HTMLDivElement | null>(null)
   const highlightSourceId = useRef('selected-feature-source')
@@ -117,6 +120,13 @@ export function MapViewer() {
       terrainSamplerRef.current?.dispose()
     }
   }, [])
+
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 3000)
+      return () => clearTimeout(timer)
+    }
+  }, [toast])
 
   const removeTerrainSource = useCallback(() => {
     const map = mapRef.current
@@ -1107,6 +1117,14 @@ export function MapViewer() {
     }
   }, [removeTerrainSource])
 
+  useEffect(() => {
+    const handleGlobalClick = () => {
+      setContextMenu(null)
+    }
+    window.addEventListener('click', handleGlobalClick)
+    return () => window.removeEventListener('click', handleGlobalClick)
+  }, [])
+
   /**
    * Custom interaction bindings
    */
@@ -1195,6 +1213,7 @@ export function MapViewer() {
         const point = toContainerPoint(event)
         const around = toLngLatArray(map.unproject(point))
         isRightZoomingRef.current = true
+        hasMovedDuringRightClickRef.current = false
         zoomStartRef.current = {
           y: event.clientY,
           zoom: map.getZoom(),
@@ -1217,6 +1236,9 @@ export function MapViewer() {
         map.setPitch(newPitch)
       } else if (isRightZoomingRef.current && zoomStartRef.current) {
         const dy = event.clientY - zoomStartRef.current.y
+        if (Math.abs(dy) > 2) {
+          hasMovedDuringRightClickRef.current = true
+        }
         const newZoom = zoomStartRef.current.zoom - dy * zoomFactor
         map.zoomTo(newZoom, { around: zoomStartRef.current.around, animate: false } as any)
       }
@@ -1237,6 +1259,17 @@ export function MapViewer() {
 
     const handleContextMenu = (event: MouseEvent) => {
       event.preventDefault()
+      if (hasMovedDuringRightClickRef.current) return
+
+      const point = toContainerPoint(event)
+      const lngLat = map.unproject(point)
+      
+      setContextMenu({
+        x: event.clientX,
+        y: event.clientY,
+        lat: lngLat.lat,
+        lng: lngLat.lng
+      })
     }
 
     container.addEventListener('mousedown', handleMouseDown)
@@ -1599,10 +1632,10 @@ export function MapViewer() {
   }, [addBaseLayers, mapReady])
 
   const latDisplay = cursorPosition
-    ? `${Math.abs(cursorPosition.lat).toFixed(4)} deg ${cursorPosition.lat >= 0 ? 'N' : 'S'}`
+    ? `${Math.abs(cursorPosition.lat).toFixed(5)}° ${cursorPosition.lat >= 0 ? 'N' : 'S'}`
     : '--'
   const lonDisplay = cursorPosition
-    ? `${Math.abs(cursorPosition.lng).toFixed(4)} deg ${cursorPosition.lng >= 0 ? 'E' : 'W'}`
+    ? `${Math.abs(cursorPosition.lng).toFixed(5)}° ${cursorPosition.lng >= 0 ? 'E' : 'W'}`
     : '--'
 
   const elevationDisplay = (() => {
@@ -1842,31 +1875,118 @@ export function MapViewer() {
         />
       )}
 
-      <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-30 px-4 pb-2">
-        <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center justify-center gap-x-6 gap-y-1 rounded-md border border-border bg-card/90 px-4 py-2 text-xs shadow-lg backdrop-blur">
-          <div className="flex w-28 items-center gap-1 font-medium text-muted-foreground">
-            Lat:
-            <span className="font-mono font-normal text-foreground tabular-nums">{latDisplay}</span>
-          </div>
-          <div className="flex w-28 items-center gap-1 font-medium text-muted-foreground">
-            Lon:
-            <span className="font-mono font-normal text-foreground tabular-nums">{lonDisplay}</span>
-          </div>
-          <div className="flex w-32 items-center gap-1 font-medium text-muted-foreground">
-            Elev:
-            <span className="min-w-[4rem] font-mono font-normal text-foreground tabular-nums text-right">
-              {elevationDisplay}
-            </span>
-            <div className="h-3 w-3 flex-shrink-0">
-              {elevationLoading && <Loader2 className="h-3 w-3 animate-spin text-primary" />}
+      <div className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 z-30">
+        <div className="bg-black/80 backdrop-blur-md border border-white/10 px-6 py-2 rounded-full shadow-[0_0_20px_-5px_rgba(0,0,0,0.5)] flex items-center gap-6 relative overflow-hidden group">
+            {/* Scan line effect */}
+            <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-50" />
+            
+            <div className="flex items-center gap-2">
+                <span className="text-[9px] font-mono text-white/40 uppercase tracking-widest">LAT</span>
+                <span className="text-xs font-mono font-bold text-white/90 min-w-[80px]">{latDisplay}</span>
             </div>
-          </div>
-          <div className="flex items-center gap-1 font-medium text-muted-foreground">
-            DEM:
-            <span className="font-normal text-foreground">{demDisplay}</span>
-          </div>
+
+            <div className="w-px h-3 bg-white/10" />
+
+            <div className="flex items-center gap-2">
+                <span className="text-[9px] font-mono text-white/40 uppercase tracking-widest">LON</span>
+                <span className="text-xs font-mono font-bold text-white/90 min-w-[80px]">{lonDisplay}</span>
+            </div>
+
+            <div className="w-px h-3 bg-white/10" />
+
+            <div className="flex items-center gap-2">
+                <span className="text-[9px] font-mono text-white/40 uppercase tracking-widest">ELEV</span>
+                <div className="flex items-center gap-2 min-w-[70px]">
+                    <span className={cn(
+                        "text-xs font-mono font-bold",
+                        cursorElevation.value !== null ? "text-primary" : "text-white/50"
+                    )}>
+                        {elevationDisplay}
+                    </span>
+                    {elevationLoading && <Loader2 className="w-2.5 h-2.5 animate-spin text-primary/70" />}
+                </div>
+            </div>
+
+            <div className="w-px h-3 bg-white/10" />
+
+            <div className="flex items-center gap-2">
+                <span className="text-[9px] font-mono text-white/40 uppercase tracking-widest">DEM</span>
+                <span className="text-[10px] font-mono text-white/60 max-w-[150px] truncate" title={demDisplay}>
+                    {demDisplay}
+                </span>
+            </div>
         </div>
       </div>
+
+      {/* Toast Notification */}
+      {toast && (
+        <div className="fixed bottom-20 right-4 z-50 animate-in slide-in-from-right-5 fade-in duration-300">
+          <div className={cn(
+            "px-4 py-2 rounded-sm border shadow-[0_0_20px_-5px_rgba(0,0,0,0.5)] flex items-center gap-3 backdrop-blur-md",
+            toast.type === 'success' ? "bg-emerald-900/80 border-emerald-500/30 text-emerald-100" : "bg-blue-900/80 border-blue-500/30 text-blue-100"
+          )}>
+            <div className={cn(
+              "w-2 h-2 rounded-full shadow-[0_0_5px_currentColor]",
+              toast.type === 'success' ? "bg-emerald-400" : "bg-blue-400"
+            )} />
+            <span className="text-xs font-mono uppercase tracking-wide">{toast.message}</span>
+          </div>
+        </div>
+      )}
+
+      {contextMenu && (
+        <div 
+          className="fixed z-50 min-w-[180px] bg-black/90 backdrop-blur-md border border-white/10 rounded-sm shadow-[0_0_20px_-5px_rgba(0,0,0,0.8)] py-1 animate-in fade-in zoom-in-95 duration-100"
+          style={{ top: contextMenu.y, left: contextMenu.x }}
+          onClick={(e) => e.stopPropagation()} 
+        >
+          <div className="px-3 py-1.5 border-b border-white/10 mb-1">
+            <div className="text-[10px] font-mono text-white/40 uppercase tracking-widest">Coordinates</div>
+            <div className="text-xs font-mono text-white/90">
+              {contextMenu.lat.toFixed(5)}, {contextMenu.lng.toFixed(5)}
+            </div>
+          </div>
+          
+          <button
+            onClick={() => {
+              const text = `${contextMenu.lat.toFixed(6)}, ${contextMenu.lng.toFixed(6)}`
+              if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).catch(console.error)
+              } else {
+                const textArea = document.createElement("textarea")
+                textArea.value = text
+                textArea.style.position = "fixed"
+                textArea.style.left = "-9999px"
+                textArea.style.top = "0"
+                document.body.appendChild(textArea)
+                textArea.focus()
+                textArea.select()
+                try {
+                  document.execCommand('copy')
+                } catch (err) {
+                  console.error('Unable to copy', err)
+                }
+                document.body.removeChild(textArea)
+              }
+              setContextMenu(null)
+              setToast({ message: 'Coordinates Copied to Clipboard', type: 'success' })
+            }}
+            className="w-full text-left px-3 py-2 text-xs font-mono text-white/80 hover:bg-primary/20 hover:text-white hover:border-l-2 hover:border-primary transition-all flex items-center gap-2 group border-l-2 border-transparent"
+          >
+            <span className="uppercase tracking-wide group-hover:translate-x-1 transition-transform">Copy Coordinates</span>
+          </button>
+
+          <button
+            onClick={() => {
+              // Placeholder for Examine
+              setContextMenu(null)
+            }}
+            className="w-full text-left px-3 py-2 text-xs font-mono text-white/80 hover:bg-primary/20 hover:text-white hover:border-l-2 hover:border-primary transition-all flex items-center gap-2 group border-l-2 border-transparent"
+          >
+            <span className="uppercase tracking-wide group-hover:translate-x-1 transition-transform">Examine</span>
+          </button>
+        </div>
+      )}
     </div>
   )
 }

@@ -20,6 +20,7 @@ import { cn } from '@/lib/utils'
 import { ProjectSelector } from '@/components/Project/ProjectSelector'
 import { ProjectProfileDialog } from '@/components/Project/ProjectProfileDialog'
 import { DatasetCoverageDialog } from '@/components/Project/DatasetCoverageDialog'
+import { PirlAiDialog } from '@/components/Pirl/PirlAiDialog'
 import { ZeusLoadingDialog } from '@/components/shared/ZeusLoadingDialog'
 // removed DigitalTwinView import
 
@@ -34,6 +35,7 @@ export function Sidebar({ className, devMode = false, activeView, onViewChange }
   const [collapsed, setCollapsed] = useState(false)
   const [showDatasets, setShowDatasets] = useState(false)
   const [showProfile, setShowProfile] = useState(false)
+  const [showPirlAi, setShowPirlAi] = useState(false)
   const [isZeusAnalyzing, setIsZeusAnalyzing] = useState(false)
 
   const handleDatasetsClick = () => {
@@ -52,9 +54,9 @@ export function Sidebar({ className, devMode = false, activeView, onViewChange }
   const navigationItems = [
     { icon: Target, label: 'Project Profile', onClick: () => setShowProfile(true), description: 'Metadata & CRS' },
     { icon: Map, label: 'Map View', active: activeView === 'map', onClick: () => onViewChange('map'), description: 'Main Interface' },
-    { icon: MonitorPlay, label: 'Digital Twin', active: activeView === 'digital-twin', onClick: () => onViewChange('digital-twin'), description: 'Live Visualization' },
+    { icon: MonitorPlay, label: 'Digital Twin', active: activeView === 'digital-twin', onClick: () => onViewChange('digital-twin'), description: 'Live Visualization', tag: 'Under Development' },
     { icon: Layers, label: 'Datasets', onClick: handleDatasetsClick, description: 'Acquisition & Mgmt' },
-    { icon: Brain, label: 'PIRL AI', description: 'Model Status', tag: 'Under Development' },
+    { icon: Brain, label: 'PIRL AI', description: 'Model Status', tag: 'Under Development', onClick: () => setShowPirlAi(true) },
     { icon: LayoutDashboard, label: 'Project Management', description: 'Resource Planning', tag: 'Under Development' },
     { icon: Settings, label: 'Settings', description: 'System Config' },
   ]
@@ -226,6 +228,7 @@ export function Sidebar({ className, devMode = false, activeView, onViewChange }
       )}
       <DatasetCoverageDialog open={showDatasets} onClose={() => setShowDatasets(false)} />
       <ProjectProfileDialog open={showProfile} onClose={() => setShowProfile(false)} />
+      <PirlAiDialog open={showPirlAi} onClose={() => setShowPirlAi(false)} />
     </div>
   )
 }

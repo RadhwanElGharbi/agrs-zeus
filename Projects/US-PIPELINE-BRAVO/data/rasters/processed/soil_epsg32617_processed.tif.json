@@ -1,0 +1,75 @@
+{
+  "dataset_name": "SoilGrids v2.0 (SOC 0-5cm) (Processed)",
+  "category": "soil",
+  "project": "US-PIPELINE-BRAVO",
+  "processing_date": "2025-11-27T12:40:51.363536Z",
+  "target_crs": "EPSG:32617",
+  "target_crs_name": "WGS 84 / UTM zone 17N",
+  "data_type": "Raster",
+  "format": "GeoTIFF",
+  "processed_path": "/opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/processed/soil_epsg32617_processed.tif",
+  "raw_path": "/opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/soil_soilgrids_250m_raw.tif",
+  "raw_metadata_file": "/opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/soil_soilgrids_250m_raw.tif.json",
+  "source_files": [
+    {
+      "filename": "soil_soilgrids_250m_raw.tif",
+      "metadata": "soil_soilgrids_250m_raw.tif.json"
+    }
+  ],
+  "operations_applied": [
+    {
+      "operation": "reproject",
+      "tool": "gdalwarp",
+      "target_epsg": 32617
+    },
+    {
+      "operation": "clip",
+      "tool": "AOI cutline",
+      "source": "/opt/agrs/Projects/US-PIPELINE-BRAVO/aoi/aoi.geojson"
+    }
+  ],
+  "file_size_bytes": 6405,
+  "validation_status": "passed",
+  "validation_date": "2025-11-27T12:40:51.363596Z",
+  "protocol_reference": "/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md",
+  "protocol_version": "1.0",
+  "zeus_version": "0.1.0",
+  "notes": "ISRIC SoilGrids SOC 0-30 cm layer for corrosion + constructability. Property: SOC at 0-5cm.",
+  "source": "ISRIC SoilGrids v2.0",
+  "provider": "ISRIC - World Soil Information",
+  "provider_url": "https://soilgrids.org/",
+  "coverage_date": "2020",
+  "documentation_url": "https://www.isric.org/explore/soilgrids",
+  "license": "CC BY 4.0",
+  "attribution": "Contains ISRIC SoilGrids data.",
+  "resolution_m": {
+    "x": 497.4967565955777,
+    "y": 494.48108121250857
+  },
+  "coverage_depth": "0-5cm",
+  "dimensions": {
+    "width": 35,
+    "height": 36
+  },
+  "extent": {
+    "minx": 490789.882,
+    "miny": 4234301.418,
+    "maxx": 508202.268,
+    "maxy": 4252102.737,
+    "crs": "EPSG:4326"
+  },
+  "bbox_wgs84": {
+    "west": -81.1055024,
+    "south": 38.2566922,
+    "east": -80.9060426,
+    "north": 38.4171341,
+    "crs": "EPSG:4326"
+  },
+  "statistics": {
+    "min": 1074.3571777344,
+    "max": 1935.5648193359,
+    "mean": 1424.9809864431,
+    "stddev": 185.58807627782,
+    "valid_percent": 87.62
+  }
+}

@@ -629,3 +629,19 @@ export async function clearCache(): Promise<void> {
     throw new Error(`Failed to clear cache: ${response.statusText}`);
   }
 }
+
+export interface PirlOutput {
+  filename: string;
+  size_bytes: number;
+  last_modified: string;
+  path: string;
+}
+
+export async function listPirlOutputs(projectName: string): Promise<PirlOutput[]> {
+  const base = await getApiBaseAsync();
+  const response = await fetch(`${base}/projects/${projectName}/pirl/outputs`);
+  if (!response.ok) {
+    throw new Error(`Failed to list PIRL outputs: ${response.statusText}`);
+  }
+  return response.json();
+}

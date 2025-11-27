@@ -378,29 +378,168 @@ class AgentConversation:
             • USGS Earthquake Hazards: https://earthquake.usgs.gov/hazards/
             • Global Landslide Susceptibility: NASA SEDAC
             
-            INFRASTRUCTURE (OpenStreetMap):
+            INFRASTRUCTURE VECTORS (OSM and Other Sources):
             ─────────────────────────────────
-            • Overpass API: https://overpass-api.de/api/interpreter
-            • Overpass Turbo: https://overpass-turbo.eu/
-            • Geofabrik extracts: https://download.geofabrik.de/
-            • BBBike extracts: https://extract.bbbike.org/
+            ⚠️ PRESERVE ALL ORIGINAL ATTRIBUTES - COMPUTED FIELDS ADDED AUTOMATICALLY ⚠️
             
-            OSM Query Template:
-            ```
-            curl -X POST "https://overpass-api.de/api/interpreter" \\
-              -d '[out:xml][timeout:300];
-                  (way["highway"~"motorway|trunk|primary|secondary|tertiary"]({self.ctx.bbox[1]},{self.ctx.bbox[0]},{self.ctx.bbox[3]},{self.ctx.bbox[2]}););
-                  out body; >; out skel qt;' \\
-              -o roads.osm
-            ogr2ogr -f GPKG roads.gpkg roads.osm lines
+            When fetching infrastructure data from ANY source (OSM, government datasets, commercial
+            providers, etc.), you MUST preserve ALL original attributes from the source data.
+            The processing pipeline will automatically ADD computed fields for PIRL compatibility
+            without removing any existing attributes.
+            
+            For OSM data: Use Overpass API with [out:json] format and extract all available tags.
+            For other sources: Download and convert to GeoPackage preserving the original schema.
+            
+            The following schemas show the MINIMUM required fields. Additional source-specific
+            fields will be preserved automatically.
+            
+            ═══════════════════════════════════════════════════════════════════════════════════════════
+            ROADS SCHEMA (layer name: "roads")
+            ═══════════════════════════════════════════════════════════════════════════════════════════
+            Required fields:
+            • osm_id      (integer) - OSM way ID
+            • name        (string)  - Road name from tags.name
+            • highway     (string)  - Road type (motorway, trunk, primary, secondary, tertiary, etc.)
+            • ref         (string)  - Road reference number (e.g., "I-95", "A1") from tags.ref
+            • surface     (string)  - Surface type (paved, asphalt, gravel, etc.) from tags.surface
+            • lanes       (string)  - Number of lanes from tags.lanes
+            • maxspeed    (string)  - Speed limit from tags.maxspeed
+            • oneway      (string)  - One-way flag (yes/no) from tags.oneway
+            
+            ═══════════════════════════════════════════════════════════════════════════════════════════
+            RAILWAYS SCHEMA (layer name: "railways")
+            ═══════════════════════════════════════════════════════════════════════════════════════════
+            Required fields:
+            • osm_id      (integer) - OSM way ID
+            • name        (string)  - Railway name from tags.name
+            • railway     (string)  - Railway type (rail, subway, tram, light_rail) from tags.railway
+            • operator    (string)  - Railway operator from tags.operator
+            • gauge       (string)  - Track gauge (e.g., "1435") from tags.gauge
+            • electrified (string)  - Electrification type (contact_line, rail, yes, no) from tags.electrified
+            • usage       (string)  - Usage type (main, branch, industrial) from tags.usage
+            • service     (string)  - Service type (spur, yard, siding) from tags.service
+            
+            ═══════════════════════════════════════════════════════════════════════════════════════════
+            WATERWAYS SCHEMA (layer name: "waterways")
+            ═══════════════════════════════════════════════════════════════════════════════════════════
+            Required fields:
+            • osm_id           (integer) - OSM way ID
+            • name             (string)  - Waterway name from tags.name
+            • waterway         (string)  - Waterway type (river, stream, canal, drain, ditch)
+            • width            (string)  - Raw width tag from tags.width
+            • width_m          (float)   - Width in meters (COMPUTED - see logic below)
+            • width_class      (string)  - Classification (COMPUTED: small/medium/large/major)
+            • crossing_cost_cat(string)  - Cost category (COMPUTED: low/medium/high/very_high)
+            • depth            (string)  - Depth from tags.depth
+            • seasonal         (string)  - Seasonal flag from tags.seasonal
+            • intermittent     (string)  - Intermittent flag from tags.intermittent
+            • tunnel           (string)  - Tunnel flag from tags.tunnel
+            
+            WIDTH COMPUTATION LOGIC (MUST IMPLEMENT):
+            ```python
+            # Parse width from tag (e.g., "25 m" -> 25.0)
+            width_m = None
+            if width_raw:
+                try:
+                    width_m = float(width_raw.split()[0])
+                except:
+                    pass
+            # Estimate from waterway type if not tagged
+            if width_m is None:
+                if waterway_type in ('stream', 'ditch'):
+                    width_m = 2.0   # 1-3m typical
+                elif waterway_type == 'drain':
+                    width_m = 5.0   # 3-10m typical
+                elif waterway_type == 'canal':
+                    width_m = 15.0  # 10-50m typical
+                else:  # river
+                    width_m = 25.0  # default for rivers
+            # Compute width_class and crossing_cost_cat
+            if width_m < 3:
+                width_class = 'small'
+                crossing_cost_cat = 'low'      # $10K-20K open cut
+            elif width_m < 10:
+                width_class = 'medium'
+                crossing_cost_cat = 'medium'   # $30K-70K open cut
+            elif width_m < 50:
+                width_class = 'large'
+                crossing_cost_cat = 'high'     # $200K-400K HDD
+            else:
+                width_class = 'major'
+                crossing_cost_cat = 'very_high' # $800K+ HDD
             ```
             
-            IMPORTANT FOR OSM: Expand hstore tags into columns:
+            ═══════════════════════════════════════════════════════════════════════════════════════════
+            POWER LINES SCHEMA (layer name: "power_lines")
+            ═══════════════════════════════════════════════════════════════════════════════════════════
+            Required fields:
+            • osm_id        (integer) - OSM way ID
+            • name          (string)  - Line name from tags.name
+            • power         (string)  - Power type (line, minor_line, cable) from tags.power
+            • voltage       (string)  - Raw voltage tag from tags.voltage
+            • voltage_v     (integer) - Voltage in volts (COMPUTED from voltage tag)
+            • voltage_kv    (float)   - Voltage in kilovolts (COMPUTED: voltage_v / 1000)
+            • voltage_class (string)  - Classification (COMPUTED: low/medium/high/extra_high)
+            • cables        (string)  - Number of cables from tags.cables
+            • operator      (string)  - Operator from tags.operator
+            • frequency     (string)  - Frequency from tags.frequency
+            • ref           (string)  - Reference from tags.ref
+            • crossing_cost (string)  - Cost category (COMPUTED based on voltage_class)
+            • location      (string)  - Location (underground, overhead) from tags.location
+            
+            VOLTAGE COMPUTATION LOGIC:
+            ```python
+            voltage_v = None
+            if voltage_str:
+                try:
+                    voltage_v = int(voltage_str.replace('kV', '000').replace(' ', ''))
+                except:
+                    pass
+            voltage_kv = voltage_v / 1000 if voltage_v else None
+            if voltage_v:
+                if voltage_v < 1000:
+                    voltage_class = 'low'
+                    crossing_cost = 'low'
+                elif voltage_v < 50000:
+                    voltage_class = 'medium'
+                    crossing_cost = 'medium'
+                elif voltage_v < 200000:
+                    voltage_class = 'high'
+                    crossing_cost = 'high'
+                else:
+                    voltage_class = 'extra_high'
+                    crossing_cost = 'very_high'
             ```
-            ogr2ogr -f GPKG output.gpkg input.osm lines -sql "SELECT *, 
-              hstore_get_value(other_tags,'surface') as surface,
-              hstore_get_value(other_tags,'lanes') as lanes,
-              ... FROM lines"
+            
+            ═══════════════════════════════════════════════════════════════════════════════════════════
+            PIPELINES SCHEMA (layer name: "pipelines")
+            ═══════════════════════════════════════════════════════════════════════════════════════════
+            Required fields:
+            • osm_id      (integer) - OSM way ID
+            • name        (string)  - Pipeline name from tags.name
+            • man_made    (string)  - Should be "pipeline" from tags.man_made
+            • substance   (string)  - Transported substance (gas, oil, water) from tags.substance
+            • operator    (string)  - Pipeline operator from tags.operator
+            • diameter    (string)  - Pipe diameter from tags.diameter
+            • location    (string)  - Location (underground, overground) from tags.location
+            • pressure    (string)  - Operating pressure from tags.pressure
+            
+            ═══════════════════════════════════════════════════════════════════════════════════════════
+            OSM FETCH WORKFLOW
+            ═══════════════════════════════════════════════════════════════════════════════════════════
+            1. Query Overpass API with [out:json] format (NOT xml)
+            2. Parse JSON response and extract way elements with geometry
+            3. For each element, extract tags and compute derived fields per schema above
+            4. Build GeoJSON FeatureCollection with proper properties
+            5. Convert GeoJSON to GeoPackage with ogr2ogr, setting correct layer name
+            6. Layer names MUST match: roads, railways, waterways, power_lines, pipelines
+            
+            Example Overpass query for roads:
+            ```
+            curl -s "https://overpass-api.de/api/interpreter" \\
+              -d '[out:json][timeout:300];
+                  (way["highway"~"motorway|trunk|primary|secondary|tertiary|unclassified|residential|service|track"]({self.ctx.bbox[1]},{self.ctx.bbox[0]},{self.ctx.bbox[3]},{self.ctx.bbox[2]}););
+                  out geom;' > roads.json
             ```
             
             ═══════════════════════════════════════════════════════════════════════════════════════════
@@ -1201,25 +1340,32 @@ def _opentopo_3dep_fetch(ctx: FetchContext, raw_path: Path, job: DatasetJobState
 
 
 def _osm_overpass_fetch(dataset_key: str, ctx: FetchContext, raw_path: Path, job: DatasetJobState) -> Tuple[List[str], Dict[str, object]]:
+    """
+    Fetch OSM data with proper attribute expansion for PIRL compatibility.
+    Uses JSON output format and Python processing to extract/compute all required fields.
+    """
     filters = OSM_OVERPASS_FILTERS.get(dataset_key)
     if not filters:
         raise RuntimeError(f"No Overpass filters configured for dataset '{dataset_key}'")
 
     south, west, north, east = ctx.bbox[1], ctx.bbox[0], ctx.bbox[3], ctx.bbox[2]
     filter_body = "\n  ".join(f"{expr}({south},{west},{north},{east});" for expr in filters)
+    
+    # Use JSON format with geometry for proper attribute extraction
     query = f"""
-[out:xml][timeout:900];
+[out:json][timeout:900];
 (
   {filter_body}
 );
-out body;
->;
-out skel qt;
+out geom;
 """.strip()
 
     tmp_dir = Path(tempfile.mkdtemp(prefix=f"osm_{dataset_key}_{job.id}_"))
-    osm_file = tmp_dir / f"{dataset_key}.osm"
+    json_file = tmp_dir / f"{dataset_key}.json"
+    geojson_file = tmp_dir / f"{dataset_key}.geojson"
+    
     try:
+        # Download from Overpass API
         last_error: Optional[Exception] = None
         for endpoint in OVERPASS_ENDPOINTS:
             download_cmd = [
@@ -1231,7 +1377,7 @@ out skel qt;
                 query,
                 endpoint,
                 "-o",
-                str(osm_file),
+                str(json_file),
             ]
             try:
                 _run_command(download_cmd, ctx.project_path, job, ctx, f"OSM {dataset_key} download")
@@ -1245,19 +1391,241 @@ out skel qt;
         if last_error:
             raise RuntimeError(f"OSM {dataset_key} download failed: {last_error}")
 
+        # Process JSON to GeoJSON with proper attribute schema
+        _log_to_job(job, ctx, f"Processing OSM {dataset_key} with attribute expansion...")
+        _process_osm_json_to_geojson(dataset_key, json_file, geojson_file, job, ctx)
+
+        # Convert GeoJSON to GeoPackage
+        layer_name = _get_osm_layer_name(dataset_key)
         convert_cmd = [
             OGR2OGR_BIN,
             "-f",
             "GPKG",
             "-overwrite",
+            "-nln",
+            layer_name,
+            "-a_srs",
+            "EPSG:4326",
             str(raw_path),
-            str(osm_file),
-            "lines",
+            str(geojson_file),
         ]
         _run_command(convert_cmd, ctx.project_path, job, ctx, f"OSM {dataset_key} conversion")
         return [f"osm_{dataset_key}_overpass_fetch"], {}
     finally:
         shutil.rmtree(tmp_dir, ignore_errors=True)
+
+
+def _get_osm_layer_name(dataset_key: str) -> str:
+    """Map dataset key to proper layer name."""
+    layer_names = {
+        "roads": "roads",
+        "railways": "railways",
+        "powerlines": "power_lines",
+        "waterways": "waterways",
+        "pipelines": "pipelines",
+    }
+    return layer_names.get(dataset_key, dataset_key)
+
+
+def _process_osm_json_to_geojson(
+    dataset_key: str,
+    json_file: Path,
+    geojson_file: Path,
+    job: DatasetJobState,
+    ctx: FetchContext,
+) -> None:
+    """
+    Process Overpass JSON response to GeoJSON with proper attribute schema.
+    Implements the same attribute expansion logic as ZEUS CLI tools.
+    """
+    with open(json_file, "r") as f:
+        data = json.load(f)
+    
+    features = []
+    for element in data.get("elements", []):
+        if element.get("type") != "way" or "geometry" not in element:
+            continue
+        
+        coords = [[pt["lon"], pt["lat"]] for pt in element["geometry"]]
+        if len(coords) < 2:
+            continue
+        
+        tags = element.get("tags", {})
+        osm_id = element.get("id")
+        
+        # Build properties based on dataset type
+        if dataset_key == "roads":
+            properties = _build_roads_properties(osm_id, tags)
+        elif dataset_key == "railways":
+            properties = _build_railways_properties(osm_id, tags)
+        elif dataset_key == "waterways":
+            properties = _build_waterways_properties(osm_id, tags)
+        elif dataset_key == "powerlines":
+            properties = _build_powerlines_properties(osm_id, tags)
+        elif dataset_key == "pipelines":
+            properties = _build_pipelines_properties(osm_id, tags)
+        else:
+            properties = {"osm_id": osm_id, "name": tags.get("name", "")}
+        
+        feature = {
+            "type": "Feature",
+            "geometry": {"type": "LineString", "coordinates": coords},
+            "properties": properties,
+        }
+        features.append(feature)
+    
+    geojson = {"type": "FeatureCollection", "features": features}
+    
+    with open(geojson_file, "w") as f:
+        json.dump(geojson, f)
+    
+    _log_to_job(job, ctx, f"Processed {len(features)} {dataset_key} features with expanded attributes")
+
+
+def _build_roads_properties(osm_id: int, tags: Dict[str, str]) -> Dict[str, Any]:
+    """Build roads properties with proper schema."""
+    return {
+        "osm_id": osm_id,
+        "name": tags.get("name", ""),
+        "highway": tags.get("highway", ""),
+        "ref": tags.get("ref", ""),
+        "surface": tags.get("surface", ""),
+        "lanes": tags.get("lanes", ""),
+        "maxspeed": tags.get("maxspeed", ""),
+        "oneway": tags.get("oneway", ""),
+    }
+
+
+def _build_railways_properties(osm_id: int, tags: Dict[str, str]) -> Dict[str, Any]:
+    """Build railways properties with proper schema."""
+    return {
+        "osm_id": osm_id,
+        "name": tags.get("name", ""),
+        "railway": tags.get("railway", ""),
+        "operator": tags.get("operator", ""),
+        "gauge": tags.get("gauge", ""),
+        "electrified": tags.get("electrified", ""),
+        "usage": tags.get("usage", ""),
+        "service": tags.get("service", ""),
+    }
+
+
+def _build_waterways_properties(osm_id: int, tags: Dict[str, str]) -> Dict[str, Any]:
+    """Build waterways properties with width computation logic."""
+    waterway_type = tags.get("waterway", "")
+    width_raw = tags.get("width", "")
+    
+    # Parse width from tag
+    width_m: Optional[float] = None
+    if width_raw:
+        try:
+            width_m = float(width_raw.split()[0])
+        except (ValueError, IndexError):
+            pass
+    
+    # Estimate from waterway type if not tagged
+    if width_m is None:
+        if waterway_type in ("stream", "ditch"):
+            width_m = 2.0  # 1-3m typical
+        elif waterway_type == "drain":
+            width_m = 5.0  # 3-10m typical
+        elif waterway_type == "canal":
+            width_m = 15.0  # 10-50m typical
+        else:  # river or other
+            width_m = 25.0  # default for rivers
+    
+    # Compute width_class and crossing_cost_cat
+    if width_m < 3:
+        width_class = "small"
+        crossing_cost_cat = "low"  # $10K-20K open cut
+    elif width_m < 10:
+        width_class = "medium"
+        crossing_cost_cat = "medium"  # $30K-70K open cut
+    elif width_m < 50:
+        width_class = "large"
+        crossing_cost_cat = "high"  # $200K-400K HDD
+    else:
+        width_class = "major"
+        crossing_cost_cat = "very_high"  # $800K+ HDD
+    
+    return {
+        "osm_id": osm_id,
+        "name": tags.get("name", ""),
+        "waterway": waterway_type,
+        "width": width_raw,
+        "width_m": width_m,
+        "width_class": width_class,
+        "crossing_cost_cat": crossing_cost_cat,
+        "depth": tags.get("depth", ""),
+        "seasonal": tags.get("seasonal", ""),
+        "intermittent": tags.get("intermittent", ""),
+        "tunnel": tags.get("tunnel", ""),
+    }
+
+
+def _build_powerlines_properties(osm_id: int, tags: Dict[str, str]) -> Dict[str, Any]:
+    """Build power lines properties with voltage computation logic."""
+    power_type = tags.get("power", "")
+    voltage_str = tags.get("voltage", "")
+    
+    # Parse voltage
+    voltage_v: Optional[int] = None
+    if voltage_str:
+        try:
+            # Handle formats like "380000", "380 kV", "380kV"
+            clean_v = voltage_str.lower().replace("kv", "000").replace(" ", "").replace(",", "")
+            voltage_v = int(clean_v)
+        except ValueError:
+            pass
+    
+    voltage_kv: Optional[float] = voltage_v / 1000 if voltage_v else None
+    
+    # Compute voltage_class and crossing_cost
+    voltage_class = ""
+    crossing_cost = ""
+    if voltage_v:
+        if voltage_v < 1000:
+            voltage_class = "low"
+            crossing_cost = "low"
+        elif voltage_v < 50000:
+            voltage_class = "medium"
+            crossing_cost = "medium"
+        elif voltage_v < 200000:
+            voltage_class = "high"
+            crossing_cost = "high"
+        else:
+            voltage_class = "extra_high"
+            crossing_cost = "very_high"
+    
+    return {
+        "osm_id": osm_id,
+        "name": tags.get("name", ""),
+        "power": power_type,
+        "voltage": voltage_str,
+        "voltage_v": voltage_v,
+        "voltage_kv": voltage_kv,
+        "voltage_class": voltage_class,
+        "cables": tags.get("cables", ""),
+        "operator": tags.get("operator", ""),
+        "frequency": tags.get("frequency", ""),
+        "ref": tags.get("ref", ""),
+        "crossing_cost": crossing_cost,
+        "location": tags.get("location", ""),
+    }
+
+
+def _build_pipelines_properties(osm_id: int, tags: Dict[str, str]) -> Dict[str, Any]:
+    """Build pipelines properties with proper schema."""
+    return {
+        "osm_id": osm_id,
+        "name": tags.get("name", ""),
+        "man_made": tags.get("man_made", ""),
+        "substance": tags.get("substance", ""),
+        "operator": tags.get("operator", ""),
+        "diameter": tags.get("diameter", ""),
+        "location": tags.get("location", ""),
+        "pressure": tags.get("pressure", ""),
+    }
 
 
 def _overpass_placeholder_command(*_: Any) -> List[str]:
@@ -1297,11 +1665,17 @@ def _load_project_context(project: str) -> FetchContext:
         except json.JSONDecodeError:
             metadata = {}
 
-    target_epsg = metadata.get("crs_epsg")
+    # Support both nested crs object (new standard) and flat crs_epsg (legacy)
+    crs_obj = metadata.get("crs")
+    if isinstance(crs_obj, dict):
+        target_epsg = crs_obj.get("epsg")
+        target_crs_name = crs_obj.get("name")
+    else:
+        target_epsg = metadata.get("crs_epsg")
+        target_crs_name = metadata.get("crs_name")
+    
     if not isinstance(target_epsg, int):
-        raise HTTPException(status_code=400, detail="project_metadata.json must define integer 'crs_epsg'")
-
-    target_crs_name = metadata.get("crs_name")
+        raise HTTPException(status_code=400, detail="project_metadata.json must define CRS (either 'crs.epsg' or legacy 'crs_epsg')")
 
     aoi_file, cutline_path = _resolve_aoi_file(project_path)
     bbox = _extent_from_cutline(cutline_path) or _parse_project_bbox(project_path)
@@ -2450,11 +2824,17 @@ def _process_raster(defn: DatasetDefinition, ctx: FetchContext, raw_path: Path, 
 
 
 def _process_vector(defn: DatasetDefinition, ctx: FetchContext, raw_path: Path, job: DatasetJobState) -> None:
+    """
+    Process vector data: reproject, clip to AOI, and enrich with computed fields.
+    Preserves ALL original attributes from any source while adding standardized computed fields.
+    """
     processed_path = defn.processed_path(ctx)
     processed_path.parent.mkdir(parents=True, exist_ok=True)
     tmp_path = processed_path.with_suffix(".tmp.gpkg")
     if tmp_path.exists():
         tmp_path.unlink()
+    
+    # Step 1: Reproject and clip (preserves all original attributes)
     cmd = [
         OGR2OGR_BIN,
         "-f",
@@ -2473,9 +2853,419 @@ def _process_vector(defn: DatasetDefinition, ctx: FetchContext, raw_path: Path, 
         str(raw_path),
     ]
     _run_command(cmd, ctx.project_path, job, ctx, f"{defn.label} processing")
+    
+    # Step 2: Enrich with computed fields (non-destructive - adds fields, never removes)
+    if defn.key in ("roads", "railways", "waterways", "powerlines", "pipelines"):
+        _log_to_job(job, ctx, f"Enriching {defn.label} with computed attributes...")
+        _enrich_vector_attributes(defn.key, tmp_path, job, ctx)
+    
     if processed_path.exists():
         processed_path.unlink()
     tmp_path.replace(processed_path)
+
+
+def _enrich_vector_attributes(dataset_key: str, gpkg_path: Path, job: DatasetJobState, ctx: FetchContext) -> None:
+    """
+    Enrich vector attributes with computed fields for PIRL compatibility.
+    This is NON-DESTRUCTIVE: it preserves ALL original attributes and only ADDS new computed fields.
+    Works with any source (OSM, government datasets, commercial data, etc.)
+    """
+    try:
+        from osgeo import ogr, gdal
+        gdal.UseExceptions()
+    except ImportError:
+        _log_to_job(job, ctx, "GDAL Python bindings not available, skipping attribute enrichment")
+        return
+    
+    ds = ogr.Open(str(gpkg_path), update=1)
+    if ds is None:
+        _log_to_job(job, ctx, f"Could not open {gpkg_path} for attribute enrichment")
+        return
+    
+    try:
+        layer = ds.GetLayer(0)
+        if layer is None:
+            return
+        
+        layer_defn = layer.GetLayerDefn()
+        existing_fields = {layer_defn.GetFieldDefn(i).GetName().lower() for i in range(layer_defn.GetFieldCount())}
+        
+        # Define computed fields based on dataset type
+        if dataset_key == "waterways":
+            _enrich_waterways(layer, existing_fields, job, ctx)
+        elif dataset_key == "powerlines":
+            _enrich_powerlines(layer, existing_fields, job, ctx)
+        elif dataset_key == "roads":
+            _enrich_roads(layer, existing_fields, job, ctx)
+        elif dataset_key == "railways":
+            _enrich_railways(layer, existing_fields, job, ctx)
+        elif dataset_key == "pipelines":
+            _enrich_pipelines(layer, existing_fields, job, ctx)
+        
+    finally:
+        ds = None  # Close dataset
+
+
+def _add_field_if_missing(layer, field_name: str, field_type, existing_fields: set) -> bool:
+    """Add a field to layer if it doesn't already exist. Returns True if field was added."""
+    from osgeo import ogr
+    if field_name.lower() in existing_fields:
+        return False
+    field_defn = ogr.FieldDefn(field_name, field_type)
+    layer.CreateField(field_defn)
+    return True
+
+
+def _enrich_waterways(layer, existing_fields: set, job: DatasetJobState, ctx: FetchContext) -> None:
+    """Enrich waterways with width_m, width_class, crossing_cost_cat if not present."""
+    from osgeo import ogr
+    
+    # Add computed fields if they don't exist
+    added_width_m = _add_field_if_missing(layer, "width_m", ogr.OFTReal, existing_fields)
+    added_width_class = _add_field_if_missing(layer, "width_class", ogr.OFTString, existing_fields)
+    added_crossing_cost = _add_field_if_missing(layer, "crossing_cost_cat", ogr.OFTString, existing_fields)
+    
+    if not (added_width_m or added_width_class or added_crossing_cost):
+        # All fields already exist, nothing to compute
+        return
+    
+    layer_defn = layer.GetLayerDefn()
+    
+    # Find source fields (case-insensitive lookup)
+    width_field_idx = -1
+    waterway_field_idx = -1
+    for i in range(layer_defn.GetFieldCount()):
+        fname = layer_defn.GetFieldDefn(i).GetName().lower()
+        if fname == "width":
+            width_field_idx = i
+        elif fname == "waterway":
+            waterway_field_idx = i
+    
+    enriched_count = 0
+    layer.ResetReading()
+    feature = layer.GetNextFeature()
+    while feature:
+        # Get existing width_m if present, otherwise compute
+        width_m = None
+        if not added_width_m:
+            width_m = feature.GetFieldAsDouble("width_m")
+        
+        if width_m is None or width_m == 0:
+            # Try to parse from width field
+            if width_field_idx >= 0:
+                width_raw = feature.GetFieldAsString(width_field_idx)
+                if width_raw:
+                    try:
+                        width_m = float(width_raw.split()[0])
+                    except (ValueError, IndexError):
+                        pass
+            
+            # Estimate from waterway type if still unknown
+            if width_m is None or width_m == 0:
+                waterway_type = ""
+                if waterway_field_idx >= 0:
+                    waterway_type = (feature.GetFieldAsString(waterway_field_idx) or "").lower()
+                
+                if waterway_type in ("stream", "ditch"):
+                    width_m = 2.0
+                elif waterway_type == "drain":
+                    width_m = 5.0
+                elif waterway_type == "canal":
+                    width_m = 15.0
+                else:  # river or unknown
+                    width_m = 25.0
+        
+        # Compute classifications
+        if width_m and width_m > 0:
+            if width_m < 3:
+                width_class = "small"
+                crossing_cost_cat = "low"
+            elif width_m < 10:
+                width_class = "medium"
+                crossing_cost_cat = "medium"
+            elif width_m < 50:
+                width_class = "large"
+                crossing_cost_cat = "high"
+            else:
+                width_class = "major"
+                crossing_cost_cat = "very_high"
+            
+            if added_width_m:
+                feature.SetField("width_m", width_m)
+            if added_width_class:
+                feature.SetField("width_class", width_class)
+            if added_crossing_cost:
+                feature.SetField("crossing_cost_cat", crossing_cost_cat)
+            
+            layer.SetFeature(feature)
+            enriched_count += 1
+        
+        feature = layer.GetNextFeature()
+    
+    _log_to_job(job, ctx, f"Enriched {enriched_count} waterway features with computed attributes")
+
+
+def _enrich_powerlines(layer, existing_fields: set, job: DatasetJobState, ctx: FetchContext) -> None:
+    """Enrich power lines with voltage_v, voltage_kv, voltage_class, crossing_cost if not present."""
+    from osgeo import ogr
+    
+    added_voltage_v = _add_field_if_missing(layer, "voltage_v", ogr.OFTInteger, existing_fields)
+    added_voltage_kv = _add_field_if_missing(layer, "voltage_kv", ogr.OFTReal, existing_fields)
+    added_voltage_class = _add_field_if_missing(layer, "voltage_class", ogr.OFTString, existing_fields)
+    added_crossing_cost = _add_field_if_missing(layer, "crossing_cost", ogr.OFTString, existing_fields)
+    
+    if not (added_voltage_v or added_voltage_kv or added_voltage_class or added_crossing_cost):
+        return
+    
+    layer_defn = layer.GetLayerDefn()
+    
+    # Find voltage field
+    voltage_field_idx = -1
+    for i in range(layer_defn.GetFieldCount()):
+        fname = layer_defn.GetFieldDefn(i).GetName().lower()
+        if fname == "voltage":
+            voltage_field_idx = i
+            break
+    
+    enriched_count = 0
+    layer.ResetReading()
+    feature = layer.GetNextFeature()
+    while feature:
+        voltage_v = None
+        
+        # Try to get existing voltage_v
+        if not added_voltage_v:
+            voltage_v = feature.GetFieldAsInteger("voltage_v")
+        
+        # Parse from voltage string if needed
+        if (voltage_v is None or voltage_v == 0) and voltage_field_idx >= 0:
+            voltage_str = feature.GetFieldAsString(voltage_field_idx) or ""
+            if voltage_str:
+                try:
+                    clean_v = voltage_str.lower().replace("kv", "000").replace(" ", "").replace(",", "")
+                    voltage_v = int(clean_v)
+                except ValueError:
+                    pass
+        
+        if voltage_v and voltage_v > 0:
+            voltage_kv = voltage_v / 1000.0
+            
+            if voltage_v < 1000:
+                voltage_class = "low"
+                crossing_cost = "low"
+            elif voltage_v < 50000:
+                voltage_class = "medium"
+                crossing_cost = "medium"
+            elif voltage_v < 200000:
+                voltage_class = "high"
+                crossing_cost = "high"
+            else:
+                voltage_class = "extra_high"
+                crossing_cost = "very_high"
+            
+            if added_voltage_v:
+                feature.SetField("voltage_v", voltage_v)
+            if added_voltage_kv:
+                feature.SetField("voltage_kv", voltage_kv)
+            if added_voltage_class:
+                feature.SetField("voltage_class", voltage_class)
+            if added_crossing_cost:
+                feature.SetField("crossing_cost", crossing_cost)
+            
+            layer.SetFeature(feature)
+            enriched_count += 1
+        
+        feature = layer.GetNextFeature()
+    
+    _log_to_job(job, ctx, f"Enriched {enriched_count} power line features with computed attributes")
+
+
+def _enrich_roads(layer, existing_fields: set, job: DatasetJobState, ctx: FetchContext) -> None:
+    """Enrich roads with road_class, crossing_difficulty if not present."""
+    from osgeo import ogr
+    
+    added_road_class = _add_field_if_missing(layer, "road_class", ogr.OFTString, existing_fields)
+    added_crossing_diff = _add_field_if_missing(layer, "crossing_difficulty", ogr.OFTString, existing_fields)
+    
+    if not (added_road_class or added_crossing_diff):
+        return
+    
+    layer_defn = layer.GetLayerDefn()
+    
+    # Find highway/road type field
+    highway_field_idx = -1
+    for i in range(layer_defn.GetFieldCount()):
+        fname = layer_defn.GetFieldDefn(i).GetName().lower()
+        if fname in ("highway", "road_type", "fclass", "type"):
+            highway_field_idx = i
+            break
+    
+    enriched_count = 0
+    layer.ResetReading()
+    feature = layer.GetNextFeature()
+    while feature:
+        highway_type = ""
+        if highway_field_idx >= 0:
+            highway_type = (feature.GetFieldAsString(highway_field_idx) or "").lower()
+        
+        # Classify road and crossing difficulty
+        if highway_type in ("motorway", "motorway_link", "trunk", "trunk_link"):
+            road_class = "major"
+            crossing_difficulty = "high"
+        elif highway_type in ("primary", "primary_link", "secondary", "secondary_link"):
+            road_class = "arterial"
+            crossing_difficulty = "medium"
+        elif highway_type in ("tertiary", "tertiary_link", "unclassified", "residential"):
+            road_class = "local"
+            crossing_difficulty = "low"
+        elif highway_type in ("service", "track", "path", "footway", "cycleway"):
+            road_class = "minor"
+            crossing_difficulty = "very_low"
+        else:
+            road_class = "unknown"
+            crossing_difficulty = "medium"
+        
+        if added_road_class:
+            feature.SetField("road_class", road_class)
+        if added_crossing_diff:
+            feature.SetField("crossing_difficulty", crossing_difficulty)
+        
+        layer.SetFeature(feature)
+        enriched_count += 1
+        
+        feature = layer.GetNextFeature()
+    
+    _log_to_job(job, ctx, f"Enriched {enriched_count} road features with computed attributes")
+
+
+def _enrich_railways(layer, existing_fields: set, job: DatasetJobState, ctx: FetchContext) -> None:
+    """Enrich railways with rail_class, crossing_difficulty if not present."""
+    from osgeo import ogr
+    
+    added_rail_class = _add_field_if_missing(layer, "rail_class", ogr.OFTString, existing_fields)
+    added_crossing_diff = _add_field_if_missing(layer, "crossing_difficulty", ogr.OFTString, existing_fields)
+    
+    if not (added_rail_class or added_crossing_diff):
+        return
+    
+    layer_defn = layer.GetLayerDefn()
+    
+    # Find railway type and usage fields
+    railway_field_idx = -1
+    usage_field_idx = -1
+    for i in range(layer_defn.GetFieldCount()):
+        fname = layer_defn.GetFieldDefn(i).GetName().lower()
+        if fname in ("railway", "rail_type", "fclass", "type"):
+            railway_field_idx = i
+        elif fname == "usage":
+            usage_field_idx = i
+    
+    enriched_count = 0
+    layer.ResetReading()
+    feature = layer.GetNextFeature()
+    while feature:
+        railway_type = ""
+        usage = ""
+        if railway_field_idx >= 0:
+            railway_type = (feature.GetFieldAsString(railway_field_idx) or "").lower()
+        if usage_field_idx >= 0:
+            usage = (feature.GetFieldAsString(usage_field_idx) or "").lower()
+        
+        # Classify railway and crossing difficulty
+        if railway_type == "rail":
+            if usage == "main":
+                rail_class = "mainline"
+                crossing_difficulty = "very_high"
+            elif usage in ("branch", "industrial"):
+                rail_class = "branch"
+                crossing_difficulty = "high"
+            else:
+                rail_class = "standard"
+                crossing_difficulty = "high"
+        elif railway_type in ("subway", "light_rail", "tram"):
+            rail_class = "transit"
+            crossing_difficulty = "medium"
+        elif railway_type in ("narrow_gauge", "miniature"):
+            rail_class = "narrow"
+            crossing_difficulty = "low"
+        elif railway_type in ("abandoned", "disused", "preserved"):
+            rail_class = "inactive"
+            crossing_difficulty = "very_low"
+        else:
+            rail_class = "unknown"
+            crossing_difficulty = "medium"
+        
+        if added_rail_class:
+            feature.SetField("rail_class", rail_class)
+        if added_crossing_diff:
+            feature.SetField("crossing_difficulty", crossing_difficulty)
+        
+        layer.SetFeature(feature)
+        enriched_count += 1
+        
+        feature = layer.GetNextFeature()
+    
+    _log_to_job(job, ctx, f"Enriched {enriched_count} railway features with computed attributes")
+
+
+def _enrich_pipelines(layer, existing_fields: set, job: DatasetJobState, ctx: FetchContext) -> None:
+    """Enrich pipelines with pipeline_class, crossing_consideration if not present."""
+    from osgeo import ogr
+    
+    added_pipe_class = _add_field_if_missing(layer, "pipeline_class", ogr.OFTString, existing_fields)
+    added_crossing_consid = _add_field_if_missing(layer, "crossing_consideration", ogr.OFTString, existing_fields)
+    
+    if not (added_pipe_class or added_crossing_consid):
+        return
+    
+    layer_defn = layer.GetLayerDefn()
+    
+    # Find substance and type fields
+    substance_field_idx = -1
+    type_field_idx = -1
+    for i in range(layer_defn.GetFieldCount()):
+        fname = layer_defn.GetFieldDefn(i).GetName().lower()
+        if fname == "substance":
+            substance_field_idx = i
+        elif fname in ("type", "pipeline_type", "man_made"):
+            type_field_idx = i
+    
+    enriched_count = 0
+    layer.ResetReading()
+    feature = layer.GetNextFeature()
+    while feature:
+        substance = ""
+        if substance_field_idx >= 0:
+            substance = (feature.GetFieldAsString(substance_field_idx) or "").lower()
+        
+        # Classify pipeline and crossing consideration
+        if substance in ("gas", "natural_gas", "lng"):
+            pipeline_class = "gas"
+            crossing_consideration = "high"  # Safety and regulatory requirements
+        elif substance in ("oil", "petroleum", "crude"):
+            pipeline_class = "oil"
+            crossing_consideration = "high"
+        elif substance in ("water", "sewage", "wastewater"):
+            pipeline_class = "water"
+            crossing_consideration = "medium"
+        elif substance in ("chemicals", "hazmat"):
+            pipeline_class = "hazardous"
+            crossing_consideration = "very_high"
+        else:
+            pipeline_class = "unknown"
+            crossing_consideration = "medium"
+        
+        if added_pipe_class:
+            feature.SetField("pipeline_class", pipeline_class)
+        if added_crossing_consid:
+            feature.SetField("crossing_consideration", crossing_consideration)
+        
+        layer.SetFeature(feature)
+        enriched_count += 1
+        
+        feature = layer.GetNextFeature()
+    
+    _log_to_job(job, ctx, f"Enriched {enriched_count} pipeline features with computed attributes")
 
 
 def _execute_dataset(defn: DatasetDefinition, ctx: FetchContext, job: DatasetJobState) -> None:
