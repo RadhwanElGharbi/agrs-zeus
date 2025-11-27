@@ -189,6 +189,8 @@ export interface AOIPreviewResponse {
     lon: number;
   };
   recommended_crs: ProjectCRSRecommendation;
+  start_point_within?: boolean | null;
+  end_point_within?: boolean | null;
 }
 
 export interface CreateProjectResponse {

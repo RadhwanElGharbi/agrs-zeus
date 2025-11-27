@@ -181,7 +181,12 @@ export function CreateProjectWizard({ open, onClose, onCreated }: CreateProjectW
     }
   }, [stepIndex, projectName, organization, projectCreator, aoiSummary, product, innerDiameter, outerDiameter])
 
-  const handleAoiPreview = async (options?: { geojson?: any; file?: File }) => {
+  const handleAoiPreview = async (options?: { 
+    geojson?: any; 
+    file?: File;
+    startCoords?: { lat: number; lon: number } | null;
+    endCoords?: { lat: number; lon: number } | null;
+  }) => {
     setPreviewLoading(true)
     setPreviewError(null)
     try {
@@ -195,6 +200,20 @@ export function CreateProjectWizard({ open, onClose, onCreated }: CreateProjectW
       } else {
         throw new Error('Upload an AOI file or draw an area to continue.')
       }
+      
+      // Include point coordinates for boundary checking
+      const startPt = options?.startCoords ?? startPointCoords
+      const endPt = options?.endCoords ?? endPointCoords
+      
+      if (startPt) {
+        formData.append('start_point_lat', String(startPt.lat))
+        formData.append('start_point_lon', String(startPt.lon))
+      }
+      if (endPt) {
+        formData.append('end_point_lat', String(endPt.lat))
+        formData.append('end_point_lon', String(endPt.lon))
+      }
+      
       const summary = await previewAoi(formData)
       setAoiSummary(summary)
     } catch (error) {
@@ -223,13 +242,22 @@ export function CreateProjectWizard({ open, onClose, onCreated }: CreateProjectW
     if (file) {
       try {
         const result = await previewPoint(file)
-        setStartPointCoords({ lat: result.latitude, lon: result.longitude })
+        const coords = { lat: result.latitude, lon: result.longitude }
+        setStartPointCoords(coords)
+        // Re-run AOI preview to check if point is within bounds
+        if (aoiFile || drawnAoi) {
+          void handleAoiPreview({ startCoords: coords })
+        }
       } catch (error) {
         console.error('Failed to parse start point file:', error)
         setStartPointCoords(null)
       }
     } else {
       setStartPointCoords(null)
+      // Re-run AOI preview without start point
+      if (aoiFile || drawnAoi) {
+        void handleAoiPreview({ startCoords: null })
+      }
     }
   }
 
@@ -238,13 +266,22 @@ export function CreateProjectWizard({ open, onClose, onCreated }: CreateProjectW
     if (file) {
       try {
         const result = await previewPoint(file)
-        setEndPointCoords({ lat: result.latitude, lon: result.longitude })
+        const coords = { lat: result.latitude, lon: result.longitude }
+        setEndPointCoords(coords)
+        // Re-run AOI preview to check if point is within bounds
+        if (aoiFile || drawnAoi) {
+          void handleAoiPreview({ endCoords: coords })
+        }
       } catch (error) {
         console.error('Failed to parse end point file:', error)
         setEndPointCoords(null)
       }
     } else {
       setEndPointCoords(null)
+      // Re-run AOI preview without end point
+      if (aoiFile || drawnAoi) {
+        void handleAoiPreview({ endCoords: null })
+      }
     }
   }
 
@@ -729,17 +766,29 @@ function AOIStep(props: {
           {/* Points Section */}
           <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-white/10">
             {/* Start Point */}
-            <div className="p-6 hover:bg-white/5 transition-colors relative group">
+            <div className={cn(
+              "p-6 hover:bg-white/5 transition-colors relative group",
+              props.summary?.start_point_within === false && "bg-red-500/10 border-l-2 border-l-red-500"
+            )}>
               <div className="flex items-center gap-3 mb-2">
-                <MapPin className="w-4 h-4 text-emerald-400" />
+                <MapPin className={cn("w-4 h-4", props.summary?.start_point_within === false ? "text-red-400" : "text-emerald-400")} />
                 <span className="text-xs font-mono uppercase text-white/50 tracking-widest">Start Point</span>
               </div>
               <div className={cn("text-xs font-mono truncate", props.startPointFile ? "text-white" : "text-white/30")}>
                 {props.startPointFile ? props.startPointFile.name : "Optional .geojson/.kml"}
               </div>
               {props.startPointCoords && (
-                <div className="mt-2 text-[11px] font-mono text-emerald-400/80">
+                <div className={cn(
+                  "mt-2 text-[11px] font-mono",
+                  props.summary?.start_point_within === false ? "text-red-400" : "text-emerald-400/80"
+                )}>
                   {props.startPointCoords.lat.toFixed(6)}°, {props.startPointCoords.lon.toFixed(6)}°
+                </div>
+              )}
+              {props.summary?.start_point_within === false && (
+                <div className="mt-2 text-[10px] font-mono text-red-400 flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3" />
+                  Outside AOI boundary
                 </div>
               )}
               <input 
@@ -751,17 +800,29 @@ function AOIStep(props: {
             </div>
 
             {/* End Point */}
-            <div className="p-6 hover:bg-white/5 transition-colors relative group">
+            <div className={cn(
+              "p-6 hover:bg-white/5 transition-colors relative group",
+              props.summary?.end_point_within === false && "bg-red-500/10 border-r-2 border-r-red-500"
+            )}>
               <div className="flex items-center gap-3 mb-2">
-                <MapPin className="w-4 h-4 text-red-400" />
+                <MapPin className={cn("w-4 h-4", props.summary?.end_point_within === false ? "text-red-400" : "text-red-400")} />
                 <span className="text-xs font-mono uppercase text-white/50 tracking-widest">End Point</span>
               </div>
               <div className={cn("text-xs font-mono truncate", props.endPointFile ? "text-white" : "text-white/30")}>
                 {props.endPointFile ? props.endPointFile.name : "Optional .geojson/.kml"}
               </div>
               {props.endPointCoords && (
-                <div className="mt-2 text-[11px] font-mono text-red-400/80">
+                <div className={cn(
+                  "mt-2 text-[11px] font-mono",
+                  props.summary?.end_point_within === false ? "text-red-400" : "text-red-400/80"
+                )}>
                   {props.endPointCoords.lat.toFixed(6)}°, {props.endPointCoords.lon.toFixed(6)}°
+                </div>
+              )}
+              {props.summary?.end_point_within === false && (
+                <div className="mt-2 text-[10px] font-mono text-red-400 flex items-center gap-1">
+                  <AlertTriangle className="w-3 h-3" />
+                  Outside AOI boundary
                 </div>
               )}
               <input 

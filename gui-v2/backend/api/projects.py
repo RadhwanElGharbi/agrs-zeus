@@ -128,6 +128,8 @@ class AOIPreviewResponse(BaseModel):
     country: Optional[str] = None
     centroid: Dict[str, float]
     recommended_crs: ProjectCRSRecommendation
+    start_point_within: Optional[bool] = None
+    end_point_within: Optional[bool] = None
 
 
 def _sanitize_project_name(name: str) -> str:
@@ -343,9 +345,14 @@ def _write_geojson(path: Path, data: Dict[str, Any]) -> None:
 async def preview_aoi(
     aoi_file: Optional[UploadFile] = File(None),
     drawn_geojson: Optional[str] = Form(None),
+    start_point_lat: Optional[float] = Form(None),
+    start_point_lon: Optional[float] = Form(None),
+    end_point_lat: Optional[float] = Form(None),
+    end_point_lon: Optional[float] = Form(None),
 ):
     """
     Analyze AOI geometry to provide area, centroid, inferred countries, and recommended CRS.
+    Optionally checks if start/end points are within the AOI.
     """
     with tempfile.TemporaryDirectory() as tmpdir:
         temp_dir = Path(tmpdir)
@@ -356,6 +363,18 @@ async def preview_aoi(
         iso3, country_name = _infer_country_from_point(centroid.y, centroid.x)
         zone, hemi, epsg = _calculate_utm_zone(centroid.x, centroid.y)
         crs_name = f"WGS 84 / UTM zone {zone}{hemi}"
+
+        # Check if points are within AOI
+        start_point_within = None
+        end_point_within = None
+        
+        if start_point_lat is not None and start_point_lon is not None:
+            start_pt = Point(start_point_lon, start_point_lat)
+            start_point_within = geom.contains(start_pt) or geom.touches(start_pt)
+        
+        if end_point_lat is not None and end_point_lon is not None:
+            end_pt = Point(end_point_lon, end_point_lat)
+            end_point_within = geom.contains(end_pt) or geom.touches(end_pt)
 
         return AOIPreviewResponse(
             area_km2=area_km2,
@@ -370,6 +389,8 @@ async def preview_aoi(
                 utm_zone=zone,
                 hemisphere=hemi,
             ),
+            start_point_within=start_point_within,
+            end_point_within=end_point_within,
         )
 
 
