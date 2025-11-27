@@ -45,6 +45,7 @@ export function DatasetFetchProgressDialog({ jobId, open, onClose, onJobFinished
   const [error, setError] = useState<string | null>(null)
   const [isCancelling, setIsCancelling] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [isClosing, setIsClosing] = useState(false)
   const completionHandled = useRef(false)
 
   const isComplete = job?.status === 'succeeded' || job?.status === 'failed'
@@ -52,6 +53,10 @@ export function DatasetFetchProgressDialog({ jobId, open, onClose, onJobFinished
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  useEffect(() => {
+    if (open) setIsClosing(false)
+  }, [open])
 
   useEffect(() => {
     completionHandled.current = false
@@ -88,7 +93,10 @@ export function DatasetFetchProgressDialog({ jobId, open, onClose, onJobFinished
   }, [jobId])
 
   const handleClose = () => {
-    if (isComplete) onClose()
+    if (isComplete) {
+      setIsClosing(true)
+      setTimeout(onClose, 150)
+    }
   }
 
   const sortedCategories = useMemo(() => {
@@ -110,10 +118,16 @@ export function DatasetFetchProgressDialog({ jobId, open, onClose, onJobFinished
 
   return createPortal(
     <>
-      <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] animate-in fade-in duration-300" />
+      <div className={cn(
+        "fixed inset-0 bg-black/80 backdrop-blur-md z-[100]",
+        isClosing ? "animate-fade-out" : "animate-fade-in"
+      )} />
       
       <div className="fixed inset-0 z-[101] flex items-center justify-center p-4">
-        <div className="relative w-[900px] max-w-[95vw] max-h-[90vh] bg-[#0a0a0a]/95 border border-white/10 rounded-sm shadow-[0_0_60px_-15px_rgba(0,0,0,0.9)] flex flex-col overflow-hidden font-mono">
+        <div className={cn(
+          "relative w-[900px] max-w-[95vw] max-h-[90vh] bg-[#0a0a0a]/95 border border-white/10 rounded-sm shadow-[0_0_60px_-15px_rgba(0,0,0,0.9)] flex flex-col overflow-hidden font-mono",
+          isClosing ? "animate-fade-out" : "animate-fade-in"
+        )}>
           
           {/* Header */}
           <header className="px-6 py-5 border-b border-white/10 bg-black/40 flex items-center justify-between">

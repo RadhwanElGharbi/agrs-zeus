@@ -48,6 +48,7 @@ export function ZeusLoadingDialog({ open, onComplete }: ZeusLoadingDialogProps) 
   const [stage, setStage] = useState<'initializing' | 'processing' | 'finalizing'>('initializing')
   const [logLines, setLogLines] = useState<string[]>([])
   const [mounted, setMounted] = useState(false)
+  const [isClosing, setIsClosing] = useState(false)
 
   const progressRef = useRef(0)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -59,6 +60,10 @@ export function ZeusLoadingDialog({ open, onComplete }: ZeusLoadingDialogProps) 
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  useEffect(() => {
+    if (open) setIsClosing(false)
+  }, [open])
 
   const clearTimers = () => {
     if (timeoutRef.current) {
@@ -108,7 +113,10 @@ export function ZeusLoadingDialog({ open, onComplete }: ZeusLoadingDialogProps) 
       updateStageForProgress(100)
       updateLogsForProgress(100, true)
       timeoutRef.current = setTimeout(() => {
-        onComplete()
+        setIsClosing(true)
+        setTimeout(() => {
+          onComplete()
+        }, 150)
       }, 400)
     }, 5000)
   }
@@ -175,7 +183,10 @@ export function ZeusLoadingDialog({ open, onComplete }: ZeusLoadingDialogProps) 
 
   return createPortal(
     <>
-      <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 backdrop-blur-xl">
+      <div className={cn(
+        "fixed inset-0 z-[200] flex items-center justify-center bg-black/90 backdrop-blur-xl",
+        isClosing ? "animate-fade-out" : "animate-fade-in"
+      )}>
         {/* Background Effects */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(var(--primary),0.1),transparent_70%)]" />
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px]" />

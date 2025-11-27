@@ -1,24 +1,74 @@
 {
-  "name": "geohazards_gem_seismic",
-  "type": "raster",
-  "source": "GEM Global Seismic Hazard Map",
-  "provider": "GEM Foundation",
-  "url": "https://www.globalquakemodel.org/",
-  "resolution_m": 100,
-  "crs": "EPSG:32633",
-  "extent": {
-    "minx": 373758.8446026653,
-    "miny": 4746501.112547567,
-    "maxx": 414158.8446026653,
-    "maxy": 4810101.112547567
-  },
-  "nodata_value": 0,
-  "date_acquired": "2025-10-28",
-  "fetch_tool": "gem_seismic_fetch",
-  "processing_steps": [
-    "reproject",
-    "clip",
-    "validate"
+  "dataset_name": "GEM Global Seismic Hazard (PGA) (Processed)",
+  "category": "geohazard",
+  "project": "test_project2",
+  "processing_date": "2025-11-26T01:40:20.974353Z",
+  "target_crs": "EPSG:32633",
+  "target_crs_name": "WGS 84 / UTM zone 33N",
+  "data_type": "Raster",
+  "format": "GeoTIFF",
+  "processed_path": "/opt/agrs/Projects/test_project2/data/rasters/processed/geohazards_epsg32633_processed.tif",
+  "raw_path": "/opt/agrs/Projects/test_project2/data/rasters/raw/geohazards_gem_seismic_raw.tif",
+  "raw_metadata_file": "/opt/agrs/Projects/test_project2/data/rasters/raw/geohazards_gem_seismic_raw.tif.json",
+  "source_files": [
+    {
+      "filename": "geohazards_gem_seismic_raw.tif",
+      "metadata": "geohazards_gem_seismic_raw.tif.json"
+    }
   ],
-  "validation_status": "passed"
+  "operations_applied": [
+    {
+      "operation": "reproject",
+      "tool": "gdalwarp",
+      "target_epsg": 32633
+    },
+    {
+      "operation": "clip",
+      "tool": "AOI cutline",
+      "source": "/opt/agrs/Projects/test_project2/data/vectors/aoi.gpkg"
+    }
+  ],
+  "file_size_bytes": 2231,
+  "validation_status": "passed",
+  "validation_date": "2025-11-26T01:40:20.974463Z",
+  "protocol_reference": "/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md",
+  "protocol_version": "1.0",
+  "zeus_version": "0.1.0",
+  "notes": "Peak ground acceleration (PGA) map for seismic risk screening.",
+  "source": "GEM hazard surface PGA",
+  "provider": "Global Earthquake Model (GEM) Foundation",
+  "provider_url": "https://hazard.openquake.org/",
+  "coverage_date": "2018",
+  "documentation_url": "https://hazard.openquake.org/",
+  "license": "CC BY-NC-SA 4.0",
+  "attribution": "Contains data \u00a9 GEM Foundation.",
+  "resolution_m": {
+    "x": 481.76757735432545,
+    "y": 481.1422028523703
+  },
+  "dimensions": {
+    "width": 80,
+    "height": 134
+  },
+  "extent": {
+    "minx": 374835.242,
+    "miny": 4745835.441,
+    "maxx": 413376.649,
+    "maxy": 4810308.496,
+    "crs": "EPSG:4326"
+  },
+  "bbox_wgs84": {
+    "west": 13.4534437,
+    "south": 42.8548576,
+    "east": 13.9396512,
+    "north": 43.4406676,
+    "crs": "EPSG:4326"
+  },
+  "statistics": {
+    "min": 0.0,
+    "max": 0.0,
+    "mean": 0.0,
+    "stddev": 0.0,
+    "valid_percent": 60.75
+  }
 }

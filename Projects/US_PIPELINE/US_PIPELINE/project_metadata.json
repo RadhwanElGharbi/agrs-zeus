@@ -1,6 +1,18 @@
 {
-    "crs_epsg": 32613,
-    "crs_name": "WGS 84 / UTM zone 13N",
+    "project_name": "US_PIPELINE",
+    "project_id": "AGRS_US_PIPELINE_USA_2025_001",
     "date_created": "2025-11-20T23:28:56Z",
-    "project_name": "US_PIPELINE"
+    "status": "active",
+    "project_creator": "Radwan El-Gharbi",
+    "collaborators": [],
+    "organization": "AGRS",
+    "country": "United States",
+    "iso3": "USA",
+    "measurement_system": "SI",
+    "crs": {
+        "epsg": 32613,
+        "name": "WGS 84 / UTM zone 13N"
+    },
+    "crs_epsg": 32613,
+    "crs_name": "WGS 84 / UTM zone 13N"
 }

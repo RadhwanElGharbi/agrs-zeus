@@ -8,9 +8,11 @@
 
 import React, { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { X, Folder, Calendar, MapPin, Globe, User, Building2, Briefcase, Users, RefreshCw, Loader2, ChevronRight, Terminal, Activity, ShieldCheck, Database } from 'lucide-react'
+import { X, Folder, Calendar, MapPin, Globe, User, RefreshCw, Loader2, ChevronRight, Terminal, Activity, ShieldCheck, Database, Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ProjectMetadata } from '@/lib/api/dataClient'
+import { useProject } from '@/lib/context/ProjectContext'
+import { CreateProjectWizard } from './CreateProjectWizard'
 
 interface ProjectSelectionDialogProps {
   open: boolean
@@ -31,6 +33,9 @@ export function ProjectSelectionDialog({
 }: ProjectSelectionDialogProps) {
   const [selectedProject, setSelectedProject] = useState<string | null>(null)
   const [mounted, setMounted] = useState(false)
+  const [isClosing, setIsClosing] = useState(false)
+  const [wizardOpen, setWizardOpen] = useState(false)
+  const { refreshProjects, setCurrentProject } = useProject()
 
   useEffect(() => {
     setMounted(true)
@@ -40,8 +45,24 @@ export function ProjectSelectionDialog({
   useEffect(() => {
     if (open) {
       setSelectedProject(null)
+      setIsClosing(false)
     }
   }, [open])
+
+  const handleClose = () => {
+    setIsClosing(true)
+    setTimeout(() => {
+      onClose()
+    }, 150) // Match animation duration (0.15s)
+  }
+
+  const handleProjectCreated = async (projectName: string) => {
+    await refreshProjects()
+    setCurrentProject(projectName)
+    onSelect(projectName)
+    setWizardOpen(false)
+    handleClose()
+  }
 
   if (!open || !mounted) return null
 
@@ -82,8 +103,11 @@ export function ProjectSelectionDialog({
     <>
       {/* Backdrop with technical grid overlay */}
       <div 
-        className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] animate-in fade-in duration-300"
-        onClick={onClose}
+        className={cn(
+          "fixed inset-0 bg-black/80 backdrop-blur-md z-[100]",
+          isClosing ? "animate-fade-out" : "animate-fade-in"
+        )}
+        onClick={handleClose}
       >
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:40px_40px]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,black_100%)]" />
@@ -92,7 +116,10 @@ export function ProjectSelectionDialog({
       {/* Dialog */}
       <div className="fixed inset-0 flex items-center justify-center z-[101] p-4 md:p-8 pointer-events-none">
         <div 
-          className="relative bg-[#0a0a0a]/90 border border-white/10 rounded-sm shadow-[0_0_50px_-12px_rgba(0,0,0,0.9)] w-full max-w-6xl max-h-[90vh] flex flex-col pointer-events-auto animate-in zoom-in-95 fade-in duration-300 overflow-hidden"
+          className={cn(
+            "relative bg-[#0a0a0a]/90 border border-white/10 rounded-sm shadow-[0_0_50px_-12px_rgba(0,0,0,0.9)] w-full max-w-6xl max-h-[90vh] flex flex-col pointer-events-auto overflow-hidden",
+            isClosing ? "animate-fade-out" : "animate-fade-in"
+          )}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Decorative Top Line */}
@@ -140,7 +167,7 @@ export function ProjectSelectionDialog({
                 <RefreshCw className={cn("w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors", isLoading && "animate-spin")} />
               </button>
               <button
-                onClick={onClose}
+                onClick={handleClose}
                 className="group p-2 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 rounded-sm transition-all"
               >
                 <X className="w-5 h-5 text-muted-foreground group-hover:text-red-400 transition-colors" />
@@ -179,6 +206,20 @@ export function ProjectSelectionDialog({
                     getProjectLocation={getProjectLocation}
                   />
                 ))}
+
+                {/* Create New Project Card */}
+                <button
+                  onClick={() => setWizardOpen(true)}
+                  className="group relative p-6 border border-dashed border-white/10 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/20 rounded-sm flex flex-col items-center justify-center gap-4 transition-all min-h-[240px]"
+                >
+                  <div className="p-4 rounded-full bg-white/5 border border-white/10 group-hover:border-primary/50 group-hover:bg-primary/10 transition-all">
+                    <Plus className="w-8 h-8 text-white/30 group-hover:text-primary transition-colors" />
+                  </div>
+                  <div className="text-center">
+                    <div className="text-sm font-bold text-white uppercase tracking-wide group-hover:text-primary transition-colors">Create New Project</div>
+                    <div className="text-[10px] font-mono text-white/30 mt-1">Initiate Setup Sequence</div>
+                  </div>
+                </button>
               </div>
             )}
           </div>
@@ -191,7 +232,7 @@ export function ProjectSelectionDialog({
             </div>
             <div className="flex items-center gap-4">
               <button
-                onClick={onClose}
+                onClick={handleClose}
                 className="px-6 py-2.5 text-xs font-mono uppercase tracking-wider text-white/60 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 rounded-sm transition-all"
               >
                 Abort
@@ -215,6 +256,12 @@ export function ProjectSelectionDialog({
           </div>
         </div>
       </div>
+
+      <CreateProjectWizard
+        open={wizardOpen}
+        onClose={() => setWizardOpen(false)}
+        onCreated={handleProjectCreated}
+      />
     </>,
     document.body
   )

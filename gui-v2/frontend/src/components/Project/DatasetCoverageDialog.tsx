@@ -349,10 +349,24 @@ export function DatasetCoverageDialog({ open, onClose }: DatasetCoverageDialogPr
   const [categoryOverrides, setCategoryOverrides] = useState<Partial<Record<DatasetCategory, string | null>>>({})
   
   const [mounted, setMounted] = useState(false)
+  const [isClosing, setIsClosing] = useState(false)
 
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  useEffect(() => {
+    if (open) {
+      setIsClosing(false)
+    }
+  }, [open])
+
+  const handleClose = () => {
+    setIsClosing(true)
+    setTimeout(() => {
+      onClose()
+    }, 150)
+  }
 
   useEffect(() => {
     if (!open) return
@@ -698,12 +712,21 @@ export function DatasetCoverageDialog({ open, onClose }: DatasetCoverageDialogPr
 
   return createPortal(
     <>
-      <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] animate-in fade-in duration-300" onClick={onClose}>
+      <div 
+        className={cn(
+          "fixed inset-0 bg-black/80 backdrop-blur-md z-[100]",
+          isClosing ? "animate-fade-out" : "animate-fade-in"
+        )} 
+        onClick={handleClose}
+      >
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
-      </div>
+            </div>
       
       <div className="fixed inset-0 z-[101] flex items-center justify-center p-4 pointer-events-none">
-        <div className="relative z-10 w-[1000px] max-w-[95vw] max-h-[90vh] bg-[#0a0a0a]/95 border border-white/10 rounded-sm shadow-[0_0_50px_-10px_rgba(0,0,0,0.8)] flex flex-col pointer-events-auto animate-in zoom-in-95 duration-300 overflow-hidden">
+        <div className={cn(
+          "relative z-10 w-[1000px] max-w-[95vw] max-h-[90vh] bg-[#0a0a0a]/95 border border-white/10 rounded-sm shadow-[0_0_50px_-10px_rgba(0,0,0,0.8)] flex flex-col pointer-events-auto overflow-hidden",
+          isClosing ? "animate-fade-out" : "animate-fade-in"
+        )}>
           
           {/* Header */}
           <header className="px-6 py-5 border-b border-white/10 flex items-center justify-between bg-black/20 shrink-0">
@@ -712,7 +735,7 @@ export function DatasetCoverageDialog({ open, onClose }: DatasetCoverageDialogPr
                 <Database className="w-3 h-3" />
                 <span>Acquisition Protocol</span>
               </div>
-              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3">
                 <h2 className="text-xl font-bold text-white uppercase tracking-wide font-mono">
                   Dataset Manager
                 </h2>
@@ -732,7 +755,7 @@ export function DatasetCoverageDialog({ open, onClose }: DatasetCoverageDialogPr
               )}
             </div>
             <button 
-              onClick={onClose}
+              onClick={handleClose}
               className="p-2 hover:bg-white/5 border border-transparent hover:border-white/10 rounded-sm text-white/50 hover:text-white transition-all"
             >
               <X className="w-5 h-5" />
@@ -755,51 +778,51 @@ export function DatasetCoverageDialog({ open, onClose }: DatasetCoverageDialogPr
                         <span className={cn("text-xs font-mono uppercase", minimumMet ? "text-emerald-500" : "text-amber-500")}>
                             {minimumMet ? 'Minimum Requirements Met' : 'Critical Datasets Missing'}
                         </span>
-                    </div>
+                  </div>
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3">
                   <button
-                    onClick={() => setRefreshKey((key) => key + 1)}
-                    disabled={readinessLoading || !!jobId}
+                  onClick={() => setRefreshKey((key) => key + 1)}
+                  disabled={readinessLoading || !!jobId}
                     className="flex items-center gap-2 px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider text-white/60 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/10 rounded-sm transition-all disabled:opacity-50"
                   >
                     <RefreshCw className={cn("w-3 h-3", readinessLoading && "animate-spin")} />
                     Refresh Status
                   </button>
                 </div>
-              </div>
+            </div>
 
-              {jobBanner && (
+            {jobBanner && (
                 <div className={cn(
                     "p-3 border rounded-sm text-xs font-mono flex items-center gap-3",
-                    jobBanner.kind === 'success' 
+                  jobBanner.kind === 'success'
                         ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" 
                         : "bg-red-500/10 border-red-500/30 text-red-400"
                 )}>
                     {jobBanner.kind === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
-                    {jobBanner.message}
-                </div>
-              )}
+                {jobBanner.message}
+              </div>
+            )}
 
-              {readinessState === 'loading' && (
+            {readinessState === 'loading' && (
                 <div className="flex items-center justify-center gap-3 py-12 text-white/40 font-mono text-xs uppercase tracking-widest">
                   <Loader2 className="w-5 h-5 animate-spin text-primary" />
                   <span>Scanning Project Architecture...</span>
-                </div>
-              )}
+              </div>
+            )}
 
-              {readinessState === 'error' && readinessError && (
+            {readinessState === 'error' && readinessError && (
                 <div className="border border-red-500/30 bg-red-500/10 text-red-400 rounded-sm p-4 text-xs font-mono">
                   ERROR: {readinessError}
-                </div>
-              )}
+              </div>
+            )}
 
-              {readinessState === 'ready' && datasetList.length > 0 && (
-                <>
-                  <div className="space-y-3">
-                    {datasetList.map((entry) => {
+            {readinessState === 'ready' && datasetList.length > 0 && (
+              <>
+                <div className="space-y-3">
+                  {datasetList.map((entry) => {
                       const category = entry.category as DatasetCategory
                       const isSelected = selectedCategories.has(category)
                       const overrideValue = categoryOverrides[category] || null
@@ -816,9 +839,9 @@ export function DatasetCoverageDialog({ open, onClose }: DatasetCoverageDialogPr
                         filteredOptions.unshift(overrideValue)
                       }
 
-                      return (
+                    return (
                         <div
-                          key={entry.category}
+                        key={entry.category}
                           className={cn(
                             "group relative flex gap-4 p-4 border rounded-sm transition-all duration-200 hover:bg-white/[0.02]",
                             entry.present ? "border-emerald-500/20 bg-emerald-500/[0.02]" : "border-white/10 bg-black/20",
@@ -829,7 +852,7 @@ export function DatasetCoverageDialog({ open, onClose }: DatasetCoverageDialogPr
                           <div className="pt-1">
                              <button
                                 onClick={() => handleToggleCategory(category)}
-                                disabled={!!jobId || readinessLoading}
+                          disabled={!!jobId || readinessLoading}
                                 className={cn(
                                     "w-5 h-5 border rounded-sm flex items-center justify-center transition-all",
                                     isSelected 
@@ -846,9 +869,9 @@ export function DatasetCoverageDialog({ open, onClose }: DatasetCoverageDialogPr
                                 <div className="flex items-center gap-3">
                                     <span className="font-bold text-sm text-white uppercase tracking-wide">{CATEGORY_LABELS[category]}</span>
                                     <span className="text-[9px] font-mono text-white/30 border border-white/10 px-1.5 py-0.5 rounded-sm">
-                                        {entry.dataset_type.toUpperCase()}
-                                    </span>
-                                </div>
+                              {entry.dataset_type.toUpperCase()}
+                            </span>
+                          </div>
                                 <div className={cn(
                                     "text-[9px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-wider border",
                                     entry.present 
@@ -895,20 +918,20 @@ export function DatasetCoverageDialog({ open, onClose }: DatasetCoverageDialogPr
                                 <div className="font-mono text-[10px] text-white/40 truncate max-w-[400px]">
                                     {entry.processed_path || 'No processed artifact'}
                                 </div>
-                                {entry.last_modified && (
+                            {entry.last_modified && (
                                     <div className="font-mono text-[10px] text-white/30">
                                         {new Date(entry.last_modified).toLocaleDateString()}
                                     </div>
-                                )}
+                            )}
                             </div>
                           </div>
                         </div>
-                      )
-                    })}
-                  </div>
-                </>
-              )}
-            </section>
+                    )
+                  })}
+                </div>
+              </>
+            )}
+          </section>
 
             {/* Reference Catalog */}
             <section className="space-y-4 pt-8 border-t border-white/10">
@@ -920,26 +943,26 @@ export function DatasetCoverageDialog({ open, onClose }: DatasetCoverageDialogPr
               {coverageState === 'loading' && (
                 <div className="text-center py-8 text-white/30 font-mono text-xs uppercase tracking-widest">
                     Accessing Global Index...
-                </div>
-              )}
+                  </div>
+                )}
 
               {coverageState === 'ready' && (
                 <div className="grid grid-cols-1 gap-8">
-                    <CoverageSection
+                <CoverageSection
                       title="AOI-Aligned Sources"
                       subtitle="High-precision datasets overlapping target coordinates."
-                      entries={localEntries}
+                  entries={localEntries}
                       onSelectDataset={handleCatalogDatasetSelect}
-                    />
-                    <CoverageSection
+                />
+                <CoverageSection
                       title="Baseline Global Sources"
                       subtitle="Standard fallback datasets."
-                      entries={globalEntries}
+                  entries={globalEntries}
                       onSelectDataset={handleCatalogDatasetSelect}
-                    />
+                />
                 </div>
-              )}
-            </section>
+            )}
+          </section>
           </div>
 
           {/* Fixed Footer */}
@@ -1009,8 +1032,8 @@ function CoverageSection({
                             <span className="text-primary">{CATEGORY_LABELS[inferredCategory].split('(')[0]}</span>
                         ) : (
                             <span className="text-white/20">Unmapped</span>
-                        )}
-                    </td>
+                    )}
+                  </td>
                     <td className="px-4 py-2 text-right">
                         {inferredCategory && onSelectDataset && (
                             <button 
@@ -1019,9 +1042,9 @@ function CoverageSection({
                             >
                                 USE
                             </button>
-                        )}
-                    </td>
-                  </tr>
+                    )}
+                  </td>
+                </tr>
                 )
               })}
             </tbody>

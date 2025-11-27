@@ -205,33 +205,84 @@ This file is **auto-populated** from the AOI file when the project is created or
 - Document CRS with EPSG code and human-readable name
 - **All datasets must be reprojected to the project CRS**
 
+**Required Fields** (`project_metadata.json`):
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `project_name` | string | ✅ | Human-readable project name |
+| `project_id` | string | ✅ | Unique project identifier (see format below) |
+| `date_created` | string | ✅ | ISO 8601 timestamp |
+| `status` | string | ✅ | Project status: `active`, `completed`, `archived` |
+| `project_creator` | string | ✅ | Name of the project creator |
+| `collaborators` | array | ✅ | Array of collaborator names (can be empty) |
+| `organization` | string | ✅ | Organization name |
+| `country` | string | ✅ | Full country name |
+| `iso3` | string | ✅ | ISO 3166-1 alpha-3 country code |
+| `measurement_system` | string | ✅ | `SI` or `Imperial` |
+| `crs` | object | ✅ | Coordinate Reference System |
+| `crs.epsg` | integer | ✅ | EPSG code (e.g., 32633) |
+| `crs.name` | string | ✅ | Human-readable CRS name |
+
+**Project ID Format:**
+
+```
+{organization}_{project_name}_{ISO3}_{YEAR}_{SEQ}
+```
+
+| Component | Description | Example |
+|-----------|-------------|---------|
+| `organization` | Organization abbreviation (uppercase) | `AGRS`, `SAIPEM` |
+| `project_name` | Short project name (underscores, no spaces) | `Central_Italy`, `US_PIPELINE` |
+| `ISO3` | ISO 3166-1 alpha-3 country code | `ITA`, `USA`, `SAU` |
+| `YEAR` | 4-digit year | `2025` |
+| `SEQ` | 3-digit sequence number | `001`, `002` |
+
+**Examples:**
+- `AGRS_Central_Italy_ITA_2025_001`
+- `AGRS_US_PIPELINE_USA_2025_001`
+- `SAIPEM_Eastern_Province_SAU_2025_003`
+
+**Optional Fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `project_code` | string | Client-specific project code |
+| `client` | string | Client organization name |
+| `contacts` | object | Project contacts (project_manager, gis_lead, client_contact) |
+
 **Example Project Metadata** (`project_metadata.json`):
 
 ```json
 {
-  "project_name": "SAIPEM Central Italy Pipeline Routing",
-  "project_code": "SAIPEM_IT_2025",
-  "client": "SAIPEM S.p.A.",
+  "project_name": "Central Italy Pipeline Routing",
+  "project_id": "SAIPEM_Central_Italy_ITA_2025_001",
   "date_created": "2025-10-11T00:00:00Z",
   "status": "active",
+  "project_creator": "John Smith",
+  "collaborators": ["Jane Doe", "Bob Wilson"],
+  "organization": "SAIPEM",
   "country": "Italy",
   "iso3": "ITA",
+  "measurement_system": "SI",
   "crs": {
     "epsg": 32633,
     "name": "WGS 84 / UTM zone 33N"
   },
-  "measurement_system": "SI",
+  "project_code": "SAIPEM_IT_2025",
+  "client": "SAIPEM S.p.A.",
   "contacts": {
-    "project_manager": "Name",
-    "gis_lead": "Name",
-    "client_contact": "Name"
+    "project_manager": "John Smith",
+    "gis_lead": "Jane Doe",
+    "client_contact": "Client Name"
   }
 }
 ```
 
-**DEPRECATED Fields**: The following root-level fields are deprecated. Use the nested `crs` object instead:
-- `crs_epsg` → Use `crs.epsg`
-- `crs_name` → Use `crs.name`
+**REMOVED Fields**: The following root-level fields have been removed. Use the nested `crs` object instead:
+- ~~`crs_epsg`~~ → Use `crs.epsg`
+- ~~`crs_name`~~ → Use `crs.name`
+
+**Note**: Legacy projects may still have `crs_epsg` and `crs_name` at the root level. The backend normalizes these to the nested `crs` object for API responses.
 
 ---
 

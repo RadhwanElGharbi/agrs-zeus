@@ -95,7 +95,7 @@ export function ProjectSelector() {
                 <span className="text-[10px] font-mono text-primary/80">EPSG:{projectMetadata.crs.epsg}</span>
               </div>
             )}
-            {projectMetadata.aoi && (
+            {projectMetadata.aoi && projectMetadata.aoi.area_km2 != null && (
               <div className="flex justify-between items-center">
                 <span className="text-[10px] text-white/40 font-mono uppercase tracking-wider">AOI Coverage</span>
                 <span className="text-[10px] font-mono text-white/80">{projectMetadata.aoi.area_km2.toFixed(1)} KM²</span>

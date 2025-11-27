@@ -103,3 +103,4 @@ export function Compass({ map, className }: CompassProps) {
   )
 }
 
+

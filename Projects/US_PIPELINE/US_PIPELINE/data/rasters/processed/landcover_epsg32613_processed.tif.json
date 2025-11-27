@@ -1,48 +1,74 @@
 {
-  "dataset_name": "ESA WorldCover 10m v200 2021 (Processed)",
-  "processing_date": "2025-11-21T04:51:30Z",
+  "dataset_name": "ESA WorldCover 2021 (Processed)",
+  "category": "landcover",
+  "project": "US_PIPELINE",
+  "processing_date": "2025-11-26T03:21:28.662419Z",
   "target_crs": "EPSG:32613",
   "target_crs_name": "WGS 84 / UTM zone 13N",
-  "resolution_m": 10,
   "data_type": "Raster",
   "format": "GeoTIFF",
-  "extent": {
-    "minx": 480194.86,
-    "miny": 4926710.49,
-    "maxx": 484925.86,
-    "maxy": 4933311.94,
-    "crs": "EPSG:32613"
-  },
-  "bbox_wgs84": {
-    "west": -105.249101,
-    "south": 44.493569,
-    "east": -105.189801,
-    "north": 44.552869
-  },
+  "processed_path": "/opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/processed/landcover_epsg32613_processed.tif",
+  "raw_path": "/opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/landcover_esa_worldcover_raw.tif",
+  "raw_metadata_file": "/opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/rasters/raw/landcover_esa_worldcover_raw.tif.json",
+  "source_files": [
+    {
+      "filename": "landcover_esa_worldcover_raw.tif",
+      "metadata": "landcover_esa_worldcover_raw.tif.json"
+    }
+  ],
   "operations_applied": [
     {
       "operation": "reproject",
       "tool": "gdalwarp",
-      "source_crs": "EPSG:4326",
-      "target_crs": "EPSG:32613",
-      "resampling": "near",
-      "timestamp": "2025-11-21T04:51:30Z"
+      "target_epsg": 32613
     },
     {
       "operation": "clip",
-      "tool": "gdalwarp",
-      "cutline": "aoi/aoi.kmz",
-      "timestamp": "2025-11-21T04:51:30Z"
+      "tool": "AOI cutline",
+      "source": "/opt/agrs/Projects/US_PIPELINE/US_PIPELINE/aoi/aoi.gpkg"
     }
   ],
-  "source_files": [
-    {
-      "filename": "landcover_esa_worldcover_10m_raw_N42W108.tif",
-      "metadata": "landcover_esa_worldcover_10m_raw_N42W108.tif.json"
-    }
-  ],
-  "file_size_bytes": 44530,
-  "nodata_value": 0,
+  "file_size_bytes": 15232,
   "validation_status": "passed",
-  "validation_date": "2025-11-21T04:51:30Z"
+  "validation_date": "2025-11-26T03:21:28.662463Z",
+  "protocol_reference": "/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md",
+  "protocol_version": "1.0",
+  "zeus_version": "0.1.0",
+  "notes": "10 m categorical landcover classes (agriculture, forest, urban, etc.).",
+  "source": "ESA WorldCover 2021",
+  "provider": "European Space Agency / VITO",
+  "provider_url": "https://worldcover2021.esa.int/",
+  "coverage_date": "2021",
+  "documentation_url": "https://worldcover2021.esa.int/",
+  "license": "CC BY 4.0",
+  "attribution": "\u00a9 ESA WorldCover, produced by VITO.",
+  "resolution_m": {
+    "x": 7.936244034387082,
+    "y": 7.941724723816886
+  },
+  "dimensions": {
+    "width": 596,
+    "height": 831
+  },
+  "extent": {
+    "minx": 480194.856,
+    "miny": 4926712.369,
+    "maxx": 484924.858,
+    "maxy": 4933311.942,
+    "crs": "EPSG:4326"
+  },
+  "bbox_wgs84": {
+    "west": -105.2493538,
+    "south": 44.4934552,
+    "east": -105.189609,
+    "north": 44.552983,
+    "crs": "EPSG:4326"
+  },
+  "statistics": {
+    "min": 10.0,
+    "max": 80.0,
+    "mean": 30.08205674812,
+    "stddev": 2.1071003372276,
+    "valid_percent": 99.26
+  }
 }

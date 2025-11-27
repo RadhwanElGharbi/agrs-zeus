@@ -1,22 +1,75 @@
 {
-  "name": "soil_soilgrids_250m",
-  "type": "raster",
-  "source": "ISRIC SoilGrids v2.0 250m",
-  "provider": "ISRIC - World Soil Information",
-  "url": "https://soilgrids.org/",
-  "resolution_m": 250,
-  "crs": "EPSG:32633",
-  "bands": [
-    {"name": "clay", "units": "g/kg", "description": "Clay content (0-2 µm)"},
-    {"name": "sand", "units": "g/kg", "description": "Sand content (50-2000 µm)"},
-    {"name": "soc", "units": "g/kg", "description": "Soil organic carbon content"},
-    {"name": "bdod", "units": "kg/dm³", "description": "Bulk density"}
+  "dataset_name": "SoilGrids v2.0 (SOC 0-5cm) (Processed)",
+  "category": "soil",
+  "project": "test_project2",
+  "processing_date": "2025-11-26T01:21:34.257040Z",
+  "target_crs": "EPSG:32633",
+  "target_crs_name": "WGS 84 / UTM zone 33N",
+  "data_type": "Raster",
+  "format": "GeoTIFF",
+  "processed_path": "/opt/agrs/Projects/test_project2/data/rasters/processed/soil_epsg32633_processed.tif",
+  "raw_path": "/opt/agrs/Projects/test_project2/data/rasters/raw/soil_soilgrids_250m_raw.tif",
+  "raw_metadata_file": "/opt/agrs/Projects/test_project2/data/rasters/raw/soil_soilgrids_250m_raw.tif.json",
+  "source_files": [
+    {
+      "filename": "soil_soilgrids_250m_raw.tif",
+      "metadata": "soil_soilgrids_250m_raw.tif.json"
+    }
   ],
-  "depth": "0-5cm",
-  "nodata_value": -32768,
-  "date_acquired": "2025-10-28",
-  "fetch_tool": "soilgrids_fetch",
-  "processing_steps": ["fetch_via_wcs", "reproject", "clip", "validate"],
-  "raw_source": "data/rasters/raw/soil_soilgrids_250m_raw.tif",
-  "validation_status": "passed"
+  "operations_applied": [
+    {
+      "operation": "reproject",
+      "tool": "gdalwarp",
+      "target_epsg": 32633
+    },
+    {
+      "operation": "clip",
+      "tool": "AOI cutline",
+      "source": "/opt/agrs/Projects/test_project2/data/vectors/aoi.gpkg"
+    }
+  ],
+  "file_size_bytes": 41176,
+  "validation_status": "passed",
+  "validation_date": "2025-11-26T01:21:34.257080Z",
+  "protocol_reference": "/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md",
+  "protocol_version": "1.0",
+  "zeus_version": "0.1.0",
+  "notes": "ISRIC SoilGrids SOC 0-30 cm layer for corrosion + constructability. Property: SOC at 0-5cm.",
+  "source": "ISRIC SoilGrids v2.0",
+  "provider": "ISRIC - World Soil Information",
+  "provider_url": "https://soilgrids.org/",
+  "coverage_date": "2020",
+  "documentation_url": "https://www.isric.org/explore/soilgrids",
+  "license": "CC BY 4.0",
+  "attribution": "Contains ISRIC SoilGrids data.",
+  "resolution_m": {
+    "x": 199.69640512096393,
+    "y": 200.2268794478808
+  },
+  "coverage_depth": "0-5cm",
+  "dimensions": {
+    "width": 193,
+    "height": 322
+  },
+  "extent": {
+    "minx": 374835.242,
+    "miny": 4745835.441,
+    "maxx": 413376.649,
+    "maxy": 4810308.496,
+    "crs": "EPSG:4326"
+  },
+  "bbox_wgs84": {
+    "west": 13.4534437,
+    "south": 42.8548576,
+    "east": 13.9396512,
+    "north": 43.4406676,
+    "crs": "EPSG:4326"
+  },
+  "statistics": {
+    "min": 284.0,
+    "max": 468.0,
+    "mean": 374.70159875877,
+    "stddev": 28.699916514051,
+    "valid_percent": 47.71
+  }
 }

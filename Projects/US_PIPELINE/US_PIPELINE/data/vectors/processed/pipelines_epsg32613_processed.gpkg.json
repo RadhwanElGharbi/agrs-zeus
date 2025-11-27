@@ -1,0 +1,60 @@
+{
+  "dataset_name": "OpenStreetMap Pipelines Extract (Processed)",
+  "category": "pipelines",
+  "project": "US_PIPELINE",
+  "processing_date": "2025-11-26T03:31:26.223003Z",
+  "target_crs": "EPSG:32613",
+  "target_crs_name": "WGS 84 / UTM zone 13N",
+  "data_type": "Vector",
+  "format": "GeoPackage",
+  "processed_path": "/opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/processed/pipelines_epsg32613_processed.gpkg",
+  "raw_path": "/opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/raw/osm_pipelines_raw.gpkg",
+  "raw_metadata_file": "/opt/agrs/Projects/US_PIPELINE/US_PIPELINE/data/vectors/raw/osm_pipelines_raw.gpkg.json",
+  "source_files": [
+    {
+      "filename": "osm_pipelines_raw.gpkg",
+      "metadata": "osm_pipelines_raw.gpkg.json"
+    }
+  ],
+  "operations_applied": [
+    {
+      "operation": "reproject",
+      "tool": "ogr2ogr",
+      "target_epsg": 32613
+    },
+    {
+      "operation": "clip",
+      "tool": "AOI cutline",
+      "source": "/opt/agrs/Projects/US_PIPELINE/US_PIPELINE/aoi/aoi.gpkg"
+    }
+  ],
+  "file_size_bytes": 106496,
+  "validation_status": "passed",
+  "validation_date": "2025-11-26T03:31:26.224555Z",
+  "protocol_reference": "/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md",
+  "protocol_version": "1.0",
+  "zeus_version": "0.1.0",
+  "notes": "Existing pipelines for ROW alignment + crossings.",
+  "source": "OpenStreetMap (pipeline)",
+  "provider": "OpenStreetMap Contributors",
+  "provider_url": "https://www.openstreetmap.org",
+  "coverage_date": "Current (live OSM)",
+  "documentation_url": "https://wiki.openstreetmap.org/wiki/Overpass_API",
+  "license": "ODbL 1.0",
+  "attribution": "\u00a9 OpenStreetMap contributors.",
+  "feature_count": 0,
+  "extent": {
+    "minx": -105.2502869671583,
+    "miny": 44.49238310951499,
+    "maxx": -105.18861512059449,
+    "maxy": 44.55405501865524,
+    "crs": "EPSG:4326"
+  },
+  "bbox_wgs84": {
+    "west": -105.2502869671583,
+    "south": 44.49238310951499,
+    "east": -105.18861512059449,
+    "north": 44.55405501865524,
+    "crs": "EPSG:4326"
+  }
+}

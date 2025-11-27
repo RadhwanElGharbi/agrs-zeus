@@ -1,0 +1,20 @@
+{
+    "dataset_name": "US Pipeline AOI",
+    "category": "aoi",
+    "project": "US_PIPELINE",
+    "processing_date": "2025-11-26T00:00:00Z",
+    "target_crs": "EPSG:32613",
+    "target_crs_name": "WGS 84 / UTM zone 13N",
+    "data_type": "Vector",
+    "geometry_type": "Polygon",
+    "format": "GeoPackage",
+    "source_files": [
+        {
+            "filename": "aoi.gpkg",
+            "metadata": null
+        }
+    ],
+    "validation_status": "passed"
+}
+
+

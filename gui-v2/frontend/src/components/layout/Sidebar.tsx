@@ -5,28 +5,35 @@ import Image from 'next/image'
 import { 
   Map, 
   Layers, 
-  Database, 
   Settings, 
-  Activity,
   ChevronLeft,
   ChevronRight,
   Terminal,
   Cpu,
-  ShieldCheck
+  ShieldCheck,
+  Target,
+  MonitorPlay,
+  LayoutDashboard,
+  Brain
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ProjectSelector } from '@/components/Project/ProjectSelector'
+import { ProjectProfileDialog } from '@/components/Project/ProjectProfileDialog'
 import { DatasetCoverageDialog } from '@/components/Project/DatasetCoverageDialog'
 import { ZeusLoadingDialog } from '@/components/shared/ZeusLoadingDialog'
+// removed DigitalTwinView import
 
 interface SidebarProps {
   className?: string
   devMode?: boolean
+  activeView: 'map' | 'digital-twin'
+  onViewChange: (view: 'map' | 'digital-twin') => void
 }
 
-export function Sidebar({ className, devMode = false }: SidebarProps) {
+export function Sidebar({ className, devMode = false, activeView, onViewChange }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false)
   const [showDatasets, setShowDatasets] = useState(false)
+  const [showProfile, setShowProfile] = useState(false)
   const [isZeusAnalyzing, setIsZeusAnalyzing] = useState(false)
 
   const handleDatasetsClick = () => {
@@ -43,10 +50,12 @@ export function Sidebar({ className, devMode = false }: SidebarProps) {
   }
 
   const navigationItems = [
-    { icon: Map, label: 'Map View', active: true, description: 'Main Interface' },
+    { icon: Target, label: 'Project Profile', onClick: () => setShowProfile(true), description: 'Metadata & CRS' },
+    { icon: Map, label: 'Map View', active: activeView === 'map', onClick: () => onViewChange('map'), description: 'Main Interface' },
+    { icon: MonitorPlay, label: 'Digital Twin', active: activeView === 'digital-twin', onClick: () => onViewChange('digital-twin'), description: 'Live Visualization' },
     { icon: Layers, label: 'Datasets', onClick: handleDatasetsClick, description: 'Acquisition & Mgmt' },
-    { icon: Activity, label: 'PIRL Training', description: 'Model Status' },
-    { icon: Database, label: 'Data Catalog', description: 'Global Index' },
+    { icon: Brain, label: 'PIRL AI', description: 'Model Status', tag: 'Under Development' },
+    { icon: LayoutDashboard, label: 'Project Management', description: 'Resource Planning', tag: 'Under Development' },
     { icon: Settings, label: 'Settings', description: 'System Config' },
   ]
 
@@ -154,6 +163,15 @@ export function Sidebar({ className, devMode = false }: SidebarProps) {
                 </div>
               )}
 
+              {/* Status Tag */}
+              {item.tag && !collapsed && (
+                 <div className="ml-auto pl-2">
+                    <div className="px-1.5 py-0.5 rounded-sm bg-red-500/10 border border-red-500/30 shadow-[0_0_5px_rgba(239,68,68,0.4)] animate-pulse">
+                      <span className="text-[8px] font-bold font-mono text-red-500 uppercase tracking-wider whitespace-nowrap block transform scale-90">{item.tag}</span>
+                    </div>
+                 </div>
+              )}
+
               {/* Hover Glow Effect */}
               {!item.active && (
                 <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
@@ -207,6 +225,7 @@ export function Sidebar({ className, devMode = false }: SidebarProps) {
         <ZeusLoadingDialog open={isZeusAnalyzing} onComplete={handleAnalysisComplete} />
       )}
       <DatasetCoverageDialog open={showDatasets} onClose={() => setShowDatasets(false)} />
+      <ProjectProfileDialog open={showProfile} onClose={() => setShowProfile(false)} />
     </div>
   )
 }

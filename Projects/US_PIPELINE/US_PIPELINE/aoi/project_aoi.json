@@ -1,8 +1,15 @@
 {
-  "name": "US_PIPELINE AOI",
-  "crs": "EPSG:32613",
-  "geometry_type": "POLYGON",
-  "source_file": "aoi.kml (from Downloads)",
-  "date_updated": "2025-11-21",
-  "notes": "Replaced MULTIPOLYGON with simpler POLYGON to fix boundary distance calculations"
+    "aoi_file": "/opt/agrs/Projects/US_PIPELINE/US_PIPELINE/aoi/aoi.gpkg",
+    "aoi_area_km2": 31.22,
+    "aoi_countries": ["United States"],
+    "start_point": {
+        "kml_file": "/opt/agrs/Projects/US_PIPELINE/US_PIPELINE/aoi/start_point.kml",
+        "latitude": 44.55183140917692,
+        "longitude": -105.1908884301829
+    },
+    "end_point": {
+        "kml_file": "/opt/agrs/Projects/US_PIPELINE/US_PIPELINE/aoi/end_point.kml",
+        "latitude": 44.49755703622304,
+        "longitude": -105.2437342719213
+    }
 }

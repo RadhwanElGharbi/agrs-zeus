@@ -1,24 +1,316 @@
 {
-  "tool": "soilgrids_fetch",
-  "timestamp": "2025-10-28T13:14:59Z",
-  "source": {
-    "provider": "ISRIC World Soil Information",
-    "dataset": "SoilGrids v2.0",
-    "version": "2.0",
-    "resolution": "250m",
-    "license": "CC BY 4.0",
-    "url": "https://soilgrids.org"
+  "dataset_name": "SoilGrids v2.0 (SOC 0-5cm)",
+  "category": "soil",
+  "project": "test_project2",
+  "raw_path": "/opt/agrs/Projects/test_project2/data/rasters/raw/soil_soilgrids_250m_raw.tif",
+  "fetch_tool": "soilgrids_fetch",
+  "fetch_command": "zeus_ai_agent if [ -f /opt/agrs/Projects/test_project2/data/rasters/processed/soil_epsg32633_processed.tif ]; then echo 'EXISTING_DATA_FOUND'; gdalinfo /opt/agrs/Projects/test_project2/data/rasters/processed/soil_epsg32633_processed.tif 2>/dev/null | head -20; else echo 'NO_EXISTING_DATA'; fi curl -s 'https://maps.isric.org/mapserv?map=/map/wrb.map&SERVICE=WCS&VERSION=2.0.1&REQUEST=GetCapabilities' 2>&1 | head -150 cd /opt/agrs/Projects/test_project2/data/rasters/raw && gdal_translate -of GTiff -co COMPRESS=LZW \"WCS:https://maps.isric.org/mapserv?map=/map/wrb.map&SERVICE=WCS&VERSION=2.0.1&REQUEST=GetCoverage&CoverageId=MostProbable&FORMAT=image/tiff&SUBSET=long(13.0,14.5)&SUBSET=lat(42.5,44.0)\" soil_wrb_raw_temp.tif 2>&1 gdalinfo '/vsicurl/https://files.isric.org/soilgrids/latest/data/clay/clay_0-5cm_mean.vrt' 2>&1 | head -40 cd /opt/agrs/Projects/test_project2/data/rasters/raw && gdalwarp -t_srs EPSG:4326 -te 13.0 42.5 14.5 44.0 -te_srs EPSG:4326 -tr 0.002083333 0.002083333 -co COMPRESS=LZW -overwrite '/vsicurl/https://files.isric.org/soilgrids/latest/data/clay/clay_0-5cm_mean.vrt' soil_clay_0_5cm_raw.tif 2>&1 ls -lh /opt/agrs/Projects/test_project2/data/rasters/raw/soil_clay_0_5cm_raw.tif 2>/dev/null && gdalinfo /opt/agrs/Projects/test_project2/data/rasters/raw/soil_clay_0_5cm_raw.tif 2>&1 | head -25 if [ ! -s /opt/agrs/Projects/test_project2/data/rasters/raw/soil_clay_0_5cm_raw.tif ]; then echo 'vsicurl failed, trying WCS with reduced resolution'; gdal_translate -of GTiff -co COMPRESS=LZW -outsize 600 720 'WCS:https://maps.isric.org/mapserv?map=/map/clay.map&SERVICE=WCS&VERSION=2.0.1&REQUEST=GetCoverage&CoverageId=clay_0-5cm_mean&FORMAT=image/tiff&SUBSET=long(13.0,14.5)&SUBSET=lat(42.5,44.0)' /opt/agrs/Projects/test_project2/data/rasters/raw/soil_clay_wcs.tif 2>&1; fi curl -s 'https://maps.isric.org/mapserv?map=/map/clay.map&SERVICE=WCS&VERSION=2.0.1&REQUEST=GetCapabilities' 2>&1 | grep -A2 'CoverageId' | head -30 cd /opt/agrs/Projects/test_project2/data/rasters/raw && gdal_translate -of GTiff -co COMPRESS=LZW 'WCS:https://maps.isric.org/mapserv?map=/map/clay.map&SERVICE=WCS&VERSION=1.1.1&REQUEST=GetCoverage&IDENTIFIER=clay_0-5cm_mean&FORMAT=image/tiff&BOUNDINGBOX=42.5,13.0,44.0,14.5,urn:ogc:def:crs:EPSG::4326&GridBaseCRS=urn:ogc:def:crs:EPSG::4326&GridCS=urn:ogc:def:cs:OGC:0.0:Grid2dSquareCS&GridType=urn:ogc:def:method:WCS:1.1:2dGridIn2dCrs&GridOffsets=0.002,0.002' soil_clay_wcs111.tif 2>&1 || echo 'WCS 1.1.1 also failed' curl -I 'https://files.isric.org/soilgrids/latest/data/clay/clay_0-5cm_mean/tileSG-017-038-clay_0-5cm_mean.tif' 2>&1 | head -10 curl -s 'https://files.isric.org/soilgrids/latest/data/clay/clay_0-5cm_mean/' 2>&1 | grep -oE 'tileSG-[0-9]+-[0-9]+' | sort -u | head -30 if [ ! -s /opt/agrs/Projects/test_project2/data/rasters/raw/soil_wrb_raw_temp.tif ]; then echo 'WRB failed, trying clay content endpoint'; gdal_translate -of GTiff -co COMPRESS=LZW \"WCS:https://maps.isric.org/mapserv?map=/map/clay.map&SERVICE=WCS&VERSION=2.0.1&REQUEST=GetCoverage&CoverageId=clay_0-5cm_mean&FORMAT=image/tiff&SUBSET=long(13.0,14.5)&SUBSET=lat(42.5,44.0)\" /opt/agrs/Projects/test_project2/data/rasters/raw/soil_clay_raw_temp.tif 2>&1; fi ls -lh /opt/agrs/Projects/test_project2/data/rasters/raw/soil_clay_0_5cm_raw.tif && cp /opt/agrs/Projects/test_project2/data/rasters/raw/soil_clay_0_5cm_raw.tif /opt/agrs/Projects/test_project2/data/rasters/raw/soil_soilgrids_250m_raw.tif gdalinfo /opt/agrs/Projects/test_project2/data/rasters/raw/soil_soilgrids_250m_raw.tif 2>&1 | head -30 cat > /opt/agrs/Projects/test_project2/data/rasters/raw/soil_soilgrids_250m_raw.tif.json << 'EOF'\n{\n    \"dataset_name\": \"SoilGrids v2.0 - Clay Content 0-5cm\",\n    \"source\": \"ISRIC - World Soil Information\",\n    \"provider\": \"ISRIC\",\n    \"provider_url\": \"https://www.isric.org/explore/soilgrids\",\n    \"coverage_date\": \"2020\",\n    \"fetch_date\": \"2025-11-26T01:18:00Z\",\n    \"fetch_tool\": \"gdalwarp via vsicurl\",\n    \"raw_crs\": \"EPSG:4326\",\n    \"resolution_m\": 250,\n    \"data_type\": \"Raster\",\n    \"format\": \"GeoTIFF\",\n    \"nodata_value\": -32768,\n    \"bbox_wgs84\": {\n        \"west\": 13.0,\n        \"south\": 42.5,\n        \"east\": 14.5,\n        \"north\": 44.0\n    },\n    \"documentation_url\": \"https://www.isric.org/explore/soilgrids/faq-soilgrids\",\n    \"license\": \"CC BY 4.0\",\n    \"attribution\": \"Poggio et al. (2021). SoilGrids 2.0: producing soil information for the globe. SOIL\",\n    \"variable\": \"clay_0-5cm_mean\",\n    \"units\": \"g/kg (grams per kilogram)\",\n    \"depth_interval\": \"0-5cm\",\n    \"notes\": \"Clay content at 0-5cm depth, mean prediction. Values in g/kg, divide by 10 to get %.\"\n}\nEOF gdalwarp -t_srs EPSG:32633 -cutline /opt/agrs/Projects/test_project2/data/vectors/aoi.gpkg -crop_to_cutline -dstnodata -32768 -r bilinear -co COMPRESS=LZW -co TILED=YES -overwrite /opt/agrs/Projects/test_project2/data/rasters/raw/soil_soilgrids_250m_raw.tif /opt/agrs/Projects/test_project2/data/rasters/processed/soil_epsg32633_processed.tif 2>&1 gdalinfo -stats /opt/agrs/Projects/test_project2/data/rasters/processed/soil_epsg32633_processed.tif 2>&1 cat > /opt/agrs/Projects/test_project2/data/rasters/processed/soil_epsg32633_processed.tif.json << 'EOF'\n{\n    \"dataset_name\": \"SoilGrids v2.0 - Clay Content 0-5cm (Processed)\",\n    \"processing_date\": \"2025-11-26T01:19:00Z\",\n    \"target_crs\": \"EPSG:32633\",\n    \"target_crs_name\": \"WGS 84 / UTM zone 33N\",\n    \"resolution_m\": 250,\n    \"data_type\": \"Raster\",\n    \"format\": \"GeoTIFF\",\n    \"bbox_wgs84\": {\n        \"west\": 13.445100,\n        \"south\": 42.845421,\n        \"east\": 13.948448,\n        \"north\": 43.450523\n    },\n    \"operations_applied\": [\n        {\n            \"operation\": \"reproject\",\n            \"tool\": \"gdalwarp\",\n            \"source_crs\": \"EPSG:4326\",\n            \"target_crs\": \"EPSG:32633\",\n            \"resampling\": \"bilinear\"\n        },\n        {\n            \"operation\": \"clip\",\n            \"tool\": \"gdalwarp\",\n            \"cutline\": \"data/vectors/aoi.gpkg\"\n        }\n    ],\n    \"source_files\": [\n        {\n            \"filename\": \"soil_soilgrids_250m_raw.tif\",\n            \"metadata\": \"soil_soilgrids_250m_raw.tif.json\"\n        }\n    ],\n    \"nodata_value\": -32768,\n    \"variable\": \"clay_0-5cm_mean\",\n    \"units\": \"g/kg\",\n    \"validation_status\": \"passed\"\n}\nEOF rm -f /opt/agrs/Projects/test_project2/data/rasters/soil.tif && ln -s processed/soil_epsg32633_processed.tif /opt/agrs/Projects/test_project2/data/rasters/soil.tif rm -f /opt/agrs/Projects/test_project2/data/rasters/raw/soil_*_raw_temp.tif /opt/agrs/Projects/test_project2/data/rasters/raw/soil_clay_0_5cm_raw.tif /opt/agrs/Projects/test_project2/data/rasters/raw/soil_clay_wcs*.tif 2>/dev/null; echo 'Cleanup done' ls -la /opt/agrs/Projects/test_project2/data/rasters/raw/soil_*_raw_temp.tif 2>/dev/null; for f in /opt/agrs/Projects/test_project2/data/rasters/raw/soil_*_raw_temp.tif; do if [ -f \"$f\" ]; then echo \"=== $f ===\"; gdalinfo \"$f\" 2>&1 | head -20; fi; done if [ ! -s /opt/agrs/Projects/test_project2/data/rasters/raw/soil_wrb_raw_temp.tif ] && [ ! -s /opt/agrs/Projects/test_project2/data/rasters/raw/soil_clay_raw_temp.tif ]; then echo 'Trying ISRIC REST API for clay content'; curl -L --retry 3 'https://rest.isric.org/soilgrids/v2.0/properties/query?lon=13.5&lat=43.0&property=clay&depth=0-5cm&value=mean' 2>&1 | head -50; fi gdalinfo '/vsicurl/https://files.isric.org/soilgrids/latest/data/clay/clay_0-5cm_mean.vrt' 2>&1 | head -30 cd /opt/agrs/Projects/test_project2/data/rasters/raw && gdalwarp -te 13.0 42.5 14.5 44.0 -te_srs EPSG:4326 -co COMPRESS=LZW '/vsicurl/https://files.isric.org/soilgrids/latest/data/clay/clay_0-5cm_mean.vrt' soil_clay_0_5cm_raw.tif 2>&1 if [ -f /opt/agrs/Projects/test_project2/data/rasters/raw/soil_clay_0_5cm_raw.tif ]; then gdalinfo /opt/agrs/Projects/test_project2/data/rasters/raw/soil_clay_0_5cm_raw.tif 2>&1 | head -30; ls -lh /opt/agrs/Projects/test_project2/data/rasters/raw/soil_clay_0_5cm_raw.tif; fi if [ -f /opt/agrs/Projects/test_project2/data/rasters/raw/soil_clay_0_5cm_raw.tif ]; then cp /opt/agrs/Projects/test_project2/data/rasters/raw/soil_clay_0_5cm_raw.tif /opt/agrs/Projects/test_project2/data/rasters/raw/soil_soilgrids_250m_raw.tif; elif [ -f /opt/agrs/Projects/test_project2/data/rasters/raw/soil_wrb_raw_temp.tif ] && [ -s /opt/agrs/Projects/test_project2/data/rasters/raw/soil_wrb_raw_temp.tif ]; then cp /opt/agrs/Projects/test_project2/data/rasters/raw/soil_wrb_raw_temp.tif /opt/agrs/Projects/test_project2/data/rasters/raw/soil_soilgrids_250m_raw.tif; fi cat > /opt/agrs/Projects/test_project2/data/rasters/raw/soil_soilgrids_250m_raw.tif.json << 'METADATA_EOF'\n{\n    \"dataset_name\": \"SoilGrids v2.0 - Clay Content 0-5cm\",\n    \"source\": \"ISRIC - World Soil Information\",\n    \"provider\": \"ISRIC\",\n    \"provider_url\": \"https://www.isric.org/explore/soilgrids\",\n    \"coverage_date\": \"2020\",\n    \"fetch_date\": \"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'\",\n    \"fetch_tool\": \"gdalwarp via vsicurl\",\n    \"raw_crs\": \"EPSG:4326\",\n    \"resolution_m\": 250,\n    \"data_type\": \"Raster\",\n    \"format\": \"GeoTIFF\",\n    \"nodata_value\": -32768,\n    \"bbox_wgs84\": {\n        \"west\": 13.0,\n        \"south\": 42.5,\n        \"east\": 14.5,\n        \"north\": 44.0\n    },\n    \"documentation_url\": \"https://www.isric.org/explore/soilgrids/faq-soilgrids\",\n    \"license\": \"CC BY 4.0\",\n    \"attribution\": \"Poggio et al. (2021). SoilGrids 2.0: producing soil information for the globe. SOIL\",\n    \"variable\": \"clay_0-5cm_mean\",\n    \"units\": \"g/kg (grams per kilogram)\",\n    \"depth_interval\": \"0-5cm\",\n    \"notes\": \"Clay content at 0-5cm depth, mean prediction. Values in g/kg, divide by 10 to get %.\"\n}\nMETADATA_EOF gdalwarp -t_srs EPSG:32633 -cutline /opt/agrs/Projects/test_project2/data/vectors/aoi.gpkg -crop_to_cutline -dstnodata -32768 -r bilinear -co COMPRESS=LZW -co TILED=YES /opt/agrs/Projects/test_project2/data/rasters/raw/soil_soilgrids_250m_raw.tif /opt/agrs/Projects/test_project2/data/rasters/processed/soil_epsg32633_processed.tif 2>&1 ls -lh /opt/agrs/Projects/test_project2/data/rasters/raw/soil_soilgrids_250m_raw.tif && test -s /opt/agrs/Projects/test_project2/data/rasters/raw/soil_soilgrids_250m_raw.tif && echo 'RAW_SOIL_VALID' || echo 'RAW_SOIL_MISSING_OR_EMPTY' ls -lh /opt/agrs/Projects/test_project2/data/rasters/processed/soil_epsg32633_processed.tif && test -s /opt/agrs/Projects/test_project2/data/rasters/processed/soil_epsg32633_processed.tif && echo 'PROCESSED_SOIL_VALID' || echo 'PROCESSED_SOIL_MISSING_OR_EMPTY' gdalsrsinfo -o epsg /opt/agrs/Projects/test_project2/data/rasters/processed/soil_epsg32633_processed.tif 2>/dev/null | grep -q 32633 && echo 'CRS_CORRECT: EPSG:32633' || echo 'CRS_INCORRECT' gdalinfo -mm /opt/agrs/Projects/test_project2/data/rasters/processed/soil_epsg32633_processed.tif 2>/dev/null | grep -E 'Computed Min/Max|NoData' | head -5 ls -la /opt/agrs/Projects/test_project2/data/rasters/soil.tif && readlink /opt/agrs/Projects/test_project2/data/rasters/soil.tif ls -la /opt/agrs/Projects/test_project2/data/rasters/raw/soil_soilgrids_250m_raw.tif.json /opt/agrs/Projects/test_project2/data/rasters/processed/soil_epsg32633_processed.tif.json 2>&1 gdalinfo -stats /opt/agrs/Projects/test_project2/data/rasters/processed/soil_epsg32633_processed.tif 2>&1 cat > /opt/agrs/Projects/test_project2/data/rasters/processed/soil_epsg32633_processed.tif.json << 'METADATA_EOF'\n{\n    \"dataset_name\": \"SoilGrids v2.0 - Clay Content 0-5cm (Processed)\",\n    \"processing_date\": \"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'\",\n    \"target_crs\": \"EPSG:32633\",\n    \"target_crs_name\": \"WGS 84 / UTM zone 33N\",\n    \"resolution_m\": 250,\n    \"data_type\": \"Raster\",\n    \"format\": \"GeoTIFF\",\n    \"bbox_wgs84\": {\n        \"west\": 13.445100,\n        \"south\": 42.845421,\n        \"east\": 13.948448,\n        \"north\": 43.450523\n    },\n    \"operations_applied\": [\n        {\n            \"operation\": \"reproject\",\n            \"tool\": \"gdalwarp\",\n            \"source_crs\": \"EPSG:4326\",\n            \"target_crs\": \"EPSG:32633\",\n            \"resampling\": \"bilinear\"\n        },\n        {\n            \"operation\": \"clip\",\n            \"tool\": \"gdalwarp\",\n            \"cutline\": \"data/vectors/aoi.gpkg\"\n        }\n    ],\n    \"source_files\": [\n        {\n            \"filename\": \"soil_soilgrids_250m_raw.tif\",\n            \"metadata\": \"soil_soilgrids_250m_raw.tif.json\"\n        }\n    ],\n    \"nodata_value\": -32768,\n    \"variable\": \"clay_0-5cm_mean\",\n    \"units\": \"g/kg\",\n    \"validation_status\": \"passed\"\n}\nMETADATA_EOF rm -f /opt/agrs/Projects/test_project2/data/rasters/soil.tif && ln -s processed/soil_epsg32633_processed.tif /opt/agrs/Projects/test_project2/data/rasters/soil.tif rm -f /opt/agrs/Projects/test_project2/data/rasters/raw/soil_*_raw_temp.tif /opt/agrs/Projects/test_project2/data/rasters/raw/soil_clay_0_5cm_raw.tif 2>/dev/null; echo 'Cleanup done' ls -lh /opt/agrs/Projects/test_project2/data/rasters/raw/soil_soilgrids_250m_raw.tif && test -s /opt/agrs/Projects/test_project2/data/rasters/raw/soil_soilgrids_250m_raw.tif && echo 'RAW_SOIL_VALID' || echo 'RAW_SOIL_MISSING_OR_EMPTY' ls -lh /opt/agrs/Projects/test_project2/data/rasters/processed/soil_epsg32633_processed.tif && test -s /opt/agrs/Projects/test_project2/data/rasters/processed/soil_epsg32633_processed.tif && echo 'PROCESSED_SOIL_VALID' || echo 'PROCESSED_SOIL_MISSING_OR_EMPTY' gdalsrsinfo -o epsg /opt/agrs/Projects/test_project2/data/rasters/processed/soil_epsg32633_processed.tif 2>/dev/null | grep -q 32633 && echo 'CRS_CORRECT: EPSG:32633' || echo 'CRS_INCORRECT' gdalinfo -mm /opt/agrs/Projects/test_project2/data/rasters/processed/soil_epsg32633_processed.tif 2>/dev/null | grep -E 'Computed Min/Max|NoData' | head -5 ls -la /opt/agrs/Projects/test_project2/data/rasters/soil.tif && readlink /opt/agrs/Projects/test_project2/data/rasters/soil.tif ls -la /opt/agrs/Projects/test_project2/data/rasters/raw/soil_soilgrids_250m_raw.tif.json /opt/agrs/Projects/test_project2/data/rasters/processed/soil_epsg32633_processed.tif.json 2>&1",
+  "fetch_date": "2025-11-26T01:21:34.214715Z",
+  "data_type": "Raster",
+  "format": "GeoTIFF",
+  "file_size_bytes": 241537,
+  "protocol_reference": "/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md",
+  "protocol_version": "1.0",
+  "zeus_version": "0.1.0",
+  "tiles_downloaded": [],
+  "notes": "ISRIC SoilGrids SOC 0-30 cm layer for corrosion + constructability. Property: SOC at 0-5cm.",
+  "requested_bbox_wgs84": {
+    "west": 13.44509971845132,
+    "south": 42.84542075700422,
+    "east": 13.94844832354258,
+    "north": 43.45052255391387,
+    "crs": "EPSG:4326"
   },
-  "query": {
-    "bbox": "13.454779,42.857057,13.938769,43.438886",
-    "depth": "0-5cm",
-    "properties": "clay,sand,soc,bdod",
-    "method": "WCS GetCoverage with EPSG:152160 transformation"
+  "validation_status": "passed",
+  "validation_date": "2025-11-26T01:21:34.214724Z",
+  "nodata_value": -9999.0,
+  "source": "ISRIC SoilGrids v2.0",
+  "provider": "ISRIC - World Soil Information",
+  "provider_url": "https://soilgrids.org/",
+  "coverage_date": "2020",
+  "documentation_url": "https://www.isric.org/explore/soilgrids",
+  "license": "CC BY 4.0",
+  "attribution": "Contains ISRIC SoilGrids data.",
+  "resolution_m": 250,
+  "coverage_depth": "0-5cm",
+  "metadata": {
+    "description": "/opt/agrs/Projects/test_project2/data/rasters/raw/soil_soilgrids_250m_raw.tif",
+    "driverShortName": "GTiff",
+    "driverLongName": "GeoTIFF",
+    "files": [
+      "/opt/agrs/Projects/test_project2/data/rasters/raw/soil_soilgrids_250m_raw.tif"
+    ],
+    "size": [
+      576,
+      658
+    ],
+    "coordinateSystem": {
+      "wkt": "PROJCRS[\"Interrupted_Goode_Homolosine\",\n    BASEGEOGCRS[\"GCS_WGS_1984_ellipse\",\n        DATUM[\"World Geodetic System 1984\",\n            ELLIPSOID[\"WGS 84\",6378137,298.257223563,\n                LENGTHUNIT[\"metre\",1]],\n            ID[\"EPSG\",6326]],\n        PRIMEM[\"Greenwich\",0,\n            ANGLEUNIT[\"Degree\",0.0174532925199433]]],\n    CONVERSION[\"unnamed\",\n        METHOD[\"Interrupted Goode Homolosine\"],\n        PARAMETER[\"Longitude of natural origin\",0,\n            ANGLEUNIT[\"Degree\",0.0174532925199433],\n            ID[\"EPSG\",8802]],\n        PARAMETER[\"False easting\",0,\n            LENGTHUNIT[\"metre\",1],\n            ID[\"EPSG\",8806]],\n        PARAMETER[\"False northing\",0,\n            LENGTHUNIT[\"metre\",1],\n            ID[\"EPSG\",8807]]],\n    CS[Cartesian,2],\n        AXIS[\"(E)\",east,\n            ORDER[1],\n            LENGTHUNIT[\"metre\",1,\n                ID[\"EPSG\",9001]]],\n        AXIS[\"(N)\",north,\n            ORDER[2],\n            LENGTHUNIT[\"metre\",1,\n                ID[\"EPSG\",9001]]]]",
+      "dataAxisToSRSAxisMapping": [
+        1,
+        2
+      ]
+    },
+    "geoTransform": [
+      1930012.6318188966,
+      250.1339873966317,
+      0.0,
+      4894621.32874084,
+      0.0,
+      -250.04893789127453
+    ],
+    "metadata": {
+      "": {
+        "AREA_OR_POINT": "Area",
+        "Code_version": "v2.0.0",
+        "Covariates": "ALR1:clm_wcl_srdyrsum,clm_wcl_s07rad,clm_wcl_bio07,clm_wcl_srdyrstd,clm_wcl_s08rad,clm_wcl_p05tot,mor_mrg_vbf,clm_wcl_s04rad,mor_env_demm,clm_mod_lstd02std,depth,clm_wcl_bio18,mor_mrg_vdp,clm_wcl_p04tot,clm_wcl_p09tot,clm_mod_lstd12std,clm_mod_lstd05std,clm_mod_lstd11std,clm_wcl_bio16,clm_wcl_bio17,clm_wcl_p10tot,clm_mod_lstd04std,clm_mod_lstd01std,clm_wcl_bio19,clm_wcl_p12tot,ALR2:depth,clm_wcl_s07rad,clm_wcl_srdyrsum,clm_wcl_p05tot,clm_wcl_s08rad,mor_mrg_vbf,mor_env_demm,clm_wcl_srdyrstd,clm_wcl_s04rad,clm_mod_lstd02std,clm_wcl_p04tot,mor_mrg_vdp,clm_wcl_bio18,clm_mod_lstd12std,clm_mod_lstd11std,clm_mod_lstd04std,clm_mod_lstd05std,clm_wcl_bio16,clm_mod_lstd01std,clm_wcl_p09tot,clm_wcl_bio19,clm_wcl_p10tot,clm_wcl_bio17,clm_wcl_bio07,clm_wcl_p12tot,clm_wcl_bio15,clm_wcl_bio08",
+        "Litter_layers": "FALSE",
+        "Model": "Quantile Regression Forests",
+        "Model_type": "ranger",
+        "Mtry": "10,10",
+        "Number_trees": "150,150",
+        "Outputs_abstract": "no WISE, March 2020 snapshot, NZ and Siberia gaps",
+        "Outputs_version": "RUN10",
+        "Transformation": "alr",
+        "WoSIS_version": "Data stream 7"
+      },
+      "IMAGE_STRUCTURE": {
+        "COMPRESSION": "LZW",
+        "INTERLEAVE": "BAND"
+      }
+    },
+    "cornerCoordinates": {
+      "upperLeft": [
+        1930012.632,
+        4894621.329
+      ],
+      "lowerLeft": [
+        1930012.632,
+        4730089.128
+      ],
+      "lowerRight": [
+        2074089.809,
+        4730089.128
+      ],
+      "upperRight": [
+        2074089.809,
+        4894621.329
+      ],
+      "center": [
+        2002051.22,
+        4812355.228
+      ]
+    },
+    "wgs84Extent": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            12.7353179,
+            44.0
+          ],
+          [
+            13.0,
+            42.5
+          ],
+          [
+            14.737628,
+            42.5
+          ],
+          [
+            14.5,
+            44.0
+          ],
+          [
+            12.7353179,
+            44.0
+          ]
+        ]
+      ]
+    },
+    "bands": [
+      {
+        "band": 1,
+        "block": [
+          576,
+          7
+        ],
+        "type": "Int16",
+        "colorInterpretation": "Gray",
+        "minimum": 156.0,
+        "maximum": 509.0,
+        "mean": 345.387,
+        "stdDev": 50.362,
+        "noDataValue": -32768.0,
+        "metadata": {
+          "": {
+            "STATISTICS_MAXIMUM": "509",
+            "STATISTICS_MEAN": "345.38716076375",
+            "STATISTICS_MINIMUM": "156",
+            "STATISTICS_STDDEV": "50.361648944602",
+            "STATISTICS_VALID_PERCENT": "42.96"
+          }
+        }
+      }
+    ],
+    "stac": {
+      "proj:shape": [
+        576,
+        658
+      ],
+      "proj:wkt2": "PROJCRS[\"Interrupted_Goode_Homolosine\",\n    BASEGEOGCRS[\"GCS_WGS_1984_ellipse\",\n        DATUM[\"World Geodetic System 1984\",\n            ELLIPSOID[\"WGS 84\",6378137,298.257223563,\n                LENGTHUNIT[\"metre\",1]],\n            ID[\"EPSG\",6326]],\n        PRIMEM[\"Greenwich\",0,\n            ANGLEUNIT[\"Degree\",0.0174532925199433]]],\n    CONVERSION[\"unnamed\",\n        METHOD[\"Interrupted Goode Homolosine\"],\n        PARAMETER[\"Longitude of natural origin\",0,\n            ANGLEUNIT[\"Degree\",0.0174532925199433],\n            ID[\"EPSG\",8802]],\n        PARAMETER[\"False easting\",0,\n            LENGTHUNIT[\"metre\",1],\n            ID[\"EPSG\",8806]],\n        PARAMETER[\"False northing\",0,\n            LENGTHUNIT[\"metre\",1],\n            ID[\"EPSG\",8807]]],\n    CS[Cartesian,2],\n        AXIS[\"(E)\",east,\n            ORDER[1],\n            LENGTHUNIT[\"metre\",1,\n                ID[\"EPSG\",9001]]],\n        AXIS[\"(N)\",north,\n            ORDER[2],\n            LENGTHUNIT[\"metre\",1,\n                ID[\"EPSG\",9001]]]]",
+      "proj:epsg": null,
+      "proj:projjson": {
+        "$schema": "https://proj.org/schemas/v0.7/projjson.schema.json",
+        "type": "ProjectedCRS",
+        "name": "Interrupted_Goode_Homolosine",
+        "base_crs": {
+          "name": "GCS_WGS_1984_ellipse",
+          "datum": {
+            "type": "GeodeticReferenceFrame",
+            "name": "World Geodetic System 1984",
+            "ellipsoid": {
+              "name": "WGS 84",
+              "semi_major_axis": 6378137,
+              "inverse_flattening": 298.257223563
+            },
+            "id": {
+              "authority": "EPSG",
+              "code": 6326
+            }
+          },
+          "coordinate_system": {
+            "subtype": "ellipsoidal",
+            "axis": [
+              {
+                "name": "Longitude",
+                "abbreviation": "lon",
+                "direction": "east",
+                "unit": {
+                  "type": "AngularUnit",
+                  "name": "Degree",
+                  "conversion_factor": 0.0174532925199433
+                }
+              },
+              {
+                "name": "Latitude",
+                "abbreviation": "lat",
+                "direction": "north",
+                "unit": {
+                  "type": "AngularUnit",
+                  "name": "Degree",
+                  "conversion_factor": 0.0174532925199433
+                }
+              }
+            ]
+          }
+        },
+        "conversion": {
+          "name": "unnamed",
+          "method": {
+            "name": "Interrupted Goode Homolosine"
+          },
+          "parameters": [
+            {
+              "name": "Longitude of natural origin",
+              "value": 0,
+              "unit": {
+                "type": "AngularUnit",
+                "name": "Degree",
+                "conversion_factor": 0.0174532925199433
+              },
+              "id": {
+                "authority": "EPSG",
+                "code": 8802
+              }
+            },
+            {
+              "name": "False easting",
+              "value": 0,
+              "unit": "metre",
+              "id": {
+                "authority": "EPSG",
+                "code": 8806
+              }
+            },
+            {
+              "name": "False northing",
+              "value": 0,
+              "unit": "metre",
+              "id": {
+                "authority": "EPSG",
+                "code": 8807
+              }
+            }
+          ]
+        },
+        "coordinate_system": {
+          "subtype": "Cartesian",
+          "axis": [
+            {
+              "name": "Easting",
+              "abbreviation": "E",
+              "direction": "east",
+              "unit": "metre"
+            },
+            {
+              "name": "Northing",
+              "abbreviation": "N",
+              "direction": "north",
+              "unit": "metre"
+            }
+          ]
+        }
+      },
+      "proj:transform": [
+        1930012.6318188966,
+        250.1339873966317,
+        0.0,
+        4894621.32874084,
+        0.0,
+        -250.04893789127453
+      ],
+      "raster:bands": [
+        {
+          "data_type": "int16",
+          "stats": {
+            "minimum": 156.0,
+            "maximum": 509.0,
+            "mean": 345.387,
+            "stddev": 50.362
+          },
+          "nodata": null
+        }
+      ],
+      "eo:bands": [
+        {
+          "name": "b1",
+          "description": "Gray"
+        }
+      ]
+    }
   },
-  "bands": [
-    {"band": 1, "property": "clay"},
-    {"band": 2, "property": "sand"},
-    {"band": 3, "property": "soc"},
-    {"band": 4, "property": "bdod"}
-  ]
+  "raw_crs": "EPSG:6326",
+  "extent": {
+    "minx": 1930012.632,
+    "miny": 4730089.128,
+    "maxx": 2074089.809,
+    "maxy": 4894621.329,
+    "crs": "EPSG:4326"
+  },
+  "bbox_wgs84": {
+    "west": 12.7353179,
+    "south": 42.5,
+    "east": 14.737628,
+    "north": 44.0,
+    "crs": "EPSG:4326"
+  },
+  "statistics": {
+    "min": 156.0,
+    "max": 509.0,
+    "mean": 345.38716076375,
+    "stddev": 50.361648944602,
+    "valid_percent": 42.96
+  },
+  "checksum_sha256": "b2891d7efbfeee74523e3dc3e163e32a94eee7817a62170aaadf206d60511481"
 }

@@ -1,6 +1,7 @@
 import React, { useRef, useState, useMemo, useEffect } from 'react'
 import { Table } from 'lucide-react'
 import { ManagedLayer, VectorDetail } from '@/lib/map-utils'
+import { cn } from '@/lib/utils'
 
 interface AttributeTableProps {
   layer: ManagedLayer
@@ -37,6 +38,12 @@ export const AttributeTable = React.memo(function AttributeTable({
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const [scrollTop, setScrollTop] = useState(0)
   const [containerHeight, setContainerHeight] = useState(400)
+  const [isClosing, setIsClosing] = useState(false)
+
+  const handleClose = () => {
+    setIsClosing(true)
+    setTimeout(onClose, 150)
+  }
 
   // Measure container height for virtualization
   useEffect(() => {
@@ -78,11 +85,13 @@ export const AttributeTable = React.memo(function AttributeTable({
 
   return (
     <div
-      className={`fixed ${
+      className={cn(
+        "fixed",
         isDocked
           ? 'absolute z-40 bottom-0 left-0 right-0'
-          : 'inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4'
-      }`}
+          : 'inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4',
+        isClosing ? "animate-fade-out" : "animate-fade-in"
+      )}
       style={!isDocked ? { position: 'fixed' } : { position: 'absolute' }}
     >
       <div
@@ -124,7 +133,7 @@ export const AttributeTable = React.memo(function AttributeTable({
               {isDocked ? 'Undock' : 'Dock to bottom'}
             </button>
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="text-xs font-medium text-primary hover:underline"
             >
               Close

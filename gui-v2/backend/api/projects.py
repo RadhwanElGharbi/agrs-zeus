@@ -229,6 +229,7 @@ def _create_point_feature(lat: float, lon: float) -> Dict[str, Any]:
 
 
 def _ensure_directories(base: Path) -> None:
+    """Create all required directories per PROJECT_STRUCTURE_STANDARD.md"""
     directories = [
         base / "aoi",
         base / "data" / "rasters" / "raw",
@@ -237,8 +238,12 @@ def _ensure_directories(base: Path) -> None:
         base / "data" / "vectors" / "processed",
         base / "inputs",
         base / "scripts",
-        base / "derived",
-        base / "outputs",
+        base / "derived" / "terrain_analysis",
+        base / "derived" / "cost_surfaces",
+        base / "derived" / "constraints",
+        base / "outputs" / "routing_results",
+        base / "outputs" / "reports",
+        base / "outputs" / "figures",
         base / "PIRL" / "models" / "best_model",
         base / "PIRL" / "models" / "checkpoints",
         base / "PIRL" / "outputs",
@@ -272,6 +277,176 @@ def _copy_template_if_exists(source: Path, destination: Path) -> None:
     if source.exists():
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy(source, destination)
+
+
+def _create_readme_files(base: Path, project_name: str) -> None:
+    """Create standard README files per PROJECT_STRUCTURE_STANDARD.md"""
+    
+    # inputs/README.md
+    inputs_readme = base / "inputs" / "README.md"
+    inputs_readme.write_text(f"""# Input Materials - {project_name}
+
+This directory contains client-provided materials for the project.
+
+## Contents
+
+| File | Description | Date Added |
+|------|-------------|------------|
+| (No files yet) | | |
+
+## Notes
+
+- Add all client-provided PDFs, drawings, specifications, and data here
+- Update this index when adding new materials
+- Do not modify original files; create copies in `scripts/` if processing is needed
+""", encoding="utf-8")
+
+    # scripts/README.md
+    scripts_readme = base / "scripts" / "README.md"
+    scripts_readme.write_text(f"""# Project Scripts - {project_name}
+
+This directory contains project-specific scripts for data fetching, processing, and validation.
+
+## Script Categories
+
+### Data Fetching (`fetch_*.sh`)
+Scripts for acquiring datasets from external sources.
+
+### Processing (`process_*.sh`)
+Scripts for geoprocessing operations (reprojection, clipping, mosaicking).
+
+### Validation (`validate_*.py`)
+Scripts for validating dataset quality and compliance.
+
+## Usage
+
+All scripts should be run from the project root directory:
+
+```bash
+cd /opt/agrs/Projects/{project_name}
+./scripts/fetch_example.sh
+```
+
+## Notes
+
+- Document all scripts with usage instructions
+- Log all operations to `logs/` directory
+- Follow the AGRS coding standards
+""", encoding="utf-8")
+
+    # docs/README.md
+    docs_readme = base / "docs" / "README.md"
+    docs_readme.write_text(f"""# Project Documentation - {project_name}
+
+This directory contains all project documentation.
+
+## Directory Structure
+
+```
+docs/
+├── README.md                    # This file
+├── data_sources.md              # Dataset sources and acquisition details
+├── project_confirmation_report.md  # Project confirmation report
+├── cost_matrix/                 # PIRL cost matrix data
+│   ├── COST_MATRIX_COMPLETE.csv
+│   ├── COST_MATRIX_COMPLETE.xlsx
+│   └── COST_MATRIX_README.md
+├── regulatory_docs/             # Regulatory documentation
+│   ├── national/
+│   ├── regional/
+│   ├── local/
+│   ├── regulatory_index.md
+│   └── regulatory_document_sources.md
+└── perplexity_research/         # AI research outputs
+    ├── aoi_intelligence.md
+    ├── regulatory_authorities.md
+    ├── stakeholders.md
+    ├── permitting.md
+    ├── environmental_constraints.md
+    ├── risk_assessment.md
+    ├── research_summary.md
+    └── queries/
+```
+
+## Required Documentation
+
+See `/opt/agrs/docs/Project Instructions/PROJECT_STRUCTURE_STANDARD.md` for complete documentation requirements.
+""", encoding="utf-8")
+
+    # docs/regulatory_docs/regulatory_index.md
+    reg_index = base / "docs" / "regulatory_docs" / "regulatory_index.md"
+    reg_index.write_text(f"""# Regulatory Documentation Index - {project_name}
+
+**Project:** {project_name}  
+**Date Compiled:** (Pending)  
+**Status:** Awaiting regulatory research
+
+## National-Level Regulations
+
+(To be populated after Perplexity research)
+
+## Regional Regulations
+
+(To be populated after Perplexity research)
+
+## Local Regulations
+
+(To be populated after Perplexity research)
+
+## Technical Standards
+
+(To be populated - ASME, ISO, API, etc.)
+
+## Action Items
+
+- [ ] Complete Perplexity regulatory research
+- [ ] Download all relevant regulatory documents
+- [ ] Review documents with legal team
+- [ ] Identify required permits and applications
+- [ ] Establish compliance checklist
+- [ ] Schedule regulatory agency consultations
+
+---
+
+See `/opt/agrs/docs/Project Instructions/PROJECT_STRUCTURE_STANDARD.md` for regulatory documentation requirements.
+""", encoding="utf-8")
+
+    # docs/cost_matrix/COST_MATRIX_README.md
+    cost_readme = base / "docs" / "cost_matrix" / "COST_MATRIX_README.md"
+    cost_readme.write_text(f"""# Cost Matrix Documentation - {project_name}
+
+This directory contains the cost matrix data used for PIRL training.
+
+## Files
+
+| File | Description |
+|------|-------------|
+| `COST_MATRIX_COMPLETE.csv` | Complete cost matrix in CSV format |
+| `COST_MATRIX_COMPLETE.xlsx` | Cost matrix with formatting (optional) |
+
+## Cost Categories
+
+The cost matrix should include the following categories:
+
+1. **Terrain Costs** - Slope, elevation change, terrain type
+2. **Land Cover Costs** - Per-meter costs for different land cover classes
+3. **Infrastructure Crossing Costs** - Roads, railways, pipelines, power lines
+4. **Environmental Costs** - Protected areas, sensitive habitats
+5. **Hydraulic Costs** - Compressor requirements, pressure drop
+6. **Construction Costs** - Soil type, accessibility, seasonal factors
+
+## Data Sources
+
+Document all cost assumptions and data sources here:
+
+- (To be populated)
+
+## Notes
+
+- All costs should be in consistent units (USD per meter or per crossing)
+- Document any regional adjustments or multipliers
+- Update when new cost data becomes available
+""", encoding="utf-8")
 
 
 def _generate_project_id(organization: str, project_name: str, iso3: Optional[str]) -> str:
@@ -1247,6 +1422,7 @@ async def create_project(
     project_dir.mkdir(parents=True, exist_ok=False)
     _ensure_directories(project_dir)
     _touch_logs(project_dir)
+    _create_readme_files(project_dir, sanitized_name)
 
     # Persist AOI GeoJSON
     aoi_geojson_path = project_dir / "aoi" / "aoi.geojson"
@@ -1265,16 +1441,26 @@ async def create_project(
         _write_geojson(project_dir / "aoi" / "end_point.geojson", end_geojson)
         end_point_entry = {"latitude": ep_lat, "longitude": ep_lon}
 
-    # AOI metadata
+    # AOI metadata (per PROJECT_STRUCTURE_STANDARD.md)
     aoi_metadata = {
         "aoi_file": "aoi/aoi.geojson",
         "aoi_area_km2": area_km2,
         "aoi_countries": [country_name] if country_name else [],
+        "crs_epsg": epsg,
+        "crs_name": crs_display_name,
     }
     if start_point_entry:
-        aoi_metadata["start_point"] = start_point_entry
+        aoi_metadata["start_point"] = {
+            "file": "aoi/start_point.geojson",
+            "latitude": start_point_entry["latitude"],
+            "longitude": start_point_entry["longitude"],
+        }
     if end_point_entry:
-        aoi_metadata["end_point"] = end_point_entry
+        aoi_metadata["end_point"] = {
+            "file": "aoi/end_point.geojson",
+            "latitude": end_point_entry["latitude"],
+            "longitude": end_point_entry["longitude"],
+        }
     _write_json(project_dir / "aoi" / "project_aoi.json", aoi_metadata)
 
     project_id = _generate_project_id(organization, sanitized_name, iso3)

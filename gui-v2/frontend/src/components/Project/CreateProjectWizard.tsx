@@ -433,95 +433,97 @@ export function CreateProjectWizard({ open, onClose, onCreated }: CreateProjectW
           </aside>
 
           <section className="flex-1 overflow-y-auto p-8 space-y-8">
-            {stepIndex === 0 && (
-              <IdentityStep
-                projectName={projectName}
-                organization={organization}
-                projectCreator={projectCreator}
-                measurementSystem={measurementSystem}
-                projectIdPreview={projectIdPreview}
-                onProjectNameChange={(value) => setProjectName(sanitizeProjectName(value))}
-                onOrganizationChange={setOrganization}
-                onCreatorChange={setProjectCreator}
-                onMeasurementSystemChange={(value) => setMeasurementSystem(value)}
-              />
-            )}
+            <div key={stepIndex} className="animate-slide-up-fade">
+              {stepIndex === 0 && (
+                <IdentityStep
+                  projectName={projectName}
+                  organization={organization}
+                  projectCreator={projectCreator}
+                  measurementSystem={measurementSystem}
+                  projectIdPreview={projectIdPreview}
+                  onProjectNameChange={(value) => setProjectName(sanitizeProjectName(value))}
+                  onOrganizationChange={setOrganization}
+                  onCreatorChange={setProjectCreator}
+                  onMeasurementSystemChange={(value) => setMeasurementSystem(value)}
+                />
+              )}
 
-            {stepIndex === 1 && (
-              <AOIStep
-                mode={aoiMode}
-                onModeChange={setAoiMode}
-                aoiFile={aoiFile}
-                onFileChange={(file) => {
-                  setAoiFile(file)
-                  setDrawnAoi(null)
-                  if (file) {
-                    void handleAoiPreview({ file })
-                  } else {
-                    setAoiSummary(null)
-                  }
-                }}
-                startPointFile={startPointFile}
-                endPointFile={endPointFile}
-                startPointCoords={startPointCoords}
-                endPointCoords={endPointCoords}
-                startPointError={startPointError}
-                endPointError={endPointError}
-                onStartPointFile={handleStartPointFile}
-                onEndPointFile={handleEndPointFile}
-                summary={aoiSummary}
-                crsSelection={crsSelection}
-                onLaunchCrsSelector={() => setCrsDialogOpen(true)}
-                previewError={previewError}
-                previewLoading={previewLoading}
-                onLaunchDraw={() => {
-                  setDrawOverlayOpen(true)
-                  setAoiMode('draw')
-                }}
-              />
-            )}
+              {stepIndex === 1 && (
+                <AOIStep
+                  mode={aoiMode}
+                  onModeChange={setAoiMode}
+                  aoiFile={aoiFile}
+                  onFileChange={(file) => {
+                    setAoiFile(file)
+                    setDrawnAoi(null)
+                    if (file) {
+                      void handleAoiPreview({ file })
+                    } else {
+                      setAoiSummary(null)
+                    }
+                  }}
+                  startPointFile={startPointFile}
+                  endPointFile={endPointFile}
+                  startPointCoords={startPointCoords}
+                  endPointCoords={endPointCoords}
+                  startPointError={startPointError}
+                  endPointError={endPointError}
+                  onStartPointFile={handleStartPointFile}
+                  onEndPointFile={handleEndPointFile}
+                  summary={aoiSummary}
+                  crsSelection={crsSelection}
+                  onLaunchCrsSelector={() => setCrsDialogOpen(true)}
+                  previewError={previewError}
+                  previewLoading={previewLoading}
+                  onLaunchDraw={() => {
+                    setDrawOverlayOpen(true)
+                    setAoiMode('draw')
+                  }}
+                />
+              )}
 
-            {stepIndex === 2 && (
-              <CRSStep
-                summary={aoiSummary}
-                crsSelection={crsSelection}
-                onLaunchCrsSelector={() => setCrsDialogOpen(true)}
-              />
-            )}
+              {stepIndex === 2 && (
+                <CRSStep
+                  summary={aoiSummary}
+                  crsSelection={crsSelection}
+                  onLaunchCrsSelector={() => setCrsDialogOpen(true)}
+                />
+              )}
 
-            {stepIndex === 3 && (
-              <PipelineStep
-                product={product}
-                innerDiameter={innerDiameter}
-                outerDiameter={outerDiameter}
-                measurementSystem={measurementSystem}
-                innerDiameterUnit={innerDiameterUnit}
-                outerDiameterUnit={outerDiameterUnit}
-                onProductChange={setProduct}
-                onInnerDiameterChange={setInnerDiameter}
-                onOuterDiameterChange={setOuterDiameter}
-                onInnerDiameterUnitChange={setInnerDiameterUnit}
-                onOuterDiameterUnitChange={setOuterDiameterUnit}
-              />
-            )}
+              {stepIndex === 3 && (
+                <PipelineStep
+                  product={product}
+                  innerDiameter={innerDiameter}
+                  outerDiameter={outerDiameter}
+                  measurementSystem={measurementSystem}
+                  innerDiameterUnit={innerDiameterUnit}
+                  outerDiameterUnit={outerDiameterUnit}
+                  onProductChange={setProduct}
+                  onInnerDiameterChange={setInnerDiameter}
+                  onOuterDiameterChange={setOuterDiameter}
+                  onInnerDiameterUnitChange={setInnerDiameterUnit}
+                  onOuterDiameterUnitChange={setOuterDiameterUnit}
+                />
+              )}
 
-            {stepIndex === 4 && (
-              <ReviewStep
-                projectName={projectName}
-                organization={organization}
-                projectCreator={projectCreator}
-                measurementSystem={measurementSystem}
-                units={UNIT_TABLE[measurementSystem]}
-                aoiSummary={aoiSummary}
-                crsSelection={crsSelection}
-                product={product}
-                innerDiameter={innerDiameter}
-                outerDiameter={outerDiameter}
-                innerDiameterUnit={innerDiameterUnit}
-                outerDiameterUnit={outerDiameterUnit}
-                projectIdPreview={projectIdPreview}
-              />
-            )}
+              {stepIndex === 4 && (
+                <ReviewStep
+                  projectName={projectName}
+                  organization={organization}
+                  projectCreator={projectCreator}
+                  measurementSystem={measurementSystem}
+                  units={UNIT_TABLE[measurementSystem]}
+                  aoiSummary={aoiSummary}
+                  crsSelection={crsSelection}
+                  product={product}
+                  innerDiameter={innerDiameter}
+                  outerDiameter={outerDiameter}
+                  innerDiameterUnit={innerDiameterUnit}
+                  outerDiameterUnit={outerDiameterUnit}
+                  projectIdPreview={projectIdPreview}
+                />
+              )}
+            </div>
           </section>
         </div>
 
