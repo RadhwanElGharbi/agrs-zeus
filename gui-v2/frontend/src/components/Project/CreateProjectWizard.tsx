@@ -798,105 +798,134 @@ function AOIStep(props: {
           <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
           {/* Points Section */}
-          <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-white/10">
-            {/* Start Point */}
-            <div className={cn(
-              "p-6 hover:bg-white/5 transition-colors relative group",
-              props.startPointError && "bg-red-500/10 border-l-2 border-l-red-500",
-              !props.startPointError && props.summary?.start_point_within === false && "bg-red-500/10 border-l-2 border-l-red-500"
-            )}>
-              <div className="flex items-center gap-3 mb-2">
-                <MapPin className={cn(
-                  "w-4 h-4", 
-                  props.startPointError ? "text-red-400" :
-                  props.summary?.start_point_within === false ? "text-red-400" : "text-emerald-400"
-                )} />
-                <span className="text-xs font-mono uppercase text-white/50 tracking-widest">Start Point</span>
-              </div>
-              <div className={cn(
-                "text-xs font-mono truncate", 
-                props.startPointError ? "text-red-400" :
-                props.startPointFile ? "text-white" : "text-white/30"
-              )}>
-                {props.startPointFile ? props.startPointFile.name : "Optional .geojson/.kml"}
-              </div>
-              {props.startPointCoords && !props.startPointError && (
+          {(() => {
+            // Check if start and end points are identical
+            const pointsIdentical = props.startPointCoords && props.endPointCoords &&
+              props.startPointCoords.lat === props.endPointCoords.lat &&
+              props.startPointCoords.lon === props.endPointCoords.lon;
+            
+            return (
+              <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-white/10">
+                {/* Start Point */}
                 <div className={cn(
-                  "mt-2 text-[11px] font-mono",
-                  props.summary?.start_point_within === false ? "text-red-400" : "text-emerald-400/80"
+                  "p-6 hover:bg-white/5 transition-colors relative group",
+                  props.startPointError && "bg-red-500/10 border-l-2 border-l-red-500",
+                  !props.startPointError && pointsIdentical && "bg-red-500/10 border-l-2 border-l-red-500",
+                  !props.startPointError && !pointsIdentical && props.summary?.start_point_within === false && "bg-red-500/10 border-l-2 border-l-red-500"
                 )}>
-                  {props.startPointCoords.lat.toFixed(6)}°, {props.startPointCoords.lon.toFixed(6)}°
+                  <div className="flex items-center gap-3 mb-2">
+                    <MapPin className={cn(
+                      "w-4 h-4", 
+                      props.startPointError ? "text-red-400" :
+                      pointsIdentical ? "text-red-400" :
+                      props.summary?.start_point_within === false ? "text-red-400" : "text-emerald-400"
+                    )} />
+                    <span className="text-xs font-mono uppercase text-white/50 tracking-widest">Start Point</span>
+                  </div>
+                  <div className={cn(
+                    "text-xs font-mono truncate", 
+                    props.startPointError ? "text-red-400" :
+                    pointsIdentical ? "text-red-400" :
+                    props.startPointFile ? "text-white" : "text-white/30"
+                  )}>
+                    {props.startPointFile ? props.startPointFile.name : "Optional .geojson/.kml"}
+                  </div>
+                  {props.startPointCoords && !props.startPointError && (
+                    <div className={cn(
+                      "mt-2 text-[11px] font-mono",
+                      pointsIdentical ? "text-red-400" :
+                      props.summary?.start_point_within === false ? "text-red-400" : "text-emerald-400/80"
+                    )}>
+                      {props.startPointCoords.lat.toFixed(6)}°, {props.startPointCoords.lon.toFixed(6)}°
+                    </div>
+                  )}
+                  {props.startPointError && (
+                    <div className="mt-2 text-[10px] font-mono text-red-400 flex items-center gap-1">
+                      <AlertTriangle className="w-3 h-3" />
+                      {props.startPointError}
+                    </div>
+                  )}
+                  {!props.startPointError && pointsIdentical && (
+                    <div className="mt-2 text-[10px] font-mono text-red-400 flex items-center gap-1">
+                      <AlertTriangle className="w-3 h-3" />
+                      Identical to End Point
+                    </div>
+                  )}
+                  {!props.startPointError && !pointsIdentical && props.summary?.start_point_within === false && (
+                    <div className="mt-2 text-[10px] font-mono text-red-400 flex items-center gap-1">
+                      <AlertTriangle className="w-3 h-3" />
+                      Outside AOI boundary
+                    </div>
+                  )}
+                  <input 
+                    type="file"
+                    accept=".geojson,.json,.gpkg,.kml,.kmz"
+                    className="absolute inset-0 opacity-0 cursor-pointer"
+                    onChange={(event) => props.onStartPointFile(event.target.files?.[0] || null)}
+                  />
                 </div>
-              )}
-              {props.startPointError && (
-                <div className="mt-2 text-[10px] font-mono text-red-400 flex items-center gap-1">
-                  <AlertTriangle className="w-3 h-3" />
-                  {props.startPointError}
-                </div>
-              )}
-              {!props.startPointError && props.summary?.start_point_within === false && (
-                <div className="mt-2 text-[10px] font-mono text-red-400 flex items-center gap-1">
-                  <AlertTriangle className="w-3 h-3" />
-                  Outside AOI boundary
-                </div>
-              )}
-              <input 
-                type="file"
-                accept=".geojson,.json,.gpkg,.kml,.kmz"
-                className="absolute inset-0 opacity-0 cursor-pointer"
-                onChange={(event) => props.onStartPointFile(event.target.files?.[0] || null)}
-              />
-            </div>
 
-            {/* End Point */}
-            <div className={cn(
-              "p-6 hover:bg-white/5 transition-colors relative group",
-              props.endPointError && "bg-red-500/10 border-r-2 border-r-red-500",
-              !props.endPointError && props.summary?.end_point_within === false && "bg-red-500/10 border-r-2 border-r-red-500"
-            )}>
-              <div className="flex items-center gap-3 mb-2">
-                <MapPin className={cn(
-                  "w-4 h-4", 
-                  props.endPointError ? "text-red-400" :
-                  props.summary?.end_point_within === false ? "text-red-400" : "text-red-400"
-                )} />
-                <span className="text-xs font-mono uppercase text-white/50 tracking-widest">End Point</span>
-              </div>
-              <div className={cn(
-                "text-xs font-mono truncate", 
-                props.endPointError ? "text-red-400" :
-                props.endPointFile ? "text-white" : "text-white/30"
-              )}>
-                {props.endPointFile ? props.endPointFile.name : "Optional .geojson/.kml"}
-              </div>
-              {props.endPointCoords && !props.endPointError && (
+                {/* End Point */}
                 <div className={cn(
-                  "mt-2 text-[11px] font-mono",
-                  props.summary?.end_point_within === false ? "text-red-400" : "text-red-400/80"
+                  "p-6 hover:bg-white/5 transition-colors relative group",
+                  props.endPointError && "bg-red-500/10 border-r-2 border-r-red-500",
+                  !props.endPointError && pointsIdentical && "bg-red-500/10 border-r-2 border-r-red-500",
+                  !props.endPointError && !pointsIdentical && props.summary?.end_point_within === false && "bg-red-500/10 border-r-2 border-r-red-500"
                 )}>
-                  {props.endPointCoords.lat.toFixed(6)}°, {props.endPointCoords.lon.toFixed(6)}°
+                  <div className="flex items-center gap-3 mb-2">
+                    <MapPin className={cn(
+                      "w-4 h-4", 
+                      props.endPointError ? "text-red-400" :
+                      pointsIdentical ? "text-red-400" :
+                      props.summary?.end_point_within === false ? "text-red-400" : "text-red-400"
+                    )} />
+                    <span className="text-xs font-mono uppercase text-white/50 tracking-widest">End Point</span>
+                  </div>
+                  <div className={cn(
+                    "text-xs font-mono truncate", 
+                    props.endPointError ? "text-red-400" :
+                    pointsIdentical ? "text-red-400" :
+                    props.endPointFile ? "text-white" : "text-white/30"
+                  )}>
+                    {props.endPointFile ? props.endPointFile.name : "Optional .geojson/.kml"}
+                  </div>
+                  {props.endPointCoords && !props.endPointError && (
+                    <div className={cn(
+                      "mt-2 text-[11px] font-mono",
+                      pointsIdentical ? "text-red-400" :
+                      props.summary?.end_point_within === false ? "text-red-400" : "text-red-400/80"
+                    )}>
+                      {props.endPointCoords.lat.toFixed(6)}°, {props.endPointCoords.lon.toFixed(6)}°
+                    </div>
+                  )}
+                  {props.endPointError && (
+                    <div className="mt-2 text-[10px] font-mono text-red-400 flex items-center gap-1">
+                      <AlertTriangle className="w-3 h-3" />
+                      {props.endPointError}
+                    </div>
+                  )}
+                  {!props.endPointError && pointsIdentical && (
+                    <div className="mt-2 text-[10px] font-mono text-red-400 flex items-center gap-1">
+                      <AlertTriangle className="w-3 h-3" />
+                      Identical to Start Point
+                    </div>
+                  )}
+                  {!props.endPointError && !pointsIdentical && props.summary?.end_point_within === false && (
+                    <div className="mt-2 text-[10px] font-mono text-red-400 flex items-center gap-1">
+                      <AlertTriangle className="w-3 h-3" />
+                      Outside AOI boundary
+                    </div>
+                  )}
+                  <input 
+                    type="file"
+                    accept=".geojson,.json,.gpkg,.kml,.kmz"
+                    className="absolute inset-0 opacity-0 cursor-pointer"
+                    onChange={(event) => props.onEndPointFile(event.target.files?.[0] || null)}
+                  />
                 </div>
-              )}
-              {props.endPointError && (
-                <div className="mt-2 text-[10px] font-mono text-red-400 flex items-center gap-1">
-                  <AlertTriangle className="w-3 h-3" />
-                  {props.endPointError}
-                </div>
-              )}
-              {!props.endPointError && props.summary?.end_point_within === false && (
-                <div className="mt-2 text-[10px] font-mono text-red-400 flex items-center gap-1">
-                  <AlertTriangle className="w-3 h-3" />
-                  Outside AOI boundary
-                </div>
-              )}
-              <input 
-                type="file"
-                accept=".geojson,.json,.gpkg,.kml,.kmz"
-                className="absolute inset-0 opacity-0 cursor-pointer"
-                onChange={(event) => props.onEndPointFile(event.target.files?.[0] || null)}
-              />
-            </div>
-          </div>
+              </div>
+            );
+          })()}
         </div>
       ) : (
         <div className="border border-white/10 rounded-md p-6 bg-black/30 flex flex-col gap-4">
