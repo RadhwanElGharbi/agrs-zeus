@@ -40,6 +40,7 @@ type AOIMode = 'upload' | 'draw'
 const STEPS = [
   { id: 'identity', label: 'Identity & Units' },
   { id: 'aoi', label: 'AOI Capture' },
+  { id: 'crs', label: 'Coordinate System' },
   { id: 'pipeline', label: 'Pipeline Specs' },
   { id: 'review', label: 'Review' },
 ]
@@ -163,13 +164,15 @@ export function CreateProjectWizard({ open, onClose, onCreated }: CreateProjectW
       case 1:
         return Boolean(aoiSummary)
       case 2:
+        return Boolean(aoiSummary) // CRS step valid if AOI summary exists (which provides default)
+      case 3:
         return (
           Boolean(product) &&
           innerDiameter !== '' &&
           outerDiameter !== '' &&
           parseFloat(outerDiameter) > parseFloat(innerDiameter)
         )
-      case 3:
+      case 4:
         return true
       default:
         return false
@@ -394,6 +397,14 @@ export function CreateProjectWizard({ open, onClose, onCreated }: CreateProjectW
             )}
 
             {stepIndex === 2 && (
+              <CRSStep
+                summary={aoiSummary}
+                crsSelection={crsSelection}
+                onLaunchCrsSelector={() => setCrsDialogOpen(true)}
+              />
+            )}
+
+            {stepIndex === 3 && (
               <PipelineStep
                 product={product}
                 innerDiameter={innerDiameter}
@@ -409,7 +420,7 @@ export function CreateProjectWizard({ open, onClose, onCreated }: CreateProjectW
               />
             )}
 
-            {stepIndex === 3 && (
+            {stepIndex === 4 && (
               <ReviewStep
                 projectName={projectName}
                 organization={organization}
@@ -620,8 +631,6 @@ function AOIStep(props: {
   previewError: string | null
   onLaunchDraw: () => void
 }) {
-  const displayCRS = props.crsSelection || props.summary?.recommended_crs
-
   return (
     <div className="space-y-8">
       <div className="flex gap-4">
@@ -712,44 +721,77 @@ function AOIStep(props: {
       )}
 
       {props.summary && (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <SummaryCard
-              icon={<FileText className="w-5 h-5 text-primary" />}
-              title="AOI Area"
-              value={`${props.summary.area_km2.toLocaleString()} km²`}
-              subtitle="Computed via WGS84 ellipsoid"
-            />
-            <SummaryCard
-              icon={<MapPin className="w-5 h-5 text-primary" />}
-              title="Countries"
-              value={props.summary.country || 'Pending'}
-              subtitle="Derived from centroid"
-            />
-          </div>
-
-          <div className="border border-white/10 rounded-sm p-4 bg-black/40 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 border border-white/10 rounded-sm bg-black/30">
-                <Globe className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <div className="text-xs font-mono uppercase text-white/50 tracking-widest">Coordinate System</div>
-                <div className="text-sm font-bold text-white">{displayCRS?.name || 'Pending Analysis'}</div>
-                <div className="text-[11px] text-white/40 font-mono">
-                  EPSG:{displayCRS?.epsg} • {props.crsSelection ? 'Manual Selection' : 'Auto-Recommended'}
-                </div>
-              </div>
-            </div>
-            <button
-              onClick={props.onLaunchCrsSelector}
-              className="px-3 py-1.5 text-xs font-mono uppercase tracking-wider border border-primary/50 text-primary hover:bg-primary/10 rounded-sm transition-colors"
-            >
-              Change System
-            </button>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <SummaryCard
+            icon={<FileText className="w-5 h-5 text-primary" />}
+            title="AOI Area"
+            value={`${props.summary.area_km2.toLocaleString()} km²`}
+            subtitle="Computed via WGS84 ellipsoid"
+          />
+          <SummaryCard
+            icon={<MapPin className="w-5 h-5 text-primary" />}
+            title="Countries"
+            value={props.summary.country || 'Pending'}
+            subtitle="Derived from centroid"
+          />
         </div>
       )}
+    </div>
+  )
+}
+
+function CRSStep(props: {
+  summary: AOIPreviewResponse | null
+  crsSelection: ProjectCRSRecommendation | null
+  onLaunchCrsSelector: () => void
+}) {
+  const displayCRS = props.crsSelection || props.summary?.recommended_crs
+
+  return (
+    <div className="space-y-6">
+      <div className="border border-white/10 rounded-sm p-6 bg-black/40">
+        <div className="flex items-start gap-4 mb-6">
+          <div className="p-3 border border-white/10 rounded-sm bg-black/30 text-primary">
+            <Globe className="w-8 h-8" />
+          </div>
+          <div>
+            <h3 className="text-lg font-bold text-white">Coordinate Reference System</h3>
+            <p className="text-sm text-white/60 max-w-lg mt-1">
+              The system automatically recommends a UTM zone based on your AOI's geographic centroid. You can override this if your project requires a specific projection.
+            </p>
+          </div>
+        </div>
+
+        <div className="bg-black/50 border border-white/10 rounded-sm p-6 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div>
+            <div className="text-xs font-mono uppercase text-white/50 tracking-widest mb-1">Selected System</div>
+            <div className="text-xl font-bold text-white mb-1">{displayCRS?.name || 'Pending Analysis'}</div>
+            <div className="flex items-center gap-3 text-sm font-mono">
+              <span className="text-primary bg-primary/10 px-2 py-0.5 rounded-sm">
+                EPSG:{displayCRS?.epsg}
+              </span>
+              <span className="text-white/40">
+                • {props.crsSelection ? 'Manual Selection' : 'Auto-Recommended'}
+              </span>
+            </div>
+          </div>
+
+          <button
+            onClick={props.onLaunchCrsSelector}
+            className="px-6 py-3 text-sm font-mono uppercase tracking-wider bg-white/5 border border-white/20 text-white hover:bg-white/10 hover:border-white/40 hover:text-primary transition-all rounded-sm flex items-center gap-2"
+          >
+            <Globe className="w-4 h-4" />
+            Change System
+          </button>
+        </div>
+
+        {displayCRS?.reason && (
+          <div className="mt-4 flex items-center gap-2 text-xs text-white/40 font-mono px-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-primary/50" />
+            {displayCRS.reason}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
