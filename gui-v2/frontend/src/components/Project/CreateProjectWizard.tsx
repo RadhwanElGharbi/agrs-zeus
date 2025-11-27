@@ -651,42 +651,76 @@ function AOIStep(props: {
       </div>
 
       {props.mode === 'upload' ? (
-        <div className="space-y-4 border border-dashed border-white/15 rounded-md p-6 bg-black/30">
-          <div className="flex flex-col items-center text-center text-white/70 gap-3">
-            <UploadCloud className="w-10 h-10 text-primary" />
-            <p className="text-sm font-mono uppercase tracking-wider">
-              Drag & Drop AOI file (.geojson, .json, .gpkg, .kml, .kmz)
-            </p>
-            <input
+        <div className="border border-white/10 rounded-sm bg-black/40 overflow-hidden">
+          {/* Main AOI Upload */}
+          <div className="p-8 flex flex-col items-center justify-center text-center gap-4 hover:bg-white/5 transition-colors relative group">
+            <div className="p-4 rounded-full bg-primary/5 text-primary mb-2 group-hover:scale-110 transition-transform duration-500">
+              <UploadCloud className="w-8 h-8" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-1">Area of Interest</h3>
+              <p className="text-xs text-white/50 font-mono">Supported: GeoJSON, KML, KMZ, GPKG</p>
+            </div>
+            
+            <div className="mt-2">
+              <span className={cn(
+                "px-4 py-2 rounded-sm text-xs font-mono uppercase tracking-wider border transition-all inline-flex items-center gap-2",
+                props.aoiFile 
+                  ? "border-primary text-primary bg-primary/10" 
+                  : "border-white/20 text-white/60 group-hover:border-white/40 group-hover:text-white"
+              )}>
+                {props.aoiFile ? (
+                  <><CheckCircle2 className="w-3 h-3" /> {props.aoiFile.name}</>
+                ) : (
+                  "Select Geometry File"
+                )}
+              </span>
+            </div>
+
+            <input 
               type="file"
               accept=".geojson,.json,.gpkg,.kml,.kmz,.zip"
+              className="absolute inset-0 opacity-0 cursor-pointer"
               onChange={(event) => props.onFileChange(event.target.files?.[0] || null)}
-              className="text-xs text-white/60"
             />
-            {props.aoiFile && <p className="text-xs text-white/40">{props.aoiFile.name}</p>}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className="text-xs font-mono uppercase text-white/40 tracking-widest">
-                Start Point File (optional)
-              </label>
-              <input
+          {/* Divider */}
+          <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+
+          {/* Points Section */}
+          <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-white/10">
+            {/* Start Point */}
+            <div className="p-6 hover:bg-white/5 transition-colors relative group">
+              <div className="flex items-center gap-3 mb-2">
+                <MapPin className="w-4 h-4 text-emerald-400" />
+                <span className="text-xs font-mono uppercase text-white/50 tracking-widest">Start Point</span>
+              </div>
+              <div className={cn("text-xs font-mono truncate", props.startPointFile ? "text-white" : "text-white/30")}>
+                {props.startPointFile ? props.startPointFile.name : "Optional .geojson/.kml"}
+              </div>
+              <input 
                 type="file"
                 accept=".geojson,.json,.gpkg,.kml,.kmz"
+                className="absolute inset-0 opacity-0 cursor-pointer"
                 onChange={(event) => props.onStartPointFile(event.target.files?.[0] || null)}
-                className="text-xs text-white/60"
               />
             </div>
-            <div className="space-y-1">
-              <label className="text-xs font-mono uppercase text-white/40 tracking-widest">
-                End Point File (optional)
-              </label>
-              <input
+
+            {/* End Point */}
+            <div className="p-6 hover:bg-white/5 transition-colors relative group">
+              <div className="flex items-center gap-3 mb-2">
+                <MapPin className="w-4 h-4 text-red-400" />
+                <span className="text-xs font-mono uppercase text-white/50 tracking-widest">End Point</span>
+              </div>
+              <div className={cn("text-xs font-mono truncate", props.endPointFile ? "text-white" : "text-white/30")}>
+                {props.endPointFile ? props.endPointFile.name : "Optional .geojson/.kml"}
+              </div>
+              <input 
                 type="file"
                 accept=".geojson,.json,.gpkg,.kml,.kmz"
+                className="absolute inset-0 opacity-0 cursor-pointer"
                 onChange={(event) => props.onEndPointFile(event.target.files?.[0] || null)}
-                className="text-xs text-white/60"
               />
             </div>
           </div>
