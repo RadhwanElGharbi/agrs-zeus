@@ -234,7 +234,7 @@ def _extract_json_payload(text: str) -> Dict[str, Any]:
 class AgentConversation:
     """
     Maintains full conversational context for ZEUS AI throughout the entire
-    dataset fetching pipeline. This allows Claude to learn from successes,
+    dataset fetching pipeline. This allows ZEUS AI to learn from successes,
     failures, and outputs across all operations.
     """
     
@@ -693,7 +693,7 @@ class AgentConversation:
         request_next_steps: bool = True,
     ) -> Optional[Dict[str, Any]]:
         """
-        Report the result of a command execution back to Claude.
+        Report the result of a command execution back to ZEUS AI.
         If the command failed and request_next_steps is True, ask for corrective action.
         """
         self.total_commands_executed += 1
@@ -830,7 +830,7 @@ def _run_agent_for_dataset(
     - All outputs from those commands
     - Its own analysis and reasoning
     
-    This allows Claude to learn from errors and adapt its strategy across
+    This allows ZEUS AI to learn from errors and adapt its strategy across
     the entire pipeline, not just within a single dataset.
     """
     if not AGENT_ENABLED:
@@ -844,7 +844,7 @@ def _run_agent_for_dataset(
             _log_to_job(job, ctx, f"ZEUS AI unavailable: {exc}")
             return None
     
-    _log_to_job(job, ctx, f"ZEUS AI (Claude Opus 4.5) engaged for {defn.label}.")
+    _log_to_job(job, ctx, f"ZEUS AI engaged for {defn.label}.")
     if conversation.completed_datasets:
         _log_to_job(job, ctx, f"ZEUS AI · Context retained from: {', '.join(conversation.completed_datasets)}")
     
@@ -861,7 +861,7 @@ def _run_agent_for_dataset(
     current_steps = plan.get("steps") or []
     post_checks = plan.get("post_checks") or []
     
-    # Log Claude's thinking if provided
+    # Log ZEUS AI's thinking if provided
     thinking = plan.get("thinking")
     if thinking:
         _log_to_job(job, ctx, f"ZEUS AI thinking: {thinking[:500]}{'...' if len(thinking) > 500 else ''}")
@@ -897,11 +897,11 @@ def _run_agent_for_dataset(
         )
         executed.append(command)
         
-        # Report result back to Claude (this updates conversation context)
+        # Report result back to ZEUS AI (this updates conversation context)
         is_last_step = step_idx == len(current_steps) - 1 and not post_checks
         
         if exit_code == 0:
-            # Success - report to Claude and continue
+            # Success - report to ZEUS AI and continue
             if not is_last_step:
                 # Only ask for next steps if there might be more
                 next_plan = conversation.report_command_result(
@@ -914,8 +914,8 @@ def _run_agent_for_dataset(
             step_idx += 1
             continue
         
-        # Command failed - ask Claude to fix it with full context
-        _log_to_job(job, ctx, f"ZEUS AI · Command failed (exit {exit_code}). Consulting Claude with full context...")
+        # Command failed - ask ZEUS AI to fix it with full context
+        _log_to_job(job, ctx, f"ZEUS AI · Command failed (exit {exit_code}). Consulting ZEUS AI with full context...")
         
         if retry_count >= AGENT_MAX_RETRIES:
             _log_to_job(
@@ -938,7 +938,7 @@ def _run_agent_for_dataset(
                 request_next_steps=True,
             )
         except RuntimeError as fix_exc:
-            _log_to_job(job, ctx, f"ZEUS AI · Failed to get fix from Claude: {fix_exc}")
+            _log_to_job(job, ctx, f"ZEUS AI · Failed to get fix from ZEUS AI: {fix_exc}")
             conversation.mark_dataset_complete(defn, success=False)
             raise RuntimeError(f"ZEUS AI could not recover from error: {fix_exc}")
         
