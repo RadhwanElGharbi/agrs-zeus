@@ -61,8 +61,26 @@ export class PixelStreamingClient {
           resolve();
         };
         
-        this.ws.onmessage = (event) => {
-          this.handleSignalingMessage(JSON.parse(event.data));
+        this.ws.onmessage = async (event) => {
+          try {
+            let data: string;
+            
+            // Handle both string and Blob messages
+            if (event.data instanceof Blob) {
+              data = await event.data.text();
+            } else {
+              data = event.data;
+            }
+            
+            // Only parse if it looks like JSON
+            if (data.startsWith('{') || data.startsWith('[')) {
+              this.handleSignalingMessage(JSON.parse(data));
+            } else {
+              console.log('[PixelStreaming] Non-JSON message:', data.substring(0, 100));
+            }
+          } catch (e) {
+            console.warn('[PixelStreaming] Failed to parse message:', e);
+          }
         };
         
         this.ws.onclose = (event) => {
