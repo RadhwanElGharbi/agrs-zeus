@@ -40,6 +40,9 @@ export class PixelStreamingClient {
   private reconnectDelay: number = 2000;
   private inputElement: HTMLElement | null = null;
   private inputHandlers: { [key: string]: (e: Event) => void } = {};
+  
+  // Mouse sensitivity multiplier - increase for faster camera movement
+  public mouseSensitivity: number = 1.0;
 
   constructor(config: PixelStreamingConfig) {
     this.config = config;
@@ -333,11 +336,11 @@ export class PixelStreamingClient {
     const posX = Math.max(0, Math.min(65535, Math.round(x * 65535)));
     const posY = Math.max(0, Math.min(65535, Math.round(y * 65535)));
     
-    // Scale deltas - UE5 expects larger values for smooth camera movement
-    // The raw movementX/Y can be small, multiply to make panning more responsive
-    const deltaScale = 1.0; // Adjust if panning is too slow/fast
-    const deltaX = Math.round(e.movementX * deltaScale);
-    const deltaY = Math.round(e.movementY * deltaScale);
+    // Apply sensitivity multiplier to raw mouse deltas
+    // Default UE5 Pixel Streaming expects raw pixel deltas, but we may need to scale
+    // for network streaming where responsiveness matters
+    const deltaX = Math.round(e.movementX * this.mouseSensitivity);
+    const deltaY = Math.round(e.movementY * this.mouseSensitivity);
 
     // UE5 expects: type (1 byte) + x (2 bytes) + y (2 bytes) + deltaX (2 bytes) + deltaY (2 bytes)
     const buffer = new ArrayBuffer(9);

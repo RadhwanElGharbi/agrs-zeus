@@ -56,6 +56,7 @@ export function DigitalTwinView({
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [customUrl, setCustomUrl] = useState(signalingUrl)
   const [inputEnabled, setInputEnabled] = useState(true)
+  const [mouseSensitivity, setMouseSensitivity] = useState(3.0) // Default sensitivity multiplier
 
   // Fullscreen toggle function
   const toggleFullscreen = useCallback(async () => {
@@ -113,6 +114,9 @@ export function DigitalTwinView({
         setStatus(ConnectionStatus.Connected)
         setErrorMessage(null)
         
+        // Set mouse sensitivity
+        client.mouseSensitivity = mouseSensitivity
+        
         // Enable input handling on the video container
         if (videoContainerRef.current && inputEnabled) {
           client.enableInput(videoContainerRef.current)
@@ -153,7 +157,7 @@ export function DigitalTwinView({
 
     clientRef.current = client
     return client
-  }, [customUrl, projectName, inputEnabled])
+  }, [customUrl, projectName, inputEnabled, mouseSensitivity])
 
   // Connect to streaming
   const connect = useCallback(async () => {
@@ -512,11 +516,36 @@ export function DigitalTwinView({
                   readOnly
                 />
               </div>
+              <div>
+                <label className="text-white/60 text-xs font-mono block mb-1">
+                  Mouse Sensitivity: {mouseSensitivity.toFixed(1)}x
+                </label>
+                <input 
+                  type="range" 
+                  min="0.5"
+                  max="10"
+                  step="0.5"
+                  value={mouseSensitivity}
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value);
+                    setMouseSensitivity(val);
+                    if (clientRef.current) {
+                      clientRef.current.mouseSensitivity = val;
+                    }
+                  }}
+                  className="w-full accent-emerald-500"
+                />
+                <div className="flex justify-between text-[9px] text-white/30 font-mono mt-1">
+                  <span>0.5x</span>
+                  <span>5x</span>
+                  <span>10x</span>
+                </div>
+              </div>
               <div className="pt-2 border-t border-white/10 text-[10px] text-white/40 font-mono space-y-1">
                 <div>Status: {status}</div>
                 {stats && <div>Streamer: {stats.streamerConnected ? 'Connected' : 'Disconnected'}</div>}
                 <div className="pt-2 text-white/30">
-                  Tip: Use Ctrl+mouse to orbit in UE5
+                  Tip: Double-click to lock mouse for camera control
                 </div>
               </div>
             </div>
