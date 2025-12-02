@@ -23,8 +23,17 @@ The Digital Twin view has been updated to connect to UE5 Pixel Streaming running
 ```bash
 cd /opt/agrs
 git fetch origin
+
+# Switch to the branch
 git checkout feature/gui-v2
-git pull origin feature/gui-v2
+
+# Reset to remote version (discards local changes on this branch)
+git reset --hard origin/feature/gui-v2
+```
+
+**Alternative** (if you want to preserve local changes):
+```bash
+git pull origin feature/gui-v2 --rebase
 ```
 
 ---
@@ -256,8 +265,11 @@ AGRSDigitalTwin.exe -AudioMixer -PixelStreamingIP=0.0.0.0 -PixelStreamingPort=88
 ## Quick Commands Reference
 
 ```bash
-# Pull and rebuild
-cd /opt/agrs && git pull origin feature/gui-v2
+# Pull and rebuild (reset to remote version)
+cd /opt/agrs
+git fetch origin
+git checkout feature/gui-v2
+git reset --hard origin/feature/gui-v2
 cd gui-v2/frontend && npm run build && pm2 restart agrs-frontend
 
 # Check logs
