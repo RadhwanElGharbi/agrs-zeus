@@ -317,10 +317,33 @@ export class PixelStreamingClient {
         this.playerId = message.playerId || 'player_' + Date.now();
         console.log('[PixelStreaming] Received config, playerId:', this.playerId);
         
-        // UE5's embedded server - streamer is always connected when we get config
+        // Store peer connection options if provided
+        if (message.peerConnectionOptions) {
+          console.log('[PixelStreaming] Got peerConnectionOptions:', message.peerConnectionOptions);
+        }
+        
+        // Create peer connection first
+        this.createPeerConnection();
+        
+        // For UE5 embedded server, we need to request the stream
+        // Send a subscribe message to start receiving the stream
+        this.sendSignalingMessage({ type: 'listStreamers' });
+        break;
+      
+      case 'streamerList':
+        // Response to listStreamers - subscribe to the first one
+        console.log('[PixelStreaming] Streamer list:', message.ids);
+        if (message.ids && message.ids.length > 0) {
+          const streamerId = message.ids[0];
+          console.log('[PixelStreaming] Subscribing to streamer:', streamerId);
+          this.sendSignalingMessage({ type: 'subscribe', streamerId });
+        } else {
+          // No streamer list, try direct subscribe
+          console.log('[PixelStreaming] No streamer list, sending direct subscribe');
+          this.sendSignalingMessage({ type: 'subscribe' });
+        }
         this.streamerConnected = true;
         this.config.onStreamerConnected?.();
-        this.createPeerConnection();
         break;
       
       case 'playerCount':
