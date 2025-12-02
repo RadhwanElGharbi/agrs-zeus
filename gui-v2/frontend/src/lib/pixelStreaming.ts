@@ -297,6 +297,9 @@ export class PixelStreamingClient {
   private sendInputMessage(buffer: ArrayBuffer): void {
     if (this.dataChannel && this.dataChannel.readyState === 'open') {
       this.dataChannel.send(buffer);
+    } else {
+      // Silently ignore - data channel not ready yet
+      // This can happen during initial connection
     }
   }
 
@@ -508,7 +511,7 @@ export class PixelStreamingClient {
 
     // Handle incoming tracks (video/audio from UE5)
     this.pc.ontrack = (event) => {
-      console.log('[PixelStreaming] Received track:', event.track.kind, event.streams);
+      console.log('[PixelStreaming] Received track:', event.track.kind, 'streams:', event.streams?.length);
       
       if (event.track.kind === 'video') {
         if (!this.videoElement) {
@@ -516,20 +519,39 @@ export class PixelStreamingClient {
           this.videoElement.autoplay = true;
           this.videoElement.playsInline = true;
           this.videoElement.muted = true;
+          this.videoElement.style.width = '100%';
+          this.videoElement.style.height = '100%';
+          this.videoElement.style.objectFit = 'contain';
         }
         
         // Use the stream from the event
         if (event.streams && event.streams[0]) {
+          console.log('[PixelStreaming] Setting video srcObject from stream');
           this.videoElement.srcObject = event.streams[0];
         } else {
           // Create a new MediaStream with just this track
+          console.log('[PixelStreaming] Creating new MediaStream for video track');
           const stream = new MediaStream([event.track]);
           this.videoElement.srcObject = stream;
         }
         
-        this.videoElement.play().catch(e => console.warn('[PixelStreaming] Video play failed:', e));
+        // Wait for video to be ready
+        this.videoElement.onloadedmetadata = () => {
+          console.log('[PixelStreaming] Video metadata loaded:', 
+            this.videoElement?.videoWidth, 'x', this.videoElement?.videoHeight);
+          this.videoElement?.play().catch(e => console.warn('[PixelStreaming] Video play failed:', e));
+        };
+        
+        this.videoElement.onplaying = () => {
+          console.log('[PixelStreaming] Video playing:', 
+            this.videoElement?.videoWidth, 'x', this.videoElement?.videoHeight);
+          this.config.onConnected?.();
+        };
+        
         this.config.onVideoReady?.(this.videoElement);
-        this.config.onConnected?.();
+        
+        // Try to play immediately as well
+        this.videoElement.play().catch(e => console.warn('[PixelStreaming] Initial play failed:', e));
       }
     };
 
@@ -629,20 +651,32 @@ export class PixelStreamingClient {
   }
 
   private setupDataChannel(channel: RTCDataChannel): void {
+    console.log('[PixelStreaming] Setting up data channel:', channel.label, 'state:', channel.readyState);
+    
     channel.onopen = () => {
-      console.log('[PixelStreaming] Data channel opened');
+      console.log('[PixelStreaming] Data channel opened:', channel.label);
+      // Use this channel for input if it's UE5's channel
+      if (channel.label === 'datachannel' || channel.label === 'cirrus' || !this.dataChannel || this.dataChannel.readyState !== 'open') {
+        this.dataChannel = channel;
+        console.log('[PixelStreaming] Using data channel for input:', channel.label);
+      }
     };
 
     channel.onclose = () => {
-      console.log('[PixelStreaming] Data channel closed');
+      console.log('[PixelStreaming] Data channel closed:', channel.label);
     };
 
     channel.onmessage = (event) => {
       try {
+        // UE5 can send binary or text messages
+        if (event.data instanceof ArrayBuffer || event.data instanceof Blob) {
+          // Binary message from UE5 - could be response to input
+          return;
+        }
         const data = JSON.parse(event.data);
         this.config.onDataChannelMessage?.(data);
       } catch {
-        // Non-JSON message
+        // Non-JSON message - might be a command response
         this.config.onDataChannelMessage?.(event.data);
       }
     };
@@ -651,7 +685,10 @@ export class PixelStreamingClient {
       console.error('[PixelStreaming] Data channel error:', error);
     };
 
-    if (channel.label === 'agrs-data' || !this.dataChannel) {
+    // Prefer UE5's data channel over our own
+    if (channel.label === 'datachannel' || channel.label === 'cirrus') {
+      this.dataChannel = channel;
+    } else if (!this.dataChannel) {
       this.dataChannel = channel;
     }
   }
