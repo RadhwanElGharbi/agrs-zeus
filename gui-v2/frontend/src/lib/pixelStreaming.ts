@@ -142,6 +142,8 @@ export class PixelStreamingClient {
     this.inputHandlers['mouseup'] = (e) => this.handleMouseButton(e as MouseEvent, false);
     this.inputHandlers['mousemove'] = (e) => this.handleMouseMove(e as MouseEvent);
     this.inputHandlers['wheel'] = (e) => this.handleMouseWheel(e as WheelEvent);
+    this.inputHandlers['mouseenter'] = (e) => this.handleMouseEnter(e as MouseEvent);
+    this.inputHandlers['mouseleave'] = (e) => this.handleMouseLeave(e as MouseEvent);
     this.inputHandlers['contextmenu'] = (e) => e.preventDefault();
     
     // Keyboard events
@@ -157,7 +159,24 @@ export class PixelStreamingClient {
     element.tabIndex = 0;
     element.focus();
     
-    console.log('[PixelStreaming] Input enabled');
+    // Request pointer lock for better mouse control (click to activate, Esc to release)
+    element.addEventListener('dblclick', () => {
+      if (!document.pointerLockElement) {
+        element.requestPointerLock?.();
+        console.log('[PixelStreaming] Pointer lock requested (double-click to lock, Esc to release)');
+      }
+    });
+    
+    // Handle pointer lock changes
+    document.addEventListener('pointerlockchange', () => {
+      if (document.pointerLockElement === element) {
+        console.log('[PixelStreaming] Pointer locked - mouse captured for camera control');
+      } else {
+        console.log('[PixelStreaming] Pointer unlocked');
+      }
+    });
+    
+    console.log('[PixelStreaming] Input enabled (double-click to lock mouse for camera control)');
   }
 
   /**
@@ -307,15 +326,40 @@ export class PixelStreamingClient {
     const x = (e.clientX - rect.left) / rect.width;
     const y = (e.clientY - rect.top) / rect.height;
 
+    // Clamp position to valid range
+    const posX = Math.max(0, Math.min(65535, Math.round(x * 65535)));
+    const posY = Math.max(0, Math.min(65535, Math.round(y * 65535)));
+    
+    // Scale deltas - UE5 expects larger values for smooth camera movement
+    // The raw movementX/Y can be small, multiply to make panning more responsive
+    const deltaScale = 1.0; // Adjust if panning is too slow/fast
+    const deltaX = Math.round(e.movementX * deltaScale);
+    const deltaY = Math.round(e.movementY * deltaScale);
+
     // UE5 expects: type (1 byte) + x (2 bytes) + y (2 bytes) + deltaX (2 bytes) + deltaY (2 bytes)
     const buffer = new ArrayBuffer(9);
     const view = new DataView(buffer);
     view.setUint8(0, PixelStreamingClient.MessageType.MouseMove);
-    view.setUint16(1, Math.round(x * 65535), true);
-    view.setUint16(3, Math.round(y * 65535), true);
-    view.setInt16(5, e.movementX, true);
-    view.setInt16(7, e.movementY, true);
+    view.setUint16(1, posX, true);
+    view.setUint16(3, posY, true);
+    view.setInt16(5, deltaX, true);
+    view.setInt16(7, deltaY, true);
     
+    this.sendInputMessage(buffer);
+  }
+
+  // Also add mouse enter/leave for proper focus handling
+  private handleMouseEnter(e: MouseEvent): void {
+    const buffer = new ArrayBuffer(1);
+    const view = new DataView(buffer);
+    view.setUint8(0, PixelStreamingClient.MessageType.MouseEnter);
+    this.sendInputMessage(buffer);
+  }
+
+  private handleMouseLeave(e: MouseEvent): void {
+    const buffer = new ArrayBuffer(1);
+    const view = new DataView(buffer);
+    view.setUint8(0, PixelStreamingClient.MessageType.MouseLeave);
     this.sendInputMessage(buffer);
   }
 
