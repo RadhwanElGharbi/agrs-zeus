@@ -247,8 +247,39 @@ export class PixelStreamingClient {
   }
 
   // ============================================================================
-  // Input Handlers
+  // Input Handlers - UE5 Pixel Streaming Binary Protocol
   // ============================================================================
+
+  // UE5 Pixel Streaming message types
+  private static readonly MessageType = {
+    // Input
+    KeyDown: 60,
+    KeyUp: 61,
+    KeyPress: 62,
+    MouseEnter: 70,
+    MouseLeave: 71,
+    MouseDown: 72,
+    MouseUp: 73,
+    MouseMove: 74,
+    MouseWheel: 75,
+    MouseDouble: 76,
+    TouchStart: 80,
+    TouchEnd: 81,
+    TouchMove: 82,
+    // Commands
+    UIInteraction: 50,
+    Command: 51,
+    // Gamepad
+    GamepadButtonPressed: 90,
+    GamepadButtonReleased: 91,
+    GamepadAnalog: 92,
+  };
+
+  private sendInputMessage(buffer: ArrayBuffer): void {
+    if (this.dataChannel && this.dataChannel.readyState === 'open') {
+      this.dataChannel.send(buffer);
+    }
+  }
 
   private handleMouseButton(e: MouseEvent, isDown: boolean): void {
     e.preventDefault();
@@ -258,12 +289,15 @@ export class PixelStreamingClient {
     const x = (e.clientX - rect.left) / rect.width;
     const y = (e.clientY - rect.top) / rect.height;
 
-    this.sendDataChannelMessage({
-      type: isDown ? 'MouseDown' : 'MouseUp',
-      button: e.button,
-      x: Math.round(x * 65535),
-      y: Math.round(y * 65535)
-    });
+    // UE5 expects: type (1 byte) + button (1 byte) + x (2 bytes) + y (2 bytes)
+    const buffer = new ArrayBuffer(6);
+    const view = new DataView(buffer);
+    view.setUint8(0, isDown ? PixelStreamingClient.MessageType.MouseDown : PixelStreamingClient.MessageType.MouseUp);
+    view.setUint8(1, e.button);
+    view.setUint16(2, Math.round(x * 65535), true); // little-endian
+    view.setUint16(4, Math.round(y * 65535), true);
+    
+    this.sendInputMessage(buffer);
   }
 
   private handleMouseMove(e: MouseEvent): void {
@@ -273,21 +307,35 @@ export class PixelStreamingClient {
     const x = (e.clientX - rect.left) / rect.width;
     const y = (e.clientY - rect.top) / rect.height;
 
-    this.sendDataChannelMessage({
-      type: 'MouseMove',
-      x: Math.round(x * 65535),
-      y: Math.round(y * 65535),
-      deltaX: e.movementX,
-      deltaY: e.movementY
-    });
+    // UE5 expects: type (1 byte) + x (2 bytes) + y (2 bytes) + deltaX (2 bytes) + deltaY (2 bytes)
+    const buffer = new ArrayBuffer(9);
+    const view = new DataView(buffer);
+    view.setUint8(0, PixelStreamingClient.MessageType.MouseMove);
+    view.setUint16(1, Math.round(x * 65535), true);
+    view.setUint16(3, Math.round(y * 65535), true);
+    view.setInt16(5, e.movementX, true);
+    view.setInt16(7, e.movementY, true);
+    
+    this.sendInputMessage(buffer);
   }
 
   private handleMouseWheel(e: WheelEvent): void {
     e.preventDefault();
-    this.sendDataChannelMessage({
-      type: 'MouseWheel',
-      delta: Math.sign(e.deltaY) * -120
-    });
+    const rect = this.inputElement?.getBoundingClientRect();
+    if (!rect) return;
+
+    const x = (e.clientX - rect.left) / rect.width;
+    const y = (e.clientY - rect.top) / rect.height;
+
+    // UE5 expects: type (1 byte) + delta (2 bytes) + x (2 bytes) + y (2 bytes)
+    const buffer = new ArrayBuffer(7);
+    const view = new DataView(buffer);
+    view.setUint8(0, PixelStreamingClient.MessageType.MouseWheel);
+    view.setInt16(1, Math.round(e.deltaY), true);
+    view.setUint16(3, Math.round(x * 65535), true);
+    view.setUint16(5, Math.round(y * 65535), true);
+    
+    this.sendInputMessage(buffer);
   }
 
   private handleKeyboard(e: KeyboardEvent, isDown: boolean): void {
@@ -295,11 +343,15 @@ export class PixelStreamingClient {
     if (e.ctrlKey || e.metaKey) return;
     
     e.preventDefault();
-    this.sendDataChannelMessage({
-      type: isDown ? 'KeyDown' : 'KeyUp',
-      keyCode: e.keyCode,
-      repeat: e.repeat
-    });
+    
+    // UE5 expects: type (1 byte) + keyCode (1 byte) + repeat (1 byte)
+    const buffer = new ArrayBuffer(3);
+    const view = new DataView(buffer);
+    view.setUint8(0, isDown ? PixelStreamingClient.MessageType.KeyDown : PixelStreamingClient.MessageType.KeyUp);
+    view.setUint8(1, e.keyCode);
+    view.setUint8(2, e.repeat ? 1 : 0);
+    
+    this.sendInputMessage(buffer);
   }
 
   // ============================================================================
