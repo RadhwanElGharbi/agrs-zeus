@@ -380,24 +380,35 @@ export class PixelStreamingClient {
       iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
         { urls: 'stun:stun1.l.google.com:19302' }
-      ]
+      ],
+      // Needed for some network configurations
+      iceCandidatePoolSize: 10
     };
 
     this.pc = new RTCPeerConnection(config);
 
     // Handle incoming tracks (video/audio from UE5)
     this.pc.ontrack = (event) => {
-      console.log('[PixelStreaming] Received track:', event.track.kind);
+      console.log('[PixelStreaming] Received track:', event.track.kind, event.streams);
       
       if (event.track.kind === 'video') {
         if (!this.videoElement) {
           this.videoElement = document.createElement('video');
           this.videoElement.autoplay = true;
           this.videoElement.playsInline = true;
-          this.videoElement.muted = true; // Start muted (can unmute later)
+          this.videoElement.muted = true;
         }
         
-        this.videoElement.srcObject = event.streams[0];
+        // Use the stream from the event
+        if (event.streams && event.streams[0]) {
+          this.videoElement.srcObject = event.streams[0];
+        } else {
+          // Create a new MediaStream with just this track
+          const stream = new MediaStream([event.track]);
+          this.videoElement.srcObject = stream;
+        }
+        
+        this.videoElement.play().catch(e => console.warn('[PixelStreaming] Video play failed:', e));
         this.config.onVideoReady?.(this.videoElement);
         this.config.onConnected?.();
       }
@@ -405,6 +416,7 @@ export class PixelStreamingClient {
 
     // Handle ICE candidates
     this.pc.onicecandidate = (event) => {
+      console.log('[PixelStreaming] ICE candidate:', event.candidate?.candidate?.substring(0, 50));
       if (event.candidate) {
         this.sendSignalingMessage({
           type: 'iceCandidate',
@@ -413,11 +425,18 @@ export class PixelStreamingClient {
       }
     };
 
+    // Handle ICE connection state
+    this.pc.oniceconnectionstatechange = () => {
+      console.log('[PixelStreaming] ICE connection state:', this.pc?.iceConnectionState);
+    };
+
     // Handle connection state changes
     this.pc.onconnectionstatechange = () => {
       console.log('[PixelStreaming] Connection state:', this.pc?.connectionState);
       
-      if (this.pc?.connectionState === 'disconnected' || 
+      if (this.pc?.connectionState === 'connected') {
+        console.log('[PixelStreaming] WebRTC connected!');
+      } else if (this.pc?.connectionState === 'disconnected' || 
           this.pc?.connectionState === 'failed') {
         this.config.onDisconnected?.();
       }
@@ -429,55 +448,39 @@ export class PixelStreamingClient {
       this.setupDataChannel(event.channel);
     };
 
-    // Create offer to initiate connection
-    this.createOffer();
-  }
-
-  private async createOffer(): Promise<void> {
-    if (!this.pc) return;
-
-    try {
-      // Add transceivers for receiving video/audio
-      this.pc.addTransceiver('video', { direction: 'recvonly' });
-      this.pc.addTransceiver('audio', { direction: 'recvonly' });
-
-      // Create data channel for sending commands to UE5
-      this.dataChannel = this.pc.createDataChannel('agrs-data', { ordered: true });
-      this.setupDataChannel(this.dataChannel);
-
-      const offer = await this.pc.createOffer();
-      await this.pc.setLocalDescription(offer);
-
-      this.sendSignalingMessage({
-        type: 'offer',
-        sdp: offer.sdp
-      });
-    } catch (error) {
-      console.error('[PixelStreaming] Failed to create offer:', error);
-      this.config.onError?.('Failed to create WebRTC offer');
-    }
+    // DON'T create an offer - wait for UE5 to send us an offer
+    // UE5's Pixel Streaming is the offerer, we are the answerer
+    console.log('[PixelStreaming] Peer connection ready, waiting for offer from UE5');
   }
 
   private async handleOffer(message: any): Promise<void> {
+    console.log('[PixelStreaming] Received offer from UE5');
+    
     if (!this.pc) {
       this.createPeerConnection();
     }
 
     try {
+      // Set the remote description (the offer from UE5)
       await this.pc!.setRemoteDescription(new RTCSessionDescription({
         type: 'offer',
         sdp: message.sdp
       }));
+      console.log('[PixelStreaming] Remote description set');
 
+      // Create our answer
       const answer = await this.pc!.createAnswer();
       await this.pc!.setLocalDescription(answer);
+      console.log('[PixelStreaming] Local description set, sending answer');
 
+      // Send answer back to UE5
       this.sendSignalingMessage({
         type: 'answer',
         sdp: answer.sdp
       });
     } catch (error) {
       console.error('[PixelStreaming] Failed to handle offer:', error);
+      this.config.onError?.('Failed to handle WebRTC offer: ' + error);
     }
   }
 
