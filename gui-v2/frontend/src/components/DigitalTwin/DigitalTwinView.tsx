@@ -56,7 +56,7 @@ export function DigitalTwinView({
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [customUrl, setCustomUrl] = useState(signalingUrl)
   const [inputEnabled, setInputEnabled] = useState(true)
-  const [mouseSensitivity, setMouseSensitivity] = useState(3.0) // Default sensitivity multiplier
+  const [mouseSensitivity, setMouseSensitivity] = useState(10.0) // Default sensitivity multiplier
 
   // Fullscreen toggle function
   const toggleFullscreen = useCallback(async () => {
@@ -518,13 +518,13 @@ export function DigitalTwinView({
               </div>
               <div>
                 <label className="text-white/60 text-xs font-mono block mb-1">
-                  Mouse Sensitivity: {mouseSensitivity.toFixed(1)}x
+                  Mouse Sensitivity: {mouseSensitivity.toFixed(0)}x
                 </label>
                 <input 
                   type="range" 
-                  min="0.5"
-                  max="10"
-                  step="0.5"
+                  min="3"
+                  max="30"
+                  step="1"
                   value={mouseSensitivity}
                   onChange={(e) => {
                     const val = parseFloat(e.target.value);
@@ -536,9 +536,9 @@ export function DigitalTwinView({
                   className="w-full accent-emerald-500"
                 />
                 <div className="flex justify-between text-[9px] text-white/30 font-mono mt-1">
-                  <span>0.5x</span>
-                  <span>5x</span>
+                  <span>3x</span>
                   <span>10x</span>
+                  <span>30x</span>
                 </div>
               </div>
               <div className="pt-2 border-t border-white/10 text-[10px] text-white/40 font-mono space-y-1">
