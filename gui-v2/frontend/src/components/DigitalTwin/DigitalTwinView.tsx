@@ -1,231 +1,534 @@
-import React from 'react'
-import { Activity, Droplets, AlertTriangle, Maximize2 } from 'lucide-react'
-import { cn } from '@/lib/utils'
+/**
+ * AGRS ZEUS Digital Twin View Component
+ * 
+ * Displays the UE5 Pixel Streaming with terrain from the selected project's DEM.
+ * Requires a project to be selected to connect.
+ * 
+ * Architecture:
+ * - GUI runs on VM (192.168.0.126:3000)
+ * - UE5 Pixel Streaming runs on Windows Host (192.168.0.41)
+ * - Signaling server runs on Windows Host port 80
+ */
+'use client'
 
-export function DigitalTwinView() {
-  // Main view component replacing MapViewer
+import React, { useEffect, useRef, useState, useCallback } from 'react'
+import { Activity, AlertTriangle, Maximize2, Minimize2, Radio, XCircle, Settings, RefreshCw, FolderOpen, Monitor, Gamepad2 } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { PixelStreamingClient, createPixelStreamingClient, StreamingStats } from '@/lib/pixelStreaming'
+import { useProject } from '@/lib/context/ProjectContext'
+
+// Connection status enum
+enum ConnectionStatus {
+  Disconnected = 'disconnected',
+  Connecting = 'connecting',
+  WaitingForStreamer = 'waiting',
+  Connected = 'connected',
+  Error = 'error'
+}
+
+// Default signaling server URL - Windows host where UE5 is running
+// When accessed from VM browser, this points to the Windows host
+const DEFAULT_SIGNALING_URL = 'ws://192.168.0.41:80'
+
+interface DigitalTwinViewProps {
+  signalingUrl?: string;
+}
+
+export function DigitalTwinView({ 
+  signalingUrl = DEFAULT_SIGNALING_URL
+}: DigitalTwinViewProps) {
+  // Get current project from context
+  const { currentProject, projectMetadata } = useProject()
   
-  return (
-    <div className="relative w-full h-full bg-black overflow-hidden flex flex-col animate-in fade-in duration-300">
+  // Use the current project name
+  const projectName = currentProject || ''
+  
+  // Refs
+  const videoContainerRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const clientRef = useRef<PixelStreamingClient | null>(null)
+  
+  // State
+  const [status, setStatus] = useState<ConnectionStatus>(ConnectionStatus.Disconnected)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [stats, setStats] = useState<StreamingStats | null>(null)
+  const [showSettings, setShowSettings] = useState(false)
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  const [customUrl, setCustomUrl] = useState(signalingUrl)
+  const [inputEnabled, setInputEnabled] = useState(true)
+
+  // Fullscreen toggle function
+  const toggleFullscreen = useCallback(async () => {
+    if (!containerRef.current) return
+
+    try {
+      if (!document.fullscreenElement) {
+        await containerRef.current.requestFullscreen()
+        setIsFullscreen(true)
+      } else {
+        await document.exitFullscreen()
+        setIsFullscreen(false)
+      }
+    } catch (err) {
+      console.error('[DigitalTwin] Fullscreen error:', err)
+    }
+  }, [])
+
+  // Listen for fullscreen changes (e.g., user presses Escape)
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement)
+    }
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange)
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange)
+  }, [])
+  
+  // Initialize Pixel Streaming client
+  const initializeClient = useCallback(() => {
+    if (clientRef.current) {
+      clientRef.current.disconnect()
+    }
+
+    const client = createPixelStreamingClient({
+      signalingUrl: customUrl,
+      
+      onVideoReady: (video) => {
+        if (videoContainerRef.current) {
+          // Clear any existing video
+          const existingVideo = videoContainerRef.current.querySelector('video')
+          if (existingVideo) {
+            existingVideo.remove()
+          }
+          
+          // Style and add the new video
+          video.className = 'w-full h-full object-contain'
+          video.style.cursor = 'crosshair'
+          videoContainerRef.current.appendChild(video)
+        }
+      },
+      
+      onConnected: () => {
+        console.log('[DigitalTwin] Stream connected')
+        setStatus(ConnectionStatus.Connected)
+        setErrorMessage(null)
         
-        {/* Header - Integrated into view */}
-        <div className="h-14 border-b border-emerald-500/30 bg-emerald-950/30 flex items-center justify-between px-6 select-none z-50 relative">
-          <div className="flex items-center gap-4">
-            <div className="p-1.5 bg-emerald-500/10 rounded border border-emerald-500/20">
-              <Activity className="w-5 h-5 text-emerald-400" />
-            </div>
-            <div>
-              <div className="font-mono font-bold text-emerald-400 tracking-widest uppercase text-sm">
-                Digital Twin <span className="text-white/40 mx-2">|</span> Visualization
-              </div>
-              <div className="flex items-center gap-2 mt-0.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
-                <span className="text-[10px] text-emerald-500/70 font-mono uppercase tracking-wider">Live Feed Active</span>
-              </div>
-            </div>
+        // Enable input handling on the video container
+        if (videoContainerRef.current && inputEnabled) {
+          client.enableInput(videoContainerRef.current)
+        }
+        
+        // Send project context to UE5
+        if (projectName) {
+          client.sendCommand('SetProject', { projectName })
+        }
+      },
+      
+      onDisconnected: () => {
+        console.log('[DigitalTwin] Stream disconnected')
+        setStatus(ConnectionStatus.Disconnected)
+      },
+      
+      onError: (error) => {
+        console.error('[DigitalTwin] Error:', error)
+        setStatus(ConnectionStatus.Error)
+        setErrorMessage(error)
+      },
+      
+      onStreamerConnected: () => {
+        console.log('[DigitalTwin] UE5 streamer connected')
+        setStatus(ConnectionStatus.Connected)
+      },
+      
+      onStreamerDisconnected: () => {
+        console.log('[DigitalTwin] UE5 streamer disconnected')
+        setStatus(ConnectionStatus.WaitingForStreamer)
+      },
+      
+      onDataChannelMessage: (message) => {
+        console.log('[DigitalTwin] Data from UE5:', message)
+        // Handle messages from UE5 here (e.g., sensor data, alerts)
+      }
+    })
+
+    clientRef.current = client
+    return client
+  }, [customUrl, projectName, inputEnabled])
+
+  // Connect to streaming
+  const connect = useCallback(async () => {
+    setStatus(ConnectionStatus.Connecting)
+    setErrorMessage(null)
+    
+    try {
+      const client = initializeClient()
+      await client.connect()
+      setStatus(ConnectionStatus.WaitingForStreamer)
+    } catch (error) {
+      console.error('[DigitalTwin] Connection failed:', error)
+      setStatus(ConnectionStatus.Error)
+      setErrorMessage('Failed to connect to signaling server. Make sure UE5 is streaming.')
+    }
+  }, [initializeClient])
+
+  // Disconnect from streaming
+  const disconnect = useCallback(() => {
+    if (clientRef.current) {
+      clientRef.current.disableInput()
+      clientRef.current.disconnect()
+      clientRef.current = null
+    }
+    setStatus(ConnectionStatus.Disconnected)
+    
+    // Clear video
+    if (videoContainerRef.current) {
+      const video = videoContainerRef.current.querySelector('video')
+      if (video) {
+        video.remove()
+      }
+    }
+  }, [])
+
+  // Toggle input (mouse/keyboard passthrough)
+  const toggleInput = useCallback(() => {
+    if (!clientRef.current || status !== ConnectionStatus.Connected) return
+    
+    if (inputEnabled) {
+      clientRef.current.disableInput()
+      setInputEnabled(false)
+    } else {
+      if (videoContainerRef.current) {
+        clientRef.current.enableInput(videoContainerRef.current)
+      }
+      setInputEnabled(true)
+    }
+  }, [inputEnabled, status])
+
+  // Update stats periodically
+  useEffect(() => {
+    if (status !== ConnectionStatus.Connected) return
+    
+    const interval = setInterval(async () => {
+      if (clientRef.current) {
+        const newStats = await clientRef.current.getStats()
+        setStats(newStats)
+      }
+    }, 1000)
+    
+    return () => clearInterval(interval)
+  }, [status])
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (clientRef.current) {
+        clientRef.current.disconnect()
+      }
+    }
+  }, [])
+
+  // Status indicator component
+  const StatusIndicator = () => {
+    const statusConfig = {
+      [ConnectionStatus.Disconnected]: { color: 'bg-gray-500', text: 'Disconnected', pulse: false },
+      [ConnectionStatus.Connecting]: { color: 'bg-yellow-500', text: 'Connecting...', pulse: true },
+      [ConnectionStatus.WaitingForStreamer]: { color: 'bg-blue-500', text: 'Waiting for UE5', pulse: true },
+      [ConnectionStatus.Connected]: { color: 'bg-emerald-500', text: 'Live', pulse: true },
+      [ConnectionStatus.Error]: { color: 'bg-red-500', text: 'Error', pulse: false }
+    }
+    
+    const config = statusConfig[status]
+    
+    return (
+      <div className="flex items-center gap-2">
+        <span className={cn(
+          'w-2 h-2 rounded-full',
+          config.color,
+          config.pulse && 'animate-pulse shadow-[0_0_8px_currentColor]'
+        )} />
+        <span className="text-[10px] text-white/70 font-mono uppercase tracking-wider">
+          {config.text}
+        </span>
+      </div>
+    )
+  }
+
+  return (
+    <div 
+      ref={containerRef}
+      className="relative w-full h-full bg-black overflow-hidden flex flex-col animate-in fade-in duration-300"
+    >
+      
+      {/* Header */}
+      <div className="h-14 border-b border-emerald-500/30 bg-emerald-950/30 flex items-center justify-between px-6 select-none z-50 relative">
+        <div className="flex items-center gap-4">
+          <div className="p-1.5 bg-emerald-500/10 rounded border border-emerald-500/20">
+            <Activity className="w-5 h-5 text-emerald-400" />
           </div>
-          <div className="flex items-center gap-2">
-            <button className="p-2 hover:bg-white/5 rounded text-white/40 hover:text-white transition-colors">
-              <Maximize2 className="w-4 h-4" />
-            </button>
+          <div>
+            <div className="font-mono font-bold text-emerald-400 tracking-widest uppercase text-sm">
+              Digital Twin <span className="text-white/40 mx-2">|</span> {currentProject || 'No Project'}
+            </div>
+            <StatusIndicator />
           </div>
         </div>
-
-        {/* Main Viewport */}
-        <div className="flex-1 relative bg-gradient-to-b from-gray-900 to-black overflow-hidden group">
+        
+        <div className="flex items-center gap-2">
+          {/* Input Toggle (only when connected) */}
+          {status === ConnectionStatus.Connected && (
+            <button
+              onClick={toggleInput}
+              className={cn(
+                "flex items-center gap-2 px-3 py-1.5 border rounded text-sm font-mono transition-colors",
+                inputEnabled 
+                  ? "bg-emerald-500/20 border-emerald-500/30 text-emerald-400"
+                  : "bg-white/5 border-white/10 text-white/40"
+              )}
+              title={inputEnabled ? "Input Enabled (click to disable)" : "Input Disabled (click to enable)"}
+            >
+              <Gamepad2 className="w-4 h-4" />
+              {inputEnabled ? 'Input On' : 'Input Off'}
+            </button>
+          )}
           
-          {/* Image Container */}
-          <div className="absolute inset-0 flex items-center justify-center bg-[#050505]">
-             {/* Grid Background for "No Image" State */}
-             <div className="absolute inset-0 opacity-20 bg-[linear-gradient(to_right,#10b981_1px,transparent_1px),linear-gradient(to_bottom,#10b981_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)]" />
-             
-             {/* The Image - User to replace src */}
-             <img 
-               src="/images/digital-twin-demo.jpg" 
-               alt="Digital Twin Render" 
-               className="w-full h-full object-cover opacity-90 transition-opacity duration-700"
-               onError={(e) => {
-                 e.currentTarget.style.display = 'none'
-               }}
-             />
-             
-             {/* Overlay Vignette */}
-             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.4)_100%)] pointer-events-none" />
-             
-             {/* Scanlines */}
-             <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0)_50%,rgba(0,0,0,0.2)_50%)] bg-[size:100%_4px] pointer-events-none opacity-30" />
-          </div>
+          {/* Connection Button */}
+          {status === ConnectionStatus.Disconnected || status === ConnectionStatus.Error ? (
+            <button 
+              onClick={connect}
+              className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/30 rounded text-emerald-400 text-sm font-mono transition-colors"
+              title="Connect to Digital Twin"
+            >
+              <Radio className="w-4 h-4" />
+              Connect
+            </button>
+          ) : status === ConnectionStatus.Connected ? (
+            <button 
+              onClick={disconnect}
+              className="flex items-center gap-2 px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 rounded text-red-400 text-sm font-mono transition-colors"
+            >
+              <XCircle className="w-4 h-4" />
+              Disconnect
+            </button>
+          ) : (
+            <button 
+              disabled
+              className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10 rounded text-white/40 text-sm font-mono cursor-not-allowed"
+            >
+              <RefreshCw className="w-4 h-4 animate-spin" />
+              {status === ConnectionStatus.Connecting ? 'Connecting...' : 'Waiting...'}
+            </button>
+          )}
+          
+          <button 
+            onClick={() => setShowSettings(!showSettings)}
+            className="p-2 hover:bg-white/5 rounded text-white/40 hover:text-white transition-colors"
+          >
+            <Settings className="w-4 h-4" />
+          </button>
+          
+          <button 
+            onClick={toggleFullscreen}
+            className="p-2 hover:bg-white/5 rounded text-white/40 hover:text-white transition-colors"
+            title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
+          >
+            {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+          </button>
+        </div>
+      </div>
 
-          {/* "Under Development" Badge */}
-          <div className="absolute top-12 left-1/2 -translate-x-1/2 pointer-events-none z-30">
-             <div className="relative flex flex-col items-center">
-                <div className="absolute inset-0 bg-red-500 blur-3xl opacity-20 animate-pulse" />
-                <div className="bg-black/90 text-red-500 font-black text-3xl px-8 py-3 uppercase tracking-[0.2em] border-y-2 border-red-500/50 shadow-[0_0_30px_rgba(239,68,68,0.4)] backdrop-blur-md transform skew-x-[-10deg]">
-                  Under Development
+      {/* Main Viewport */}
+      <div className="flex-1 relative bg-gradient-to-b from-gray-900 to-black overflow-hidden">
+        
+        {/* Video Container */}
+        <div 
+          ref={videoContainerRef}
+          className="absolute inset-0 flex items-center justify-center bg-[#050505]"
+          tabIndex={0}
+        >
+          {/* Grid Background (shown when no video) */}
+          {status !== ConnectionStatus.Connected && (
+            <div className="absolute inset-0 opacity-20 bg-[linear-gradient(to_right,#10b981_1px,transparent_1px),linear-gradient(to_bottom,#10b981_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)]" />
+          )}
+          
+          {/* Placeholder content when not connected */}
+          {status !== ConnectionStatus.Connected && (
+            <div className="relative z-10 text-center">
+              {/* Ready to Connect */}
+              {status === ConnectionStatus.Disconnected && (
+                <div className="space-y-6">
+                  <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-lg inline-block">
+                    <Monitor className="w-16 h-16 text-emerald-500/70 mx-auto" />
+                  </div>
+                  <div className="text-white/80 font-mono text-xl">UE5 Digital Twin</div>
+                  {currentProject ? (
+                    <div className="text-emerald-400 font-mono text-sm">Project: {currentProject}</div>
+                  ) : (
+                    <div className="text-amber-400/70 font-mono text-sm">No project selected</div>
+                  )}
+                  <div className="text-white/40 font-mono text-sm max-w-md mx-auto">
+                    Click <span className="text-emerald-400">Connect</span> to stream from UE5.
+                    <br />
+                    Make sure Pixel Streaming is enabled on Windows.
+                  </div>
+                  <div className="text-white/30 font-mono text-xs mt-4">
+                    Signaling: {customUrl}
+                  </div>
                 </div>
-                <div className="mt-3 text-xs text-red-500/60 font-mono uppercase tracking-[0.3em] bg-black/50 px-4 py-1 rounded-full border border-red-500/10">
-                  Integration Pending
+              )}
+              
+              {status === ConnectionStatus.Connecting && (
+                <div className="space-y-4">
+                  <RefreshCw className="w-12 h-12 text-emerald-500/50 animate-spin mx-auto" />
+                  <div className="text-white/60 font-mono">Connecting to signaling server...</div>
+                  <div className="text-white/30 font-mono text-xs">{customUrl}</div>
                 </div>
-             </div>
-          </div>
+              )}
+              
+              {status === ConnectionStatus.WaitingForStreamer && (
+                <div className="space-y-4">
+                  <div className="w-16 h-16 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mx-auto" />
+                  <div className="text-white/60 font-mono">Waiting for UE5 Streamer...</div>
+                  <div className="text-white/40 font-mono text-sm max-w-md">
+                    In UE5: Pixel Streaming → Stream Level Editor
+                  </div>
+                </div>
+              )}
+              
+              {status === ConnectionStatus.Error && (
+                <div className="space-y-4">
+                  <AlertTriangle className="w-12 h-12 text-red-500/70 mx-auto" />
+                  <div className="text-red-400 font-mono">Connection Error</div>
+                  <div className="text-white/40 font-mono text-sm max-w-md">{errorMessage}</div>
+                  <div className="text-white/30 font-mono text-xs mt-4">
+                    Check that UE5 is running with Pixel Streaming on {customUrl}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* Overlay Vignette */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.4)_100%)] pointer-events-none z-20" />
+        </div>
 
-          {/* HUD Layer */}
-          <div className="absolute inset-0 pointer-events-none">
+        {/* HUD Overlay (only shown when connected) */}
+        {status === ConnectionStatus.Connected && (
+          <div className="absolute inset-0 pointer-events-none z-30">
             
-            {/* SVG Connections Layer */}
-            <svg className="absolute inset-0 w-full h-full pointer-events-none z-0 opacity-60">
-              <defs>
-                <marker id="dot-emerald" markerWidth="4" markerHeight="4" refX="2" refY="2">
-                  <circle cx="2" cy="2" r="1.5" fill="#10b981" />
-                </marker>
-                <marker id="dot-yellow" markerWidth="4" markerHeight="4" refX="2" refY="2">
-                  <circle cx="2" cy="2" r="1.5" fill="#eab308" />
-                </marker>
-              </defs>
-              {/* Top Left -> Center Pipeline */}
-              <path d="M 320, 160 L 400, 160 L 550, 300" fill="none" stroke="#10b981" strokeWidth="1" markerEnd="url(#dot-emerald)" vectorEffect="non-scaling-stroke" />
-              {/* Bottom Left -> Lower Pipeline */}
-              <path d="M 320, 650 L 450, 650 L 600, 500" fill="none" stroke="#10b981" strokeWidth="1" markerEnd="url(#dot-emerald)" vectorEffect="non-scaling-stroke" />
-              {/* Top Right -> Center Pipeline */}
-              <path d="M calc(100% - 360px), 120 L calc(100% - 450px), 120 L calc(50% + 100px), 350" fill="none" stroke="#10b981" strokeWidth="1" markerEnd="url(#dot-emerald)" vectorEffect="non-scaling-stroke" />
-              {/* Bottom Right -> Lower Pipeline */}
-              <path d="M calc(100% - 360px), 650 L calc(100% - 450px), 650 L calc(50% + 150px), 550" fill="none" stroke="#eab308" strokeWidth="1" markerEnd="url(#dot-yellow)" vectorEffect="non-scaling-stroke" />
-            </svg>
-
-            {/* Top Left: Segment Info */}
-            <div className="absolute top-24 left-12 pointer-events-auto">
-              <div className="bg-black/80 backdrop-blur-md border-l-2 border-l-emerald-500 border-y border-r border-emerald-500/20 p-4 rounded-r-sm shadow-lg min-w-[280px] relative group">
-                <div className="absolute -right-12 top-1/2 w-12 h-[1px] bg-emerald-500/50 hidden group-hover:block"></div>
+            {/* Top Left: Project Info */}
+            <div className="absolute top-6 left-6 pointer-events-auto">
+              <div className="bg-black/80 backdrop-blur-md border-l-2 border-l-emerald-500 border-y border-r border-emerald-500/20 p-4 rounded-r-sm shadow-lg min-w-[280px]">
                 <div className="flex items-center justify-between mb-3 border-b border-emerald-500/20 pb-2">
-                  <span className="text-emerald-400 text-[10px] font-mono uppercase tracking-widest">Target Segment</span>
+                  <span className="text-emerald-400 text-[10px] font-mono uppercase tracking-widest">Project</span>
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-white/50 text-xs font-mono">ID</span>
-                    <span className="text-white font-mono text-sm font-bold">US-PL-TX-4092-A</span>
+                    <span className="text-white/50 text-xs font-mono">Name</span>
+                    <span className="text-white font-mono text-sm font-bold">{projectName || 'None'}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-white/50 text-xs font-mono">Length</span>
-                    <span className="text-emerald-400 font-mono text-sm">50.0 m</span>
+                    <span className="text-white/50 text-xs font-mono">Mode</span>
+                    <span className="text-emerald-400 font-mono text-sm">Planning</span>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-white/50 text-xs font-mono">Location</span>
-                    <span className="text-white/80 font-mono text-xs">31.968°N, 99.901°W</span>
-                  </div>
+                  {stats && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-white/50 text-xs font-mono">Resolution</span>
+                      <span className="text-white/80 font-mono text-xs">{stats.videoWidth}x{stats.videoHeight}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Bottom Left: Health Monitor */}
-            <div className="absolute bottom-24 left-12 pointer-events-auto">
-               <div className="bg-black/80 backdrop-blur-md border border-emerald-500/30 p-5 rounded-sm shadow-lg min-w-[300px] group/health hover:border-emerald-500/50 transition-colors relative">
-                 <div className="absolute -right-12 top-1/2 w-12 h-[1px] bg-emerald-500/50 hidden group-hover:block"></div>
-                 <h3 className="text-emerald-400 text-xs font-mono uppercase mb-4 flex items-center gap-2 tracking-widest">
-                   <Activity className="w-4 h-4" /> System Health Metrics
-                 </h3>
-                 <div className="space-y-4">
-                   <div>
-                     <div className="flex justify-between text-xs mb-1.5">
-                       <span className="text-white/70 font-mono">Structural Integrity</span>
-                       <span className="text-emerald-400 font-mono font-bold">98.5%</span>
-                     </div>
-                     <div className="h-1.5 bg-white/10 rounded-full overflow-hidden relative">
-                       <div className="absolute inset-0 bg-emerald-500/20 animate-pulse" />
-                       <div className="h-full bg-emerald-500 w-[98.5%] shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
-                     </div>
-                   </div>
-                   <div>
-                     <div className="flex justify-between text-xs mb-1.5">
-                       <span className="text-white/70 font-mono">Coating Condition</span>
-                       <span className="text-emerald-400 font-mono font-bold">94.2%</span>
-                     </div>
-                     <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
-                       <div className="h-full bg-emerald-500 w-[94.2%]" />
-                     </div>
-                   </div>
-                   <div>
-                     <div className="flex justify-between text-xs mb-1.5">
-                       <span className="text-white/70 font-mono">Corrosion Index</span>
-                       <span className="text-emerald-400 font-mono font-bold">Low (0.02)</span>
-                     </div>
-                     <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
-                       <div className="h-full bg-emerald-500 w-[2%]" />
-                     </div>
-                   </div>
-                 </div>
+            {/* Bottom Left: Stream Stats */}
+            {stats && (
+              <div className="absolute bottom-6 left-6 pointer-events-auto">
+                <div className="bg-black/60 backdrop-blur-sm border border-white/10 p-3 rounded-sm text-[10px] font-mono text-white/50 space-y-1">
+                  <div>Stream: {stats.videoWidth}x{stats.videoHeight} @ {stats.frameRate.toFixed(0)} fps</div>
+                  <div>Bitrate: {(stats.bitrate / 1000).toFixed(1)} Mbps</div>
+                  <div>Input: {inputEnabled ? 'Enabled' : 'Disabled'}</div>
+                </div>
+              </div>
+            )}
+
+            {/* Top Right: Mode Selector */}
+            <div className="absolute top-6 right-6 pointer-events-auto">
+              <div className="flex gap-1 bg-black/80 backdrop-blur-md border border-emerald-500/20 rounded-sm p-1">
+                <button className="px-3 py-1.5 bg-emerald-500/20 text-emerald-400 text-xs font-mono rounded-sm">
+                  Planning
+                </button>
+                <button className="px-3 py-1.5 text-white/40 hover:text-white/60 text-xs font-mono rounded-sm transition-colors">
+                  Construction
+                </button>
+                <button className="px-3 py-1.5 text-white/40 hover:text-white/60 text-xs font-mono rounded-sm transition-colors">
+                  Operation
+                </button>
               </div>
             </div>
 
-            {/* Right Side: Hydraulics & Maintenance */}
-            <div className="absolute top-24 right-12 space-y-4 pointer-events-auto flex flex-col items-end">
-              
-              {/* Hydraulics Panel */}
-              <div className="w-80 bg-black/80 backdrop-blur-md border border-emerald-500/30 rounded-sm overflow-hidden shadow-lg relative group">
-                 <div className="absolute -left-12 top-1/2 w-12 h-[1px] bg-emerald-500/50 hidden group-hover:block"></div>
-                 <div className="bg-emerald-500/10 px-4 py-2 border-b border-emerald-500/20 flex justify-between items-center">
-                   <h3 className="text-emerald-400 text-xs font-mono uppercase flex items-center gap-2 tracking-widest">
-                     <Droplets className="w-3 h-3" /> Hydraulics Telemetry
-                   </h3>
-                   <span className="text-[9px] text-emerald-500/50 font-mono">REALTIME</span>
-                 </div>
-                 <div className="p-4 grid grid-cols-2 gap-3">
-                   <div className="bg-emerald-950/30 p-2.5 rounded border border-emerald-500/10 hover:border-emerald-500/30 transition-colors">
-                      <div className="text-[9px] text-emerald-500/60 uppercase mb-1 font-mono">Flow Rate</div>
-                      <div className="flex items-baseline gap-1">
-                        <div className="text-lg text-white font-mono font-bold">1,240</div>
-                        <div className="text-[9px] text-white/40 font-mono">bbl/h</div>
-                      </div>
-                   </div>
-                   <div className="bg-emerald-950/30 p-2.5 rounded border border-emerald-500/10 hover:border-emerald-500/30 transition-colors">
-                      <div className="text-[9px] text-emerald-500/60 uppercase mb-1 font-mono">Pressure</div>
-                      <div className="flex items-baseline gap-1">
-                        <div className="text-lg text-white font-mono font-bold">845</div>
-                        <div className="text-[9px] text-white/40 font-mono">PSI</div>
-                      </div>
-                   </div>
-                   <div className="bg-emerald-950/30 p-2.5 rounded border border-emerald-500/10 hover:border-emerald-500/30 transition-colors">
-                      <div className="text-[9px] text-emerald-500/60 uppercase mb-1 font-mono">Temperature</div>
-                      <div className="flex items-baseline gap-1">
-                        <div className="text-lg text-yellow-400 font-mono font-bold">45.2</div>
-                        <div className="text-[9px] text-white/40 font-mono">°C</div>
-                      </div>
-                   </div>
-                   <div className="bg-emerald-950/30 p-2.5 rounded border border-emerald-500/10 hover:border-emerald-500/30 transition-colors">
-                      <div className="text-[9px] text-emerald-500/60 uppercase mb-1 font-mono">Viscosity</div>
-                      <div className="flex items-baseline gap-1">
-                        <div className="text-lg text-white font-mono font-bold">12.4</div>
-                        <div className="text-[9px] text-white/40 font-mono">cSt</div>
-                      </div>
-                   </div>
-                 </div>
+            {/* Right Side: Quick Actions */}
+            <div className="absolute bottom-6 right-6 pointer-events-auto">
+              <div className="flex flex-col gap-2">
+                <button 
+                  onClick={() => clientRef.current?.sendCommand('ReloadTerrain')}
+                  className="p-2 bg-black/80 backdrop-blur-md border border-white/10 hover:border-emerald-500/30 rounded text-white/60 hover:text-emerald-400 transition-colors"
+                  title="Reload Terrain"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                </button>
               </div>
-
-               {/* Maintenance Prediction */}
-               <div className="w-80 bg-black/80 backdrop-blur-md border border-yellow-500/20 rounded-sm p-4 shadow-lg relative overflow-hidden mt-auto top-[400px] absolute right-0">
-                  <div className="absolute -left-12 top-1/2 w-12 h-[1px] bg-yellow-500/50 hidden group-hover:block"></div>
-                  <div className="absolute top-0 left-0 w-1 h-full bg-yellow-500/50" />
-                  <div className="flex items-start gap-3 pl-2">
-                     <div className="mt-1 text-yellow-500 animate-pulse">
-                       <AlertTriangle className="w-4 h-4" />
-                     </div>
-                     <div>
-                       <div className="text-yellow-500/80 text-[10px] font-mono uppercase mb-1 tracking-widest">Predictive Analysis</div>
-                       <div className="text-white text-sm font-bold mb-1">Routine Check Recommended</div>
-                       <div className="text-white/40 text-[10px] font-mono leading-tight">
-                         Based on wear patterns, schedule inspection by:
-                       </div>
-                       <div className="text-yellow-400 font-mono text-lg mt-1 font-bold tracking-wide">
-                         2026-01-15
-                       </div>
-                     </div>
-                  </div>
-               </div>
-
             </div>
           </div>
+        )}
 
-        </div>
+        {/* Settings Panel */}
+        {showSettings && (
+          <div className="absolute top-16 right-6 z-50 bg-black/90 backdrop-blur-md border border-white/20 rounded-lg p-4 w-96 shadow-xl">
+            <h3 className="text-white font-mono text-sm mb-4 pb-2 border-b border-white/10">
+              Connection Settings
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <label className="text-white/60 text-xs font-mono block mb-1">Signaling Server URL</label>
+                <input 
+                  type="text" 
+                  value={customUrl}
+                  onChange={(e) => setCustomUrl(e.target.value)}
+                  placeholder="ws://192.168.0.41:80"
+                  className="w-full bg-white/5 border border-white/10 rounded px-3 py-2 text-white font-mono text-sm focus:border-emerald-500/50 focus:outline-none"
+                  disabled={status === ConnectionStatus.Connected}
+                />
+                <div className="text-[10px] text-white/30 font-mono mt-1">
+                  Default: ws://192.168.0.41:80 (Windows Host)
+                </div>
+              </div>
+              <div>
+                <label className="text-white/60 text-xs font-mono block mb-1">Project</label>
+                <input 
+                  type="text" 
+                  value={projectName || 'None selected'}
+                  className="w-full bg-white/5 border border-white/10 rounded px-3 py-2 text-white/60 font-mono text-sm"
+                  readOnly
+                />
+              </div>
+              <div className="pt-2 border-t border-white/10 text-[10px] text-white/40 font-mono space-y-1">
+                <div>Status: {status}</div>
+                {stats && <div>Streamer: {stats.streamerConnected ? 'Connected' : 'Disconnected'}</div>}
+                <div className="pt-2 text-white/30">
+                  Tip: Use Ctrl+mouse to orbit in UE5
+                </div>
+              </div>
+            </div>
+            <button 
+              onClick={() => setShowSettings(false)}
+              className="mt-4 w-full py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded text-white/60 text-sm font-mono transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
