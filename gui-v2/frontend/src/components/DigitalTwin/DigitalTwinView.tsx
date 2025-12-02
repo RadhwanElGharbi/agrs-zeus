@@ -56,7 +56,8 @@ export function DigitalTwinView({
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [customUrl, setCustomUrl] = useState(signalingUrl)
   const [inputEnabled, setInputEnabled] = useState(true)
-  const [mouseSensitivity, setMouseSensitivity] = useState(10.0) // Default sensitivity multiplier
+  const [sensitivityX, setSensitivityX] = useState(10.0) // Horizontal sensitivity
+  const [sensitivityY, setSensitivityY] = useState(10.0) // Vertical sensitivity
 
   // Fullscreen toggle function
   const toggleFullscreen = useCallback(async () => {
@@ -114,8 +115,9 @@ export function DigitalTwinView({
         setStatus(ConnectionStatus.Connected)
         setErrorMessage(null)
         
-        // Set mouse sensitivity
-        client.mouseSensitivity = mouseSensitivity
+        // Set mouse sensitivities
+        client.mouseSensitivityX = sensitivityX
+        client.mouseSensitivityY = sensitivityY
         
         // Enable input handling on the video container
         if (videoContainerRef.current && inputEnabled) {
@@ -157,7 +159,7 @@ export function DigitalTwinView({
 
     clientRef.current = client
     return client
-  }, [customUrl, projectName, inputEnabled, mouseSensitivity])
+  }, [customUrl, projectName, inputEnabled, sensitivityX, sensitivityY])
 
   // Connect to streaming
   const connect = useCallback(async () => {
@@ -518,19 +520,44 @@ export function DigitalTwinView({
               </div>
               <div>
                 <label className="text-white/60 text-xs font-mono block mb-1">
-                  Mouse Sensitivity: {mouseSensitivity.toFixed(0)}x
+                  Horizontal Sensitivity: {sensitivityX.toFixed(0)}x
                 </label>
                 <input 
                   type="range" 
                   min="3"
                   max="30"
                   step="1"
-                  value={mouseSensitivity}
+                  value={sensitivityX}
                   onChange={(e) => {
                     const val = parseFloat(e.target.value);
-                    setMouseSensitivity(val);
+                    setSensitivityX(val);
                     if (clientRef.current) {
-                      clientRef.current.mouseSensitivity = val;
+                      clientRef.current.mouseSensitivityX = val;
+                    }
+                  }}
+                  className="w-full accent-emerald-500"
+                />
+                <div className="flex justify-between text-[9px] text-white/30 font-mono mt-1">
+                  <span>3x</span>
+                  <span>10x</span>
+                  <span>30x</span>
+                </div>
+              </div>
+              <div>
+                <label className="text-white/60 text-xs font-mono block mb-1">
+                  Vertical Sensitivity: {sensitivityY.toFixed(0)}x
+                </label>
+                <input 
+                  type="range" 
+                  min="3"
+                  max="30"
+                  step="1"
+                  value={sensitivityY}
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value);
+                    setSensitivityY(val);
+                    if (clientRef.current) {
+                      clientRef.current.mouseSensitivityY = val;
                     }
                   }}
                   className="w-full accent-emerald-500"
