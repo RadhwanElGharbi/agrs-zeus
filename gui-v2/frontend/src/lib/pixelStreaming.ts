@@ -51,9 +51,15 @@ export class PixelStreamingClient {
   async connect(): Promise<void> {
     return new Promise((resolve, reject) => {
       try {
-        console.log('[PixelStreaming] Connecting to signaling server:', this.config.signalingUrl);
+        // UE5's embedded signaling server expects /ws path if not specified
+        let url = this.config.signalingUrl;
+        if (!url.endsWith('/ws') && !url.includes('?')) {
+          url = url.replace(/\/$/, '') + '/ws';
+        }
         
-        this.ws = new WebSocket(this.config.signalingUrl);
+        console.log('[PixelStreaming] Connecting to signaling server:', url);
+        
+        this.ws = new WebSocket(url);
         
         this.ws.onopen = () => {
           console.log('[PixelStreaming] WebSocket connected');
@@ -303,23 +309,32 @@ export class PixelStreamingClient {
   private handleSignalingMessage(message: any): void {
     const { type } = message;
     
+    console.log('[PixelStreaming] Received message type:', type, message);
+    
     switch (type) {
       case 'config':
-        this.playerId = message.playerId;
-        this.streamerConnected = message.streamerConnected;
+        // UE5 sends config with peerConnectionOptions
+        this.playerId = message.playerId || 'player_' + Date.now();
         console.log('[PixelStreaming] Received config, playerId:', this.playerId);
         
-        if (this.streamerConnected) {
-          this.config.onStreamerConnected?.();
-          this.createPeerConnection();
-        }
+        // UE5's embedded server - streamer is always connected when we get config
+        this.streamerConnected = true;
+        this.config.onStreamerConnected?.();
+        this.createPeerConnection();
+        break;
+      
+      case 'playerCount':
+        // UE5 sends player count updates
+        console.log('[PixelStreaming] Player count:', message.count);
         break;
         
       case 'streamerConnected':
         console.log('[PixelStreaming] Streamer connected');
         this.streamerConnected = true;
         this.config.onStreamerConnected?.();
-        this.createPeerConnection();
+        if (!this.pc) {
+          this.createPeerConnection();
+        }
         break;
         
       case 'streamerDisconnected':
@@ -339,9 +354,18 @@ export class PixelStreamingClient {
       case 'iceCandidate':
         this.handleIceCandidate(message);
         break;
+      
+      case 'ping':
+        // UE5 sends pings - respond with pong
+        this.sendSignalingMessage({ type: 'pong', time: message.time });
+        break;
+        
+      case 'pong':
+        // Response to our ping
+        break;
         
       default:
-        console.log('[PixelStreaming] Unknown message type:', type);
+        console.log('[PixelStreaming] Unknown message type:', type, message);
     }
   }
 
