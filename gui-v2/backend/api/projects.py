@@ -39,6 +39,9 @@ TIER1_DATASETS_CSV = PERPLEXITY_ROOT / "TIER1_BEST_DATASETS.csv"
 DATASET_FETCH_PROTOCOL = "/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md"
 GEOD = Geod(ellps="WGS84")
 
+# Maximum AOI area limit in square kilometers
+MAX_AOI_AREA_KM2 = 300
+
 
 class ProjectMetadata(BaseModel):
     """Project metadata model"""
@@ -800,6 +803,29 @@ async def get_project_metadata(project_name: str):
     return ProjectMetadata(**normalized)
 
 
+@router.get("/projects/{project_name}/pipeline-specs")
+async def get_pipeline_specs(project_name: str):
+    """
+    Get pipeline specifications for a project
+    """
+    project_path = resolve_project_path(project_name)
+
+    if not project_path or not project_path.exists():
+        raise HTTPException(status_code=404, detail=f"Project '{project_name}' not found")
+
+    specs_file = project_path / "pipeline_specs.json"
+
+    if not specs_file.exists():
+        raise HTTPException(status_code=404, detail=f"pipeline_specs.json not found for project '{project_name}'")
+
+    specs = load_json_file(specs_file)
+
+    if not specs:
+        raise HTTPException(status_code=500, detail=f"Failed to load pipeline specs for '{project_name}'")
+
+    return specs
+
+
 def _build_display_name_from_metadata(metadata: dict, fallback_name: str) -> str:
     """
     Build display name from metadata JSON sidecar.
@@ -1478,10 +1504,18 @@ async def create_project(
         temp_dir = Path(tmpdir)
         feature_collection = _prepare_aoi_payload(aoi_file, drawn_geojson, temp_dir)
         area_km2 = _calculate_area_km2(feature_collection)
+
+        # Validate area limit
+        if area_km2 > MAX_AOI_AREA_KM2:
+            raise HTTPException(
+                status_code=400,
+                detail=f"AOI area ({area_km2:.1f} km²) exceeds the maximum allowed limit of {MAX_AOI_AREA_KM2} km². Please draw a smaller area."
+            )
+
         geom = _collect_geometry(feature_collection)
         centroid = geom.centroid
         iso3, country_name = _infer_country_from_point(centroid.y, centroid.x)
-        
+
         # Determine CRS: use provided override or calculate UTM
         if crs_epsg and crs_name:
             epsg = crs_epsg

@@ -59,15 +59,16 @@ export default function TestMapPage() {
       console.log('📊 Data event:', e.dataType)
     })
 
-    map.current.on('error', (e) => {
+    map.current.on('error', (e: any) => {
       console.error('❌ Map error:', e.error)
       console.error('Error source:', e.sourceId)
       console.error('Error tile:', e.tile)
     })
 
-    map.current.on('render', () => {
+    // @ts-ignore - render event exists but not in types
+    map.current.once('render', () => {
       console.log('🎨 Render event (map is rendering)')
-    }, {once: true})
+    })
 
     console.log('Map instance created:', map.current)
 

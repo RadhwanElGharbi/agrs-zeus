@@ -1,17 +1,42 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { useProject } from '@/lib/context/ProjectContext'
-import { listPirlOutputs, type PirlOutput } from '@/lib/api/dataClient'
-import { 
-  X, Brain, Settings2, DollarSign, Activity, 
+import { listPirlOutputs, type PirlOutput, fetchPipelineSpecs, type PipelineSpecs } from '@/lib/api/dataClient'
+import {
+  X, Brain, Settings2, DollarSign, Activity,
   ChevronRight, Play, RotateCcw, Save, Box,
   Layers, Ruler, AlertTriangle, CheckCircle2,
   Info, Droplet, Factory,
-  Sparkles, Download, Map as MapIcon
+  Sparkles, Download, Map as MapIcon, Loader2
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import dynamic from 'next/dynamic'
+import type { ViewMode } from './PipelineViewer3D'
+import { Target as TargetIcon } from 'lucide-react'
+
+const PipelineViewer3D = dynamic(() => import('./PipelineViewer3D').then(mod => ({ default: mod.PipelineViewer3D })), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-full flex items-center justify-center">
+      <div className="text-sm text-muted-foreground">Loading 3D Viewer...</div>
+    </div>
+  )
+})
+
+// Helper to get API base URL
+function getApiBase(): string {
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return 'http://localhost:8000/api'
+    }
+    return `http://${hostname}:8000/api`
+  }
+  return 'http://localhost:8000/api'
+}
 
 interface PirlAiDialogProps {
   open: boolean
@@ -20,12 +45,262 @@ interface PirlAiDialogProps {
 
 type PirlSection = 'objectives' | 'hydraulics' | 'cost' | 'constraints' | 'review' | 'results'
 
+// Type definitions for all form data
+interface ObjectivesData {
+  primaryWeights: {
+    costOptimization: number
+    constructionSpeed: number
+    regulatoryMinimization: number
+    environmentalImpact: number
+  }
+  geometricPreferences: {
+    existingRowUsage: number
+    minimizeCrossings: number
+    terrainFlatness: number
+  }
+  activeProfile: string
+}
+
+interface HydraulicsData {
+  mechanical: {
+    outerDiameter: number
+    wallThickness: number
+    grade: string
+    locationClass: string
+    designFactor: string
+    jointFactor: string
+    tempDerating: string
+    maop: string
+  }
+  operating: {
+    inletPressure: string
+    deliveryPressure: string
+    flowRate: string
+    inletTemp: string
+    groundTemp: string
+    roughness: string
+  }
+  fluidComposition: {
+    methane: string
+    ethane: string
+    propane: string
+    butane: string
+    nitrogen: string
+    co2: string
+    h2s: string
+    waterContent: string
+    specificGravity: string
+    viscosity: string
+    critPressure: string
+    critTemp: string
+  }
+}
+
+interface CostMatrixData {
+  materialCosts: Array<{ diameter: string, wallThickness: string, grade: string, costPerMeter: string, weight: string }>
+  laborRates: Array<{ region: string, welder: string, equipmentOperator: string, laborer: string, engineer: string }>
+  equipmentRental: Array<{ equipment: string, capacity: string, dailyRate: string, monthlyRate: string }>
+  terrainMultipliers: Array<{ terrainType: string, multiplier: string, costPerKm: string, rationale: string }>
+  rowAcquisition: Array<{ landUse: string, permanentEasement: string, temporaryEasement: string, totalPerKm: string }>
+  waterCrossings: Array<{ type: string, width: string, openCut: string, hddCost: string, hddMultiplier: string }>
+  infrastructureCrossings: Array<{ infrastructure: string, costPerCrossing: string, method: string, notes: string }>
+  regionalFactors: Array<{ region: string, costPerKm: string, laborIndex: string, materialIndex: string, notes: string }>
+  permitting: Array<{ item: string, costRange: string, timeline: string }>
+  indirectCosts: Array<{ item: string, cost: string, description: string }>
+}
+
+interface ConstraintsData {
+  geographicalExclusions: {
+    protectedAreas: boolean
+    urbanDensity: boolean
+    indigenousLands: boolean
+    waterBodies: boolean
+    culturalHeritage: boolean
+    militaryZones: boolean
+    geohazards: boolean
+  }
+  constructabilityLimits: {
+    maxLongSlope: string
+    maxSideSlope: string
+    minBendRadius: string
+    maxBendAngle: string
+    minDepthOfCover: string
+    rowWidth: string
+    buoyancyControl: string
+    strainLimit: string
+  }
+}
+
+interface PirlFormData {
+  objectives: ObjectivesData
+  hydraulics: HydraulicsData
+  costMatrix: CostMatrixData
+  constraints: ConstraintsData
+}
+
+// Default values
+const defaultObjectives: ObjectivesData = {
+  primaryWeights: {
+    costOptimization: 80,
+    constructionSpeed: 40,
+    regulatoryMinimization: 60,
+    environmentalImpact: 70,
+  },
+  geometricPreferences: {
+    existingRowUsage: 90,
+    minimizeCrossings: 50,
+    terrainFlatness: 60,
+  },
+  activeProfile: 'Cost Aggressive'
+}
+
+const defaultHydraulics: HydraulicsData = {
+  mechanical: {
+    outerDiameter: 660.4,
+    wallThickness: 11.0,
+    grade: '483',
+    locationClass: '1',
+    designFactor: '0.72',
+    jointFactor: '1.0',
+    tempDerating: '1.0',
+    maop: '9930',
+  },
+  operating: {
+    inletPressure: '75.0',
+    deliveryPressure: '45.0',
+    flowRate: '1.0',
+    inletTemp: '288.15',
+    groundTemp: '283.15',
+    roughness: '0.045',
+  },
+  fluidComposition: {
+    methane: '92.5',
+    ethane: '4.2',
+    propane: '1.5',
+    butane: '0.8',
+    nitrogen: '0.6',
+    co2: '0.4',
+    h2s: '0.0',
+    waterContent: '< 7',
+    specificGravity: '0.58',
+    viscosity: '1.1e-5',
+    critPressure: '46.0',
+    critTemp: '190.6',
+  }
+}
+
+const defaultCostMatrix: CostMatrixData = {
+  materialCosts: [
+    { diameter: '8" (219mm)', wallThickness: '6.4mm', grade: 'X52', costPerMeter: '$45 - $70', weight: '27' },
+    { diameter: '12" (323mm)', wallThickness: '7.9mm', grade: 'X52', costPerMeter: '$85 - $130', weight: '62' },
+    { diameter: '24" (610mm)', wallThickness: '11.1mm', grade: 'X65', costPerMeter: '$280 - $400', weight: '168' },
+    { diameter: '30" (762mm)', wallThickness: '12.7mm', grade: 'X65', costPerMeter: '$450 - $650', weight: '242' },
+    { diameter: '36" (914mm)', wallThickness: '14.3mm', grade: 'X70', costPerMeter: '$650 - $900', weight: '328' },
+    { diameter: '48" (1219mm)', wallThickness: '17.5mm', grade: 'X70', costPerMeter: '$1,200 - $1,700', weight: '541' },
+  ],
+  laborRates: [
+    { region: 'USA', welder: '$60-90', equipmentOperator: '$45-70', laborer: '$25-40', engineer: '$100-150' },
+    { region: 'Canada', welder: '$55-85', equipmentOperator: '$40-65', laborer: '$22-38', engineer: '$90-140' },
+    { region: 'Western Europe', welder: '$50-80', equipmentOperator: '$35-60', laborer: '$20-35', engineer: '$90-130' },
+    { region: 'Middle East', welder: '$35-60', equipmentOperator: '$25-45', laborer: '$12-25', engineer: '$70-110' },
+  ],
+  equipmentRental: [
+    { equipment: 'Excavator', capacity: '50-ton', dailyRate: '$600 - $1,000', monthlyRate: '$15,000 - $25,000' },
+    { equipment: 'Sideboom', capacity: '90-ton', dailyRate: '$800 - $1,300', monthlyRate: '$20,000 - $32,000' },
+    { equipment: 'HDD Rig', capacity: 'Large (500-ton)', dailyRate: '$15,000 - $30,000', monthlyRate: '$375,000 - $750,000' },
+    { equipment: 'Crane', capacity: '200-ton', dailyRate: '$2,500 - $4,500', monthlyRate: '$60,000 - $110,000' },
+  ],
+  terrainMultipliers: [
+    { terrainType: 'Flat Terrain (0-2°)', multiplier: '1.0', costPerKm: '$0.5M - $1.0M', rationale: 'Standard trenching' },
+    { terrainType: 'Moderate Slopes (5-15°)', multiplier: '1.3 - 1.5', costPerKm: '$0.65M - $1.5M', rationale: 'Grading, erosion control' },
+    { terrainType: 'Steep Slopes (>30°)', multiplier: '2.0 - 3.0', costPerKm: '$1.0M - $3.0M', rationale: 'Blasting, retaining walls' },
+    { terrainType: 'Swamp/Wetland', multiplier: '2.0 - 3.5', costPerKm: '$1.0M - $3.5M', rationale: 'Mats, floating equipment' },
+    { terrainType: 'Urban Areas', multiplier: '2.5 - 4.0', costPerKm: '$1.25M - $4.0M', rationale: 'Utilities, permits, traffic' },
+    { terrainType: 'Permafrost', multiplier: '2.5 - 4.0', costPerKm: '$1.25M - $4.0M', rationale: 'Elevated design, insulation' },
+  ],
+  rowAcquisition: [
+    { landUse: 'Cropland (Prime)', permanentEasement: '$3,000 - $8,000', temporaryEasement: '$500 - $1,500', totalPerKm: '$20k - $60k' },
+    { landUse: 'Forest Land', permanentEasement: '$2,000 - $6,000', temporaryEasement: '$400 - $1,000', totalPerKm: '$15k - $45k' },
+    { landUse: 'Urban/Suburban', permanentEasement: '$20,000 - $100,000+', temporaryEasement: '$3,000 - $15,000', totalPerKm: '$150k - $750k' },
+    { landUse: 'Desert/Arid', permanentEasement: '$500 - $2,000', temporaryEasement: '$100 - $400', totalPerKm: '$3k - $15k' },
+  ],
+  waterCrossings: [
+    { type: 'Small Stream', width: '<3m', openCut: '$500 - $1,000', hddCost: '$1,000 - $2,000', hddMultiplier: '2x' },
+    { type: 'Medium River', width: '3-10m', openCut: '$1,000 - $3,000', hddCost: '$2,000 - $9,000', hddMultiplier: '2-3x' },
+    { type: 'Large River', width: '>10m', openCut: '$3,000 - $10,000', hddCost: '$6,000 - $40,000', hddMultiplier: '2-4x' },
+    { type: 'Lake/Reservoir', width: 'N/A', openCut: 'N/A', hddCost: '$10,000 - $50,000', hddMultiplier: 'Deep HDD' },
+  ],
+  infrastructureCrossings: [
+    { infrastructure: 'Tertiary Road', costPerCrossing: '$50k - $100k', method: 'Open cut/HDD', notes: 'Low traffic' },
+    { infrastructure: 'Highway/Motorway', costPerCrossing: '$400k - $1.0M', method: 'HDD Required', notes: 'Major disruption' },
+    { infrastructure: 'Heavy Rail', costPerCrossing: '$150k - $300k', method: 'HDD Required', notes: '5-8m depth' },
+    { infrastructure: 'Gas/Oil Pipeline', costPerCrossing: '$50k - $200k', method: 'Coordination', notes: 'Safety clearances' },
+    { infrastructure: 'Power Line (>400kV)', costPerCrossing: '$150k - $300k', method: 'HDD Required', notes: '10-15m clearance' },
+  ],
+  regionalFactors: [
+    { region: 'USA (Lower 48)', costPerKm: '$0.8M - $1.5M', laborIndex: '1.0', materialIndex: '1.0', notes: 'Baseline' },
+    { region: 'USA (Alaska)', costPerKm: '$1.2M - $2.5M', laborIndex: '1.3', materialIndex: '1.4', notes: 'Remote, logistics' },
+    { region: 'Canada (South)', costPerKm: '$0.7M - $1.3M', laborIndex: '0.9', materialIndex: '0.95', notes: 'Similar to USA' },
+    { region: 'Middle East', costPerKm: '$0.5M - $1.0M', laborIndex: '0.6', materialIndex: '1.0', notes: 'Imported labor' },
+    { region: 'Western Europe', costPerKm: '$0.9M - $1.8M', laborIndex: '1.1', materialIndex: '1.05', notes: 'High regulation' },
+  ],
+  permitting: [
+    { item: 'Federal Permits', costRange: '$500k - $2.0M', timeline: '12-24 months' },
+    { item: 'Environmental Impact', costRange: '$200k - $1.0M', timeline: '6-12 months' },
+    { item: 'Wetland Mitigation', costRange: '$50k - $200k / acre', timeline: 'Per impact acre' },
+    { item: 'Cultural/Arch. Survey', costRange: '$5k - $20k / km', timeline: 'Sensitive areas' },
+  ],
+  indirectCosts: [
+    { item: 'Engineering & PM', cost: '10% - 15%', description: 'Of Total Install Cost (TIC)' },
+    { item: 'Contingency', cost: '15% - 30%', description: 'AACE Class 4 Estimate' },
+    { item: 'Insurance & Legal', cost: '2% - 5%', description: 'Project specific' },
+    { item: 'Pump/Comp Station', cost: '$25M - $50M', description: 'Per station (approx 100km)' },
+    { item: 'Block Valve Station', cost: '$0.5M - $1.5M', description: 'Every 30km' },
+    { item: 'Pigging Launcher/Receiver', cost: '$1.0M - $2.5M', description: 'At start/end points' },
+  ],
+}
+
+const defaultConstraints: ConstraintsData = {
+  geographicalExclusions: {
+    protectedAreas: true,
+    urbanDensity: true,
+    indigenousLands: true,
+    waterBodies: true,
+    culturalHeritage: false,
+    militaryZones: true,
+    geohazards: true,
+  },
+  constructabilityLimits: {
+    maxLongSlope: '30',
+    maxSideSlope: '15',
+    minBendRadius: '20',
+    maxBendAngle: '90',
+    minDepthOfCover: '1.2',
+    rowWidth: '30',
+    buoyancyControl: '1.1',
+    strainLimit: '0.5',
+  }
+}
+
 export function PirlAiDialog({ open, onClose }: PirlAiDialogProps) {
   const { currentProject } = useProject()
   const [pirlResults, setPirlResults] = useState<PirlOutput[]>([])
   const [activeSection, setActiveSection] = useState<PirlSection>('objectives')
   const [isClosing, setIsClosing] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [pipelineSpecs, setPipelineSpecs] = useState<PipelineSpecs | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitSuccess, setSubmitSuccess] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+
+  // Form state
+  const [objectives, setObjectives] = useState<ObjectivesData>(defaultObjectives)
+  const [hydraulics, setHydraulics] = useState<HydraulicsData>(defaultHydraulics)
+  const [costMatrix, setCostMatrix] = useState<CostMatrixData>(defaultCostMatrix)
+  const [constraints, setConstraints] = useState<ConstraintsData>(defaultConstraints)
+
+  // 3D Viewer mode
+  const [viewMode, setViewMode] = useState<ViewMode>('pipe')
 
   useEffect(() => {
     setMounted(true)
@@ -34,10 +309,30 @@ export function PirlAiDialog({ open, onClose }: PirlAiDialogProps) {
   useEffect(() => {
     if (open) {
       setIsClosing(false)
+      setSubmitSuccess(false)
+      setSubmitError(null)
       if (currentProject) {
         listPirlOutputs(currentProject)
           .then(setPirlResults)
           .catch(console.error)
+
+        // Fetch pipeline specs
+        fetchPipelineSpecs(currentProject)
+          .then(specs => {
+            setPipelineSpecs(specs)
+            // Initialize editable values from specs
+            setHydraulics(prev => ({
+              ...prev,
+              mechanical: {
+                ...prev.mechanical,
+                outerDiameter: specs.outer_diameter * 1000, // Convert to mm
+                wallThickness: (specs.outer_diameter - specs.inner_diameter) * 1000, // Convert to mm
+              }
+            }))
+          })
+          .catch(err => {
+            console.error('Failed to load pipeline specs:', err)
+          })
       }
     }
   }, [open, currentProject])
@@ -50,63 +345,89 @@ export function PirlAiDialog({ open, onClose }: PirlAiDialogProps) {
     }, 300)
   }
 
+  const handleSubmit = async () => {
+    if (!currentProject) {
+      setSubmitError('No project selected')
+      return
+    }
+
+    setIsSubmitting(true)
+    setSubmitError(null)
+
+    try {
+      const formData: PirlFormData = {
+        objectives,
+        hydraulics,
+        costMatrix,
+        constraints,
+      }
+
+      const apiBase = getApiBase()
+      const response = await fetch(`${apiBase}/pirl/${currentProject}/requests`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.detail || 'Failed to save PIRL request')
+      }
+
+      const result = await response.json()
+      setSubmitSuccess(true)
+      console.log('PIRL request saved:', result)
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : 'Unknown error occurred')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   if (!mounted || !open) return null
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 font-mono">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
       <div
         className={cn(
-          "absolute inset-0 bg-black/90 backdrop-blur-xl overflow-hidden",
-          isClosing ? "animate-fade-out" : "animate-fade-in"
+          "absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity duration-300",
+          isClosing ? "opacity-0" : "opacity-100"
         )}
-      >
-        {/* Exclusive White & Gold Aurora Background */}
-        <div className="absolute inset-0 animate-heartbeat">
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,#451a0344_0%,#b4530966_25%,#fbbf2444_50%,#b4530966_75%,#451a0344_100%)] bg-[length:200%_100%] animate-aurora" />
-        </div>
-        
-        {/* Luxury Grid Overlay */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(251,191,36,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(251,191,36,0.05)_1px,transparent_1px)] bg-[size:40px_40px]" />
-        
-        {/* Vignette */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_10%,#000000_100%)]" />
-      </div>
+        onClick={handleClose}
+      />
 
       <div
+        data-tour="pirl-dialog"
         className={cn(
-          "relative z-10 w-[1400px] max-w-[95vw] h-[85vh] bg-[#050505]/95 border border-amber-500/20 rounded-sm shadow-[0_0_60px_rgba(245,158,11,0.15)] flex flex-col overflow-hidden",
-          isClosing ? "animate-fade-out" : "animate-fade-in"
+          "relative z-10 w-[1400px] max-w-[95vw] h-[85vh] bg-card border border-border rounded-lg shadow-xl flex flex-col overflow-hidden transition-all duration-300",
+          isClosing ? "scale-95 opacity-0" : "scale-100 opacity-100"
         )}
       >
-        {/* Decorative Top Line */}
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-amber-500/50 to-transparent" />
-
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-amber-500/10 bg-black/40">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/30">
           <div className="flex items-center gap-4">
-            <div className="p-2 rounded-sm bg-amber-500/10 border border-amber-500/20">
-              <Brain className="w-5 h-5 text-amber-400" />
+            <div className="p-2 rounded-md bg-primary/10 text-primary">
+              <Brain className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white tracking-wider">PIRL AI <span className="text-amber-500">STUDIO</span></h2>
-              <p className="text-[10px] text-amber-500/60 uppercase tracking-widest">Physics Informed Reinforcement Learning Suite</p>
+              <h2 className="text-lg font-semibold text-foreground">PIRL AI Studio</h2>
+              <p className="text-xs text-muted-foreground">Physics Informed Reinforcement Learning Suite</p>
             </div>
           </div>
-          <button
-            onClick={handleClose}
-            className="p-2 hover:bg-white/5 rounded-sm transition-colors text-white/60 hover:text-white"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <Button variant="ghost" size="icon" onClick={handleClose}>
+            <X className="w-4 h-4" />
+          </Button>
         </div>
 
         {/* Main Layout */}
         <div className="flex flex-1 overflow-hidden">
           {/* Left Sidebar Navigation */}
-          <div className="w-64 bg-black/20 border-r border-amber-500/10 flex flex-col">
-            <div className="p-4 space-y-1">
+          <div className="w-64 bg-card border-r border-border flex flex-col">
+            <div className="p-3 space-y-1">
               {[
-                { id: 'objectives', label: 'Objectives', icon: Target },
+                { id: 'objectives', label: 'Objectives', icon: TargetIcon },
                 { id: 'hydraulics', label: 'Hydraulics', icon: Activity },
                 { id: 'cost', label: 'Cost Matrix', icon: DollarSign },
                 { id: 'constraints', label: 'Constraints', icon: AlertTriangle },
@@ -120,94 +441,111 @@ export function PirlAiDialog({ open, onClose }: PirlAiDialogProps) {
                     key={item.id}
                     onClick={() => setActiveSection(item.id as PirlSection)}
                     className={cn(
-                      "w-full flex items-center gap-3 px-4 py-3 text-xs font-medium rounded-sm transition-all duration-300 relative group overflow-hidden",
-                      isActive 
-                        ? "text-amber-400 bg-amber-500/10 border border-amber-500/20" 
-                        : "text-white/60 hover:text-white hover:bg-white/5 border border-transparent"
+                      "w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors",
+                      isActive
+                        ? "bg-primary/10 text-primary"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                     )}
                   >
-                    <Icon className={cn("w-4 h-4", isActive ? "text-amber-400" : "text-white/40 group-hover:text-white/70")} />
-                    <span className="tracking-wide uppercase">{item.label}</span>
-                    {isActive && (
-                      <div className="absolute right-0 top-0 bottom-0 w-0.5 bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.8)]" />
-                    )}
+                    <Icon className="w-4 h-4" />
+                    <span>{item.label}</span>
                   </button>
                 )
               })}
             </div>
-            
-            <div className="mt-auto p-4 border-t border-amber-500/10">
-              <div className="p-3 bg-amber-500/5 border border-amber-500/10 rounded-sm">
-                <h4 className="text-[10px] text-amber-500 font-bold uppercase tracking-widest mb-2">Model Status</h4>
+
+            <div className="mt-auto p-4 border-t border-border">
+              <div className="p-3 bg-muted/30 rounded-md border border-border">
+                <h4 className="text-xs font-semibold text-foreground mb-2">Model Status</h4>
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_5px_#10b981]" />
-                  <span className="text-xs text-white/80">PIRL-v2.4 Ready</span>
+                  <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                  <span className="text-xs text-muted-foreground">PIRL-v2.4 Ready</span>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Center Content Area */}
-          <div className="flex-1 flex flex-col bg-black/10 relative overflow-hidden">
+          <div className="flex-1 flex flex-col bg-background relative overflow-hidden">
             <div className="flex-1 overflow-y-auto p-8">
-              {activeSection === 'objectives' && <ObjectivesSection />}
-              {activeSection === 'hydraulics' && <HydraulicsSection />}
-              {activeSection === 'cost' && <CostMatrixSection />}
-              {activeSection === 'constraints' && <ConstraintsSection />}
-              {activeSection === 'review' && <ReviewSection />}
+              {activeSection === 'objectives' && (
+                <ObjectivesSection
+                  data={objectives}
+                  onChange={setObjectives}
+                />
+              )}
+              {activeSection === 'hydraulics' && (
+                <HydraulicsSection
+                  data={hydraulics}
+                  onChange={setHydraulics}
+                />
+              )}
+              {activeSection === 'cost' && (
+                <CostMatrixSection
+                  data={costMatrix}
+                  onChange={setCostMatrix}
+                />
+              )}
+              {activeSection === 'constraints' && (
+                <ConstraintsSection
+                  data={constraints}
+                  onChange={setConstraints}
+                />
+              )}
+              {activeSection === 'review' && (
+                <ReviewSection
+                  objectives={objectives}
+                  hydraulics={hydraulics}
+                  constraints={constraints}
+                  onSubmit={handleSubmit}
+                  isSubmitting={isSubmitting}
+                  submitSuccess={submitSuccess}
+                  submitError={submitError}
+                />
+              )}
               {activeSection === 'results' && <ResultsSection results={pirlResults} />}
             </div>
           </div>
 
-          {/* Right 3D Visualization Placeholder */}
-          <div className="w-[450px] bg-black/40 border-l border-amber-500/10 flex flex-col relative">
-            <div className="p-3 border-b border-amber-500/10 bg-black/20 flex items-center justify-between">
+          {/* Right 3D Visualization */}
+          <div className="w-[400px] bg-muted/10 border-l border-border flex flex-col">
+            <div className="p-3 border-b border-border flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Box className="w-4 h-4 text-amber-500" />
-                <span className="text-xs font-bold text-white/80 uppercase tracking-wider">Real-time Simulation</span>
+                <Box className="w-4 h-4 text-muted-foreground" />
+                <span className="text-xs font-semibold text-foreground">Real-time Simulation</span>
               </div>
               <div className="flex gap-1">
-                <span className="px-1.5 py-0.5 text-[9px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-sm uppercase">Fluid Dynamics</span>
+                <span className="px-2 py-0.5 text-[10px] bg-blue-500/10 text-blue-600 border border-blue-200 dark:border-blue-800 rounded-full font-medium">Fluid Dynamics</span>
               </div>
             </div>
-            
-            <div className="flex-1 relative group cursor-crosshair overflow-hidden">
-              {/* 3D Viewport Placeholder */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8">
-                <div className="w-24 h-24 border border-amber-500/20 rounded-full flex items-center justify-center mb-4 relative">
-                  <div className="absolute inset-0 border border-amber-500/30 rounded-full animate-[spin_10s_linear_infinite]" />
-                  <div className="absolute inset-2 border border-amber-500/10 rounded-full animate-[spin_15s_linear_infinite_reverse]" />
-                  <Box className="w-8 h-8 text-amber-500/50" />
-                </div>
-                <h3 className="text-sm text-amber-500 font-bold uppercase tracking-widest mb-2">3D Pipeline Viewer</h3>
-                <p className="text-xs text-white/40 font-mono max-w-[250px]">
-                  Real-time visualization of pipeline cutaway, hydraulics simulation, and terrain interaction.
-                  <br/><br/>
-                  Waiting for parameter inputs...
-                </p>
-              </div>
-              
-              {/* Overlay Grid */}
-              <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none" />
+
+            <div className="flex-1 relative bg-muted/5">
+              <PipelineViewer3D
+                diameter={hydraulics.mechanical.outerDiameter / 1000}
+                wallThickness={hydraulics.mechanical.wallThickness / 1000}
+                length={20}
+                showCutaway={true}
+                flowVelocity={2.5}
+              />
             </div>
 
             {/* Mini Stats */}
-            <div className="h-32 border-t border-amber-500/10 bg-black/20 p-4 grid grid-cols-2 gap-4">
+            <div className="border-t border-border bg-card p-4 grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                <span className="text-[10px] text-white/40 uppercase block">Est. Flow Rate</span>
-                <span className="text-sm font-mono text-amber-400">-- m³/s</span>
+                <span className="text-[10px] text-muted-foreground uppercase block">Est. Flow Rate</span>
+                <span className="text-sm font-mono text-foreground">{hydraulics.operating.flowRate} m³/s</span>
               </div>
               <div className="space-y-1">
-                <span className="text-[10px] text-white/40 uppercase block">Pressure Drop</span>
-                <span className="text-sm font-mono text-amber-400">-- MPa</span>
+                <span className="text-[10px] text-muted-foreground uppercase block">Pressure Drop</span>
+                <span className="text-sm font-mono text-foreground">-- MPa</span>
               </div>
               <div className="space-y-1">
-                <span className="text-[10px] text-white/40 uppercase block">Reynolds No.</span>
-                <span className="text-sm font-mono text-white/60">--</span>
+                <span className="text-[10px] text-muted-foreground uppercase block">Reynolds No.</span>
+                <span className="text-sm font-mono text-foreground">--</span>
               </div>
               <div className="space-y-1">
-                <span className="text-[10px] text-white/40 uppercase block">Velocity</span>
-                <span className="text-sm font-mono text-white/60">-- m/s</span>
+                <span className="text-[10px] text-muted-foreground uppercase block">Velocity</span>
+                <span className="text-sm font-mono text-foreground">-- m/s</span>
               </div>
             </div>
           </div>
@@ -220,97 +558,182 @@ export function PirlAiDialog({ open, onClose }: PirlAiDialogProps) {
 
 // --- Sub-components for Sections ---
 
-function Target({ className }: { className?: string }) {
-  return <TargetIcon className={className} />
-}
-import { Target as TargetIcon } from 'lucide-react'
-
 function SectionHeader({ title, description }: { title: string, description: string }) {
   return (
     <div className="mb-8">
-      <h3 className="text-2xl font-bold text-white mb-2 tracking-wide">{title}</h3>
-      <p className="text-sm text-white/50 font-light max-w-2xl leading-relaxed">{description}</p>
+      <h3 className="text-xl font-semibold text-foreground mb-2">{title}</h3>
+      <p className="text-sm text-muted-foreground max-w-3xl leading-relaxed">{description}</p>
     </div>
   )
 }
 
-function SliderInput({ label, defaultValue = 50 }: { label: string, defaultValue?: number }) {
+function SliderInput({
+  label,
+  value,
+  onChange
+}: {
+  label: string
+  value: number
+  onChange: (value: number) => void
+}) {
   return (
     <div className="space-y-3">
-      <div className="flex justify-between text-xs uppercase tracking-wider">
-        <span className="text-white/70">{label}</span>
-        <span className="text-amber-500">{defaultValue}%</span>
+      <div className="flex justify-between text-xs font-medium">
+        <span className="text-muted-foreground">{label}</span>
+        <span className="text-primary">{value}%</span>
       </div>
-      <div className="h-1.5 bg-white/10 rounded-full relative cursor-pointer group">
-        <div 
-          className="absolute top-0 left-0 bottom-0 bg-gradient-to-r from-amber-600 to-amber-400 rounded-full" 
-          style={{ width: `${defaultValue}%` }} 
-        />
-        <div 
-          className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-[0_0_10px_rgba(251,191,36,0.5)] opacity-0 group-hover:opacity-100 transition-opacity" 
-          style={{ left: `${defaultValue}%` }} 
+      <input
+        type="range"
+        min="0"
+        max="100"
+        value={value}
+        onChange={(e) => onChange(parseInt(e.target.value))}
+        className="w-full h-1.5 bg-muted rounded-full appearance-none cursor-pointer accent-primary"
+      />
+    </div>
+  )
+}
+
+function InputGroup({
+  label,
+  value,
+  unit,
+  onChange
+}: {
+  label: string
+  value: string
+  unit?: string
+  onChange?: (value: string) => void
+}) {
+  return (
+    <div className="space-y-1.5">
+      <div className="flex justify-between items-end">
+        <label className="text-[10px] text-muted-foreground uppercase tracking-wider">{label}</label>
+        {unit && <span className="text-[9px] text-muted-foreground font-mono">{unit}</span>}
+      </div>
+      <div className="relative group">
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => onChange?.(e.target.value)}
+          className="w-full bg-muted/50 border border-input text-foreground text-sm px-3 py-2 rounded-md focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all font-mono"
         />
       </div>
     </div>
   )
 }
 
-function ObjectivesSection() {
+interface ObjectivesSectionProps {
+  data: ObjectivesData
+  onChange: (data: ObjectivesData) => void
+}
+
+function ObjectivesSection({ data, onChange }: ObjectivesSectionProps) {
+  const updatePrimaryWeight = (key: keyof ObjectivesData['primaryWeights'], value: number) => {
+    onChange({
+      ...data,
+      primaryWeights: { ...data.primaryWeights, [key]: value }
+    })
+  }
+
+  const updateGeometricPref = (key: keyof ObjectivesData['geometricPreferences'], value: number) => {
+    onChange({
+      ...data,
+      geometricPreferences: { ...data.geometricPreferences, [key]: value }
+    })
+  }
+
   return (
-    <div className="animate-fade-in">
-      <SectionHeader 
-        title="Optimization Objectives" 
-        description="Define the priorities for the PIRL routing algorithm. Adjust sliders to weight different factors such as construction cost, timeline, and regulatory hurdles." 
+    <div className="animate-in fade-in duration-500">
+      <SectionHeader
+        title="Optimization Objectives"
+        description="Define the priorities for the PIRL routing algorithm. Adjust sliders to weight different factors such as construction cost, timeline, and regulatory hurdles."
       />
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
         <div className="space-y-8">
-          <div className="bg-white/5 border border-white/10 p-6 rounded-sm space-y-6">
-            <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-4">
-              <h4 className="text-sm font-bold text-white uppercase tracking-widest">Primary Weights</h4>
-              <Settings2 className="w-4 h-4 text-amber-500" />
+          <div className="bg-card border border-border p-6 rounded-lg space-y-6">
+            <div className="flex items-center justify-between border-b border-border pb-4 mb-4">
+              <h4 className="text-sm font-semibold text-foreground">Primary Weights</h4>
+              <Settings2 className="w-4 h-4 text-muted-foreground" />
             </div>
-            <SliderInput label="Cost Optimization (CAPEX)" defaultValue={80} />
-            <SliderInput label="Construction Speed (Time)" defaultValue={40} />
-            <SliderInput label="Regulatory Minimization" defaultValue={60} />
-            <SliderInput label="Environmental Impact" defaultValue={70} />
+            <SliderInput
+              label="Cost Optimization (CAPEX)"
+              value={data.primaryWeights.costOptimization}
+              onChange={(v) => updatePrimaryWeight('costOptimization', v)}
+            />
+            <SliderInput
+              label="Construction Speed (Time)"
+              value={data.primaryWeights.constructionSpeed}
+              onChange={(v) => updatePrimaryWeight('constructionSpeed', v)}
+            />
+            <SliderInput
+              label="Regulatory Minimization"
+              value={data.primaryWeights.regulatoryMinimization}
+              onChange={(v) => updatePrimaryWeight('regulatoryMinimization', v)}
+            />
+            <SliderInput
+              label="Environmental Impact"
+              value={data.primaryWeights.environmentalImpact}
+              onChange={(v) => updatePrimaryWeight('environmentalImpact', v)}
+            />
           </div>
 
-          <div className="bg-white/5 border border-white/10 p-6 rounded-sm space-y-6">
-            <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-4">
-              <h4 className="text-sm font-bold text-white uppercase tracking-widest">Geometric Preferences</h4>
-              <Ruler className="w-4 h-4 text-amber-500" />
+          <div className="bg-card border border-border p-6 rounded-lg space-y-6">
+            <div className="flex items-center justify-between border-b border-border pb-4 mb-4">
+              <h4 className="text-sm font-semibold text-foreground">Geometric Preferences</h4>
+              <Ruler className="w-4 h-4 text-muted-foreground" />
             </div>
-            <SliderInput label="Maximize Existing ROW Usage" defaultValue={90} />
-            <SliderInput label="Minimize Crossings" defaultValue={50} />
-            <SliderInput label="Terrain Flatness Preference" defaultValue={60} />
+            <SliderInput
+              label="Maximize Existing ROW Usage"
+              value={data.geometricPreferences.existingRowUsage}
+              onChange={(v) => updateGeometricPref('existingRowUsage', v)}
+            />
+            <SliderInput
+              label="Minimize Crossings"
+              value={data.geometricPreferences.minimizeCrossings}
+              onChange={(v) => updateGeometricPref('minimizeCrossings', v)}
+            />
+            <SliderInput
+              label="Terrain Flatness Preference"
+              value={data.geometricPreferences.terrainFlatness}
+              onChange={(v) => updateGeometricPref('terrainFlatness', v)}
+            />
           </div>
         </div>
 
         <div className="space-y-6">
-          <div className="bg-amber-500/5 border border-amber-500/20 p-6 rounded-sm">
-            <h4 className="text-sm font-bold text-amber-400 uppercase tracking-widest mb-4">Routing Profiles</h4>
-            <p className="text-xs text-white/50 mb-6">Create multiple routing profiles to compare different optimization strategies.</p>
-            
+          <div className="bg-muted/30 border border-border p-6 rounded-lg">
+            <h4 className="text-sm font-semibold text-foreground mb-4">Routing Profiles</h4>
+            <p className="text-xs text-muted-foreground mb-6">Select a routing profile strategy.</p>
+
             <div className="space-y-3">
               {['Cost Aggressive', 'Balanced Strategy', 'Timeline Critical'].map((profile, i) => (
-                <div key={i} className="flex items-center justify-between p-3 bg-black/40 border border-white/10 hover:border-amber-500/50 transition-colors cursor-pointer rounded-sm group">
+                <div
+                  key={i}
+                  onClick={() => onChange({ ...data, activeProfile: profile })}
+                  className={cn(
+                    "flex items-center justify-between p-3 border hover:border-primary/50 transition-colors cursor-pointer rounded-md group",
+                    data.activeProfile === profile ? "bg-primary/10 border-primary/30" : "bg-card border-border"
+                  )}
+                >
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-sm bg-white/5 flex items-center justify-center font-mono text-xs text-white/40 group-hover:text-amber-400 transition-colors">
+                    <div className={cn(
+                      "w-8 h-8 rounded-md flex items-center justify-center font-mono text-xs transition-colors",
+                      data.activeProfile === profile ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground group-hover:text-primary"
+                    )}>
                       {i + 1}
                     </div>
                     <div>
-                      <div className="text-sm text-white/90 font-medium">{profile}</div>
-                      <div className="text-[10px] text-white/40 uppercase tracking-wider">{i === 0 ? 'Active' : 'Draft'}</div>
+                      <div className="text-sm text-foreground font-medium">{profile}</div>
+                      <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                        {data.activeProfile === profile ? 'Active' : 'Draft'}
+                      </div>
                     </div>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-white/20 group-hover:text-amber-500 transition-colors" />
+                  <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
                 </div>
               ))}
-              
-              <button className="w-full py-3 border border-dashed border-white/20 text-white/40 text-xs uppercase tracking-widest hover:bg-white/5 hover:text-white hover:border-white/40 transition-all rounded-sm mt-4">
-                + Create New Profile
-              </button>
             </div>
           </div>
         </div>
@@ -319,82 +742,235 @@ function ObjectivesSection() {
   )
 }
 
-function HydraulicsSection() {
+interface HydraulicsSectionProps {
+  data: HydraulicsData
+  onChange: (data: HydraulicsData) => void
+}
+
+function HydraulicsSection({ data, onChange }: HydraulicsSectionProps) {
+  const updateMechanical = (key: keyof HydraulicsData['mechanical'], value: string | number) => {
+    onChange({
+      ...data,
+      mechanical: { ...data.mechanical, [key]: value }
+    })
+  }
+
+  const updateOperating = (key: keyof HydraulicsData['operating'], value: string) => {
+    onChange({
+      ...data,
+      operating: { ...data.operating, [key]: value }
+    })
+  }
+
+  const updateFluid = (key: keyof HydraulicsData['fluidComposition'], value: string) => {
+    onChange({
+      ...data,
+      fluidComposition: { ...data.fluidComposition, [key]: value }
+    })
+  }
+
   return (
-    <div className="animate-fade-in space-y-8">
-      <SectionHeader 
-        title="Engineering & Hydraulics" 
-        description="Configure detailed physical pipeline parameters, fluid composition, and mechanical design factors compliant with ASME B31.8/B31.4 standards." 
+    <div className="animate-in fade-in duration-500 space-y-8">
+      <SectionHeader
+        title="Engineering & Hydraulics"
+        description="Configure detailed physical pipeline parameters, fluid composition, and mechanical design factors compliant with ASME B31.8/B31.4 standards."
       />
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Left Column: Mechanical & Geometry */}
         <div className="space-y-8">
-          <div className="bg-white/5 border border-white/10 p-6 rounded-sm space-y-6 relative group">
-            <div className="absolute top-0 left-0 w-1 h-full bg-amber-500/50 opacity-0 group-hover:opacity-100 transition-opacity" />
-            <div className="flex items-center justify-between border-b border-white/10 pb-4">
-              <h4 className="text-sm font-bold text-amber-500 uppercase tracking-widest">Mechanical Design</h4>
-              <Settings2 className="w-4 h-4 text-amber-500/50" />
+          <div className="bg-card border border-border p-6 rounded-lg space-y-6">
+            <div className="flex items-center justify-between border-b border-border pb-4">
+              <h4 className="text-sm font-semibold text-foreground">Mechanical Design</h4>
+              <Settings2 className="w-4 h-4 text-muted-foreground" />
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <InputGroup label="Diameter (OD)" value="660.4" unit="mm" />
-              <InputGroup label="Wall Thickness" value="11.1" unit="mm" />
-              <InputGroup label="Grade (SMYS)" value="483" unit="MPa (X70)" />
-              <InputGroup label="Location Class" value="1" unit="ASME" />
-              <InputGroup label="Design Factor (F)" value="0.72" unit="-" />
-              <InputGroup label="Joint Factor (E)" value="1.0" unit="-" />
-              <InputGroup label="Temp Derating (T)" value="1.0" unit="-" />
-              <InputGroup label="MAOP" value="9930" unit="kPa" />
+              <InputGroup
+                label="Diameter (OD)"
+                value={data.mechanical.outerDiameter.toFixed(1)}
+                unit="mm"
+                onChange={(val) => updateMechanical('outerDiameter', parseFloat(val) || 0)}
+              />
+              <InputGroup
+                label="Wall Thickness"
+                value={data.mechanical.wallThickness.toFixed(1)}
+                unit="mm"
+                onChange={(val) => updateMechanical('wallThickness', parseFloat(val) || 0)}
+              />
+              <InputGroup
+                label="Grade (SMYS)"
+                value={data.mechanical.grade}
+                unit="MPa (X70)"
+                onChange={(val) => updateMechanical('grade', val)}
+              />
+              <InputGroup
+                label="Location Class"
+                value={data.mechanical.locationClass}
+                unit="ASME"
+                onChange={(val) => updateMechanical('locationClass', val)}
+              />
+              <InputGroup
+                label="Design Factor (F)"
+                value={data.mechanical.designFactor}
+                unit="-"
+                onChange={(val) => updateMechanical('designFactor', val)}
+              />
+              <InputGroup
+                label="Joint Factor (E)"
+                value={data.mechanical.jointFactor}
+                unit="-"
+                onChange={(val) => updateMechanical('jointFactor', val)}
+              />
+              <InputGroup
+                label="Temp Derating (T)"
+                value={data.mechanical.tempDerating}
+                unit="-"
+                onChange={(val) => updateMechanical('tempDerating', val)}
+              />
+              <InputGroup
+                label="MAOP"
+                value={data.mechanical.maop}
+                unit="kPa"
+                onChange={(val) => updateMechanical('maop', val)}
+              />
             </div>
           </div>
 
-          <div className="bg-white/5 border border-white/10 p-6 rounded-sm space-y-6 relative group">
-             <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500/50 opacity-0 group-hover:opacity-100 transition-opacity" />
-            <div className="flex items-center justify-between border-b border-white/10 pb-4">
-              <h4 className="text-sm font-bold text-emerald-500 uppercase tracking-widest">Operating Conditions</h4>
-              <Activity className="w-4 h-4 text-emerald-500/50" />
+          <div className="bg-card border border-border p-6 rounded-lg space-y-6">
+            <div className="flex items-center justify-between border-b border-border pb-4">
+              <h4 className="text-sm font-semibold text-foreground">Operating Conditions</h4>
+              <Activity className="w-4 h-4 text-muted-foreground" />
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <InputGroup label="Inlet Pressure" value="75.0" unit="Bar" />
-              <InputGroup label="Del. Pressure (Min)" value="45.0" unit="Bar" />
-              <InputGroup label="Flow Rate" value="1.0" unit="m³/s" />
-              <InputGroup label="Inlet Temp" value="288.15" unit="K" />
-              <InputGroup label="Ground Temp" value="283.15" unit="K" />
-              <InputGroup label="Roughness" value="0.045" unit="mm" />
+              <InputGroup
+                label="Inlet Pressure"
+                value={data.operating.inletPressure}
+                unit="Bar"
+                onChange={(val) => updateOperating('inletPressure', val)}
+              />
+              <InputGroup
+                label="Del. Pressure (Min)"
+                value={data.operating.deliveryPressure}
+                unit="Bar"
+                onChange={(val) => updateOperating('deliveryPressure', val)}
+              />
+              <InputGroup
+                label="Flow Rate"
+                value={data.operating.flowRate}
+                unit="m³/s"
+                onChange={(val) => updateOperating('flowRate', val)}
+              />
+              <InputGroup
+                label="Inlet Temp"
+                value={data.operating.inletTemp}
+                unit="K"
+                onChange={(val) => updateOperating('inletTemp', val)}
+              />
+              <InputGroup
+                label="Ground Temp"
+                value={data.operating.groundTemp}
+                unit="K"
+                onChange={(val) => updateOperating('groundTemp', val)}
+              />
+              <InputGroup
+                label="Roughness"
+                value={data.operating.roughness}
+                unit="mm"
+                onChange={(val) => updateOperating('roughness', val)}
+              />
             </div>
           </div>
         </div>
 
         {/* Right Column: Fluid Composition */}
         <div className="space-y-8">
-           <div className="bg-white/5 border border-white/10 p-6 rounded-sm space-y-6 relative group h-full">
-            <div className="absolute top-0 right-0 w-1 h-full bg-blue-500/50 opacity-0 group-hover:opacity-100 transition-opacity" />
-            <div className="flex items-center justify-between border-b border-white/10 pb-4">
-              <h4 className="text-sm font-bold text-blue-400 uppercase tracking-widest">Fluid Composition (Gas)</h4>
+           <div className="bg-card border border-border p-6 rounded-lg space-y-6 h-full">
+            <div className="flex items-center justify-between border-b border-border pb-4">
+              <h4 className="text-sm font-semibold text-blue-500">Fluid Composition (Gas)</h4>
               <div className="flex items-center gap-2">
-                <span className="text-[9px] text-white/30 uppercase bg-white/5 px-2 py-0.5 rounded-sm">Chromatography</span>
-                <Droplet className="w-4 h-4 text-blue-400/50" />
+                <span className="text-[10px] text-muted-foreground uppercase bg-muted px-2 py-0.5 rounded-md">Chromatography</span>
+                <Droplet className="w-4 h-4 text-blue-500/50" />
               </div>
             </div>
-            
+
             <div className="space-y-4">
-              <p className="text-xs text-white/40 italic">Define molar composition for Equation of State (EOS) calculations.</p>
+              <p className="text-xs text-muted-foreground italic">Define molar composition for Equation of State (EOS) calculations.</p>
               <div className="grid grid-cols-2 gap-x-6 gap-y-4">
-                <InputGroup label="Methane (C1)" value="92.5" unit="%" />
-                <InputGroup label="Ethane (C2)" value="4.2" unit="%" />
-                <InputGroup label="Propane (C3)" value="1.5" unit="%" />
-                <InputGroup label="Butane+ (C4+)" value="0.8" unit="%" />
-                <InputGroup label="Nitrogen (N2)" value="0.6" unit="%" />
-                <InputGroup label="Carbon Dioxide (CO2)" value="0.4" unit="%" />
-                <InputGroup label="Hydrogen Sulfide" value="0.0" unit="ppm" />
-                <InputGroup label="Water Content" value="< 7" unit="lbs/MMscf" />
+                <InputGroup
+                  label="Methane (C1)"
+                  value={data.fluidComposition.methane}
+                  unit="%"
+                  onChange={(val) => updateFluid('methane', val)}
+                />
+                <InputGroup
+                  label="Ethane (C2)"
+                  value={data.fluidComposition.ethane}
+                  unit="%"
+                  onChange={(val) => updateFluid('ethane', val)}
+                />
+                <InputGroup
+                  label="Propane (C3)"
+                  value={data.fluidComposition.propane}
+                  unit="%"
+                  onChange={(val) => updateFluid('propane', val)}
+                />
+                <InputGroup
+                  label="Butane+ (C4+)"
+                  value={data.fluidComposition.butane}
+                  unit="%"
+                  onChange={(val) => updateFluid('butane', val)}
+                />
+                <InputGroup
+                  label="Nitrogen (N2)"
+                  value={data.fluidComposition.nitrogen}
+                  unit="%"
+                  onChange={(val) => updateFluid('nitrogen', val)}
+                />
+                <InputGroup
+                  label="Carbon Dioxide (CO2)"
+                  value={data.fluidComposition.co2}
+                  unit="%"
+                  onChange={(val) => updateFluid('co2', val)}
+                />
+                <InputGroup
+                  label="Hydrogen Sulfide"
+                  value={data.fluidComposition.h2s}
+                  unit="ppm"
+                  onChange={(val) => updateFluid('h2s', val)}
+                />
+                <InputGroup
+                  label="Water Content"
+                  value={data.fluidComposition.waterContent}
+                  unit="lbs/MMscf"
+                  onChange={(val) => updateFluid('waterContent', val)}
+                />
               </div>
-              
-              <div className="mt-6 pt-6 border-t border-white/10 grid grid-cols-2 gap-4">
-                <InputGroup label="Specific Gravity" value="0.58" unit="Calc." />
-                <InputGroup label="Viscosity" value="1.1e-5" unit="Pa·s" />
-                <InputGroup label="Crit. Pressure" value="46.0" unit="Bar" />
-                <InputGroup label="Crit. Temp" value="190.6" unit="K" />
+
+              <div className="mt-6 pt-6 border-t border-border grid grid-cols-2 gap-4">
+                <InputGroup
+                  label="Specific Gravity"
+                  value={data.fluidComposition.specificGravity}
+                  unit="Calc."
+                  onChange={(val) => updateFluid('specificGravity', val)}
+                />
+                <InputGroup
+                  label="Viscosity"
+                  value={data.fluidComposition.viscosity}
+                  unit="Pa·s"
+                  onChange={(val) => updateFluid('viscosity', val)}
+                />
+                <InputGroup
+                  label="Crit. Pressure"
+                  value={data.fluidComposition.critPressure}
+                  unit="Bar"
+                  onChange={(val) => updateFluid('critPressure', val)}
+                />
+                <InputGroup
+                  label="Crit. Temp"
+                  value={data.fluidComposition.critTemp}
+                  unit="K"
+                  onChange={(val) => updateFluid('critTemp', val)}
+                />
               </div>
             </div>
           </div>
@@ -404,37 +980,23 @@ function HydraulicsSection() {
   )
 }
 
-function InputGroup({ label, value, unit }: { label: string, value: string, unit?: string }) {
-  return (
-    <div className="space-y-1.5">
-      <div className="flex justify-between items-end">
-        <label className="text-[10px] text-white/50 uppercase tracking-wider">{label}</label>
-        {unit && <span className="text-[9px] text-white/30 font-mono">{unit}</span>}
-      </div>
-      <div className="relative group">
-        <input 
-          type="text" 
-          defaultValue={value}
-          className="w-full bg-black/40 border border-white/10 text-white text-sm px-3 py-2 rounded-sm focus:outline-none focus:border-amber-500/50 focus:bg-amber-500/5 transition-all font-mono group-hover:border-white/20"
-        />
-        <div className="absolute bottom-0 left-0 h-[1px] bg-amber-500 w-0 group-focus-within:w-full transition-all duration-300" />
-      </div>
-    </div>
-  )
+interface CostMatrixSectionProps {
+  data: CostMatrixData
+  onChange: (data: CostMatrixData) => void
 }
 
-function CostMatrixSection() {
+function CostMatrixSection({ data, onChange }: CostMatrixSectionProps) {
   const [costTab, setCostTab] = useState<'base' | 'terrain' | 'crossings' | 'factors'>('base')
 
   return (
-    <div className="animate-fade-in h-full flex flex-col">
-      <SectionHeader 
-        title="Cost Matrix Configuration" 
-        description="Comprehensive cost factors for O&G pipeline route optimization. Defines granular multipliers and rates for the PIRL reward function." 
+    <div className="animate-in fade-in duration-500 h-full flex flex-col">
+      <SectionHeader
+        title="Cost Matrix Configuration"
+        description="Comprehensive cost factors for O&G pipeline route optimization. Defines granular multipliers and rates for the PIRL reward function."
       />
-      
+
       {/* Tabs */}
-      <div className="flex items-center gap-1 border-b border-white/10 mb-6">
+      <div className="flex items-center gap-1 border-b border-border mb-6">
         {[
           { id: 'base', label: 'Base Construction', icon: DollarSign },
           { id: 'terrain', label: 'Terrain & Land', icon: Layers },
@@ -445,44 +1007,63 @@ function CostMatrixSection() {
             key={tab.id}
             onClick={() => setCostTab(tab.id as any)}
             className={cn(
-              "flex items-center gap-2 px-6 py-3 text-xs font-bold uppercase tracking-widest transition-all relative",
-              costTab === tab.id 
-                ? "text-amber-400 bg-white/5 border-t border-x border-white/10 rounded-t-sm" 
-                : "text-white/40 hover:text-white hover:bg-white/5"
+              "flex items-center gap-2 px-4 py-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2",
+              costTab === tab.id
+                ? "text-primary border-primary bg-muted/10"
+                : "text-muted-foreground border-transparent hover:text-foreground hover:bg-muted/50"
             )}
           >
             <tab.icon className="w-3 h-3" />
             {tab.label}
-            {costTab === tab.id && <div className="absolute bottom-[-1px] left-0 right-0 h-[1px] bg-[#050505]" />}
           </button>
         ))}
       </div>
 
       <div className="flex-1 overflow-y-auto pr-2 pb-4 custom-scrollbar">
-        {costTab === 'base' && <BaseConstructionTab />}
-        {costTab === 'terrain' && <TerrainLandTab />}
-        {costTab === 'crossings' && <CrossingsTab />}
-        {costTab === 'factors' && <RegionalFactorsTab />}
+        {costTab === 'base' && <BaseConstructionTab data={data} onChange={onChange} />}
+        {costTab === 'terrain' && <TerrainLandTab data={data} onChange={onChange} />}
+        {costTab === 'crossings' && <CrossingsTab data={data} onChange={onChange} />}
+        {costTab === 'factors' && <RegionalFactorsTab data={data} onChange={onChange} />}
       </div>
     </div>
   )
 }
 
-function CostTable({ headers, rows }: { headers: string[], rows: any[][] }) {
+interface CostTableProps {
+  headers: string[]
+  rows: string[][]
+  onCellChange?: (rowIndex: number, colIndex: number, value: string) => void
+}
+
+function CostTable({ headers, rows, onCellChange }: CostTableProps) {
   return (
-    <div className="border border-white/10 rounded-sm overflow-hidden mb-8">
+    <div className="border border-border rounded-lg overflow-hidden mb-8">
       <table className="w-full text-left text-sm">
-        <thead className="bg-white/5 text-[10px] uppercase tracking-wider text-white/60">
+        <thead className="bg-muted/50 text-[10px] uppercase tracking-wider text-muted-foreground">
           <tr>
-            {headers.map((h, i) => <th key={i} className="px-4 py-3 font-medium">{h}</th>)}
+            {headers.map((h, i) => <th key={i} className="px-4 py-3 font-semibold">{h}</th>)}
           </tr>
         </thead>
-        <tbody className="divide-y divide-white/5 text-white/80 font-mono text-xs">
-          {rows.map((row, i) => (
-            <tr key={i} className="hover:bg-white/5 transition-colors">
-              {row.map((cell, j) => (
-                <td key={j} className={cn("px-4 py-3", j === 0 ? "font-sans text-white/90" : "text-white/60")}>
-                  {cell}
+        <tbody className="divide-y divide-border bg-card text-foreground font-mono text-xs">
+          {rows.map((row, rowIdx) => (
+            <tr key={rowIdx} className="hover:bg-muted/20 transition-colors">
+              {row.map((cell, colIdx) => (
+                <td key={colIdx} className="px-4 py-2">
+                  {onCellChange ? (
+                    <input
+                      type="text"
+                      value={cell}
+                      onChange={(e) => onCellChange(rowIdx, colIdx, e.target.value)}
+                      className={cn(
+                        "w-full bg-transparent border-0 focus:outline-none focus:ring-1 focus:ring-primary rounded px-1 py-1",
+                        colIdx === 0 ? "font-sans font-medium" : "text-muted-foreground"
+                      )}
+                    />
+                  ) : (
+                    <span className={colIdx === 0 ? "font-sans font-medium" : "text-muted-foreground"}>
+                      {cell}
+                    </span>
+                  )}
                 </td>
               ))}
             </tr>
@@ -493,227 +1074,316 @@ function CostTable({ headers, rows }: { headers: string[], rows: any[][] }) {
   )
 }
 
-function BaseConstructionTab() {
+function BaseConstructionTab({ data, onChange }: { data: CostMatrixData, onChange: (data: CostMatrixData) => void }) {
+  const updateMaterialCosts = (rowIdx: number, colIdx: number, value: string) => {
+    const keys = ['diameter', 'wallThickness', 'grade', 'costPerMeter', 'weight'] as const
+    const newRows = [...data.materialCosts]
+    newRows[rowIdx] = { ...newRows[rowIdx], [keys[colIdx]]: value }
+    onChange({ ...data, materialCosts: newRows })
+  }
+
+  const updateLaborRates = (rowIdx: number, colIdx: number, value: string) => {
+    const keys = ['region', 'welder', 'equipmentOperator', 'laborer', 'engineer'] as const
+    const newRows = [...data.laborRates]
+    newRows[rowIdx] = { ...newRows[rowIdx], [keys[colIdx]]: value }
+    onChange({ ...data, laborRates: newRows })
+  }
+
+  const updateEquipmentRental = (rowIdx: number, colIdx: number, value: string) => {
+    const keys = ['equipment', 'capacity', 'dailyRate', 'monthlyRate'] as const
+    const newRows = [...data.equipmentRental]
+    newRows[rowIdx] = { ...newRows[rowIdx], [keys[colIdx]]: value }
+    onChange({ ...data, equipmentRental: newRows })
+  }
+
   return (
     <div className="space-y-6">
       <div>
-        <h4 className="text-sm font-bold text-amber-500 uppercase tracking-widest mb-4">Material Costs (Pipe)</h4>
-        <CostTable 
+        <h4 className="text-sm font-semibold text-foreground mb-4">Material Costs (Pipe)</h4>
+        <CostTable
           headers={['Diameter', 'Wall Thickness', 'Grade', 'Cost per Meter', 'Weight (kg/m)']}
-          rows={[
-            ['8" (219mm)', '6.4mm', 'X52', '$45 - $70', '27'],
-            ['12" (323mm)', '7.9mm', 'X52', '$85 - $130', '62'],
-            ['24" (610mm)', '11.1mm', 'X65', '$280 - $400', '168'],
-            ['30" (762mm)', '12.7mm', 'X65', '$450 - $650', '242'],
-            ['36" (914mm)', '14.3mm', 'X70', '$650 - $900', '328'],
-            ['48" (1219mm)', '17.5mm', 'X70', '$1,200 - $1,700', '541'],
-          ]} 
+          rows={data.materialCosts.map(r => [r.diameter, r.wallThickness, r.grade, r.costPerMeter, r.weight])}
+          onCellChange={updateMaterialCosts}
         />
       </div>
 
       <div>
-        <h4 className="text-sm font-bold text-amber-500 uppercase tracking-widest mb-4">Labor Rates (Hourly)</h4>
-        <CostTable 
+        <h4 className="text-sm font-semibold text-foreground mb-4">Labor Rates (Hourly)</h4>
+        <CostTable
           headers={['Region', 'Welder', 'Equipment Operator', 'Laborer', 'Engineer']}
-          rows={[
-            ['USA', '$60-90', '$45-70', '$25-40', '$100-150'],
-            ['Canada', '$55-85', '$40-65', '$22-38', '$90-140'],
-            ['Western Europe', '$50-80', '$35-60', '$20-35', '$90-130'],
-            ['Middle East', '$35-60', '$25-45', '$12-25', '$70-110'],
-          ]} 
+          rows={data.laborRates.map(r => [r.region, r.welder, r.equipmentOperator, r.laborer, r.engineer])}
+          onCellChange={updateLaborRates}
         />
       </div>
 
       <div>
-        <h4 className="text-sm font-bold text-amber-500 uppercase tracking-widest mb-4">Equipment Rental (Daily)</h4>
-        <CostTable 
+        <h4 className="text-sm font-semibold text-foreground mb-4">Equipment Rental (Daily)</h4>
+        <CostTable
           headers={['Equipment', 'Capacity', 'Daily Rate', 'Monthly Rate']}
-          rows={[
-            ['Excavator', '50-ton', '$600 - $1,000', '$15,000 - $25,000'],
-            ['Sideboom', '90-ton', '$800 - $1,300', '$20,000 - $32,000'],
-            ['HDD Rig', 'Large (500-ton)', '$15,000 - $30,000', '$375,000 - $750,000'],
-            ['Crane', '200-ton', '$2,500 - $4,500', '$60,000 - $110,000'],
-          ]} 
+          rows={data.equipmentRental.map(r => [r.equipment, r.capacity, r.dailyRate, r.monthlyRate])}
+          onCellChange={updateEquipmentRental}
         />
       </div>
     </div>
   )
 }
 
-function TerrainLandTab() {
+function TerrainLandTab({ data, onChange }: { data: CostMatrixData, onChange: (data: CostMatrixData) => void }) {
+  const updateTerrainMultipliers = (rowIdx: number, colIdx: number, value: string) => {
+    const keys = ['terrainType', 'multiplier', 'costPerKm', 'rationale'] as const
+    const newRows = [...data.terrainMultipliers]
+    newRows[rowIdx] = { ...newRows[rowIdx], [keys[colIdx]]: value }
+    onChange({ ...data, terrainMultipliers: newRows })
+  }
+
+  const updateRowAcquisition = (rowIdx: number, colIdx: number, value: string) => {
+    const keys = ['landUse', 'permanentEasement', 'temporaryEasement', 'totalPerKm'] as const
+    const newRows = [...data.rowAcquisition]
+    newRows[rowIdx] = { ...newRows[rowIdx], [keys[colIdx]]: value }
+    onChange({ ...data, rowAcquisition: newRows })
+  }
+
   return (
     <div className="space-y-6">
       <div>
-        <h4 className="text-sm font-bold text-amber-500 uppercase tracking-widest mb-4">Terrain Multipliers</h4>
-        <CostTable 
+        <h4 className="text-sm font-semibold text-foreground mb-4">Terrain Multipliers</h4>
+        <CostTable
           headers={['Terrain Type', 'Cost Multiplier', 'Cost per km', 'Rationale']}
-          rows={[
-            ['Flat Terrain (0-2°)', '1.0 (Baseline)', '$0.5M - $1.0M', 'Standard trenching'],
-            ['Moderate Slopes (5-15°)', '1.3 - 1.5', '$0.65M - $1.5M', 'Grading, erosion control'],
-            ['Steep Slopes (>30°)', '2.0 - 3.0', '$1.0M - $3.0M', 'Blasting, retaining walls'],
-            ['Swamp/Wetland', '2.0 - 3.5', '$1.0M - $3.5M', 'Mats, floating equipment'],
-            ['Urban Areas', '2.5 - 4.0', '$1.25M - $4.0M', 'Utilities, permits, traffic'],
-            ['Permafrost', '2.5 - 4.0', '$1.25M - $4.0M', 'Elevated design, insulation'],
-          ]} 
+          rows={data.terrainMultipliers.map(r => [r.terrainType, r.multiplier, r.costPerKm, r.rationale])}
+          onCellChange={updateTerrainMultipliers}
         />
       </div>
 
       <div>
-        <h4 className="text-sm font-bold text-amber-500 uppercase tracking-widest mb-4">ROW Acquisition (USA Avg)</h4>
-        <CostTable 
+        <h4 className="text-sm font-semibold text-foreground mb-4">ROW Acquisition (USA Avg)</h4>
+        <CostTable
           headers={['Land Use', 'Permanent Easement ($/acre)', 'Temporary Easement', 'Total per km (50\' ROW)']}
-          rows={[
-            ['Cropland (Prime)', '$3,000 - $8,000', '$500 - $1,500', '$20k - $60k'],
-            ['Forest Land', '$2,000 - $6,000', '$400 - $1,000', '$15k - $45k'],
-            ['Urban/Suburban', '$20,000 - $100,000+', '$3,000 - $15,000', '$150k - $750k'],
-            ['Desert/Arid', '$500 - $2,000', '$100 - $400', '$3k - $15k'],
-          ]} 
+          rows={data.rowAcquisition.map(r => [r.landUse, r.permanentEasement, r.temporaryEasement, r.totalPerKm])}
+          onCellChange={updateRowAcquisition}
         />
       </div>
     </div>
   )
 }
 
-function CrossingsTab() {
+function CrossingsTab({ data, onChange }: { data: CostMatrixData, onChange: (data: CostMatrixData) => void }) {
+  const updateWaterCrossings = (rowIdx: number, colIdx: number, value: string) => {
+    const keys = ['type', 'width', 'openCut', 'hddCost', 'hddMultiplier'] as const
+    const newRows = [...data.waterCrossings]
+    newRows[rowIdx] = { ...newRows[rowIdx], [keys[colIdx]]: value }
+    onChange({ ...data, waterCrossings: newRows })
+  }
+
+  const updateInfrastructureCrossings = (rowIdx: number, colIdx: number, value: string) => {
+    const keys = ['infrastructure', 'costPerCrossing', 'method', 'notes'] as const
+    const newRows = [...data.infrastructureCrossings]
+    newRows[rowIdx] = { ...newRows[rowIdx], [keys[colIdx]]: value }
+    onChange({ ...data, infrastructureCrossings: newRows })
+  }
+
   return (
     <div className="space-y-6">
       <div>
-        <h4 className="text-sm font-bold text-amber-500 uppercase tracking-widest mb-4">Water Crossings</h4>
-        <CostTable 
+        <h4 className="text-sm font-semibold text-foreground mb-4">Water Crossings</h4>
+        <CostTable
           headers={['Type', 'Width', 'Open Cut ($/m)', 'HDD Cost ($/m)', 'HDD Multiplier']}
-          rows={[
-            ['Small Stream', '<3m', '$500 - $1,000', '$1,000 - $2,000', '2x'],
-            ['Medium River', '3-10m', '$1,000 - $3,000', '$2,000 - $9,000', '2-3x'],
-            ['Large River', '>10m', '$3,000 - $10,000', '$6,000 - $40,000', '2-4x'],
-            ['Lake/Reservoir', 'N/A', 'N/A', '$10,000 - $50,000', 'Deep HDD'],
-          ]} 
+          rows={data.waterCrossings.map(r => [r.type, r.width, r.openCut, r.hddCost, r.hddMultiplier])}
+          onCellChange={updateWaterCrossings}
         />
       </div>
 
       <div>
-        <h4 className="text-sm font-bold text-amber-500 uppercase tracking-widest mb-4">Infrastructure Crossings</h4>
-        <CostTable 
+        <h4 className="text-sm font-semibold text-foreground mb-4">Infrastructure Crossings</h4>
+        <CostTable
           headers={['Infrastructure', 'Cost per Crossing', 'Method', 'Notes']}
-          rows={[
-            ['Tertiary Road', '$50k - $100k', 'Open cut/HDD', 'Low traffic'],
-            ['Highway/Motorway', '$400k - $1.0M', 'HDD Required', 'Major disruption'],
-            ['Heavy Rail', '$150k - $300k', 'HDD Required', '5-8m depth'],
-            ['Gas/Oil Pipeline', '$50k - $200k', 'Coordination', 'Safety clearances'],
-            ['Power Line (>400kV)', '$150k - $300k', 'HDD Required', '10-15m clearance'],
-          ]} 
+          rows={data.infrastructureCrossings.map(r => [r.infrastructure, r.costPerCrossing, r.method, r.notes])}
+          onCellChange={updateInfrastructureCrossings}
         />
       </div>
     </div>
   )
 }
 
-function RegionalFactorsTab() {
+function RegionalFactorsTab({ data, onChange }: { data: CostMatrixData, onChange: (data: CostMatrixData) => void }) {
+  const updateRegionalFactors = (rowIdx: number, colIdx: number, value: string) => {
+    const keys = ['region', 'costPerKm', 'laborIndex', 'materialIndex', 'notes'] as const
+    const newRows = [...data.regionalFactors]
+    newRows[rowIdx] = { ...newRows[rowIdx], [keys[colIdx]]: value }
+    onChange({ ...data, regionalFactors: newRows })
+  }
+
+  const updatePermitting = (rowIdx: number, colIdx: number, value: string) => {
+    const keys = ['item', 'costRange', 'timeline'] as const
+    const newRows = [...data.permitting]
+    newRows[rowIdx] = { ...newRows[rowIdx], [keys[colIdx]]: value }
+    onChange({ ...data, permitting: newRows })
+  }
+
+  const updateIndirectCosts = (rowIdx: number, colIdx: number, value: string) => {
+    const keys = ['item', 'cost', 'description'] as const
+    const newRows = [...data.indirectCosts]
+    newRows[rowIdx] = { ...newRows[rowIdx], [keys[colIdx]]: value }
+    onChange({ ...data, indirectCosts: newRows })
+  }
+
   return (
     <div className="space-y-6">
       <div>
-        <h4 className="text-sm font-bold text-amber-500 uppercase tracking-widest mb-4">Regional Cost Multipliers</h4>
-        <CostTable 
+        <h4 className="text-sm font-semibold text-foreground mb-4">Regional Cost Multipliers</h4>
+        <CostTable
           headers={['Region', 'Cost per km', 'Labor Index', 'Material Index', 'Notes']}
-          rows={[
-            ['USA (Lower 48)', '$0.8M - $1.5M', '1.0', '1.0', 'Baseline'],
-            ['USA (Alaska)', '$1.2M - $2.5M', '1.3', '1.4', 'Remote, logistics'],
-            ['Canada (South)', '$0.7M - $1.3M', '0.9', '0.95', 'Similar to USA'],
-            ['Middle East', '$0.5M - $1.0M', '0.6', '1.0', 'Imported labor'],
-            ['Western Europe', '$0.9M - $1.8M', '1.1', '1.05', 'High regulation'],
-          ]} 
+          rows={data.regionalFactors.map(r => [r.region, r.costPerKm, r.laborIndex, r.materialIndex, r.notes])}
+          onCellChange={updateRegionalFactors}
         />
       </div>
 
       <div>
-        <h4 className="text-sm font-bold text-amber-500 uppercase tracking-widest mb-4">Permitting & Environmental</h4>
-        <CostTable 
+        <h4 className="text-sm font-semibold text-foreground mb-4">Permitting & Environmental</h4>
+        <CostTable
           headers={['Item', 'Cost Range', 'Timeline/Notes']}
-          rows={[
-            ['Federal Permits', '$500k - $2.0M', '12-24 months'],
-            ['Environmental Impact', '$200k - $1.0M', '6-12 months'],
-            ['Wetland Mitigation', '$50k - $200k / acre', 'Per impact acre'],
-            ['Cultural/Arch. Survey', '$5k - $20k / km', 'Sensitive areas'],
-          ]} 
+          rows={data.permitting.map(r => [r.item, r.costRange, r.timeline])}
+          onCellChange={updatePermitting}
         />
       </div>
 
       <div>
-        <h4 className="text-sm font-bold text-amber-500 uppercase tracking-widest mb-4">Indirect Costs & Facilities</h4>
-        <CostTable 
+        <h4 className="text-sm font-semibold text-foreground mb-4">Indirect Costs & Facilities</h4>
+        <CostTable
           headers={['Item', 'Cost', 'Description']}
-          rows={[
-            ['Engineering & PM', '10% - 15%', 'Of Total Install Cost (TIC)'],
-            ['Contingency', '15% - 30%', 'AACE Class 4 Estimate'],
-            ['Insurance & Legal', '2% - 5%', 'Project specific'],
-            ['Pump/Comp Station', '$25M - $50M', 'Per station (approx 100km)'],
-            ['Block Valve Station', '$0.5M - $1.5M', 'Every 30km'],
-            ['Pigging Launcher/Receiver', '$1.0M - $2.5M', 'At start/end points'],
-          ]} 
+          rows={data.indirectCosts.map(r => [r.item, r.cost, r.description])}
+          onCellChange={updateIndirectCosts}
         />
       </div>
     </div>
   )
 }
 
-function ConstraintsSection() {
+interface ConstraintsSectionProps {
+  data: ConstraintsData
+  onChange: (data: ConstraintsData) => void
+}
+
+function ConstraintsSection({ data, onChange }: ConstraintsSectionProps) {
+  const toggleExclusion = (key: keyof ConstraintsData['geographicalExclusions']) => {
+    onChange({
+      ...data,
+      geographicalExclusions: {
+        ...data.geographicalExclusions,
+        [key]: !data.geographicalExclusions[key]
+      }
+    })
+  }
+
+  const updateConstructability = (key: keyof ConstraintsData['constructabilityLimits'], value: string) => {
+    onChange({
+      ...data,
+      constructabilityLimits: { ...data.constructabilityLimits, [key]: value }
+    })
+  }
+
+  const exclusionItems = [
+    { key: 'protectedAreas' as const, label: 'Protected Areas', desc: 'National Parks, Wildlife Reserves (IUCN I-IV)' },
+    { key: 'urbanDensity' as const, label: 'Urban Density', desc: 'High density residential > 1000/km²' },
+    { key: 'indigenousLands' as const, label: 'Indigenous Lands', desc: 'Recognized tribal/indigenous territories' },
+    { key: 'waterBodies' as const, label: 'Water Bodies', desc: 'Avoid large lakes (> 5km crossing)' },
+    { key: 'culturalHeritage' as const, label: 'Cultural Heritage', desc: 'Archaeological sites & buffer zones' },
+    { key: 'militaryZones' as const, label: 'Military Zones', desc: 'Restricted airspace and ground usage' },
+    { key: 'geohazards' as const, label: 'Geohazards', desc: 'High seismic/landslide risk zones' },
+  ]
+
   return (
-    <div className="animate-fade-in space-y-8">
-      <SectionHeader 
-        title="Constraints & Constructability" 
-        description="Define hard geographical exclusions and engineering constructability limits. The PIRL agent will be penalized heavily for violating these boundaries." 
+    <div className="animate-in fade-in duration-500 space-y-8">
+      <SectionHeader
+        title="Constraints & Constructability"
+        description="Define hard geographical exclusions and engineering constructability limits. The PIRL agent will be penalized heavily for violating these boundaries."
       />
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
         <div className="space-y-6">
-          <h4 className="text-xs font-bold text-amber-500 uppercase tracking-widest border-b border-amber-500/20 pb-2">Geographical Exclusions</h4>
+          <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest border-b border-border pb-2">Geographical Exclusions</h4>
           <div className="grid grid-cols-1 gap-3">
-            {[
-              { label: 'Protected Areas', desc: 'National Parks, Wildlife Reserves (IUCN I-IV)', active: true },
-              { label: 'Urban Density', desc: 'High density residential > 1000/km²', active: true },
-              { label: 'Indigenous Lands', desc: 'Recognized tribal/indigenous territories', active: true },
-              { label: 'Water Bodies', desc: 'Avoid large lakes (> 5km crossing)', active: true },
-              { label: 'Cultural Heritage', desc: 'Archaeological sites & buffer zones', active: false },
-              { label: 'Military Zones', desc: 'Restricted airspace and ground usage', active: true },
-              { label: 'Geohazards', desc: 'High seismic/landslide risk zones', active: true },
-            ].map((constraint, i) => (
-              <div key={i} className={cn(
-                "p-3 border rounded-sm flex items-center gap-4 transition-all cursor-pointer group",
-                constraint.active 
-                  ? "bg-amber-500/5 border-amber-500/30" 
-                  : "bg-white/5 border-white/10 opacity-60 hover:opacity-100"
-              )}>
+            {exclusionItems.map((item) => (
+              <div
+                key={item.key}
+                onClick={() => toggleExclusion(item.key)}
+                className={cn(
+                  "p-3 border rounded-md flex items-center gap-4 transition-all cursor-pointer group",
+                  data.geographicalExclusions[item.key]
+                    ? "bg-primary/5 border-primary/30"
+                    : "bg-card border-border hover:bg-muted"
+                )}
+              >
                 <button className={cn(
-                  "w-5 h-5 rounded-sm border flex items-center justify-center transition-colors",
-                  constraint.active ? "bg-amber-500 border-amber-500 text-black" : "border-white/30 hover:border-white/50"
+                  "w-5 h-5 rounded border flex items-center justify-center transition-colors",
+                  data.geographicalExclusions[item.key] ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground/50"
                 )}>
-                  {constraint.active && <CheckCircle2 className="w-3.5 h-3.5" />}
+                  {data.geographicalExclusions[item.key] && <CheckCircle2 className="w-3.5 h-3.5" />}
                 </button>
                 <div className="flex-1">
-                  <h4 className={cn("text-xs font-bold uppercase tracking-wide", constraint.active ? "text-white" : "text-white/50")}>
-                    {constraint.label}
+                  <h4 className={cn("text-xs font-semibold uppercase tracking-wide", data.geographicalExclusions[item.key] ? "text-foreground" : "text-muted-foreground")}>
+                    {item.label}
                   </h4>
-                  <p className="text-[10px] text-white/40">{constraint.desc}</p>
+                  <p className="text-[10px] text-muted-foreground">{item.desc}</p>
                 </div>
-                <div className={cn("w-2 h-2 rounded-full", constraint.active ? "bg-red-500 shadow-[0_0_5px_#ef4444]" : "bg-white/10")} />
               </div>
             ))}
           </div>
         </div>
 
         <div className="space-y-6">
-          <h4 className="text-xs font-bold text-amber-500 uppercase tracking-widest border-b border-amber-500/20 pb-2">Constructability Limits</h4>
-          <div className="bg-white/5 border border-white/10 p-6 rounded-sm space-y-6">
+          <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest border-b border-border pb-2">Constructability Limits</h4>
+          <div className="bg-card border border-border p-6 rounded-lg space-y-6">
              <div className="grid grid-cols-2 gap-4">
-              <InputGroup label="Max Slope (Long.)" value="30" unit="Degrees" />
-              <InputGroup label="Max Side Slope" value="15" unit="Degrees" />
-              <InputGroup label="Min Bend Radius" value="20" unit="x Diameter" />
-              <InputGroup label="Max Bend Angle" value="90" unit="Degrees" />
-              <InputGroup label="Min Depth of Cover" value="1.2" unit="Meters" />
-              <InputGroup label="ROW Width" value="30" unit="Meters" />
-              <InputGroup label="Buoyancy Control" value="1.1" unit="Negative Buoy." />
-              <InputGroup label="Strain Limit" value="0.5" unit="%" />
+              <InputGroup
+                label="Max Slope (Long.)"
+                value={data.constructabilityLimits.maxLongSlope}
+                unit="Degrees"
+                onChange={(val) => updateConstructability('maxLongSlope', val)}
+              />
+              <InputGroup
+                label="Max Side Slope"
+                value={data.constructabilityLimits.maxSideSlope}
+                unit="Degrees"
+                onChange={(val) => updateConstructability('maxSideSlope', val)}
+              />
+              <InputGroup
+                label="Min Bend Radius"
+                value={data.constructabilityLimits.minBendRadius}
+                unit="x Diameter"
+                onChange={(val) => updateConstructability('minBendRadius', val)}
+              />
+              <InputGroup
+                label="Max Bend Angle"
+                value={data.constructabilityLimits.maxBendAngle}
+                unit="Degrees"
+                onChange={(val) => updateConstructability('maxBendAngle', val)}
+              />
+              <InputGroup
+                label="Min Depth of Cover"
+                value={data.constructabilityLimits.minDepthOfCover}
+                unit="Meters"
+                onChange={(val) => updateConstructability('minDepthOfCover', val)}
+              />
+              <InputGroup
+                label="ROW Width"
+                value={data.constructabilityLimits.rowWidth}
+                unit="Meters"
+                onChange={(val) => updateConstructability('rowWidth', val)}
+              />
+              <InputGroup
+                label="Buoyancy Control"
+                value={data.constructabilityLimits.buoyancyControl}
+                unit="Negative Buoy."
+                onChange={(val) => updateConstructability('buoyancyControl', val)}
+              />
+              <InputGroup
+                label="Strain Limit"
+                value={data.constructabilityLimits.strainLimit}
+                unit="%"
+                onChange={(val) => updateConstructability('strainLimit', val)}
+              />
             </div>
-             <p className="text-[10px] text-white/30 italic pt-2 border-t border-white/10">
+             <p className="text-[10px] text-muted-foreground italic pt-2 border-t border-border">
                * Violating these limits requires special construction methods (e.g., winch assist, induction bends) which significantly increase cost.
              </p>
           </div>
@@ -723,42 +1393,85 @@ function ConstraintsSection() {
   )
 }
 
-function ReviewSection() {
+interface ReviewSectionProps {
+  objectives: ObjectivesData
+  hydraulics: HydraulicsData
+  constraints: ConstraintsData
+  onSubmit: () => void
+  isSubmitting: boolean
+  submitSuccess: boolean
+  submitError: string | null
+}
+
+function ReviewSection({ objectives, hydraulics, constraints, onSubmit, isSubmitting, submitSuccess, submitError }: ReviewSectionProps) {
+  const activeConstraints = Object.values(constraints.geographicalExclusions).filter(Boolean).length
+
   return (
-    <div className="animate-fade-in h-full flex flex-col">
-      <SectionHeader 
-        title="Review & Launch Simulation" 
-        description="Verify all parameters before initializing the PIRL training session. This will spin up the compute cluster." 
+    <div className="animate-in fade-in duration-500 h-full flex flex-col">
+      <SectionHeader
+        title="Review & Launch Simulation"
+        description="Verify all parameters before initializing the PIRL training session. This will save your configuration and spin up the compute cluster."
       />
-      
+
       <div className="flex-1 flex items-center justify-center">
-        <div className="w-full max-w-lg bg-black/40 border border-white/10 p-8 rounded-sm text-center space-y-6 relative overflow-hidden">
-          <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.02)_50%,transparent_75%)] bg-[length:250%_250%] animate-shimmer opacity-50" />
-          
-          <Brain className="w-16 h-16 text-amber-500 mx-auto animate-pulse" />
-          
-          <div>
-            <h3 className="text-xl font-bold text-white uppercase tracking-widest mb-2">Ready to Initialize</h3>
-            <p className="text-white/50 text-sm">Estimated Training Time: <span className="text-amber-400">4h 30m</span></p>
-          </div>
+        <div className="w-full max-w-lg bg-card border border-border p-8 rounded-lg text-center space-y-6">
 
-          <div className="grid grid-cols-2 gap-4 text-left bg-white/5 p-4 rounded-sm text-xs font-mono">
-            <div className="text-white/40">Objective:</div>
-            <div className="text-right text-amber-400">Cost Optimized</div>
-            <div className="text-white/40">Hydraulics:</div>
-            <div className="text-right text-white">Active (Gas)</div>
-            <div className="text-white/40">Constraints:</div>
-            <div className="text-right text-white">5 Active</div>
-            <div className="text-white/40">Compute:</div>
-            <div className="text-right text-emerald-400">Cluster Ready</div>
-          </div>
+          {submitSuccess ? (
+            <>
+              <CheckCircle2 className="w-16 h-16 text-emerald-500 mx-auto" />
+              <div>
+                <h3 className="text-xl font-semibold text-foreground mb-2">Configuration Saved!</h3>
+                <p className="text-muted-foreground text-sm">Your PIRL request has been saved to the project directory.</p>
+              </div>
+            </>
+          ) : (
+            <>
+              <Brain className="w-16 h-16 text-primary mx-auto" />
 
-          <button className="w-full py-4 bg-amber-600 hover:bg-amber-500 text-black font-bold uppercase tracking-widest rounded-sm transition-all shadow-[0_0_20px_rgba(245,158,11,0.4)] hover:shadow-[0_0_30px_rgba(245,158,11,0.6)] relative overflow-hidden group">
-            <span className="relative z-10 flex items-center justify-center gap-2">
-              <Play className="w-4 h-4 fill-current" />
-              Launch PIRL Agent
-            </span>
-          </button>
+              <div>
+                <h3 className="text-xl font-semibold text-foreground mb-2">Ready to Initialize</h3>
+                <p className="text-muted-foreground text-sm">Estimated Training Time: <span className="text-foreground font-medium">4h 30m</span></p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 text-left bg-muted/20 p-4 rounded-md text-xs font-mono">
+                <div className="text-muted-foreground">Objective:</div>
+                <div className="text-right text-primary">{objectives.activeProfile}</div>
+                <div className="text-muted-foreground">Hydraulics:</div>
+                <div className="text-right text-foreground">Active (Gas)</div>
+                <div className="text-muted-foreground">Pipe OD:</div>
+                <div className="text-right text-foreground">{hydraulics.mechanical.outerDiameter.toFixed(1)} mm</div>
+                <div className="text-muted-foreground">Constraints:</div>
+                <div className="text-right text-foreground">{activeConstraints} Active</div>
+                <div className="text-muted-foreground">Compute:</div>
+                <div className="text-right text-emerald-500">Cluster Ready</div>
+              </div>
+
+              {submitError && (
+                <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-md text-red-500 text-sm">
+                  {submitError}
+                </div>
+              )}
+
+              <Button
+                className="w-full py-6 font-semibold tracking-wide"
+                size="lg"
+                onClick={onSubmit}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Saving Configuration...
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-4 h-4 mr-2 fill-current" />
+                    Launch PIRL Agent
+                  </>
+                )}
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -767,37 +1480,35 @@ function ReviewSection() {
 
 function ResultsSection({ results }: { results: PirlOutput[] }) {
   return (
-    <div className="animate-fade-in h-full flex flex-col">
-      <SectionHeader 
-        title="PIRL Optimization Results" 
-        description="Access the generated routing solutions. These exclusive outputs represent the optimal pathing calculated by the physics-informed reinforcement learning agent." 
+    <div className="animate-in fade-in duration-500 h-full flex flex-col">
+      <SectionHeader
+        title="PIRL Optimization Results"
+        description="Access the generated routing solutions. These exclusive outputs represent the optimal pathing calculated by the physics-informed reinforcement learning agent."
       />
-      
+
       <div className="grid grid-cols-1 gap-4 pb-8">
         {results.map((result, i) => (
-          <div key={i} className="relative group bg-black/40 border border-amber-500/30 rounded-sm p-6 overflow-hidden hover:bg-amber-500/5 transition-all">
-             {/* Exclusive Shine Effect */}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-500/10 to-transparent -translate-x-full group-hover:animate-shimmer" />
-            
+          <div key={i} className="relative group bg-card border border-border rounded-lg p-6 hover:bg-muted/20 transition-all">
+
             <div className="flex items-center justify-between relative z-10">
               <div className="flex items-center gap-5 flex-1 min-w-0 mr-8">
-                <div className="flex-shrink-0 p-3 bg-amber-500/10 border border-amber-500/20 rounded-sm group-hover:scale-110 transition-transform duration-500">
-                  <Sparkles className="w-6 h-6 text-amber-400" />
+                <div className="flex-shrink-0 p-3 bg-primary/10 border border-primary/20 rounded-md">
+                  <Sparkles className="w-6 h-6 text-primary" />
                 </div>
-                
+
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3 mb-1">
-                    <h4 className="text-lg font-bold text-white uppercase tracking-wider truncate" title={result.filename}>
+                    <h4 className="text-base font-semibold text-foreground truncate" title={result.filename}>
                       {result.filename}
                     </h4>
-                    <span className="flex-shrink-0 px-2 py-0.5 text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full uppercase tracking-wide">
+                    <span className="flex-shrink-0 px-2 py-0.5 text-[10px] bg-emerald-500/10 text-emerald-600 border border-emerald-200 dark:border-emerald-800 rounded-full font-medium uppercase">
                       Optimal
                     </span>
                   </div>
-                  
-                  <div className="flex items-center gap-4 text-xs font-mono text-white/50">
+
+                  <div className="flex items-center gap-4 text-xs font-mono text-muted-foreground">
                     <span className="flex items-center gap-1.5">
-                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500/50" />
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
                       {new Date(result.last_modified).toLocaleString()}
                     </span>
                   </div>
@@ -805,14 +1516,14 @@ function ResultsSection({ results }: { results: PirlOutput[] }) {
               </div>
 
               <div className="flex gap-3 flex-shrink-0">
-                <button className="px-5 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-medium uppercase tracking-wider rounded-sm transition-colors flex items-center gap-2 group/btn">
-                  <Download className="w-3.5 h-3.5 group-hover/btn:text-amber-400 transition-colors" />
+                <Button variant="outline" size="sm" className="text-xs">
+                  <Download className="w-3.5 h-3.5 mr-2" />
                   Download
-                </button>
-                <button className="px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold uppercase tracking-wider rounded-sm transition-all shadow-[0_0_15px_rgba(245,158,11,0.3)] hover:shadow-[0_0_25px_rgba(245,158,11,0.5)] flex items-center gap-2 transform hover:translate-y-[-1px]">
-                  <MapIcon className="w-3.5 h-3.5" />
+                </Button>
+                <Button size="sm" className="text-xs">
+                  <MapIcon className="w-3.5 h-3.5 mr-2" />
                   Load to Map
-                </button>
+                </Button>
               </div>
             </div>
           </div>

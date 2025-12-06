@@ -8,6 +8,7 @@
 
 import React, { useState } from 'react'
 import { useProject } from '@/lib/context/ProjectContext'
+import { useOnboarding } from '@/lib/context/OnboardingContext'
 import { ChevronDown, Folder, Loader2, Database } from 'lucide-react'
 import { ProjectSelectionDialog } from './ProjectSelectionDialog'
 import { cn } from '@/lib/utils'
@@ -21,11 +22,14 @@ export function ProjectSelector() {
     isLoading,
     refreshProjects
   } = useProject()
+  const { reportAction } = useOnboarding()
 
   const [dialogOpen, setDialogOpen] = useState(false)
 
   const handleOpenDialog = async () => {
     setDialogOpen(true)
+    // Report action for tour auto-advance
+    reportAction('click-project-selector')
     // Refresh projects when opening dialog
     await refreshProjects()
   }
@@ -42,6 +46,7 @@ export function ProjectSelector() {
       {/* Selector Button */}
       <button
         onClick={handleOpenDialog}
+        data-tour="project-selector-btn"
         className="w-full flex items-center justify-between p-3 bg-black/40 border border-white/10 rounded-sm hover:bg-primary/5 hover:border-primary/30 transition-all duration-300 group relative overflow-hidden"
       >
         {/* Active Marker */}

@@ -2,7 +2,7 @@
  * API Client for AGRS ZEUS Backend
  */
 
-const API_BASE_URL = 'http://localhost:8000/api';
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
 export interface HealthResponse {
   status: string;
@@ -78,6 +78,8 @@ class ApiClient {
 
 // Export singleton instance
 export const apiClient = new ApiClient();
+
+
 
 
 

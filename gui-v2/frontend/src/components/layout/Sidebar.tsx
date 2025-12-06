@@ -2,10 +2,10 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import { 
-  Map, 
-  Layers, 
-  Settings, 
+import {
+  Map,
+  Layers,
+  Settings,
   ChevronLeft,
   ChevronRight,
   Terminal,
@@ -17,6 +17,8 @@ import {
   Brain
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useProject } from '@/lib/context/ProjectContext'
+import { useOnboarding, TourAction } from '@/lib/context/OnboardingContext'
 import { ProjectSelector } from '@/components/Project/ProjectSelector'
 import { ProjectProfileDialog } from '@/components/Project/ProjectProfileDialog'
 import { DatasetCoverageDialog } from '@/components/Project/DatasetCoverageDialog'
@@ -27,11 +29,13 @@ import { ZeusLoadingDialog } from '@/components/shared/ZeusLoadingDialog'
 interface SidebarProps {
   className?: string
   devMode?: boolean
-  activeView: 'map' | 'digital-twin'
-  onViewChange: (view: 'map' | 'digital-twin') => void
+  activeView: 'map' | 'digital-twin' | 'project-management'
+  onViewChange: (view: 'map' | 'digital-twin' | 'project-management') => void
 }
 
 export function Sidebar({ className, devMode = false, activeView, onViewChange }: SidebarProps) {
+  const { currentProject } = useProject()
+  const { reportAction } = useOnboarding()
   const [collapsed, setCollapsed] = useState(false)
   const [showDatasets, setShowDatasets] = useState(false)
   const [showProfile, setShowProfile] = useState(false)
@@ -39,6 +43,7 @@ export function Sidebar({ className, devMode = false, activeView, onViewChange }
   const [isZeusAnalyzing, setIsZeusAnalyzing] = useState(false)
 
   const handleDatasetsClick = () => {
+    reportAction('click-datasets')
     if (devMode) {
       setShowDatasets(true)
       return
@@ -51,24 +56,32 @@ export function Sidebar({ className, devMode = false, activeView, onViewChange }
     setShowDatasets(true)
   }
 
+  const handleNavClick = (onClick: (() => void) | undefined, tourAction?: TourAction) => {
+    if (tourAction) {
+      reportAction(tourAction)
+    }
+    onClick?.()
+  }
+
   const navigationItems = [
-    { icon: Target, label: 'Project Profile', onClick: () => setShowProfile(true), description: 'Metadata & CRS' },
-    { icon: Map, label: 'Map View', active: activeView === 'map', onClick: () => onViewChange('map'), description: 'Main Interface' },
-    { icon: MonitorPlay, label: 'Digital Twin', active: activeView === 'digital-twin', onClick: () => onViewChange('digital-twin'), description: 'Live Visualization', tag: 'Under Development' },
-    { icon: Layers, label: 'Datasets', onClick: handleDatasetsClick, description: 'Acquisition & Mgmt' },
-    { icon: Brain, label: 'PIRL AI', description: 'Model Status', tag: 'Under Development', onClick: () => setShowPirlAi(true) },
-    { icon: LayoutDashboard, label: 'Project Management', description: 'Resource Planning', tag: 'Under Development' },
-    { icon: Settings, label: 'Settings', description: 'System Config' },
+    { icon: Target, label: 'Project Profile', onClick: () => currentProject && setShowProfile(true), description: 'Metadata & CRS', disabled: !currentProject, tourId: 'sidebar-profile' },
+    { icon: Map, label: 'Map View', active: activeView === 'map', onClick: () => onViewChange('map'), description: 'Main Interface', tourId: 'sidebar-map' },
+    { icon: LayoutDashboard, label: 'Project Management', active: activeView === 'project-management', onClick: () => currentProject && onViewChange('project-management'), description: 'Resource Planning', disabled: !currentProject, tourId: 'sidebar-project-management', tourAction: 'click-project-management' as TourAction },
+    { icon: MonitorPlay, label: 'Digital Twin', active: activeView === 'digital-twin', onClick: () => currentProject && onViewChange('digital-twin'), description: 'Live Visualization', disabled: !currentProject, tourId: 'sidebar-digital-twin', tourAction: 'click-digital-twin' as TourAction },
+    { icon: Layers, label: 'Datasets', onClick: () => currentProject && handleDatasetsClick(), description: 'Acquisition & Mgmt', disabled: !currentProject, tourId: 'sidebar-datasets' },
+    { icon: Brain, label: 'PIRL AI', description: 'Model Status', onClick: () => currentProject && setShowPirlAi(true), disabled: !currentProject, tourId: 'sidebar-pirl-ai', tourAction: 'click-pirl-ai' as TourAction },
+    { icon: Settings, label: 'Settings', description: 'System Config', tourId: 'sidebar-settings' },
   ]
 
   return (
-    <div 
+    <div
       className={cn(
         "relative flex flex-col bg-[#0a0a0a]/95 backdrop-blur-xl border-r border-white/10 transition-all duration-300 overflow-hidden shadow-[10px_0_30px_-10px_rgba(0,0,0,0.5)]",
         collapsed ? "w-20" : "w-80",
         className
       )}
       data-sidebar="main"
+      data-tour="sidebar"
     >
       {/* Technical Background Grid */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff03_1px,transparent_1px),linear-gradient(to_bottom,#ffffff03_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none" />
@@ -116,7 +129,7 @@ export function Sidebar({ className, devMode = false, activeView, onViewChange }
 
       {/* Project Selector */}
       {!collapsed && (
-        <div className="p-4 border-b border-white/5 bg-white/[0.01] relative z-10">
+        <div className="p-4 border-b border-white/5 bg-white/[0.01] relative z-10" data-tour="project-selector">
           <div className="flex items-center gap-2 mb-2 pl-1">
             <Terminal className="w-3 h-3 text-primary/50" />
             <span className="text-[10px] text-white/30 font-mono uppercase tracking-widest">Active Operation</span>
@@ -134,12 +147,16 @@ export function Sidebar({ className, devMode = false, activeView, onViewChange }
               key={index}
               className={cn(
                 "group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-sm transition-all duration-300 border border-transparent",
-                item.active 
-                  ? "bg-primary/10 border-primary/20 text-white" 
+                item.active
+                  ? "bg-primary/10 border-primary/20 text-white"
+                  : item.disabled
+                  ? "cursor-not-allowed opacity-50"
                   : "hover:bg-white/5 hover:border-white/10 text-muted-foreground hover:text-white"
               )}
               title={collapsed ? item.label : undefined}
-              onClick={item.onClick}
+              onClick={() => handleNavClick(item.onClick, item.tourAction)}
+              disabled={item.disabled}
+              data-tour={item.tourId}
             >
               {/* Active Indicator Line */}
               {item.active && (

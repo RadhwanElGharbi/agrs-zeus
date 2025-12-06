@@ -1,30 +1,23 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { LayerSpecification, Map as MapLibreMap, MapMouseEvent, MapOptions } from 'maplibre-gl'
-import { ZoomIn, ZoomOut, Maximize2, Loader2, RefreshCw, Layers, Mountain } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { type LayerSpecification, Map as MapLibreMap, MapMouseEvent, MapOptions } from 'maplibre-gl'
+import { ZoomIn, ZoomOut, Maximize2, Loader2, RefreshCw, Layers, Mountain, Truck, X, ExternalLink, Mail, Phone, Globe, MapPin, Building2, Award, Clock, DollarSign, Star, Package, Wrench, Factory, Briefcase, ChevronDown, ChevronRight, Minimize2, Info, Eye, EyeOff } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useProject } from '@/lib/context/ProjectContext'
-import { fetchVectorData, getTileUrl, getTerrainTileUrl, getAoiFileUrl, type DatasetInfo } from '@/lib/api/dataClient'
+import { fetchVectorData, getTerrainTileUrl, getAoiFileUrl, getApiBase, type DatasetInfo } from '@/lib/api/dataClient'
 import { TerrainSampler } from '@/lib/terrainSampler'
 import {
   ManagedLayer,
   VectorDetail,
-  LayerStyleOptions,
-  LngLatBounds,
   AOI_LAYER_HINTS,
-  colorForLayer,
   getGeoJSONBounds,
   inferGeometryType,
   buildPropertySummary,
-  getRasterBounds,
   featureBounds
 } from '@/lib/map-utils'
-import { LayerManager } from './LayerManager'
-import { AttributeTable } from './AttributeTable'
-import { StyleEditor } from './StyleEditor'
-import { Compass } from './Compass'
+import { Compass } from '@/components/Map/Compass'
+import { SupplierListDialog } from '@/components/Suppliers/SupplierListDialog'
 
 const BASEMAP_FALLBACK_DEFAULT_OPACITY = 0.75
 
@@ -35,12 +28,127 @@ type CursorElevationState = {
   status: CursorElevationStatus
 }
 
-export function MapViewer() {
+const getCategoryIconSvg = (category: string, color: string) => {
+  let path = '';
+  switch(category) {
+    case 'construction_supplies': path = '<path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22v-10"/>'; break;
+    case 'construction_services': path = '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>'; break;
+    case 'pipeline_manufacturer': path = '<path d="M2 20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8l-7 5V8l-7 5V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M17 18h1"/><path d="M12 18h1"/><path d="M7 18h1"/>'; break;
+    case 'equipment_manufacturer': path = '<path d="M5 18H3c-.6 0-1-.4-1-1V7c0-.6.4-1 1-1h10c.6 0 1 .4 1 1v11"/><path d="M14 9h4l4 4v4c0 .6-.4 1-1 1h-2"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/>'; break;
+    case 'consultancy': path = '<rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>'; break;
+    default: path = '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>';
+  }
+  
+  return `
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.9));">
+      <circle cx="16" cy="16" r="14" fill="rgba(0,0,0,0.6)" stroke="${color}" stroke-width="2" />
+      <g transform="translate(4, 4)" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        ${path}
+      </g>
+    </svg>
+  `
+}
+
+// Supplier profile type matching the schema
+interface SupplierProfile {
+  supplier_id: string
+  company_name: string
+  category: string
+  subcategories?: string[]
+  location: {
+    country: string
+    iso3: string
+    region?: string
+    city: string
+    address?: string
+    postal_code?: string
+    coordinates: {
+      latitude: number
+      longitude: number
+    }
+  }
+  contact: {
+    primary_name?: string
+    primary_title?: string
+    primary_email: string
+    primary_phone?: string
+    website?: string
+    linkedin?: string
+  }
+  capabilities: {
+    products?: string[]
+    services?: string[]
+    certifications?: string[]
+    pipeline_diameters_supported?: { min_inches: number; max_inches: number }
+    materials_expertise?: string[]
+    annual_capacity?: string
+    experience_years?: number
+    employee_count?: number
+  }
+  previous_projects?: Array<{
+    project_name: string
+    client?: string
+    country?: string
+    year?: number
+    scope?: string
+    pipeline_length_km?: number
+    pipeline_diameter_inches?: number
+    value_usd?: number
+    reference_available?: boolean
+  }>
+  logistics?: {
+    delivery_regions?: string[]
+    estimated_lead_time_days?: number
+    rush_delivery_available?: boolean
+    shipping_capabilities?: string[]
+    warehouses?: Array<{ city: string; country: string }>
+    international_export?: boolean
+  }
+  pricing?: {
+    pricing_model?: string
+    currency?: string
+    typical_project_range_usd?: { min: number; max: number }
+    payment_terms?: string
+    accepts_letters_of_credit?: boolean
+  }
+  quality_ratings?: {
+    overall_score?: number | string
+    reliability_score?: number | string
+    quality_score?: number | string
+    communication_score?: number | string
+    rating_source?: string
+    number_of_reviews?: number
+  }
+  compatibility?: {
+    pipeline_specs_match?: boolean
+    match_score?: number
+    match_notes?: string[]
+    limitations?: string[]
+  }
+  metadata: {
+    source: string
+    query_id?: string
+    date_researched: string
+    last_verified?: string
+    confidence_level: string
+    notes?: string
+    tags?: string[]
+  }
+}
+
+interface ProjectManagementViewProps {
+  onSupplierSearch?: () => void
+  suppliersUpdated?: number // Timestamp to trigger refresh
+}
+
+export function ProjectManagementView({ onSupplierSearch, suppliersUpdated }: ProjectManagementViewProps) {
   const { currentProject, datasets, isProjectLoading } = useProject()
   const mapContainerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
   const dynamicLayerIdsRef = useRef<string[]>([])
   const dynamicSourceIdsRef = useRef<string[]>([])
+  const supplierLayerAddedRef = useRef<boolean>(false)
+  const suppliersRef = useRef<SupplierProfile[]>([])
   const isMiddleRotatingRef = useRef(false)
   const rotationStartRef = useRef<{
     x: number
@@ -64,30 +172,35 @@ export function MapViewer() {
   const [mapLoaded, setMapLoaded] = useState(false)
   const [isBuffering, setIsBuffering] = useState(false)
   const [zoom, setZoom] = useState(4)
+  const bufferingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const idleTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const [managedLayers, setManagedLayers] = useState<ManagedLayer[]>([])
-  const [selectedLayerId, setSelectedLayerId] = useState<string | null>(null)
-  const selectedLayerIdRef = useRef<string | null>(null)
-  const [vectorDetails, setVectorDetails] = useState<Record<string, VectorDetail>>({})
-  const [preloadedTables, setPreloadedTables] = useState<Record<string, VectorDetail>>({})
   const [loadingMessage, setLoadingMessage] = useState<string | null>(null)
-  const [fullTableLayerId, setFullTableLayerId] = useState<string | null>(null)
-  const [fullTableDocked, setFullTableDocked] = useState(false)
-  const [dockHeight, setDockHeight] = useState(45)
-  const [sortConfig, setSortConfig] = useState<{ column: string | null; direction: 'asc' | 'desc' }>({ column: null, direction: 'asc' })
   const [terrainEnabled, setTerrainEnabled] = useState(false)
-  const [styleLayerId, setStyleLayerId] = useState<string | null>(null)
-  const [styleDraft, setStyleDraft] = useState<LayerStyleOptions>({})
-  const [styleOverrides, setStyleOverrides] = useState<Record<string, LayerStyleOptions>>({})
   const [cursorPosition, setCursorPosition] = useState<{ lng: number; lat: number } | null>(null)
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; lat: number; lng: number } | null>(null)
   const [cursorElevation, setCursorElevation] = useState<CursorElevationState>({ value: null, status: 'idle' })
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' } | null>(null)
-  const dockHeightRef = useRef(dockHeight)
-  const dockContainerRef = useRef<HTMLDivElement | null>(null)
+  const [suppliers, setSuppliers] = useState<SupplierProfile[]>([])
+  const [selectedSupplier, setSelectedSupplier] = useState<SupplierProfile | null>(null)
+  const [suppliersLoading, setSuppliersLoading] = useState(false)
+  const [shouldZoomToSuppliers, setShouldZoomToSuppliers] = useState(false)
+  const [showSupplierManager, setShowSupplierManager] = useState(true) // Show by default
+  const [showSupplierList, setShowSupplierList] = useState(false)
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
+  const [visibleCategories, setVisibleCategories] = useState<Set<string>>(new Set([
+    'construction_supplies',
+    'construction_services',
+    'pipeline_manufacturer',
+    'equipment_manufacturer',
+    'consultancy'
+  ]))
+  
   const highlightSourceId = useRef('selected-feature-source')
   const highlightLayerIds = useRef<string[]>(['selected-feature-fill', 'selected-feature-line', 'selected-feature-point'])
   const terrainSourceIdRef = useRef<string | null>(null)
   const imageryFailedRef = useRef(false)
+  
   const demLayerName = useMemo(() => {
     if (!datasets?.rasters?.length) return null
     const hints = ['dem', 'elevation', 'terrain', 'dtm', 'dsm']
@@ -97,6 +210,7 @@ export function MapViewer() {
     })
     return match?.name ?? null
   }, [datasets])
+  
   const demAvailable = Boolean(currentProject && demLayerName)
 
   useEffect(() => {
@@ -184,8 +298,6 @@ export function MapViewer() {
 
     const ensureGradientSky = () => {
       if (map.getLayer('sky-gradient-layer')) return
-      // Google Earth / ArcGIS style sky gradient
-      // Light blue at horizon, deeper blue at zenith
       const skyLayer: any = {
         id: 'sky-gradient-layer',
         type: 'sky',
@@ -195,13 +307,13 @@ export function MapViewer() {
             'interpolate',
             ['linear'],
             ['sky-radial-progress'],
-            0.0, '#87CEEB',   // Horizon: Sky blue
-            0.1, '#7EC8E3',   // Light sky blue
-            0.3, '#5DADE2',   // Medium sky blue
-            0.5, '#3498DB',   // Deeper blue
-            0.7, '#2980B9',   // Rich blue
-            0.85, '#1F618D',  // Deep blue
-            1.0, '#154360'    // Zenith: Dark blue
+            0.0, '#87CEEB',
+            0.1, '#7EC8E3',
+            0.3, '#5DADE2',
+            0.5, '#3498DB',
+            0.7, '#2980B9',
+            0.85, '#1F618D',
+            1.0, '#154360'
           ],
           'sky-gradient-center': [0, 0],
           'sky-gradient-radius': 90,
@@ -212,18 +324,15 @@ export function MapViewer() {
     }
 
     try {
-      // Use atmospheric sky gradient
       ensureGradientSky()
-      
-      // Add fog for atmospheric perspective (subtle haze effect)
       if ((map as any).setFog) {
         ;(map as any).setFog({
           range: [0.5, 10],
-          color: 'rgba(186, 210, 235, 0.4)',  // Light blue haze
+          color: 'rgba(186, 210, 235, 0.4)',
           'horizon-blend': 0.08,
-          'high-color': '#B4D7E8',  // Light sky color at horizon
-          'space-color': '#1A5276', // Deep blue for upper atmosphere
-          'star-intensity': 0.0     // No stars for daytime sky
+          'high-color': '#B4D7E8',
+          'space-color': '#1A5276',
+          'star-intensity': 0.0
         } as any)
       }
     } catch (error) {
@@ -275,6 +384,7 @@ export function MapViewer() {
   const addBaseLayers = useCallback(() => {
     const map = mapRef.current
     if (!map) return
+
     if (!map.getSource('esriImagery')) {
       map.addSource('esriImagery', {
         type: 'raster',
@@ -342,16 +452,12 @@ export function MapViewer() {
     imageryFailedRef.current = true
     setFallbackOpacity(1)
     removeBasemapLayers({ includeFallback: false })
-    // Retry after short delay to avoid thrashing if the service is temporarily offline
     setTimeout(() => {
       if (!mapRef.current) return
       addBaseLayers()
     }, 1500)
   }, [addBaseLayers, removeBasemapLayers, setFallbackOpacity])
 
-  /**
-   * Initialize MapLibre map instance (client side only)
-   */
   useEffect(() => {
     let cancelled = false
 
@@ -374,20 +480,20 @@ export function MapViewer() {
                 id: 'background',
                 type: 'background',
                 paint: {
-                  'background-color': '#87CEEB'  // Sky blue - matches horizon color
+                  'background-color': '#87CEEB'
                 }
               }
             ],
-            glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf' // Ensure glyphs are available if needed
+            glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf'
           },
-          center: [-80.5449, 43.4723], // University of Waterloo
+          center: [-80.5449, 43.4723],
           zoom: 14.5,
           maxPitch: 85,
           fieldOfView: (85 * Math.PI) / 180,
           attributionControl: false,
           failIfMajorPerformanceCaveat: false,
           preserveDrawingBuffer: true,
-          antialias: true // Enable antialias for better quality
+          antialias: true
         }
 
         const mapInstance = new maplibreModule.Map(mapOptions as MapOptions)
@@ -403,8 +509,38 @@ export function MapViewer() {
           setZoom(Number(mapInstance.getZoom().toFixed(1)))
         })
 
-        mapInstance.on('dataloading', () => setIsBuffering(true))
-        mapInstance.on('idle', () => setIsBuffering(false))
+        // Debounced buffering logic to prevent flickering
+        mapInstance.on('dataloading', () => {
+          // Clear any pending idle timeout
+          if (idleTimeoutRef.current) {
+            clearTimeout(idleTimeoutRef.current)
+            idleTimeoutRef.current = null
+          }
+
+          // Only show buffering after 150ms delay (avoids flicker on quick loads)
+          if (!bufferingTimeoutRef.current) {
+            bufferingTimeoutRef.current = setTimeout(() => {
+              setIsBuffering(true)
+              bufferingTimeoutRef.current = null
+            }, 150)
+          }
+        })
+
+        mapInstance.on('idle', () => {
+          // Clear buffering start timeout if still pending
+          if (bufferingTimeoutRef.current) {
+            clearTimeout(bufferingTimeoutRef.current)
+            bufferingTimeoutRef.current = null
+          }
+
+          // Keep buffering visible for minimum 300ms to avoid flicker
+          if (!idleTimeoutRef.current) {
+            idleTimeoutRef.current = setTimeout(() => {
+              setIsBuffering(false)
+              idleTimeoutRef.current = null
+            }, 300)
+          }
+        })
 
         mapInstance.on('error', (event) => {
           const e = event as any
@@ -433,7 +569,6 @@ export function MapViewer() {
           'top-right'
         )
 
-        // Ensure expected interactions: left = pan, middle = rotate (custom), right = zoom (custom)
         mapInstance.dragPan.enable()
         mapInstance.dragRotate.disable()
 
@@ -447,6 +582,14 @@ export function MapViewer() {
 
     return () => {
       cancelled = true
+      if (bufferingTimeoutRef.current) {
+        clearTimeout(bufferingTimeoutRef.current)
+        bufferingTimeoutRef.current = null
+      }
+      if (idleTimeoutRef.current) {
+        clearTimeout(idleTimeoutRef.current)
+        idleTimeoutRef.current = null
+      }
       if (mapRef.current) {
         mapRef.current.remove()
         mapRef.current = null
@@ -454,9 +597,6 @@ export function MapViewer() {
     }
   }, [addBaseLayers])
 
-  /**
-   * Handle container resizing to update map dimensions
-   */
   useEffect(() => {
     if (!mapContainerRef.current) return
 
@@ -472,9 +612,6 @@ export function MapViewer() {
     }
   }, [mapReady])
 
-  /**
-   * Remove dynamically added layers and sources (vectors/rasters)
-   */
   const clearDynamicLayers = useCallback(() => {
     const map = mapRef.current
     if (!map) return
@@ -503,9 +640,6 @@ export function MapViewer() {
       if (!mapLayer) return
 
       switch (mapLayer.type ?? layer.type) {
-        case 'raster':
-          map.setPaintProperty(layerId, 'raster-opacity', opacity)
-          break
         case 'fill':
           map.setPaintProperty(layerId, 'fill-opacity', opacity)
           break
@@ -537,65 +671,6 @@ export function MapViewer() {
     })
   }, [])
 
-  const applyLayerOrder = useCallback((layers: ManagedLayer[]) => {
-    const map = mapRef.current
-    if (!map) return
-    const orderedIds = [...layers]
-      .sort((a, b) => a.order - b.order)
-      .flatMap((layer) => layer.layerIds)
-
-    for (let i = orderedIds.length - 1; i >= 0; i--) {
-      const layerId = orderedIds[i]
-      if (map.getLayer(layerId)) {
-        const beforeId = orderedIds[i + 1]
-        map.moveLayer(layerId, beforeId)
-      }
-    }
-  }, [])
-
-  /**
-   * Add a raster layer using API tile endpoint
-   */
-  const addRasterLayer = useCallback(
-    (dataset: DatasetInfo) => {
-      if (!currentProject || !mapRef.current) return null
-      const map = mapRef.current
-
-      const sourceId = `raster-${dataset.name}`
-      const layerId = `${sourceId}-layer`
-
-      if (map.getLayer(layerId)) map.removeLayer(layerId)
-      if (map.getSource(sourceId)) map.removeSource(sourceId)
-
-      map.addSource(sourceId, {
-        type: 'raster',
-        tiles: [getTileUrl(currentProject, dataset.name)],
-        tileSize: 256
-      })
-      dynamicSourceIdsRef.current.push(sourceId)
-
-      map.addLayer({
-        id: layerId,
-        type: 'raster',
-        source: sourceId,
-        paint: {
-          'raster-opacity': 0.85
-        }
-      })
-
-      dynamicLayerIdsRef.current.push(layerId)
-
-      return {
-        sourceId,
-        layerIds: [layerId]
-      }
-    },
-    [currentProject]
-  )
-
-  /**
-   * Add GeoJSON layer with default styling
-   */
   const addVectorLayer = useCallback(
     async (dataset: DatasetInfo, isAoi: boolean) => {
       if (!mapRef.current || !currentProject) return null
@@ -615,7 +690,7 @@ export function MapViewer() {
 
       const layerIds: string[] = []
       const geometryType = inferGeometryType(geojson)
-      const color = isAoi ? '#2563eb' : colorForLayer(dataset.name)
+      const color = isAoi ? '#2563eb' : '#333333' 
       const bounds = getGeoJSONBounds(geojson)
 
       if (geometryType === 'polygon' || geometryType === 'mixed') {
@@ -766,17 +841,309 @@ export function MapViewer() {
     []
   )
 
-  /**
-   * Load project rasters + vectors following AGRS project structure
-   */
+  // Load suppliers from the project's docs/suppliers directory
+  const loadSuppliers = useCallback(async (zoomAfterLoad: boolean = false) => {
+    if (!currentProject) {
+      setSuppliers([])
+      return
+    }
+
+    setSuppliersLoading(true)
+    try {
+      // Fetch supplier index
+      const response = await fetch(`${getApiBase()}/projects/${currentProject}/suppliers`)
+      if (!response.ok) {
+        setSuppliers([])
+        return
+      }
+      
+      const data = await response.json()
+      const loadedSuppliers = data.suppliers || []
+      setSuppliers(loadedSuppliers)
+      
+      // Set flag to zoom to suppliers after they're rendered
+      if (zoomAfterLoad && loadedSuppliers.length > 0) {
+        setShouldZoomToSuppliers(true)
+      }
+    } catch (err) {
+      console.warn('Failed to load suppliers:', err)
+      setSuppliers([])
+    } finally {
+      setSuppliersLoading(false)
+    }
+  }, [currentProject])
+
+  // Reload suppliers when suppliersUpdated prop changes (after search completes)
+  useEffect(() => {
+    if (suppliersUpdated && suppliersUpdated > 0) {
+      loadSuppliers(true) // Zoom to fit after loading
+    }
+  }, [suppliersUpdated, loadSuppliers])
+
+  // Category colors and icons for suppliers
+  const SUPPLIER_CATEGORY_STYLES: Record<string, { color: string; strokeColor: string; label: string }> = {
+    'construction_supplies': { color: '#f59e0b', strokeColor: '#d97706', label: 'Supplies' },      // Amber
+    'construction_services': { color: '#10b981', strokeColor: '#059669', label: 'Services' },      // Emerald
+    'pipeline_manufacturer': { color: '#3b82f6', strokeColor: '#2563eb', label: 'Pipe Mfr' },      // Blue
+    'equipment_manufacturer': { color: '#8b5cf6', strokeColor: '#7c3aed', label: 'Equipment' },    // Purple
+    'consultancy': { color: '#ec4899', strokeColor: '#db2777', label: 'Consultancy' }              // Pink
+  }
+
+  // Helper to safely get numeric coordinates from supplier
+  const getSupplierCoordinates = useCallback((supplier: SupplierProfile): { lng: number; lat: number } | null => {
+    const coords = supplier.location?.coordinates
+    if (!coords) return null
+    
+    const lng = typeof coords.longitude === 'number' ? coords.longitude : parseFloat(String(coords.longitude))
+    const lat = typeof coords.latitude === 'number' ? coords.latitude : parseFloat(String(coords.latitude))
+    
+    if (isNaN(lng) || isNaN(lat) || (lng === 0 && lat === 0)) return null
+    return { lng, lat }
+  }, [])
+
+  // Helper to safely get numeric quality score
+  const getQualityScore = useCallback((supplier: SupplierProfile): number | null => {
+    const score = supplier.quality_ratings?.overall_score
+    if (score === undefined || score === null || score === 'not_available') return null
+    const numScore = typeof score === 'number' ? score : parseFloat(String(score))
+    return isNaN(numScore) ? null : numScore
+  }, [])
+
+  // Keep suppliers ref in sync
+  useEffect(() => {
+    suppliersRef.current = suppliers
+  }, [suppliers])
+
+  // Category colors for suppliers
+  const getSupplierColor = (category: string): string => {
+    const colors: Record<string, string> = {
+      'construction_supplies': '#f59e0b',   // Amber
+      'construction_services': '#10b981',   // Emerald
+      'pipeline_manufacturer': '#3b82f6',   // Blue
+      'equipment_manufacturer': '#8b5cf6',  // Purple
+      'consultancy': '#ec4899',             // Pink
+    }
+    return colors[category] || '#6b7280'
+  }
+
+  const getSupplierIconComponent = (category: string, className?: string) => {
+    const props = { className: className || "w-4 h-4" }
+    switch (category) {
+      case 'construction_supplies': return <Package {...props} />
+      case 'construction_services': return <Wrench {...props} />
+      case 'pipeline_manufacturer': return <Factory {...props} />
+      case 'equipment_manufacturer': return <Truck {...props} />
+      case 'consultancy': return <Briefcase {...props} />
+      default: return <Building2 {...props} />
+    }
+  }
+
+  // Add all supplier markers as native MapLibre layers (like START/END points)
+  const addAllSupplierMarkers = useCallback((zoomToFit: boolean = false) => {
+    if (!mapRef.current || suppliers.length === 0) return
+    const map = mapRef.current
+
+    const sourceId = 'suppliers-source'
+    const circleLayerId = 'suppliers-circle'
+    const labelLayerId = 'suppliers-label'
+
+    // Build GeoJSON features from suppliers with valid coordinates and visible categories
+    const features: GeoJSON.Feature[] = []
+    const validCoords: { lng: number; lat: number }[] = []
+
+    for (const supplier of suppliers) {
+      // Skip suppliers whose category is not visible
+      if (!visibleCategories.has(supplier.category)) continue
+
+      const coords = getSupplierCoordinates(supplier)
+      if (!coords) continue
+
+      validCoords.push(coords)
+      features.push({
+        type: 'Feature',
+        geometry: {
+          type: 'Point',
+          coordinates: [coords.lng, coords.lat]
+        },
+        properties: {
+          supplier_id: supplier.supplier_id,
+          company_name: supplier.company_name,
+          category: supplier.category,
+          city: supplier.location?.city || '',
+          color: getSupplierColor(supplier.category)
+        }
+      })
+    }
+
+    const featureCollection = {
+      type: 'FeatureCollection' as const,
+      features
+    }
+
+    // Check if source exists
+    const existingSource = map.getSource(sourceId) as any
+
+    if (existingSource) {
+      // Update existing source data without removing/re-adding (prevents flicker)
+      existingSource.setData(featureCollection)
+    } else {
+      // First time: create source and layers
+      if (features.length === 0) return
+
+      // Add GeoJSON source
+      map.addSource(sourceId, {
+        type: 'geojson',
+        data: featureCollection
+      })
+
+      // Add circle layer with category-based colors
+      map.addLayer({
+        id: circleLayerId,
+        type: 'circle',
+        source: sourceId,
+        paint: {
+          'circle-radius': 10,
+          'circle-color': ['get', 'color'],
+          'circle-stroke-width': 3,
+          'circle-stroke-color': '#ffffff',
+          'circle-opacity': 0.9
+        }
+      })
+
+      // Add label layer
+      map.addLayer({
+        id: labelLayerId,
+        type: 'symbol',
+        source: sourceId,
+        layout: {
+          'text-field': ['get', 'company_name'],
+          'text-offset': [0, 1.8],
+          'text-size': 10,
+          'text-anchor': 'top',
+          'text-max-width': 12
+        },
+        paint: {
+          'text-color': '#ffffff',
+          'text-halo-color': '#000000',
+          'text-halo-width': 1.5
+        }
+      })
+
+      // Track that we've added the layer
+      supplierLayerAddedRef.current = true
+
+      // Add click handler for supplier markers (only once)
+      map.on('click', circleLayerId, (e) => {
+        if (!e.features || e.features.length === 0) return
+
+        // When multiple features overlap, find the one closest to the actual click point
+        const clickPoint = e.point
+        let closestFeature = e.features[0]
+        let closestDistance = Infinity
+
+        for (const feature of e.features) {
+          const geometry = feature.geometry as GeoJSON.Point
+          const [lng, lat] = geometry.coordinates
+          // Project the feature's coordinates to screen space
+          const featurePoint = map.project([lng, lat])
+          // Calculate distance from click point
+          const dx = featurePoint.x - clickPoint.x
+          const dy = featurePoint.y - clickPoint.y
+          const distance = Math.sqrt(dx * dx + dy * dy)
+
+          if (distance < closestDistance) {
+            closestDistance = distance
+            closestFeature = feature
+          }
+        }
+
+        // Get coordinates directly from the closest feature
+        const geometry = closestFeature.geometry as GeoJSON.Point
+        const [lng, lat] = geometry.coordinates
+
+        // Find the supplier by matching coordinates (supplier_id may not be unique)
+        // Use coordinates as the unique identifier since each marker has distinct location
+        const supplier = suppliersRef.current.find(s => {
+          const coords = s.location?.coordinates
+          if (!coords) return false
+          const sLng = typeof coords.longitude === 'number' ? coords.longitude : parseFloat(String(coords.longitude))
+          const sLat = typeof coords.latitude === 'number' ? coords.latitude : parseFloat(String(coords.latitude))
+          // Match with small tolerance for floating point comparison
+          return Math.abs(sLng - lng) < 0.0001 && Math.abs(sLat - lat) < 0.0001
+        })
+        if (supplier) {
+          setSelectedSupplier(supplier)
+        }
+
+        // Fly to the clicked feature's actual location
+        map.flyTo({
+          center: [lng, lat],
+          zoom: 12,
+          duration: 1000
+        })
+      })
+
+      // Change cursor on hover (only once)
+      map.on('mouseenter', circleLayerId, () => {
+        map.getCanvas().style.cursor = 'pointer'
+      })
+      map.on('mouseleave', circleLayerId, () => {
+        map.getCanvas().style.cursor = ''
+      })
+    }
+
+    // Zoom to fit all suppliers if requested
+    if (zoomToFit && validCoords.length > 0) {
+      const lngs = validCoords.map(c => c.lng)
+      const lats = validCoords.map(c => c.lat)
+      
+      const bounds: [[number, number], [number, number]] = [
+        [Math.min(...lngs), Math.min(...lats)],
+        [Math.max(...lngs), Math.max(...lats)]
+      ]
+      
+      map.fitBounds(bounds, {
+        padding: { top: 100, bottom: 100, left: 100, right: 450 },
+        maxZoom: 10,
+        duration: 1200
+      })
+    }
+  }, [suppliers, getSupplierCoordinates, getSupplierColor, visibleCategories])
+
+  // Load suppliers when project changes
+  useEffect(() => {
+    if (currentProject) {
+      loadSuppliers(true) // Zoom to fit suppliers on load
+    }
+  }, [currentProject, loadSuppliers])
+
+  // Add supplier markers when suppliers are loaded and map is ready
+  useEffect(() => {
+    if (mapLoaded && mapRef.current && suppliers.length > 0) {
+      // Delay to ensure all other layers are added first
+      const timer = setTimeout(() => {
+        addAllSupplierMarkers(shouldZoomToSuppliers)
+        if (shouldZoomToSuppliers) {
+          setShouldZoomToSuppliers(false)
+        }
+      }, 300)
+      return () => clearTimeout(timer)
+    }
+  }, [mapLoaded, suppliers, addAllSupplierMarkers, shouldZoomToSuppliers])
+
+  // Update supplier markers when category visibility changes
+  useEffect(() => {
+    if (mapLoaded && mapRef.current && suppliers.length > 0) {
+      addAllSupplierMarkers(false)
+    }
+  }, [visibleCategories, mapLoaded, suppliers, addAllSupplierMarkers])
+
   const loadProjectLayers = useCallback(async () => {
     if (!mapReady || !mapRef.current) return
 
     clearDynamicLayers()
     setManagedLayers([])
-    setVectorDetails({})
-    setSelectedLayerId(null)
-    setLoadingMessage(currentProject ? `Loading ${currentProject} datasets...` : null)
+    setLoadingMessage(currentProject ? `Loading ${currentProject} AOI...` : null)
 
     if (!currentProject || !datasets) {
       setLoadingMessage(null)
@@ -785,73 +1152,29 @@ export function MapViewer() {
 
     const nextLayers: ManagedLayer[] = []
     let order = 0
-    let focusBounds: LngLatBounds | null = null
+    let focusBounds: any = null
 
-    // Load rasters first so they sit below vector overlays
-    for (const raster of datasets.rasters) {
-      const layerId = `raster-${raster.name}`
-      try {
-        const added = addRasterLayer(raster)
-        if (added) {
-          const bounds = getRasterBounds(raster.metadata)
-            const isDem = raster.name.toLowerCase().includes('dem')
-          if (bounds) {
-            if (!focusBounds || isDem) {
-              focusBounds = bounds
-            }
-          }
-
-          nextLayers.push({
-            id: layerId,
-            name: raster.name,
-            type: 'raster',
-            status: 'ready',
-            sourceId: added.sourceId,
-            layerIds: added.layerIds,
-            visible: true,
-            opacity: 0.6,
-            order: order++,
-            path: raster.path,
-            metadata: raster.metadata,
-            bounds: bounds || undefined
-          })
-        }
-      } catch (error) {
-        nextLayers.push({
-          id: layerId,
-          name: raster.name,
-          type: 'raster',
-          status: 'error',
-          message: error instanceof Error ? error.message : 'Failed to load raster',
-          sourceId: layerId,
-          layerIds: [],
-          visible: false,
-          opacity: 1,
-          order: order++,
-          path: raster.path,
-          metadata: raster.metadata
-        })
-      }
-    }
-
-    // Load vectors (including AOI)
+    // Only load vectors that are AOI
     for (const vector of datasets.vectors) {
       const isAoi = AOI_LAYER_HINTS.some(hint => vector.name.toLowerCase().includes(hint))
+      
+      if (!isAoi) continue // Skip non-AOI layers
+
       const layerId = `vector-${vector.name}`
-          nextLayers.push({
-            id: layerId,
-            name: vector.name,
-            type: 'vector',
-            status: 'loading',
-            sourceId: layerId,
-            layerIds: [],
-            visible: true,
-            opacity: isAoi ? 0.6 : 0.9,
-            order: order,
-            path: vector.path,
-            metadata: vector.metadata,
-            isAoi
-          })
+      nextLayers.push({
+        id: layerId,
+        name: vector.name,
+        type: 'vector',
+        status: 'loading',
+        sourceId: layerId,
+        layerIds: [],
+        visible: true,
+        opacity: 0.6,
+        order: order,
+        path: vector.path,
+        metadata: vector.metadata,
+        isAoi
+      })
 
       try {
         const added = await addVectorLayer(vector, isAoi)
@@ -866,19 +1189,10 @@ export function MapViewer() {
             bounds: added.bounds || undefined
           }
 
-          if (added.bounds && isAoi) {
+          if (added.bounds) {
             mapRef.current?.fitBounds(added.bounds as any, { padding: 80, duration: 900 })
+            focusBounds = added.bounds
           }
-
-          // Populate attribute cache for UI
-          setVectorDetails(prev => ({
-            ...prev,
-            [layerId]: added.vectorDetail
-          }))
-          setPreloadedTables(prev => ({
-            ...prev,
-            [layerId]: added.vectorDetail
-          }))
         }
       } catch (error) {
         nextLayers[order] = {
@@ -892,7 +1206,7 @@ export function MapViewer() {
       order += 1
     }
 
-    // Load start/end AOI points as managed vector layers
+    // Load start/end AOI points
     if (currentProject) {
       try {
         const resp = await fetch(getAoiFileUrl(currentProject, 'project_aoi.json'))
@@ -928,44 +1242,6 @@ export function MapViewer() {
 
             if (!added) continue
 
-            const vectorDetail: VectorDetail = {
-              properties: ['Label', 'Longitude', 'Latitude'],
-              sample: [
-                {
-                  Label: config.label,
-                  Longitude: point.longitude,
-                  Latitude: point.latitude
-                }
-              ],
-              rows: [
-                {
-                  Label: config.label,
-                  Longitude: point.longitude,
-                  Latitude: point.latitude
-                }
-              ],
-              features: [
-                {
-                  type: 'Feature',
-                  geometry: { type: 'Point', coordinates: [point.longitude, point.latitude] },
-                  properties: {
-                    Label: config.label,
-                    Longitude: point.longitude,
-                    Latitude: point.latitude
-                  }
-                }
-              ]
-            }
-
-            setVectorDetails(prev => ({
-              ...prev,
-              [config.id]: vectorDetail
-            }))
-            setPreloadedTables(prev => ({
-              ...prev,
-              [config.id]: vectorDetail
-            }))
-
             nextLayers.push({
               id: config.id,
               name: config.name,
@@ -998,13 +1274,9 @@ export function MapViewer() {
     if (focusBounds) {
       mapRef.current?.fitBounds(focusBounds, { padding: 80, duration: 1000 })
     }
-    if (!selectedLayerIdRef.current && ordered.length > 0) {
-      const firstRenderable = ordered.find(layer => layer.status === 'ready') || ordered[0]
-      setSelectedLayerId(firstRenderable.id)
-    }
-    applyLayerOrder(ordered)
+    
     setLoadingMessage(null)
-  }, [addPointMarkerLayer, addRasterLayer, addVectorLayer, applyLayerOrder, clearDynamicLayers, currentProject, datasets, mapReady])
+  }, [addPointMarkerLayer, addVectorLayer, clearDynamicLayers, currentProject, datasets, mapReady])
 
   useEffect(() => {
     if (!mapReady) return
@@ -1055,10 +1327,6 @@ export function MapViewer() {
     },
     [demAvailable]
   )
-
-  useEffect(() => {
-    selectedLayerIdRef.current = selectedLayerId
-  }, [selectedLayerId])
 
   useEffect(() => {
     setTerrainEnabled(false)
@@ -1125,9 +1393,6 @@ export function MapViewer() {
     return () => window.removeEventListener('click', handleGlobalClick)
   }, [])
 
-  /**
-   * Custom interaction bindings
-   */
   useEffect(() => {
     if (!mapReady || !mapRef.current || !mapContainerRef.current) return
     const map = mapRef.current
@@ -1297,8 +1562,7 @@ export function MapViewer() {
       applyVisibilityToMapLayer(layer, layer.visible)
       applyOpacityToMapLayer(layer, layer.opacity)
     })
-    applyLayerOrder(managedLayers)
-  }, [applyLayerOrder, applyOpacityToMapLayer, applyVisibilityToMapLayer, managedLayers, mapReady])
+  }, [applyOpacityToMapLayer, applyVisibilityToMapLayer, managedLayers, mapReady])
 
   const handleZoomIn = () => mapRef.current?.zoomIn()
   const handleZoomOut = () => mapRef.current?.zoomOut()
@@ -1318,347 +1582,11 @@ export function MapViewer() {
     loadProjectLayers()
   }
 
-  const handleToggleVisibility = (layerId: string) => {
-    const layer = managedLayers.find(l => l.id === layerId)
-    if (!layer) return
-    const nextVisible = !layer.visible
-    applyVisibilityToMapLayer(layer, nextVisible)
-    setManagedLayers(prev =>
-      prev.map(l => (l.id === layerId ? { ...l, visible: nextVisible } : l))
-    )
-  }
-
-  const handleOpacityChange = (layerId: string, value: number) => {
-    const layer = managedLayers.find(l => l.id === layerId)
-    if (!layer) return
-    applyOpacityToMapLayer(layer, value)
-    setManagedLayers(prev =>
-      prev.map(l => (l.id === layerId ? { ...l, opacity: value } : l))
-    )
-  }
-
-  const handleMoveLayer = (layerId: string, direction: 'up' | 'down') => {
-    setManagedLayers(prev => {
-      const index = prev.findIndex(l => l.id === layerId)
-      if (index === -1) return prev
-
-      const targetIndex = direction === 'up' ? index + 1 : index - 1
-      if (targetIndex < 0 || targetIndex >= prev.length) return prev
-
-      const updated = [...prev]
-      const [removed] = updated.splice(index, 1)
-      updated.splice(targetIndex, 0, removed)
-
-      return updated.map((layer, idx) => ({ ...layer, order: idx }))
-    })
-  }
-
-  const handleReorderLayers = (draggedId: string, targetId: string, dropPosition: 'above' | 'below') => {
-    setManagedLayers(prev => {
-      const draggedIndex = prev.findIndex(l => l.id === draggedId)
-      const targetIndex = prev.findIndex(l => l.id === targetId)
-      
-      if (draggedIndex === -1 || targetIndex === -1 || draggedIndex === targetIndex) return prev
-
-      const updated = [...prev]
-      const [removed] = updated.splice(draggedIndex, 1)
-      
-      // We need to find the index of the target again because splice shifted things
-      let newTargetIndex = updated.findIndex(l => l.id === targetId)
-      
-      // In managedLayers (ascending order), "above" in UI (top of stack) means HIGHER index.
-      // "below" in UI means LOWER index.
-      // If we drop "above" target, we want to insert AFTER target in the array (higher index).
-      // If we drop "below" target, we want to insert BEFORE target in the array (lower index).
-      
-      if (dropPosition === 'above') {
-        newTargetIndex += 1
-      } 
-      // if 'below', we insert at newTargetIndex (which puts it before/below the target in stack)
-
-      updated.splice(newTargetIndex, 0, removed)
-
-      return updated.map((layer, idx) => ({ ...layer, order: idx }))
-    })
-  }
-
-  const handleZoomToLayer = (layerId: string) => {
-    const layer = managedLayers.find(l => l.id === layerId)
-    if (!layer || !layer.bounds || !mapRef.current) return
-    
-    mapRef.current.fitBounds(layer.bounds as any, {
-        padding: 80,
-        duration: 900,
-        maxZoom: 16
-    })
-  }
-
   const projectSummary = useMemo(() => {
     return currentProject
-      ? `${currentProject} · ${datasets?.vectors.length ?? 0} vectors · ${datasets?.rasters.length ?? 0} rasters`
-      : 'Select a project to load datasets'
-  }, [currentProject, datasets])
-
-  const selectedLayer = managedLayers.find(layer => layer.id === selectedLayerId)
-  const selectedDetails = selectedLayer ? vectorDetails[selectedLayer.id] : null
-  const fullTableLayer = managedLayers.find(layer => layer.id === fullTableLayerId)
-  const fullTableDetails = fullTableLayer
-    ? preloadedTables[fullTableLayer.id] || vectorDetails[fullTableLayer.id]
-    : null
-
-  const sortedFullRows = useMemo(() => {
-    if (!fullTableDetails) return []
-    const { column, direction } = sortConfig
-    const basePairs = fullTableDetails.rows.map((row, idx) => ({
-      row,
-      feature: fullTableDetails.features?.[idx]
-    }))
-    if (!column) return basePairs
-
-    if (fullTableDetails.sortedCache && fullTableDetails.sortedCache.column === column && fullTableDetails.sortedCache.direction === direction) {
-      return fullTableDetails.sortedCache.pairs
-    }
-
-    const pairs = [...basePairs]
-    pairs.sort((a, b) => {
-      const av = a.row?.[column]
-      const bv = b.row?.[column]
-      if (av === bv) return 0
-      if (av === undefined || av === null) return 1
-      if (bv === undefined || bv === null) return -1
-      if (typeof av === 'number' && typeof bv === 'number') {
-        return direction === 'asc' ? av - bv : bv - av
-      }
-      return direction === 'asc'
-        ? String(av ?? '').localeCompare(String(bv ?? ''))
-        : String(bv ?? '').localeCompare(String(av ?? ''))
-    })
-    return pairs
-  }, [fullTableDetails, sortConfig])
-
-  useEffect(() => {
-    if (selectedLayer && selectedLayer.type === 'vector') {
-      const details = vectorDetails[selectedLayer.id]
-      if (details) {
-        if (!details.sortedCache && details.properties.length > 0) {
-          const column = details.properties[0]
-          const pairs = details.rows.map((row, idx) => ({
-            row,
-            feature: details.features?.[idx]
-          }))
-          pairs.sort((a, b) => {
-            const av = a.row?.[column]
-            const bv = b.row?.[column]
-            if (av === bv) return 0
-            if (av === undefined || av === null) return 1
-            if (bv === undefined || bv === null) return -1
-            if (typeof av === 'number' && typeof bv === 'number') {
-              return av - bv
-            }
-            return String(av ?? '').localeCompare(String(bv ?? ''))
-          })
-          details.sortedCache = { column, direction: 'asc', pairs }
-        }
-
-        setPreloadedTables((prev) => ({
-          ...prev,
-          [selectedLayer.id]: details
-        }))
-        if (!sortConfig.column && details.properties.length > 0) {
-          setSortConfig({ column: details.properties[0], direction: 'asc' })
-        }
-      }
-    }
-  }, [selectedLayer, vectorDetails, sortConfig.column])
-
-  const ensureHighlightLayers = useCallback(() => {
-    const map = mapRef.current
-    if (!map) return
-    const sourceId = highlightSourceId.current
-    if (!map.getSource(sourceId)) {
-      map.addSource(sourceId, {
-        type: 'geojson',
-        data: {
-          type: 'FeatureCollection',
-          features: []
-        }
-      })
-      map.addLayer({
-        id: highlightLayerIds.current[0],
-        type: 'fill',
-        source: sourceId,
-        paint: {
-          'fill-color': '#22d3ee',
-          'fill-opacity': 0.35
-        }
-      })
-      map.addLayer({
-        id: highlightLayerIds.current[1],
-        type: 'line',
-        source: sourceId,
-        paint: {
-          'line-color': '#06b6d4',
-          'line-width': 3,
-          'line-opacity': 0.9
-        }
-      })
-      map.addLayer({
-        id: highlightLayerIds.current[2],
-        type: 'circle',
-        source: sourceId,
-        paint: {
-          'circle-radius': 6,
-          'circle-color': '#22d3ee',
-          'circle-stroke-color': '#0f172a',
-          'circle-stroke-width': 2,
-          'circle-opacity': 0.9
-        }
-      })
-    }
-  }, [])
-
-  const showFeatureHighlight = useCallback((feature: any) => {
-    const map = mapRef.current
-    if (!map || !feature) return
-    ensureHighlightLayers()
-    const source = map.getSource(highlightSourceId.current) as any
-    if (source?.setData) {
-      source.setData({
-        type: 'FeatureCollection',
-        features: [feature]
-      })
-    }
-    const bounds = featureBounds(feature)
-    if (bounds) {
-      map.fitBounds(bounds as any, { padding: 60, duration: 350, maxZoom: Math.min(map.getMaxZoom(), 18) })
-    }
-  }, [ensureHighlightLayers])
-
-  const handleRowDoubleClick = useCallback(
-    (feature: any) => {
-      if (!feature) return
-      showFeatureHighlight(feature)
-    },
-    [showFeatureHighlight]
-  )
-
-  const applyStyleToMapLayer = useCallback(
-    (layerId: string, opts: LayerStyleOptions) => {
-      const map = mapRef.current
-      if (!map) return
-      const layer = managedLayers.find((l) => l.id === layerId)
-      if (!layer) return
-
-      if (layer.type === 'raster') {
-        layer.layerIds.forEach((id) => {
-          if (map.getLayer(id) && opts.opacity !== undefined) {
-            map.setPaintProperty(id, 'raster-opacity', opts.opacity)
-          }
-        })
-        return
-      }
-
-      layer.layerIds.forEach((id) => {
-        if (!map.getLayer(id)) return
-        if (id.includes('fill')) {
-          if (opts.fillColor) map.setPaintProperty(id, 'fill-color', opts.fillColor)
-          if (opts.opacity !== undefined) map.setPaintProperty(id, 'fill-opacity', opts.opacity)
-        } else if (id.includes('line') || id.includes('outline')) {
-          if (opts.lineColor) map.setPaintProperty(id, 'line-color', opts.lineColor)
-          if (opts.lineWidth !== undefined) map.setPaintProperty(id, 'line-width', opts.lineWidth)
-          if (opts.opacity !== undefined) map.setPaintProperty(id, 'line-opacity', opts.opacity)
-        } else if (id.includes('points')) {
-          if (opts.pointColor) map.setPaintProperty(id, 'circle-color', opts.pointColor)
-          if (opts.pointSize !== undefined) map.setPaintProperty(id, 'circle-radius', opts.pointSize)
-          if (opts.opacity !== undefined) map.setPaintProperty(id, 'circle-opacity', opts.opacity)
-        }
-      })
-    },
-    [managedLayers]
-  )
-
-  // Handlers
-  const handleCloseTable = useCallback(() => setFullTableLayerId(null), [])
-  const handleToggleDock = useCallback(() => setFullTableDocked(d => !d), [])
-  const handleSort = useCallback((prop: string) => {
-    setSortConfig((prev) => ({
-      column: prop,
-      direction: prev.column === prop && prev.direction === 'asc' ? 'desc' : 'asc'
-    }))
-  }, [])
-
-  const handleOpenTable = useCallback((id: string) => {
-    setFullTableLayerId(id)
-    setVectorDetails(prev => {
-      const details = prev[id]
-      if (details?.properties.length) {
-        setSortConfig({ column: details.properties[0], direction: 'asc' })
-      }
-      return prev
-    })
-  }, [])
-
-  const handleOpenStyle = useCallback((id: string) => {
-    setStyleLayerId(id)
-    setStyleDraft(prev => {
-      return prev
-    })
-  }, [])
-
-  useEffect(() => {
-    dockHeightRef.current = dockHeight
-  }, [dockHeight])
-
-  const handleDockResizeMouseDown = useCallback((event: React.MouseEvent) => {
-    event.preventDefault()
-    const startY = event.clientY
-    const startHeight = dockHeightRef.current
-    let frame: number | null = null
-    let nextHeight = startHeight
-
-    const applyHeight = () => {
-      const el = dockContainerRef.current
-      if (el) {
-        el.style.height = `${nextHeight}vh`
-        el.style.maxHeight = `${nextHeight}vh`
-      }
-      frame = null
-    }
-
-    const move = (ev: MouseEvent) => {
-      const deltaY = ev.clientY - startY
-      const vhDelta = (deltaY / (window.innerHeight || 1)) * 100
-      nextHeight = Math.max(20, Math.min(80, startHeight - vhDelta))
-      dockHeightRef.current = nextHeight
-      if (frame === null) {
-        frame = requestAnimationFrame(applyHeight)
-      }
-    }
-
-    const up = () => {
-      if (frame !== null) {
-        cancelAnimationFrame(frame)
-        applyHeight()
-      }
-      setDockHeight(dockHeightRef.current)
-      window.removeEventListener('mousemove', move)
-      window.removeEventListener('mouseup', up)
-    }
-
-    window.addEventListener('mousemove', move)
-    window.addEventListener('mouseup', up)
-  }, [])
-
-  useEffect(() => {
-    if (!mapReady) return
-    const interval = setInterval(() => {
-      if (imageryFailedRef.current) {
-        imageryFailedRef.current = false
-        addBaseLayers()
-      }
-    }, 2000)
-    return () => clearInterval(interval)
-  }, [addBaseLayers, mapReady])
+      ? `${currentProject} · Project Management`
+      : 'Select a project to manage'
+  }, [currentProject])
 
   const latDisplay = cursorPosition
     ? `${Math.abs(cursorPosition.lat).toFixed(5)}° ${cursorPosition.lat >= 0 ? 'N' : 'S'}`
@@ -1708,7 +1636,7 @@ export function MapViewer() {
           bottom: 0,
           width: '100%',
           height: '100%',
-          background: 'transparent' // Let parent gradient show through during load
+          background: 'transparent'
         }}
       />
 
@@ -1724,7 +1652,7 @@ export function MapViewer() {
             </div>
             <div className="text-center">
               <p className="text-lg font-semibold text-white">Loading</p>
-              <p className="text-sm text-white/70">Preparing project layers...</p>
+              <p className="text-sm text-white/70">Preparing project...</p>
             </div>
           </div>
         </div>
@@ -1747,164 +1675,8 @@ export function MapViewer() {
         </div>
       )}
 
-      {/* Map Controls */}
-      <div className="absolute top-4 left-4 z-10 space-y-3">
-        {/* Status HUD */}
-        <div className="bg-black/60 backdrop-blur-md border border-white/10 p-4 rounded-sm shadow-[0_0_20px_-5px_rgba(0,0,0,0.5)] w-[240px] relative overflow-hidden group">
-            {/* Scan line effect */}
-            <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-50" />
-            
-            {/* Corner Markers */}
-            <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-white/30" />
-            <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-white/30" />
-            <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-white/30" />
-            <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-white/30" />
-
-            <div className="space-y-3 relative z-10">
-                <div className="flex items-center gap-2 border-b border-white/10 pb-2">
-                    <div className="p-1 bg-primary/10 rounded-sm">
-                        <Layers className="w-3 h-3 text-primary" />
-                    </div>
-                    <span className="text-xs font-bold text-white uppercase tracking-wider">Hybrid Satellite</span>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-x-2 gap-y-3">
-                     <div className="space-y-0.5">
-                         <span className="text-[9px] text-white/40 font-mono uppercase block tracking-widest">Zoom Level</span>
-                         <span className="text-sm font-mono font-bold text-white/90">{zoom.toFixed(2)}x</span>
-                     </div>
-                     <div className="space-y-0.5">
-                         <span className="text-[9px] text-white/40 font-mono uppercase block tracking-widest">System</span>
-                         <div className="flex items-center gap-1.5 h-5">
-                             {mapLoaded ? (
-                                 <>
-                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_5px_rgba(16,185,129,0.8)]" />
-                                    <span className="text-[10px] font-mono text-emerald-500 tracking-wide">READY</span>
-                                 </>
-                             ) : (
-                                 <>
-                                    <Loader2 className="w-3 h-3 animate-spin text-yellow-500" />
-                                    <span className="text-[10px] font-mono text-yellow-500 tracking-wide">INIT</span>
-                                 </>
-                             )}
-                         </div>
-                     </div>
-                </div>
-
-                <div className="border-t border-white/10 pt-2">
-                    <span className="text-[9px] text-white/40 font-mono uppercase block tracking-widest mb-0.5">Active Project</span>
-                    <div className="text-[10px] font-mono text-white/70 uppercase truncate">
-                        {projectSummary || 'NO DATA STREAM'}
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {/* Control Module */}
-        <div className="flex flex-col gap-1">
-           {[
-             { icon: ZoomIn, label: "ZOOM IN", onClick: handleZoomIn },
-             { icon: ZoomOut, label: "ZOOM OUT", onClick: handleZoomOut },
-             { icon: Maximize2, label: "RESET VIEW", onClick: handleResetView },
-           ].map((btn, i) => (
-             <button
-                key={i}
-                onClick={btn.onClick}
-                className="group w-[240px] flex items-center gap-3 px-4 py-2 bg-black/40 backdrop-blur-sm border border-white/5 hover:border-white/20 hover:bg-white/5 rounded-sm transition-all duration-200"
-             >
-                <btn.icon className="w-3 h-3 text-white/50 group-hover:text-primary transition-colors" />
-                <span className="text-[10px] font-mono text-white/70 group-hover:text-white tracking-widest uppercase">{btn.label}</span>
-             </button>
-           ))}
-           
-           {/* Terrain Toggle */}
-           <button
-             onClick={() => setTerrainEnabled(prev => !prev)}
-             disabled={!demLayerName}
-             className={cn(
-               "group w-[240px] flex items-center gap-3 px-4 py-2 mt-1 backdrop-blur-sm border rounded-sm transition-all duration-200",
-               terrainEnabled 
-                 ? "bg-primary/10 border-primary/30 text-white" 
-                 : "bg-black/40 border-white/5 hover:border-white/20 hover:bg-white/5 text-white/70",
-               !demLayerName && "opacity-50 cursor-not-allowed"
-             )}
-             title={!demLayerName ? 'No DEM layer found in project' : 'Toggle 3D terrain using DEM'}
-           >
-              <Mountain className={cn("w-3 h-3 transition-colors", terrainEnabled ? "text-primary" : "text-white/50 group-hover:text-primary")} />
-              <div className="flex flex-col items-start">
-                  <span className={cn(
-                    "text-[10px] font-mono tracking-widest uppercase",
-                    terrainEnabled ? "text-white" : "group-hover:text-white"
-                  )}>3D Terrain</span>
-              </div>
-              {terrainEnabled && (
-                  <div className="ml-auto w-1.5 h-1.5 bg-primary rounded-full shadow-[0_0_5px_rgba(var(--primary),0.8)]" />
-              )}
-           </button>
-        </div>
-      </div>
-
-      <LayerManager
-        layers={managedLayers}
-        selectedLayerId={selectedLayerId}
-        loadingMessage={loadingMessage}
-        currentProject={currentProject}
-        vectorDetails={vectorDetails}
-        onSelectLayer={setSelectedLayerId}
-        onToggleVisibility={handleToggleVisibility}
-        onOpacityChange={handleOpacityChange}
-        onMoveLayer={handleMoveLayer}
-        onReorderLayers={handleReorderLayers}
-        onOpenTable={handleOpenTable}
-        onOpenStyle={handleOpenStyle}
-        onZoomToLayer={handleZoomToLayer}
-      />
-
-      {fullTableLayer && fullTableDetails && (
-        <AttributeTable
-          layer={fullTableLayer}
-          details={fullTableDetails}
-          sortedRows={sortedFullRows}
-          sortConfig={sortConfig}
-          isDocked={fullTableDocked}
-          dockHeight={dockHeight}
-          onClose={handleCloseTable}
-          onToggleDock={handleToggleDock}
-          onSort={handleSort}
-          onRowDoubleClick={handleRowDoubleClick}
-          onResizeStart={handleDockResizeMouseDown}
-          dockContainerRef={dockContainerRef}
-        />
-      )}
-
-      {styleLayerId && (
-        <StyleEditor
-          styleDraft={styleDraft}
-          onChange={setStyleDraft}
-          onApply={() => {
-             if (!styleLayerId) return
-             setStyleOverrides((prev) => ({
-               ...prev,
-               [styleLayerId]: styleDraft
-             }))
-             applyStyleToMapLayer(styleLayerId, styleDraft)
-             setStyleLayerId(null)
-          }}
-          onReset={() => {
-                    const target = styleLayerId
-                    if (!target) return
-                    setStyleOverrides((prev) => {
-                      const next = { ...prev }
-                      delete next[target]
-                      return next
-                    })
-                    applyStyleToMapLayer(target, { opacity: 1 })
-                    setStyleLayerId(null)
-                  }}
-          onCancel={() => setStyleLayerId(null)}
-        />
-      )}
-
+      {/* Map Controls - REMOVED as per request */}
+      
       <div className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 z-30">
         <div className="bg-black/80 backdrop-blur-md border border-white/10 px-6 py-2 rounded-full shadow-[0_0_20px_-5px_rgba(0,0,0,0.5)] flex items-center gap-6 relative overflow-hidden group">
             {/* Scan line effect */}
@@ -2005,18 +1777,328 @@ export function MapViewer() {
           >
             <span className="uppercase tracking-wide group-hover:translate-x-1 transition-transform">Copy Coordinates</span>
           </button>
+        </div>
+      )}
 
-          <button
-            onClick={() => {
-              // Placeholder for Examine
-              setContextMenu(null)
-            }}
-            className="w-full text-left px-3 py-2 text-xs font-mono text-white/80 hover:bg-primary/20 hover:text-white hover:border-l-2 hover:border-primary transition-all flex items-center gap-2 group border-l-2 border-transparent"
-          >
-            <span className="uppercase tracking-wide group-hover:translate-x-1 transition-transform">Examine</span>
-          </button>
+      <SupplierListDialog 
+        open={showSupplierList} 
+        onOpenChange={setShowSupplierList}
+        suppliers={suppliers as any}
+        onSelectSupplier={(s) => {
+          const supplier = s as SupplierProfile
+          setSelectedSupplier(supplier)
+          // Zoom to supplier location
+          const coords = getSupplierCoordinates(supplier)
+          if (mapRef.current && coords) {
+            mapRef.current.flyTo({
+              center: [coords.lng, coords.lat],
+              zoom: 12,
+              duration: 1200
+            })
+          }
+        }}
+      />
+
+      {/* Supplier Manager Sidebar (LayerManager Style) */}
+      {suppliers.length > 0 && (
+        <div className="absolute top-4 right-4 z-10 flex flex-col gap-3 w-[380px] max-h-[calc(100%-2rem)] overflow-hidden font-mono">
+          
+          {/* Collapsed Toggle */}
+          {!showSupplierManager && (
+            <div className="bg-black/80 backdrop-blur-md border border-white/20 rounded-sm p-2 shadow-[0_0_20px_-5px_rgba(0,0,0,0.5)] group hover:border-primary/50 transition-colors self-end">
+              <button
+                onClick={() => setShowSupplierManager(true)}
+                className="flex items-center justify-center p-1 hover:bg-white/10 rounded-sm transition-colors text-white/70 hover:text-primary"
+                title="Show Supplier Manager"
+              >
+                <Truck className="w-5 h-5 group-hover:animate-pulse" />
+              </button>
+            </div>
+          )}
+
+          {/* Main Supplier List Panel */}
+          {showSupplierManager && (
+            <div className="bg-[#0a0a0a]/95 backdrop-blur-xl border border-white/10 rounded-sm shadow-[0_0_30px_-10px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden">
+              
+              {/* Header */}
+              <div className="flex items-center justify-between px-3 py-3 border-b border-white/10 bg-white/[0.02]">
+                <div className="flex items-center gap-2">
+                  <div className="p-1 bg-primary/10 rounded-sm">
+                    <Truck className="w-3.5 h-3.5 text-primary" />
+                  </div>
+                  <span className="text-xs font-bold text-white uppercase tracking-wider">Supplier Manager</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="px-2 py-0.5 bg-white/5 border border-white/10 rounded-sm">
+                     <span className="text-[10px] text-white/70 uppercase tracking-wider">{suppliers.length} ENTRIES</span>
+                  </div>
+                  <button
+                    onClick={() => setShowSupplierManager(false)}
+                    className="p-1 hover:bg-white/10 rounded-sm transition-colors text-white/50 hover:text-white"
+                    title="Collapse Supplier Manager"
+                  >
+                    <Minimize2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* List */}
+              <div className="p-1 space-y-0.5 overflow-y-auto max-h-[320px] bg-black/20">
+                 {[
+                    { cat: 'construction_supplies', color: '#f59e0b', label: 'Construction Supplies', icon: Package },
+                    { cat: 'construction_services', color: '#10b981', label: 'Construction Services', icon: Wrench },
+                    { cat: 'pipeline_manufacturer', color: '#3b82f6', label: 'Pipeline Manufacturers', icon: Factory },
+                    { cat: 'equipment_manufacturer', color: '#8b5cf6', label: 'Equipment Manufacturers', icon: Truck },
+                    { cat: 'consultancy', color: '#ec4899', label: 'Consultancies', icon: Briefcase },
+                  ].map(({ cat, color, label, icon: Icon }) => {
+                    const categorySuppliers = suppliers.filter(s => s.category === cat)
+                    if (categorySuppliers.length === 0) return null
+                    const isExpanded = expandedCategories.has(cat)
+
+                    const isCategoryVisible = visibleCategories.has(cat)
+
+                    return (
+                      <div key={cat} className="border border-transparent">
+                        {/* Category Header */}
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => {
+                              setExpandedCategories(prev => {
+                                const next = new Set(prev)
+                                if (next.has(cat)) next.delete(cat)
+                                else next.add(cat)
+                                return next
+                              })
+                            }}
+                            className={cn(
+                              "flex-1 flex items-center gap-2 p-1.5 hover:bg-white/[0.04] hover:border-white/10 rounded-sm transition-all group",
+                              isExpanded ? "bg-white/[0.02]" : ""
+                            )}
+                          >
+                             <div
+                                className="w-5 h-5 rounded-sm flex items-center justify-center shrink-0"
+                                style={{ backgroundColor: `${color}20` }}
+                              >
+                                <Icon className="w-3 h-3" style={{ color }} />
+                              </div>
+                              <span className="text-[11px] font-medium text-white/80 flex-1 text-left uppercase tracking-wide group-hover:text-white">{label}</span>
+                              <span className="text-[9px] text-white/30 font-mono bg-white/5 px-1.5 rounded-sm">{categorySuppliers.length}</span>
+                              {isExpanded ? <ChevronDown className="w-3 h-3 text-white/30" /> : <ChevronRight className="w-3 h-3 text-white/30" />}
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setVisibleCategories(prev => {
+                                const next = new Set(prev)
+                                if (next.has(cat)) {
+                                  next.delete(cat)
+                                } else {
+                                  next.add(cat)
+                                }
+                                return next
+                              })
+                            }}
+                            className={cn(
+                              "p-1.5 rounded-sm transition-all shrink-0",
+                              isCategoryVisible
+                                ? "hover:bg-white/[0.04] text-white/60 hover:text-white"
+                                : "hover:bg-white/[0.04] text-white/20 hover:text-white/40"
+                            )}
+                            title={isCategoryVisible ? "Hide on map" : "Show on map"}
+                          >
+                            {isCategoryVisible ? (
+                              <Eye className="w-3.5 h-3.5" />
+                            ) : (
+                              <EyeOff className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+                        </div>
+
+                        {/* Items */}
+                        {isExpanded && (
+                          <div className="pl-2 mt-0.5 space-y-0.5 border-l border-white/5 ml-2.5">
+                            {categorySuppliers.map(supplier => {
+                                const isSelected = selectedSupplier?.supplier_id === supplier.supplier_id
+                                return (
+                                    <div
+                                        key={supplier.supplier_id}
+                                        onClick={() => {
+                                          setSelectedSupplier(supplier)
+                                          const coords = getSupplierCoordinates(supplier)
+                                          if (mapRef.current && coords) {
+                                            mapRef.current.flyTo({
+                                              center: [coords.lng, coords.lat],
+                                              zoom: 12,
+                                              duration: 1000
+                                            })
+                                          }
+                                        }}
+                                        className={cn(
+                                            "flex items-center justify-between p-1.5 rounded-sm cursor-pointer transition-all group/item",
+                                            isSelected
+                                                ? "bg-white/[0.08] border border-primary/40 shadow-[inset_2px_0_0_rgba(var(--primary),1)]"
+                                                : "hover:bg-white/[0.04] border border-transparent",
+                                            !isCategoryVisible && "opacity-40"
+                                        )}
+                                    >
+                                        <div className="flex flex-col min-w-0">
+                                            <span className={cn(
+                                                "text-[10px] font-medium truncate",
+                                                isSelected ? "text-white" : "text-white/70 group-hover/item:text-white"
+                                            )}>{supplier.company_name}</span>
+                                            <div className="flex items-center gap-1 text-[9px] text-white/30 font-mono">
+                                                <MapPin className="w-2.5 h-2.5" />
+                                                <span className="truncate">{supplier.location.city}</span>
+                                            </div>
+                                        </div>
+                                        {(() => {
+                                            const score = getQualityScore(supplier)
+                                            if (score === null) return null
+                                            return (
+                                                <div className="flex items-center gap-0.5 px-1 bg-white/5 rounded-sm">
+                                                    <Star className="w-2.5 h-2.5 text-yellow-400 fill-yellow-400" />
+                                                    <span className="text-[9px] text-white/80 font-mono">{score.toFixed(1)}</span>
+                                                </div>
+                                            )
+                                        })()}
+                                    </div>
+                                )
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+              </div>
+
+              {/* Footer Actions */}
+              <div className="px-2 py-2 border-t border-white/10 bg-white/[0.02] flex gap-2">
+                 <button
+                    onClick={() => setShowSupplierList(true)}
+                    className="flex-1 flex items-center justify-center gap-2 px-2 py-1.5 bg-white/5 border border-white/10 hover:bg-primary/10 hover:border-primary/30 hover:text-white text-white/60 rounded-sm transition-all text-[10px] uppercase font-bold tracking-wide"
+                 >
+                    <Layers className="w-3 h-3" />
+                    Full Directory
+                 </button>
+                 <button
+                    onClick={() => loadSuppliers(false)}
+                    className="px-2 py-1.5 bg-white/5 border border-white/10 hover:bg-white/10 hover:text-white text-white/50 rounded-sm transition-all"
+                    title="Refresh"
+                 >
+                    <RefreshCw className="w-3 h-3" />
+                 </button>
+              </div>
+            </div>
+          )}
+
+          {/* Inspector Panel (Detail) */}
+          {selectedSupplier && (
+            <div className="bg-[#0a0a0a]/95 backdrop-blur-xl border border-white/10 rounded-sm shadow-xl flex-1 overflow-hidden flex flex-col animate-in slide-in-from-top-2 duration-200">
+               <div className="flex items-center justify-between px-3 py-2 border-b border-white/10 bg-white/[0.02]">
+                  <div className="flex items-center gap-2 text-xs font-bold text-white uppercase tracking-wider">
+                    <Info className="w-3.5 h-3.5 text-primary" />
+                    <span>Inspector</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                     <span className="text-[9px] font-mono text-white/40 uppercase px-1.5 py-0.5 border border-white/10 rounded-sm bg-black/20">
+                        {selectedSupplier.category.replace(/_/g, ' ')}
+                     </span>
+                     <button
+                        onClick={() => setSelectedSupplier(null)}
+                        className="p-1 hover:bg-white/10 rounded-sm transition-colors text-white/50 hover:text-white"
+                     >
+                        <X className="w-3.5 h-3.5" />
+                     </button>
+                  </div>
+               </div>
+
+               {/* Content of Inspector */}
+               <div className="flex-1 overflow-y-auto p-3 space-y-4 bg-black/20">
+                  
+                  {/* Location */}
+                  <div className="space-y-2">
+                     <div className="text-[10px] text-white/30 font-mono uppercase tracking-widest border-b border-white/5 pb-1">Location</div>
+                     <div className="text-[11px] text-white/80 font-mono">
+                        {selectedSupplier.location.city}, {selectedSupplier.location.country}
+                     </div>
+                     {selectedSupplier.location.address && (
+                        <div className="text-[10px] text-white/50">{selectedSupplier.location.address}</div>
+                     )}
+                  </div>
+
+                  {/* Contact */}
+                  <div className="space-y-2">
+                     <div className="text-[10px] text-white/30 font-mono uppercase tracking-widest border-b border-white/5 pb-1">Contact</div>
+                     <div className="space-y-1 text-[11px] font-mono">
+                        {selectedSupplier.contact.primary_email && (
+                            <div className="flex items-center gap-2">
+                                <Mail className="w-3 h-3 text-white/40" />
+                                <a href={`mailto:${selectedSupplier.contact.primary_email}`} className="text-primary hover:underline truncate">{selectedSupplier.contact.primary_email}</a>
+                            </div>
+                        )}
+                        {selectedSupplier.contact.primary_phone && (
+                            <div className="flex items-center gap-2">
+                                <Phone className="w-3 h-3 text-white/40" />
+                                <span className="text-white/70">{selectedSupplier.contact.primary_phone}</span>
+                            </div>
+                        )}
+                        {selectedSupplier.contact.website && (
+                            <div className="flex items-center gap-2">
+                                <Globe className="w-3 h-3 text-white/40" />
+                                <a href={selectedSupplier.contact.website} target="_blank" rel="noreferrer" className="text-white/70 hover:text-white flex items-center gap-1">
+                                    Website <ExternalLink className="w-2 h-2" />
+                                </a>
+                            </div>
+                        )}
+                     </div>
+                  </div>
+
+                  {/* Properties Grid */}
+                  <div className="space-y-2">
+                     <div className="text-[10px] text-white/30 font-mono uppercase tracking-widest border-b border-white/5 pb-1">Properties</div>
+                     <div className="grid grid-cols-2 gap-2 text-[10px]">
+                        <div className="text-white/50">Rating</div>
+                        <div className="font-mono text-yellow-400 flex items-center gap-1">
+                            <Star className="w-2.5 h-2.5 fill-yellow-400" />
+                            {getQualityScore(selectedSupplier)?.toFixed(1) || 'N/A'}
+                        </div>
+
+                        <div className="text-white/50">Match Score</div>
+                        <div className={cn("font-mono font-bold", 
+                            (selectedSupplier.compatibility?.match_score || 0) >= 80 ? "text-emerald-400" : "text-amber-500"
+                        )}>
+                            {selectedSupplier.compatibility?.match_score || 0}%
+                        </div>
+
+                        <div className="text-white/50">Experience</div>
+                        <div className="font-mono text-white/80">{selectedSupplier.capabilities?.experience_years || '-'} years</div>
+
+                        <div className="text-white/50">Lead Time</div>
+                        <div className="font-mono text-white/80">{selectedSupplier.logistics?.estimated_lead_time_days || '-'} days</div>
+                     </div>
+                  </div>
+
+                  {/* Products */}
+                  {selectedSupplier.capabilities?.products && (
+                     <div className="space-y-2">
+                        <div className="text-[10px] text-white/30 font-mono uppercase tracking-widest border-b border-white/5 pb-1">Products</div>
+                        <div className="flex flex-wrap gap-1">
+                            {selectedSupplier.capabilities.products.slice(0, 6).map((p, i) => (
+                                <span key={i} className="px-1.5 py-0.5 bg-white/5 border border-white/10 rounded-[2px] text-[9px] text-white/60 uppercase tracking-wide">
+                                    {p}
+                                </span>
+                            ))}
+                        </div>
+                     </div>
+                  )}
+
+               </div>
+            </div>
+          )}
+
         </div>
       )}
     </div>
   )
 }
+

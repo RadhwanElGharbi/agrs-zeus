@@ -12,6 +12,7 @@ import { X, Folder, Calendar, MapPin, Globe, User, RefreshCw, Loader2, ChevronRi
 import { cn } from '@/lib/utils'
 import { ProjectMetadata } from '@/lib/api/dataClient'
 import { useProject } from '@/lib/context/ProjectContext'
+import { useOnboarding } from '@/lib/context/OnboardingContext'
 import { CreateProjectWizard } from './CreateProjectWizard'
 
 interface ProjectSelectionDialogProps {
@@ -36,6 +37,7 @@ export function ProjectSelectionDialog({
   const [isClosing, setIsClosing] = useState(false)
   const [wizardOpen, setWizardOpen] = useState(false)
   const { refreshProjects, setCurrentProject } = useProject()
+  const { reportAction } = useOnboarding()
 
   useEffect(() => {
     setMounted(true)
@@ -209,7 +211,11 @@ export function ProjectSelectionDialog({
 
                 {/* Create New Project Card */}
                 <button
-                  onClick={() => setWizardOpen(true)}
+                  onClick={() => {
+                    reportAction('click-create-project')
+                    setWizardOpen(true)
+                  }}
+                  data-tour="create-project-btn"
                   className="group relative p-6 border border-dashed border-white/10 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/20 rounded-sm flex flex-col items-center justify-center gap-4 transition-all min-h-[240px]"
                 >
                   <div className="p-4 rounded-full bg-white/5 border border-white/10 group-hover:border-primary/50 group-hover:bg-primary/10 transition-all">

@@ -14,6 +14,7 @@ import {
   ProjectCRSRecommendation,
 } from '@/lib/api/dataClient'
 import { useProject } from '@/lib/context/ProjectContext'
+import { useOnboarding, TourAction } from '@/lib/context/OnboardingContext'
 import { CRSSelectorDialog } from './CRSSelectorDialog'
 import { cn } from '@/lib/utils'
 import {
@@ -72,6 +73,7 @@ const UNIT_TABLE: Record<MeasurementSystem, { quantity: string; unit: string }[]
 
 export function CreateProjectWizard({ open, onClose, onCreated }: CreateProjectWizardProps) {
   const { projects, refreshProjects, setCurrentProject } = useProject()
+  const { reportAction } = useOnboarding()
   const [mounted, setMounted] = useState(false)
   const [stepIndex, setStepIndex] = useState(0)
   const [projectName, setProjectName] = useState('')
@@ -360,7 +362,10 @@ export function CreateProjectWizard({ open, onClose, onCreated }: CreateProjectW
       const response: CreateProjectResponse = await createProject(formData)
       await refreshProjects()
       setCurrentProject(response.project_name)
-      
+
+      // Report project created for tour auto-advance
+      reportAction('project-created')
+
       setIsClosing(true)
       setTimeout(() => {
         onCreated(response.project_name)
@@ -433,7 +438,7 @@ export function CreateProjectWizard({ open, onClose, onCreated }: CreateProjectW
           </aside>
 
           <section className="flex-1 overflow-y-auto p-8 space-y-8">
-            <div key={stepIndex} className="animate-slide-up-fade">
+            <div key={stepIndex} className="animate-slide-up-fade" data-tour={`wizard-step-${stepIndex + 1}`}>
               {stepIndex === 0 && (
                 <IdentityStep
                   projectName={projectName}
@@ -451,7 +456,12 @@ export function CreateProjectWizard({ open, onClose, onCreated }: CreateProjectW
               {stepIndex === 1 && (
                 <AOIStep
                   mode={aoiMode}
-                  onModeChange={setAoiMode}
+                  onModeChange={(mode) => {
+                    setAoiMode(mode)
+                    if (mode === 'draw') {
+                      reportAction('click-draw-tab')
+                    }
+                  }}
                   aoiFile={aoiFile}
                   onFileChange={(file) => {
                     setAoiFile(file)
@@ -478,6 +488,7 @@ export function CreateProjectWizard({ open, onClose, onCreated }: CreateProjectW
                   onLaunchDraw={() => {
                     setDrawOverlayOpen(true)
                     setAoiMode('draw')
+                    reportAction('click-launch-drawing')
                   }}
                 />
               )}
@@ -542,7 +553,20 @@ export function CreateProjectWizard({ open, onClose, onCreated }: CreateProjectW
             </button>
             {stepIndex < STEPS.length - 1 ? (
               <button
-                onClick={() => setStepIndex(Math.min(STEPS.length - 1, stepIndex + 1))}
+                onClick={() => {
+                  // Report wizard step completion for tour auto-advance
+                  const stepActions: Record<number, TourAction> = {
+                    0: 'wizard-step-1-complete',
+                    1: 'wizard-step-2-complete',
+                    2: 'wizard-step-3-complete',
+                    3: 'wizard-step-4-complete',
+                  }
+                  const action = stepActions[stepIndex]
+                  if (action) {
+                    reportAction(action)
+                  }
+                  setStepIndex(Math.min(STEPS.length - 1, stepIndex + 1))
+                }}
                 disabled={!isStepValid || submitState.loading}
                 className={cn(
                   'flex items-center gap-2 px-6 py-2 text-xs font-mono uppercase tracking-wider rounded-sm border transition-all',
@@ -598,8 +622,8 @@ export function CreateProjectWizard({ open, onClose, onCreated }: CreateProjectW
             epsg: crs.epsg,
             name: crs.name,
             reason: 'Manual Selection',
-            utm_zone: null,
-            hemisphere: null
+            utm_zone: undefined,
+            hemisphere: undefined
           })
           setCrsDialogOpen(false)
         }}
@@ -729,6 +753,7 @@ function AOIStep(props: {
           <button
             key={mode}
             onClick={() => props.onModeChange(mode)}
+            data-tour={mode === 'draw' ? 'aoi-draw-tab' : undefined}
             className={cn(
               'flex-1 border rounded-sm px-4 py-3 text-sm font-mono uppercase tracking-widest transition-all',
               props.mode === mode
@@ -936,6 +961,7 @@ function AOIStep(props: {
           </p>
           <button
             onClick={props.onLaunchDraw}
+            data-tour="launch-drawing-btn"
             className="self-start px-4 py-2 text-xs font-mono uppercase tracking-widest border border-primary text-primary rounded-sm hover:bg-primary/10 flex items-center gap-2"
           >
             <Layers className="w-4 h-4" />
@@ -988,7 +1014,7 @@ function CRSStep(props: {
           <div>
             <h3 className="text-lg font-bold text-white">Coordinate Reference System</h3>
             <p className="text-sm text-white/60 max-w-lg mt-1">
-              The system automatically recommends a UTM zone based on your AOI's geographic centroid. You can override this if your project requires a specific projection.
+              The system automatically recommends a UTM zone based on your AOI&apos;s geographic centroid. You can override this if your project requires a specific projection.
             </p>
           </div>
         </div>
@@ -1273,83 +1299,444 @@ interface AOIDrawOverlayProps {
   onSave: (payload: { geojson: any; startPoint?: { lat: number; lon: number }; endPoint?: { lat: number; lon: number } }) => void
 }
 
+// Maximum AOI area limit in square kilometers
+const MAX_AOI_AREA_KM2 = 300
+
+// Calculate area of a GeoJSON polygon in square kilometers using spherical geometry
+function calculatePolygonAreaKm2(geojson: any): number {
+  if (!geojson?.features?.length) return 0
+
+  let totalArea = 0
+  for (const feature of geojson.features) {
+    if (feature.geometry?.type === 'Polygon') {
+      const coords = feature.geometry.coordinates[0]
+      if (coords && coords.length >= 4) {
+        // Use spherical excess formula for geodesic area calculation
+        const toRadians = (deg: number) => (deg * Math.PI) / 180
+        let area = 0
+        for (let i = 0; i < coords.length - 1; i++) {
+          const p1 = coords[i]
+          const p2 = coords[i + 1]
+          area += toRadians(p2[0] - p1[0]) * (2 + Math.sin(toRadians(p1[1])) + Math.sin(toRadians(p2[1])))
+        }
+        // Earth radius in km
+        const R = 6371
+        area = Math.abs(area * R * R / 2)
+        totalArea += area
+      }
+    }
+  }
+  return totalArea
+}
+
+// Helper function to check if a point is inside a polygon using ray casting
+function isPointInPolygon(point: [number, number], polygon: [number, number][]): boolean {
+  const [x, y] = point
+  let inside = false
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const [xi, yi] = polygon[i]
+    const [xj, yj] = polygon[j]
+    if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
+      inside = !inside
+    }
+  }
+  return inside
+}
+
+// Helper to get polygon coordinates from draw data
+function getPolygonCoords(drawData: any): [number, number][] | null {
+  if (!drawData?.features?.length) return null
+  const feature = drawData.features.find((f: any) => f.geometry?.type === 'Polygon')
+  if (!feature?.geometry?.coordinates?.[0]) return null
+  return feature.geometry.coordinates[0] as [number, number][]
+}
+
+// Calculate area from raw coordinate array (for live preview)
+function calculateAreaFromCoords(coords: [number, number][]): number {
+  if (coords.length < 3) return 0
+
+  // Close the polygon if not already closed
+  const closedCoords = coords[0][0] === coords[coords.length - 1][0] &&
+                       coords[0][1] === coords[coords.length - 1][1]
+    ? coords
+    : [...coords, coords[0]]
+
+  const toRadians = (deg: number) => (deg * Math.PI) / 180
+  let area = 0
+  for (let i = 0; i < closedCoords.length - 1; i++) {
+    const p1 = closedCoords[i]
+    const p2 = closedCoords[i + 1]
+    area += toRadians(p2[0] - p1[0]) * (2 + Math.sin(toRadians(p1[1])) + Math.sin(toRadians(p2[1])))
+  }
+  const R = 6371 // Earth radius in km
+  return Math.abs(area * R * R / 2)
+}
+
+interface CoordinateVertex {
+  lat: string
+  lng: string
+}
+
 function AOIDrawOverlay({ open, onClose, onSave }: AOIDrawOverlayProps) {
+  const { reportAction } = useOnboarding()
   const mapContainerRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
   const drawRef = useRef<MapboxDraw | null>(null)
   const startMarkerRef = useRef<maplibregl.Marker | null>(null)
   const endMarkerRef = useRef<maplibregl.Marker | null>(null)
+  const selectModeRef = useRef<'start' | 'end' | null>(null)
   const [selectMode, setSelectMode] = useState<'start' | 'end' | null>(null)
-  const [statusMessage, setStatusMessage] = useState('Draw polygon to define AOI.')
+  const [statusMessage, setStatusMessage] = useState('Draw polygon to define AOI (max 300 km²).')
+  const [currentArea, setCurrentArea] = useState<number>(0)
+  const [areaExceeded, setAreaExceeded] = useState(false)
+  const [isDrawing, setIsDrawing] = useState(false)
+  const [hasValidAOI, setHasValidAOI] = useState(false)
+  const [polygonCoords, setPolygonCoords] = useState<[number, number][] | null>(null)
+  const polygonCoordsRef = useRef<[number, number][] | null>(null)
+  const [livePreviewArea, setLivePreviewArea] = useState<number | null>(null)
+  const [livePreviewExceeded, setLivePreviewExceeded] = useState(false)
+  const isDrawingRef = useRef(false)
+
+  // Keep polygonCoordsRef in sync
+  useEffect(() => {
+    polygonCoordsRef.current = polygonCoords
+  }, [polygonCoords])
+
+  // Coordinate entry panel state
+  const [showCoordPanel, setShowCoordPanel] = useState(false)
+  const [coordPanelTab, setCoordPanelTab] = useState<'polygon' | 'points'>('polygon')
+  const [vertexInputs, setVertexInputs] = useState<CoordinateVertex[]>([
+    { lat: '', lng: '' },
+    { lat: '', lng: '' },
+    { lat: '', lng: '' },
+  ])
+  const [startPointInput, setStartPointInput] = useState<CoordinateVertex>({ lat: '', lng: '' })
+  const [endPointInput, setEndPointInput] = useState<CoordinateVertex>({ lat: '', lng: '' })
+
+  // Sync vertex inputs when polygon coordinates change (from drawing)
+  useEffect(() => {
+    if (polygonCoords && polygonCoords.length >= 3) {
+      // Remove the closing point if it's the same as the first (GeoJSON polygons close themselves)
+      const vertices = polygonCoords.slice(0, -1)
+      const newInputs: CoordinateVertex[] = vertices.map(([lng, lat]) => ({
+        lat: lat.toFixed(6),
+        lng: lng.toFixed(6)
+      }))
+      // Ensure at least 3 inputs
+      while (newInputs.length < 3) {
+        newInputs.push({ lat: '', lng: '' })
+      }
+      setVertexInputs(newInputs)
+    }
+  }, [polygonCoords])
+
+  // Keep selectModeRef in sync
+  useEffect(() => {
+    selectModeRef.current = selectMode
+  }, [selectMode])
+
+  // Handle ESC key to cancel select mode
+  useEffect(() => {
+    if (!open) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (selectMode) {
+          setSelectMode(null)
+        } else if (isDrawing && drawRef.current) {
+          drawRef.current.changeMode('simple_select')
+          setIsDrawing(false)
+        }
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [open, selectMode, isDrawing])
 
   useEffect(() => {
     if (!open || !mapContainerRef.current) return
 
-    mapRef.current = new maplibregl.Map({
+    const map = new maplibregl.Map({
       container: mapContainerRef.current,
       style: {
         version: 8,
         sources: {
-          osm: {
+          // Use ESRI World Imagery for better satellite view like Project Management
+          esriImagery: {
             type: 'raster',
-            tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+            tiles: ['https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
             tileSize: 256,
-            attribution: '© OpenStreetMap contributors',
+            attribution: 'Esri, Maxar, Earthstar Geographics',
+          },
+          esriLabels: {
+            type: 'raster',
+            tiles: ['https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}'],
+            tileSize: 256,
+            attribution: 'Esri',
           },
         },
         layers: [
           {
-            id: 'osm',
+            id: 'esri-imagery',
             type: 'raster',
-            source: 'osm',
+            source: 'esriImagery',
+          },
+          {
+            id: 'esri-labels',
+            type: 'raster',
+            source: 'esriLabels',
+            paint: {
+              'raster-opacity': 0.8,
+            },
           },
         ],
       },
-      center: [-100, 40],
-      zoom: 3,
+      center: [-98, 39], // Center of continental US
+      zoom: 4,
+      pitch: 0,
+      bearing: 0,
+      maxPitch: 0, // Disable pitch completely for 2D drawing
+      minPitch: 0, // Also set minPitch to 0 to prevent any pitch changes
       attributionControl: false,
+      trackResize: true,
+      fadeDuration: 0, // Disable fade animations
+      renderWorldCopies: true,
+      interactive: true,
     })
 
-    mapRef.current.addControl(new maplibregl.NavigationControl(), 'top-right')
-    drawRef.current = new MapboxDraw({
-      displayControlsDefault: false,
-      controls: {
-        polygon: true,
-        trash: true,
-      },
-    })
-    mapRef.current.addControl(drawRef.current)
+    mapRef.current = map
 
-    const handleClick = (event: maplibregl.MapMouseEvent & maplibregl.EventData) => {
-      if (!selectMode) return
-      const { lngLat } = event
-      const marker = new maplibregl.Marker({
-        color: selectMode === 'start' ? '#10b981' : '#ef4444',
-      }).setLngLat(lngLat)
+    // Disable all rotation and pitch manipulation immediately
+    map.dragRotate.disable()
+    map.touchZoomRotate.disableRotation()
+    map.keyboard.disableRotation()
 
-      if (selectMode === 'start') {
-        startMarkerRef.current?.remove()
-        startMarkerRef.current = marker.addTo(mapRef.current!)
-        setStatusMessage('Start point recorded.')
-      } else {
-        endMarkerRef.current?.remove()
-        endMarkerRef.current = marker.addTo(mapRef.current!)
-        setStatusMessage('End point recorded.')
+    // Enforce 2D view - prevent any pitch changes
+    const enforce2D = () => {
+      if (map.getPitch() !== 0) {
+        map.setPitch(0)
       }
-      setSelectMode(null)
+      if (map.getBearing() !== 0) {
+        map.setBearing(0)
+      }
     }
 
-    mapRef.current.on('click', handleClick)
+    map.on('pitch', enforce2D)
+    map.on('pitchstart', enforce2D)
+    map.on('rotate', enforce2D)
+    map.on('rotatestart', enforce2D)
+
+    // Wait for map to load before adding draw controls
+    map.on('load', () => {
+      const draw = new MapboxDraw({
+        displayControlsDefault: false,
+        controls: {
+          polygon: true,
+          trash: true,
+        },
+        styles: [
+          // Polygon fill
+          {
+            id: 'gl-draw-polygon-fill',
+            type: 'fill',
+            filter: ['all', ['==', '$type', 'Polygon'], ['!=', 'mode', 'static']],
+            paint: {
+              'fill-color': '#ef4444',
+              'fill-outline-color': '#ef4444',
+              'fill-opacity': 0.25,
+            },
+          },
+          // Polygon outline stroke - active
+          {
+            id: 'gl-draw-polygon-stroke-active',
+            type: 'line',
+            filter: ['all', ['==', '$type', 'Polygon'], ['!=', 'mode', 'static']],
+            layout: {
+              'line-cap': 'round',
+              'line-join': 'round',
+            },
+            paint: {
+              'line-color': '#ef4444',
+              'line-width': 3,
+            },
+          },
+          // Polygon midpoints
+          {
+            id: 'gl-draw-polygon-midpoint',
+            type: 'circle',
+            filter: ['all', ['==', '$type', 'Point'], ['==', 'meta', 'midpoint']],
+            paint: {
+              'circle-radius': 5,
+              'circle-color': '#fbbf24',
+            },
+          },
+          // Polygon vertices
+          {
+            id: 'gl-draw-polygon-and-line-vertex-inactive',
+            type: 'circle',
+            filter: ['all', ['==', 'meta', 'vertex'], ['==', '$type', 'Point'], ['!=', 'mode', 'static']],
+            paint: {
+              'circle-radius': 7,
+              'circle-color': '#ffffff',
+              'circle-stroke-color': '#ef4444',
+              'circle-stroke-width': 2,
+            },
+          },
+          // Line stroke - active (while drawing)
+          {
+            id: 'gl-draw-line-active',
+            type: 'line',
+            filter: ['all', ['==', '$type', 'LineString'], ['!=', 'mode', 'static']],
+            layout: {
+              'line-cap': 'round',
+              'line-join': 'round',
+            },
+            paint: {
+              'line-color': '#ef4444',
+              'line-width': 3,
+              'line-dasharray': [0.2, 2],
+            },
+          },
+          // Static polygon fill
+          {
+            id: 'gl-draw-polygon-fill-static',
+            type: 'fill',
+            filter: ['all', ['==', 'mode', 'static'], ['==', '$type', 'Polygon']],
+            paint: {
+              'fill-color': '#ef4444',
+              'fill-outline-color': '#ef4444',
+              'fill-opacity': 0.15,
+            },
+          },
+          // Static polygon outline
+          {
+            id: 'gl-draw-polygon-stroke-static',
+            type: 'line',
+            filter: ['all', ['==', 'mode', 'static'], ['==', '$type', 'Polygon']],
+            layout: {
+              'line-cap': 'round',
+              'line-join': 'round',
+            },
+            paint: {
+              'line-color': '#ef4444',
+              'line-width': 3,
+            },
+          },
+        ],
+      })
+
+      drawRef.current = draw
+      map.addControl(draw as any, 'top-left')
+      map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right')
+      map.addControl(new maplibregl.ScaleControl({ maxWidth: 150, unit: 'metric' }), 'bottom-left')
+
+      // Update area when polygon is created/updated
+      const updateArea = () => {
+        const data = draw.getAll()
+        const area = calculatePolygonAreaKm2(data)
+        const coords = getPolygonCoords(data)
+        setCurrentArea(area)
+        setPolygonCoords(coords)
+        const validAOI = area > 0 && area <= MAX_AOI_AREA_KM2 && coords !== null && coords.length >= 4
+        setHasValidAOI(validAOI)
+        // Report polygon drawn for tour when valid AOI is created
+        if (validAOI) {
+          reportAction('aoi-polygon-drawn')
+        }
+        if (area > MAX_AOI_AREA_KM2) {
+          setAreaExceeded(true)
+          setStatusMessage(`Area ${area.toFixed(1)} km² exceeds ${MAX_AOI_AREA_KM2} km² limit`)
+        } else if (area > 0) {
+          setAreaExceeded(false)
+          setStatusMessage(`Area: ${area.toFixed(1)} km² (max ${MAX_AOI_AREA_KM2} km²)`)
+        } else {
+          setAreaExceeded(false)
+          setStatusMessage('Draw polygon to define AOI (max 300 km²).')
+        }
+      }
+
+      // Track drawing mode changes
+      map.on('draw.modechange', (e: any) => {
+        const drawing = e.mode === 'draw_polygon'
+        setIsDrawing(drawing)
+        isDrawingRef.current = drawing
+        if (!drawing) {
+          // Clear live preview when done drawing
+          setLivePreviewArea(null)
+          setLivePreviewExceeded(false)
+        }
+      })
+
+      // Live preview area calculation during drawing
+      const handleMouseMove = (e: maplibregl.MapMouseEvent) => {
+        if (!isDrawingRef.current || !draw) return
+
+        // Get the current feature being drawn
+        const featureIds = draw.getSelectedIds()
+        const allFeatures = draw.getAll()
+
+        // Find any feature in draw_polygon mode (it's typically a LineString while drawing)
+        let currentVertices: [number, number][] = []
+
+        for (const feature of allFeatures.features) {
+          if (feature.geometry.type === 'LineString' && feature.geometry.coordinates) {
+            // LineString while drawing - coordinates are the vertices so far
+            currentVertices = feature.geometry.coordinates as [number, number][]
+            break
+          } else if (feature.geometry.type === 'Polygon' && feature.geometry.coordinates?.[0]) {
+            // Could be a completed polygon being edited
+            currentVertices = (feature.geometry.coordinates[0] as [number, number][]).slice(0, -1)
+            break
+          }
+        }
+
+        // Need at least 2 vertices to form a triangle with cursor
+        if (currentVertices.length >= 2) {
+          // Add cursor position as the "next" vertex
+          const cursorPos: [number, number] = [e.lngLat.lng, e.lngLat.lat]
+          const previewCoords = [...currentVertices, cursorPos]
+
+          const previewArea = calculateAreaFromCoords(previewCoords)
+          setLivePreviewArea(previewArea)
+          setLivePreviewExceeded(previewArea > MAX_AOI_AREA_KM2)
+        } else if (currentVertices.length === 1) {
+          // Only one vertex - show 0 area
+          setLivePreviewArea(0)
+          setLivePreviewExceeded(false)
+        }
+      }
+
+      map.on('mousemove', handleMouseMove)
+
+      // Clear live preview when polygon is created
+      map.on('draw.create', () => {
+        setLivePreviewArea(null)
+        setLivePreviewExceeded(false)
+        updateArea()
+      })
+      map.on('draw.update', updateArea)
+      map.on('draw.delete', updateArea)
+    })
+
+    // Note: Start/end point click handling is done via a React overlay div
+    // that appears when selectMode is active. This bypasses MapboxDraw's
+    // click interception on the polygon.
 
     return () => {
-      mapRef.current?.off('click', handleClick)
-      mapRef.current?.remove()
+      map.remove()
       mapRef.current = null
       drawRef.current = null
       startMarkerRef.current = null
       endMarkerRef.current = null
       setSelectMode(null)
-      setStatusMessage('Draw polygon to define AOI.')
+      setCurrentArea(0)
+      setAreaExceeded(false)
+      setIsDrawing(false)
+      isDrawingRef.current = false
+      setHasValidAOI(false)
+      setPolygonCoords(null)
+      setLivePreviewArea(null)
+      setLivePreviewExceeded(false)
+      setStatusMessage('Draw polygon to define AOI (max 300 km²).')
     }
   }, [open])
 
@@ -1363,6 +1750,14 @@ function AOIDrawOverlay({ open, onClose, onSave }: AOIDrawOverlayProps) {
       setStatusMessage('Please draw the AOI polygon before saving.')
       return
     }
+
+    // Validate area limit
+    const area = calculatePolygonAreaKm2(data)
+    if (area > MAX_AOI_AREA_KM2) {
+      setStatusMessage(`⚠️ Cannot save: Area ${area.toFixed(1)} km² exceeds ${MAX_AOI_AREA_KM2} km² limit. Please draw a smaller area.`)
+      return
+    }
+
     const payload: { geojson: any; startPoint?: { lat: number; lon: number }; endPoint?: { lat: number; lon: number } } = {
       geojson: data,
     }
@@ -1374,50 +1769,692 @@ function AOIDrawOverlay({ open, onClose, onSave }: AOIDrawOverlayProps) {
       const lngLat = endMarkerRef.current.getLngLat()
       payload.endPoint = { lat: lngLat.lat, lon: lngLat.lng }
     }
+    reportAction('click-save-geometry')
     onSave(payload)
   }
 
+  // Custom draw control functions
+  const startDrawPolygon = () => {
+    const draw = drawRef.current
+    if (draw) {
+      draw.changeMode('draw_polygon')
+      setIsDrawing(true)
+      setStatusMessage('Click on map to add polygon vertices. Double-click to finish.')
+      reportAction('click-draw-polygon')
+    }
+  }
+
+  const deleteAllDrawings = () => {
+    const draw = drawRef.current
+    if (draw) {
+      draw.deleteAll()
+      setCurrentArea(0)
+      setAreaExceeded(false)
+      setHasValidAOI(false)
+      setPolygonCoords(null)
+      // Also remove start/end markers since they were inside the deleted AOI
+      startMarkerRef.current?.remove()
+      startMarkerRef.current = null
+      endMarkerRef.current?.remove()
+      endMarkerRef.current = null
+      // Clear coordinate inputs
+      setVertexInputs([{ lat: '', lng: '' }, { lat: '', lng: '' }, { lat: '', lng: '' }])
+      setStartPointInput({ lat: '', lng: '' })
+      setEndPointInput({ lat: '', lng: '' })
+      setStatusMessage('Draw polygon to define AOI (max 300 km²).')
+    }
+  }
+
+  // Place marker at given coordinates (used by both click handler and manual entry)
+  const placeStartMarker = (lng: number, lat: number) => {
+    const map = mapRef.current
+    if (!map) return false
+
+    // Validate point is inside AOI
+    const coords = polygonCoordsRef.current
+    if (!coords || coords.length < 4) {
+      setStatusMessage('Please create an AOI polygon first.')
+      return false
+    }
+
+    const point: [number, number] = [lng, lat]
+    if (!isPointInPolygon(point, coords)) {
+      setStatusMessage('Start point must be inside the AOI polygon.')
+      return false
+    }
+
+    // Remove existing and create new marker
+    startMarkerRef.current?.remove()
+    const marker = new maplibregl.Marker({ color: '#10b981' })
+      .setLngLat([lng, lat])
+      .addTo(map)
+    startMarkerRef.current = marker
+    setStartPointInput({ lat: lat.toFixed(6), lng: lng.toFixed(6) })
+    setStatusMessage('Start point set inside AOI.')
+    return true
+  }
+
+  const placeEndMarker = (lng: number, lat: number) => {
+    const map = mapRef.current
+    if (!map) return false
+
+    // Validate point is inside AOI
+    const coords = polygonCoordsRef.current
+    if (!coords || coords.length < 4) {
+      setStatusMessage('Please create an AOI polygon first.')
+      return false
+    }
+
+    const point: [number, number] = [lng, lat]
+    if (!isPointInPolygon(point, coords)) {
+      setStatusMessage('End point must be inside the AOI polygon.')
+      return false
+    }
+
+    // Remove existing and create new marker
+    endMarkerRef.current?.remove()
+    const marker = new maplibregl.Marker({ color: '#ef4444' })
+      .setLngLat([lng, lat])
+      .addTo(map)
+    endMarkerRef.current = marker
+    setEndPointInput({ lat: lat.toFixed(6), lng: lng.toFixed(6) })
+    setStatusMessage('End point set inside AOI.')
+    return true
+  }
+
+  // Handle map container click directly (bypasses MapboxDraw)
+  const handleMapContainerClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const mode = selectModeRef.current
+    if (!mode) return
+
+    const map = mapRef.current
+    if (!map) return
+
+    // Get the map container's bounding rect
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const y = e.clientY - rect.top
+
+    // Convert pixel coordinates to lng/lat
+    const lngLat = map.unproject([x, y])
+
+    if (mode === 'start') {
+      if (placeStartMarker(lngLat.lng, lngLat.lat)) {
+        setSelectMode(null)
+      }
+    } else if (mode === 'end') {
+      if (placeEndMarker(lngLat.lng, lngLat.lat)) {
+        setSelectMode(null)
+      }
+    }
+  }
+
+  // Toggle start point select mode
+  const toggleStartSelectMode = () => {
+    if (!hasValidAOI) return
+    if (selectMode === 'start') {
+      setSelectMode(null)
+    } else {
+      setSelectMode('start')
+      reportAction('click-set-start')
+    }
+  }
+
+  // Toggle end point select mode
+  const toggleEndSelectMode = () => {
+    if (!hasValidAOI) return
+    if (selectMode === 'end') {
+      setSelectMode(null)
+    } else {
+      setSelectMode('end')
+      reportAction('click-set-end')
+    }
+  }
+
+  // Add a vertex input row
+  const addVertexInput = () => {
+    setVertexInputs([...vertexInputs, { lat: '', lng: '' }])
+  }
+
+  // Remove a vertex input row
+  const removeVertexInput = (index: number) => {
+    if (vertexInputs.length <= 3) return // Minimum 3 vertices
+    setVertexInputs(vertexInputs.filter((_, i) => i !== index))
+  }
+
+  // Update a specific vertex input
+  const updateVertexInput = (index: number, field: 'lat' | 'lng', value: string) => {
+    const updated = [...vertexInputs]
+    updated[index] = { ...updated[index], [field]: value }
+    setVertexInputs(updated)
+  }
+
+  // Apply polygon from coordinate inputs
+  const applyPolygonFromCoords = () => {
+    const map = mapRef.current
+    const draw = drawRef.current
+    if (!map || !draw) return
+
+    // Parse and validate coordinates
+    const validCoords: [number, number][] = []
+    for (const vertex of vertexInputs) {
+      const lat = parseFloat(vertex.lat)
+      const lng = parseFloat(vertex.lng)
+      if (isNaN(lat) || isNaN(lng)) continue
+      if (lat < -90 || lat > 90 || lng < -180 || lng > 180) continue
+      validCoords.push([lng, lat]) // GeoJSON uses [lng, lat]
+    }
+
+    if (validCoords.length < 3) {
+      setStatusMessage('Need at least 3 valid coordinates to create a polygon.')
+      return
+    }
+
+    // Close the polygon by adding first point at the end
+    const closedCoords = [...validCoords, validCoords[0]]
+
+    // Delete existing drawings
+    draw.deleteAll()
+    startMarkerRef.current?.remove()
+    startMarkerRef.current = null
+    endMarkerRef.current?.remove()
+    endMarkerRef.current = null
+
+    // Create new polygon feature
+    const polygon: GeoJSON.Feature<GeoJSON.Polygon> = {
+      type: 'Feature',
+      properties: {},
+      geometry: {
+        type: 'Polygon',
+        coordinates: [closedCoords]
+      }
+    }
+
+    // Add to draw
+    draw.add(polygon)
+
+    // Calculate bounds and fly to the polygon
+    const bounds = new maplibregl.LngLatBounds()
+    for (const coord of validCoords) {
+      bounds.extend(coord as [number, number])
+    }
+    map.fitBounds(bounds, { padding: 50, maxZoom: 15 })
+
+    // Update area
+    const data = draw.getAll()
+    const area = calculatePolygonAreaKm2(data)
+    const coords = getPolygonCoords(data)
+    setCurrentArea(area)
+    setPolygonCoords(coords)
+    const isValid = area > 0 && area <= MAX_AOI_AREA_KM2 && coords !== null && coords.length >= 4
+    setHasValidAOI(isValid)
+
+    if (area > MAX_AOI_AREA_KM2) {
+      setAreaExceeded(true)
+      setStatusMessage(`Area ${area.toFixed(1)} km² exceeds ${MAX_AOI_AREA_KM2} km² limit`)
+    } else {
+      setAreaExceeded(false)
+      setStatusMessage(`Polygon created: ${area.toFixed(1)} km²`)
+    }
+  }
+
+  // Apply start point from coordinate input
+  const applyStartPointFromCoords = () => {
+    const map = mapRef.current
+    if (!map) return
+
+    const lat = parseFloat(startPointInput.lat)
+    const lng = parseFloat(startPointInput.lng)
+
+    if (isNaN(lat) || isNaN(lng)) {
+      setStatusMessage('Please enter valid start point coordinates.')
+      return
+    }
+    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+      setStatusMessage('Coordinates out of range. Lat: -90 to 90, Lng: -180 to 180.')
+      return
+    }
+
+    // Validate point is inside AOI
+    const coords = polygonCoordsRef.current
+    if (!coords || coords.length < 4) {
+      setStatusMessage('Please create an AOI polygon first.')
+      return
+    }
+
+    const point: [number, number] = [lng, lat]
+    if (!isPointInPolygon(point, coords)) {
+      setStatusMessage('Start point must be inside the AOI polygon.')
+      return
+    }
+
+    // Create marker
+    startMarkerRef.current?.remove()
+    const marker = new maplibregl.Marker({ color: '#10b981' })
+      .setLngLat([lng, lat])
+      .addTo(map)
+    startMarkerRef.current = marker
+
+    // Fly to point if not in view
+    if (!map.getBounds().contains([lng, lat])) {
+      map.flyTo({ center: [lng, lat], zoom: Math.max(map.getZoom(), 12) })
+    }
+
+    setStatusMessage('Start point set inside AOI.')
+  }
+
+  // Apply end point from coordinate input
+  const applyEndPointFromCoords = () => {
+    const map = mapRef.current
+    if (!map) return
+
+    const lat = parseFloat(endPointInput.lat)
+    const lng = parseFloat(endPointInput.lng)
+
+    if (isNaN(lat) || isNaN(lng)) {
+      setStatusMessage('Please enter valid end point coordinates.')
+      return
+    }
+    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+      setStatusMessage('Coordinates out of range. Lat: -90 to 90, Lng: -180 to 180.')
+      return
+    }
+
+    // Validate point is inside AOI
+    const coords = polygonCoordsRef.current
+    if (!coords || coords.length < 4) {
+      setStatusMessage('Please create an AOI polygon first.')
+      return
+    }
+
+    const point: [number, number] = [lng, lat]
+    if (!isPointInPolygon(point, coords)) {
+      setStatusMessage('End point must be inside the AOI polygon.')
+      return
+    }
+
+    // Create marker
+    endMarkerRef.current?.remove()
+    const marker = new maplibregl.Marker({ color: '#ef4444' })
+      .setLngLat([lng, lat])
+      .addTo(map)
+    endMarkerRef.current = marker
+
+    // Fly to point if not in view
+    if (!map.getBounds().contains([lng, lat])) {
+      map.flyTo({ center: [lng, lat], zoom: Math.max(map.getZoom(), 12) })
+    }
+
+    setStatusMessage('End point set inside AOI.')
+  }
+
   return createPortal(
-    <div className="fixed inset-0 z-[300] bg-black/90 backdrop-blur-xl flex flex-col">
-      <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
-        <div>
-          <div className="text-xs font-mono uppercase text-white/50 tracking-widest">MapLibre Drawing Console</div>
-          <div className="text-sm text-white/70">{statusMessage}</div>
+    <div className="fixed inset-0 z-[300] bg-black flex flex-col">
+      {/* Header toolbar */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-black/80 backdrop-blur-sm">
+        <div className="flex items-center gap-4">
+          <div>
+            <div className="text-xs font-mono uppercase text-white/50 tracking-widest">AOI Drawing Console</div>
+            <div className={cn(
+              "text-sm mt-0.5",
+              areaExceeded ? "text-red-400 font-semibold" : "text-white/70"
+            )}>{statusMessage}</div>
+          </div>
+          {/* Area indicator badge - show live preview during drawing, otherwise show current area */}
+          {(livePreviewArea !== null || currentArea > 0) && (
+            <div className={cn(
+              "px-3 py-1.5 text-sm font-mono rounded border flex items-center gap-2",
+              livePreviewArea !== null
+                ? livePreviewExceeded
+                  ? "border-red-500 bg-red-500/20 text-red-400 animate-pulse"
+                  : "border-amber-500 bg-amber-500/20 text-amber-400"
+                : areaExceeded
+                  ? "border-red-500 bg-red-500/20 text-red-400"
+                  : "border-emerald-500 bg-emerald-500/20 text-emerald-400"
+            )}>
+              {livePreviewArea !== null ? (
+                <>
+                  <span className="text-white/50">~</span>
+                  {livePreviewArea.toFixed(1)} km²
+                  {livePreviewExceeded && <span className="text-xs">(exceeds limit!)</span>}
+                </>
+              ) : (
+                <>{currentArea.toFixed(1)} km²</>
+              )}
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-2">
+          {/* Draw Polygon Button */}
           <button
-            onClick={() => setSelectMode('start')}
+            onClick={startDrawPolygon}
+            data-tour="draw-polygon-btn"
             className={cn(
-              'px-3 py-1 text-xs font-mono uppercase tracking-widest rounded-sm border border-white/20 text-white/70',
-              selectMode === 'start' && 'border-primary text-primary'
+              'px-3 py-2 text-xs font-mono uppercase tracking-widest rounded border transition-all flex items-center gap-2',
+              isDrawing
+                ? 'border-primary bg-primary/20 text-primary'
+                : 'border-white/20 text-white/70 hover:border-primary hover:text-primary hover:bg-primary/10'
+            )}
+            title="Draw Polygon"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="12 2 2 7 2 17 12 22 22 17 22 7 12 2"></polygon>
+            </svg>
+            Draw Polygon
+          </button>
+          {/* Delete Button */}
+          <button
+            onClick={deleteAllDrawings}
+            className="px-3 py-2 text-xs font-mono uppercase tracking-widest rounded border border-white/20 text-white/70 hover:border-red-500 hover:text-red-400 hover:bg-red-500/10 transition-all flex items-center gap-2"
+            title="Delete All"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+            Clear
+          </button>
+          {/* Enter Coordinates Button */}
+          <button
+            onClick={() => setShowCoordPanel(!showCoordPanel)}
+            className={cn(
+              'px-3 py-2 text-xs font-mono uppercase tracking-widest rounded border transition-all flex items-center gap-2',
+              showCoordPanel
+                ? 'border-amber-500 text-amber-400 bg-amber-500/20'
+                : 'border-white/20 text-white/70 hover:border-amber-500 hover:text-amber-400 hover:bg-amber-500/10'
+            )}
+            title="Enter coordinates manually"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/>
+              <circle cx="12" cy="10" r="3"/>
+            </svg>
+            Coordinates
+          </button>
+          <div className="w-px h-6 bg-white/10 mx-1" />
+          {/* Start Point Button */}
+          <button
+            onClick={toggleStartSelectMode}
+            disabled={!hasValidAOI}
+            data-tour="set-start-btn"
+            title={!hasValidAOI ? 'Draw a valid AOI polygon first' : 'Click on map to set start point'}
+            className={cn(
+              'px-3 py-2 text-xs font-mono uppercase tracking-widest rounded border transition-all flex items-center gap-2',
+              !hasValidAOI
+                ? 'border-white/10 text-white/30 cursor-not-allowed'
+                : selectMode === 'start'
+                  ? 'border-emerald-500 text-emerald-400 bg-emerald-500/20'
+                  : 'border-white/20 text-white/70 hover:border-emerald-500 hover:text-emerald-400'
             )}
           >
+            <div className={cn("w-3 h-3 rounded-full", hasValidAOI ? "bg-emerald-500" : "bg-white/30")} />
             Set Start
           </button>
+          {/* End Point Button */}
           <button
-            onClick={() => setSelectMode('end')}
+            onClick={toggleEndSelectMode}
+            disabled={!hasValidAOI}
+            data-tour="set-end-btn"
+            title={!hasValidAOI ? 'Draw a valid AOI polygon first' : 'Click on map to set end point'}
             className={cn(
-              'px-3 py-1 text-xs font-mono uppercase tracking-widest rounded-sm border border-white/20 text-white/70',
-              selectMode === 'end' && 'border-primary text-primary'
+              'px-3 py-2 text-xs font-mono uppercase tracking-widest rounded border transition-all flex items-center gap-2',
+              !hasValidAOI
+                ? 'border-white/10 text-white/30 cursor-not-allowed'
+                : selectMode === 'end'
+                  ? 'border-red-500 text-red-400 bg-red-500/20'
+                  : 'border-white/20 text-white/70 hover:border-red-500 hover:text-red-400'
             )}
           >
+            <div className={cn("w-3 h-3 rounded-full", hasValidAOI ? "bg-red-500" : "bg-white/30")} />
             Set End
           </button>
+          <div className="w-px h-6 bg-white/10 mx-1" />
+          {/* Save Button */}
           <button
             onClick={handleSave}
-            className="px-4 py-2 text-xs font-mono uppercase tracking-widest bg-primary text-black rounded-sm"
+            disabled={areaExceeded || currentArea === 0}
+            data-tour="save-geometry-btn"
+            className={cn(
+              "px-4 py-2 text-xs font-mono uppercase tracking-widest rounded transition-all font-bold",
+              areaExceeded || currentArea === 0
+                ? "bg-white/10 text-white/30 cursor-not-allowed border border-white/10"
+                : "bg-primary text-black hover:bg-primary/90"
+            )}
           >
             Save Geometry
           </button>
+          {/* Cancel Button */}
           <button
             onClick={onClose}
-            className="px-3 py-1 text-xs font-mono uppercase tracking-widest border border-white/20 text-white/60 rounded-sm"
+            className="px-3 py-2 text-xs font-mono uppercase tracking-widest border border-white/20 text-white/60 rounded hover:border-white/40 hover:text-white transition-colors"
           >
             Cancel
           </button>
         </div>
       </div>
-      <div ref={mapContainerRef} className="flex-1" />
+      {/* Instructions bar */}
+      {selectMode && (
+        <div className="px-4 py-2 bg-primary/10 border-b border-primary/30 text-sm font-mono text-primary">
+          Click on the map to place the {selectMode === 'start' ? 'START' : 'END'} point. Press ESC or click the button again to cancel.
+        </div>
+      )}
+      {/* Main content area with map and optional coordinate panel */}
+      <div className="flex-1 flex relative overflow-hidden">
+        {/* Map container */}
+        <div
+          className="flex-1 relative"
+          style={{
+            position: 'relative',
+            width: '100%',
+            height: '100%',
+            overflow: 'hidden'
+          }}
+        >
+          <div
+            ref={mapContainerRef}
+            data-tour="aoi-map"
+            className="absolute inset-0"
+            style={{
+              width: '100%',
+              height: '100%',
+            }}
+          />
+          {/* Click capture overlay - appears when in select mode to bypass MapboxDraw */}
+          {selectMode && (
+            <div
+              className="absolute inset-0 cursor-crosshair z-10"
+              style={{ backgroundColor: 'transparent' }}
+              onClick={handleMapContainerClick}
+            />
+          )}
+        </div>
+        {/* Coordinate Entry Panel */}
+        {showCoordPanel && (
+          <div className="w-96 min-w-[384px] border-l border-white/10 bg-black/90 backdrop-blur-sm flex flex-col overflow-hidden shrink-0">
+            {/* Panel header with tabs */}
+            <div className="flex border-b border-white/10">
+              <button
+                onClick={() => setCoordPanelTab('polygon')}
+                className={cn(
+                  'flex-1 px-4 py-3 text-xs font-mono uppercase tracking-widest transition-all',
+                  coordPanelTab === 'polygon'
+                    ? 'bg-white/5 text-primary border-b-2 border-primary'
+                    : 'text-white/50 hover:text-white/70 hover:bg-white/5'
+                )}
+              >
+                Polygon Vertices
+              </button>
+              <button
+                onClick={() => setCoordPanelTab('points')}
+                className={cn(
+                  'flex-1 px-4 py-3 text-xs font-mono uppercase tracking-widest transition-all',
+                  coordPanelTab === 'points'
+                    ? 'bg-white/5 text-primary border-b-2 border-primary'
+                    : 'text-white/50 hover:text-white/70 hover:bg-white/5'
+                )}
+              >
+                Start/End Points
+              </button>
+            </div>
+            {/* Panel content */}
+            <div className="flex-1 overflow-y-auto p-4">
+              {coordPanelTab === 'polygon' ? (
+                <div className="space-y-4">
+                  <div className="text-xs text-white/50 font-mono">
+                    Enter at least 3 vertex coordinates (Lat, Lng) to define the AOI polygon.
+                  </div>
+                  {/* Vertex inputs */}
+                  <div className="space-y-2">
+                    {vertexInputs.map((vertex, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <div className="w-6 h-6 flex items-center justify-center text-xs font-mono text-white/40 bg-white/5 rounded">
+                          {index + 1}
+                        </div>
+                        <input
+                          type="text"
+                          placeholder="Lat"
+                          value={vertex.lat}
+                          onChange={(e) => updateVertexInput(index, 'lat', e.target.value)}
+                          className="flex-1 px-2 py-1.5 text-xs font-mono bg-white/5 border border-white/10 rounded text-white placeholder-white/30 focus:outline-none focus:border-primary"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Lng"
+                          value={vertex.lng}
+                          onChange={(e) => updateVertexInput(index, 'lng', e.target.value)}
+                          className="flex-1 px-2 py-1.5 text-xs font-mono bg-white/5 border border-white/10 rounded text-white placeholder-white/30 focus:outline-none focus:border-primary"
+                        />
+                        <button
+                          onClick={() => removeVertexInput(index)}
+                          disabled={vertexInputs.length <= 3}
+                          className={cn(
+                            'w-6 h-6 flex items-center justify-center text-xs rounded transition-all',
+                            vertexInputs.length <= 3
+                              ? 'text-white/20 cursor-not-allowed'
+                              : 'text-white/50 hover:text-red-400 hover:bg-red-500/20'
+                          )}
+                          title={vertexInputs.length <= 3 ? 'Minimum 3 vertices required' : 'Remove vertex'}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Add vertex button */}
+                  <button
+                    onClick={addVertexInput}
+                    className="w-full py-2 text-xs font-mono uppercase tracking-widest border border-dashed border-white/20 text-white/50 rounded hover:border-white/40 hover:text-white/70 transition-all"
+                  >
+                    + Add Vertex
+                  </button>
+                  {/* Apply button */}
+                  <button
+                    onClick={applyPolygonFromCoords}
+                    className="w-full py-2.5 text-xs font-mono uppercase tracking-widest bg-primary text-black rounded font-bold hover:bg-primary/90 transition-all"
+                  >
+                    Apply Polygon
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {/* Start Point */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-emerald-500" />
+                      <span className="text-xs font-mono uppercase tracking-widest text-white/70">Start Point</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Latitude"
+                        value={startPointInput.lat}
+                        onChange={(e) => setStartPointInput({ ...startPointInput, lat: e.target.value })}
+                        disabled={!hasValidAOI}
+                        className={cn(
+                          "flex-1 px-3 py-2 text-xs font-mono bg-white/5 border border-white/10 rounded placeholder-white/30 focus:outline-none focus:border-primary",
+                          hasValidAOI ? "text-white" : "text-white/30 cursor-not-allowed"
+                        )}
+                      />
+                      <input
+                        type="text"
+                        placeholder="Longitude"
+                        value={startPointInput.lng}
+                        onChange={(e) => setStartPointInput({ ...startPointInput, lng: e.target.value })}
+                        disabled={!hasValidAOI}
+                        className={cn(
+                          "flex-1 px-3 py-2 text-xs font-mono bg-white/5 border border-white/10 rounded placeholder-white/30 focus:outline-none focus:border-primary",
+                          hasValidAOI ? "text-white" : "text-white/30 cursor-not-allowed"
+                        )}
+                      />
+                    </div>
+                    <button
+                      onClick={applyStartPointFromCoords}
+                      disabled={!hasValidAOI}
+                      className={cn(
+                        "w-full py-2 text-xs font-mono uppercase tracking-widest rounded transition-all",
+                        hasValidAOI
+                          ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500 hover:bg-emerald-500/30"
+                          : "bg-white/5 text-white/30 border border-white/10 cursor-not-allowed"
+                      )}
+                    >
+                      Set Start Point
+                    </button>
+                  </div>
+                  {/* End Point */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-red-500" />
+                      <span className="text-xs font-mono uppercase tracking-widest text-white/70">End Point</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Latitude"
+                        value={endPointInput.lat}
+                        onChange={(e) => setEndPointInput({ ...endPointInput, lat: e.target.value })}
+                        disabled={!hasValidAOI}
+                        className={cn(
+                          "flex-1 px-3 py-2 text-xs font-mono bg-white/5 border border-white/10 rounded placeholder-white/30 focus:outline-none focus:border-primary",
+                          hasValidAOI ? "text-white" : "text-white/30 cursor-not-allowed"
+                        )}
+                      />
+                      <input
+                        type="text"
+                        placeholder="Longitude"
+                        value={endPointInput.lng}
+                        onChange={(e) => setEndPointInput({ ...endPointInput, lng: e.target.value })}
+                        disabled={!hasValidAOI}
+                        className={cn(
+                          "flex-1 px-3 py-2 text-xs font-mono bg-white/5 border border-white/10 rounded placeholder-white/30 focus:outline-none focus:border-primary",
+                          hasValidAOI ? "text-white" : "text-white/30 cursor-not-allowed"
+                        )}
+                      />
+                    </div>
+                    <button
+                      onClick={applyEndPointFromCoords}
+                      disabled={!hasValidAOI}
+                      className={cn(
+                        "w-full py-2 text-xs font-mono uppercase tracking-widest rounded transition-all",
+                        hasValidAOI
+                          ? "bg-red-500/20 text-red-400 border border-red-500 hover:bg-red-500/30"
+                          : "bg-white/5 text-white/30 border border-white/10 cursor-not-allowed"
+                      )}
+                    >
+                      Set End Point
+                    </button>
+                  </div>
+                  {/* Info note */}
+                  {!hasValidAOI && (
+                    <div className="p-3 rounded bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-mono">
+                      Draw or enter a valid AOI polygon first to enable start/end point entry.
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
     </div>,
     document.body
   )

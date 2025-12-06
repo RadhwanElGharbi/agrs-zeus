@@ -183,7 +183,7 @@ export function createSkyboxLayer(): CustomLayerInterface {
 
       texture = createCubeTexture(gl)
     },
-    render(gl: WebGLRenderingContext, matrix: number[]) {
+    render(gl: WebGLRenderingContext, matrix: any) {
       if (!program || !buffer || !texture || !uMatrixLocation) return
 
       // Create a view matrix with only rotation (no translation)

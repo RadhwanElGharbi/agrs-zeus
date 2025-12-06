@@ -1,12 +1,15 @@
 """
 PIRL Route API Endpoints
 
-Provides endpoints to discover and serve PIRL route GeoJSON files.
+Provides endpoints to discover and serve PIRL route GeoJSON files,
+and to save PIRL configuration requests.
 """
 
 import os
+import csv
 import json
 from pathlib import Path
+from datetime import datetime
 from typing import List, Dict, Any, Optional
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
@@ -16,6 +19,178 @@ router = APIRouter()
 
 # Base projects directory
 PROJECTS_ROOT = Path("/opt/agrs/Projects")
+
+
+# ============================================================================
+# PIRL Request Models (for saving configuration)
+# Matches frontend TypeScript interfaces in PirlAiDialog.tsx
+# ============================================================================
+
+# --- Objectives Models ---
+class PrimaryWeights(BaseModel):
+    costOptimization: float = 80
+    constructionSpeed: float = 40
+    regulatoryMinimization: float = 60
+    environmentalImpact: float = 70
+
+class GeometricPreferences(BaseModel):
+    existingRowUsage: float = 90
+    minimizeCrossings: float = 50
+    terrainFlatness: float = 60
+
+class ObjectivesData(BaseModel):
+    primaryWeights: PrimaryWeights
+    geometricPreferences: GeometricPreferences
+    activeProfile: str = "Cost Aggressive"
+
+
+# --- Hydraulics Models ---
+class MechanicalData(BaseModel):
+    outerDiameter: float = 660.4
+    wallThickness: float = 11.0
+    grade: str = "483"
+    locationClass: str = "1"
+    designFactor: str = "0.72"
+    jointFactor: str = "1.0"
+    tempDerating: str = "1.0"
+    maop: str = "9930"
+
+class OperatingData(BaseModel):
+    inletPressure: str = "75.0"
+    deliveryPressure: str = "45.0"
+    flowRate: str = "1.0"
+    inletTemp: str = "288.15"
+    groundTemp: str = "283.15"
+    roughness: str = "0.045"
+
+class FluidCompositionData(BaseModel):
+    methane: str = "92.5"
+    ethane: str = "4.2"
+    propane: str = "1.5"
+    butane: str = "0.8"
+    nitrogen: str = "0.6"
+    co2: str = "0.4"
+    h2s: str = "0.0"
+    waterContent: str = "< 7"
+    specificGravity: str = "0.58"
+    viscosity: str = "1.1e-5"
+    critPressure: str = "46.0"
+    critTemp: str = "190.6"
+
+class HydraulicsData(BaseModel):
+    mechanical: MechanicalData
+    operating: OperatingData
+    fluidComposition: FluidCompositionData
+
+
+# --- Cost Matrix Models ---
+class MaterialCostRow(BaseModel):
+    diameter: str
+    wallThickness: str
+    grade: str
+    costPerMeter: str
+    weight: str
+
+class LaborRateRow(BaseModel):
+    region: str
+    welder: str
+    equipmentOperator: str
+    laborer: str
+    engineer: str
+
+class EquipmentRentalRow(BaseModel):
+    equipment: str
+    capacity: str
+    dailyRate: str
+    monthlyRate: str
+
+class TerrainMultiplierRow(BaseModel):
+    terrainType: str
+    multiplier: str
+    costPerKm: str
+    rationale: str
+
+class RowAcquisitionRow(BaseModel):
+    landUse: str
+    permanentEasement: str
+    temporaryEasement: str
+    totalPerKm: str
+
+class WaterCrossingRow(BaseModel):
+    type: str
+    width: str
+    openCut: str
+    hddCost: str
+    hddMultiplier: str
+
+class InfrastructureCrossingRow(BaseModel):
+    infrastructure: str
+    costPerCrossing: str
+    method: str
+    notes: str
+
+class RegionalFactorRow(BaseModel):
+    region: str
+    costPerKm: str
+    laborIndex: str
+    materialIndex: str
+    notes: str
+
+class PermittingRow(BaseModel):
+    item: str
+    costRange: str
+    timeline: str
+
+class IndirectCostRow(BaseModel):
+    item: str
+    cost: str
+    description: str
+
+class CostMatrixData(BaseModel):
+    materialCosts: List[MaterialCostRow] = []
+    laborRates: List[LaborRateRow] = []
+    equipmentRental: List[EquipmentRentalRow] = []
+    terrainMultipliers: List[TerrainMultiplierRow] = []
+    rowAcquisition: List[RowAcquisitionRow] = []
+    waterCrossings: List[WaterCrossingRow] = []
+    infrastructureCrossings: List[InfrastructureCrossingRow] = []
+    regionalFactors: List[RegionalFactorRow] = []
+    permitting: List[PermittingRow] = []
+    indirectCosts: List[IndirectCostRow] = []
+
+
+# --- Constraints Models ---
+class GeographicalExclusions(BaseModel):
+    protectedAreas: bool = True
+    urbanDensity: bool = True
+    indigenousLands: bool = True
+    waterBodies: bool = True
+    culturalHeritage: bool = False
+    militaryZones: bool = True
+    geohazards: bool = True
+
+class ConstructabilityLimits(BaseModel):
+    maxLongSlope: str = "30"
+    maxSideSlope: str = "15"
+    minBendRadius: str = "20"
+    maxBendAngle: str = "90"
+    minDepthOfCover: str = "1.2"
+    rowWidth: str = "30"
+    buoyancyControl: str = "1.1"
+    strainLimit: str = "0.5"
+
+class ConstraintsData(BaseModel):
+    geographicalExclusions: GeographicalExclusions
+    constructabilityLimits: ConstructabilityLimits
+
+
+# --- Main Request Model ---
+class PirlRequestData(BaseModel):
+    """Complete PIRL request configuration - matches frontend PirlFormData"""
+    objectives: ObjectivesData
+    hydraulics: HydraulicsData
+    costMatrix: CostMatrixData
+    constraints: ConstraintsData
 
 
 class RouteMetadata(BaseModel):
@@ -147,6 +322,221 @@ async def get_route(project: str, route_name: str):
         media_type="application/geo+json",
         filename=route_file.name
     )
+
+
+# ============================================================================
+# PIRL Request Saving Endpoint
+# ============================================================================
+
+def write_cost_matrix_csv(cost_matrix: CostMatrixData, csv_path: Path) -> None:
+    """
+    Write cost matrix data to a CSV file.
+
+    Creates a well-formatted CSV with all cost matrix tables from the PIRL configuration.
+    """
+    with open(csv_path, 'w', newline='', encoding='utf-8') as csvfile:
+        writer = csv.writer(csvfile)
+
+        # Write header section
+        writer.writerow(['PIRL Cost Matrix Configuration'])
+        writer.writerow(['Generated', datetime.now().isoformat()])
+        writer.writerow([])
+
+        # Material Costs
+        if cost_matrix.materialCosts:
+            writer.writerow(['=== MATERIAL COSTS (PIPE) ==='])
+            writer.writerow(['Diameter', 'Wall Thickness', 'Grade', 'Cost per Meter', 'Weight (kg/m)'])
+            for row in cost_matrix.materialCosts:
+                writer.writerow([row.diameter, row.wallThickness, row.grade, row.costPerMeter, row.weight])
+            writer.writerow([])
+
+        # Labor Rates
+        if cost_matrix.laborRates:
+            writer.writerow(['=== LABOR RATES (HOURLY) ==='])
+            writer.writerow(['Region', 'Welder', 'Equipment Operator', 'Laborer', 'Engineer'])
+            for row in cost_matrix.laborRates:
+                writer.writerow([row.region, row.welder, row.equipmentOperator, row.laborer, row.engineer])
+            writer.writerow([])
+
+        # Equipment Rental
+        if cost_matrix.equipmentRental:
+            writer.writerow(['=== EQUIPMENT RENTAL ==='])
+            writer.writerow(['Equipment', 'Capacity', 'Daily Rate', 'Monthly Rate'])
+            for row in cost_matrix.equipmentRental:
+                writer.writerow([row.equipment, row.capacity, row.dailyRate, row.monthlyRate])
+            writer.writerow([])
+
+        # Terrain Multipliers
+        if cost_matrix.terrainMultipliers:
+            writer.writerow(['=== TERRAIN MULTIPLIERS ==='])
+            writer.writerow(['Terrain Type', 'Cost Multiplier', 'Cost per km', 'Rationale'])
+            for row in cost_matrix.terrainMultipliers:
+                writer.writerow([row.terrainType, row.multiplier, row.costPerKm, row.rationale])
+            writer.writerow([])
+
+        # ROW Acquisition
+        if cost_matrix.rowAcquisition:
+            writer.writerow(['=== ROW ACQUISITION ==='])
+            writer.writerow(['Land Use', 'Permanent Easement ($/acre)', 'Temporary Easement', 'Total per km'])
+            for row in cost_matrix.rowAcquisition:
+                writer.writerow([row.landUse, row.permanentEasement, row.temporaryEasement, row.totalPerKm])
+            writer.writerow([])
+
+        # Water Crossings
+        if cost_matrix.waterCrossings:
+            writer.writerow(['=== WATER CROSSINGS ==='])
+            writer.writerow(['Type', 'Width', 'Open Cut ($/m)', 'HDD Cost ($/m)', 'HDD Multiplier'])
+            for row in cost_matrix.waterCrossings:
+                writer.writerow([row.type, row.width, row.openCut, row.hddCost, row.hddMultiplier])
+            writer.writerow([])
+
+        # Infrastructure Crossings
+        if cost_matrix.infrastructureCrossings:
+            writer.writerow(['=== INFRASTRUCTURE CROSSINGS ==='])
+            writer.writerow(['Infrastructure', 'Cost per Crossing', 'Method', 'Notes'])
+            for row in cost_matrix.infrastructureCrossings:
+                writer.writerow([row.infrastructure, row.costPerCrossing, row.method, row.notes])
+            writer.writerow([])
+
+        # Regional Factors
+        if cost_matrix.regionalFactors:
+            writer.writerow(['=== REGIONAL COST MULTIPLIERS ==='])
+            writer.writerow(['Region', 'Cost per km', 'Labor Index', 'Material Index', 'Notes'])
+            for row in cost_matrix.regionalFactors:
+                writer.writerow([row.region, row.costPerKm, row.laborIndex, row.materialIndex, row.notes])
+            writer.writerow([])
+
+        # Permitting
+        if cost_matrix.permitting:
+            writer.writerow(['=== PERMITTING & ENVIRONMENTAL ==='])
+            writer.writerow(['Item', 'Cost Range', 'Timeline/Notes'])
+            for row in cost_matrix.permitting:
+                writer.writerow([row.item, row.costRange, row.timeline])
+            writer.writerow([])
+
+        # Indirect Costs
+        if cost_matrix.indirectCosts:
+            writer.writerow(['=== INDIRECT COSTS & FACILITIES ==='])
+            writer.writerow(['Item', 'Cost', 'Description'])
+            for row in cost_matrix.indirectCosts:
+                writer.writerow([row.item, row.cost, row.description])
+
+
+@router.post("/pirl/{project}/requests")
+async def save_pirl_request(project: str, request_data: PirlRequestData):
+    """
+    Save a PIRL configuration request.
+
+    Creates:
+    - JSON file with complete configuration in docs/PIRL/requests/
+    - CSV file with cost matrix data in the same directory
+
+    Returns the paths to the created files.
+    """
+    project_path = PROJECTS_ROOT / project
+
+    if not project_path.exists():
+        raise HTTPException(status_code=404, detail=f"Project '{project}' not found")
+
+    # Create the requests directory structure
+    requests_dir = project_path / "docs" / "PIRL" / "requests"
+    requests_dir.mkdir(parents=True, exist_ok=True)
+
+    # Generate timestamp for unique filenames
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    # Define file paths
+    json_filename = f"pirl_request_{timestamp}.json"
+    csv_filename = f"cost_matrix_{timestamp}.csv"
+    json_path = requests_dir / json_filename
+    csv_path = requests_dir / csv_filename
+
+    try:
+        # Prepare the JSON data with metadata
+        json_data = {
+            "metadata": {
+                "created_at": datetime.now().isoformat(),
+                "project": project,
+                "version": "1.0",
+                "cost_matrix_file": csv_filename
+            },
+            "objectives": request_data.objectives.model_dump(),
+            "hydraulics": request_data.hydraulics.model_dump(),
+            "costMatrix": request_data.costMatrix.model_dump(),
+            "constraints": request_data.constraints.model_dump()
+        }
+
+        # Write JSON file
+        with open(json_path, 'w', encoding='utf-8') as f:
+            json.dump(json_data, f, indent=2)
+
+        # Write CSV file with cost matrix
+        write_cost_matrix_csv(request_data.costMatrix, csv_path)
+
+        print(f"[PIRL] Saved request configuration to {json_path}")
+        print(f"[PIRL] Saved cost matrix CSV to {csv_path}")
+
+        return JSONResponse(
+            status_code=201,
+            content={
+                "success": True,
+                "message": "PIRL request saved successfully",
+                "files": {
+                    "json": str(json_path),
+                    "csv": str(csv_path)
+                },
+                "request_id": timestamp
+            }
+        )
+
+    except Exception as e:
+        print(f"[PIRL] Error saving request: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to save PIRL request: {str(e)}"
+        )
+
+
+@router.get("/pirl/{project}/requests")
+async def list_pirl_requests(project: str):
+    """
+    List all saved PIRL requests for a project.
+
+    Returns metadata about each saved request.
+    """
+    project_path = PROJECTS_ROOT / project
+
+    if not project_path.exists():
+        raise HTTPException(status_code=404, detail=f"Project '{project}' not found")
+
+    requests_dir = project_path / "docs" / "PIRL" / "requests"
+
+    if not requests_dir.exists():
+        return []
+
+    requests = []
+
+    for json_file in requests_dir.glob("pirl_request_*.json"):
+        try:
+            with open(json_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+
+            requests.append({
+                "filename": json_file.name,
+                "created_at": data.get("metadata", {}).get("created_at"),
+                "cost_matrix_file": data.get("metadata", {}).get("cost_matrix_file"),
+                "primary_objective": data.get("objectives", {}).get("primary_objective")
+            })
+        except Exception as e:
+            print(f"Error reading {json_file}: {e}")
+            requests.append({"filename": json_file.name, "error": str(e)})
+
+    # Sort by filename (timestamp) descending
+    requests.sort(key=lambda x: x.get("filename", ""), reverse=True)
+
+    return requests
+
+
 
 
 

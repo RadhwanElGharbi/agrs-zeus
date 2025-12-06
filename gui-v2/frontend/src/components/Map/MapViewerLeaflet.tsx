@@ -23,6 +23,7 @@ export function MapViewer() {
         const L = (await import('leaflet')).default
         
         // Import Leaflet CSS
+        // @ts-ignore - CSS import
         await import('leaflet/dist/leaflet.css')
         
         // Fix Leaflet default icon paths

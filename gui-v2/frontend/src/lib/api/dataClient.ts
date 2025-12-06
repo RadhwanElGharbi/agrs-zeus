@@ -1,63 +1,23 @@
 /**
  * AGRS ZEUS GUI v2 - API Client
- * 
+ *
  * Provides typed API client for accessing backend data endpoints.
  */
 
-// API base resolver with retries across common host candidates.
-let RESOLVED_API_BASE: string | null = null
-let resolvePromise: Promise<string> | null = null
+import { API_BASE_URL } from '@/lib/api-client'
 
-const DEFAULT_PORT = 8000
-
-function candidateBases(): string[] {
-  const list: string[] = []
-  if (process.env.NEXT_PUBLIC_API_URL) list.push(process.env.NEXT_PUBLIC_API_URL)
-  if (typeof window !== 'undefined') {
-    const protocol = window.location?.protocol === 'https:' ? 'https:' : 'http:'
-    const host = window.location?.hostname || '127.0.0.1'
-    list.push(`${protocol}//${host}:${DEFAULT_PORT}/api`)
-  }
-  list.push(`http://127.0.0.1:${DEFAULT_PORT}/api`, `http://localhost:${DEFAULT_PORT}/api`)
-  return Array.from(new Set(list))
-}
-
-async function resolveApiBase(): Promise<string> {
-  if (RESOLVED_API_BASE) return RESOLVED_API_BASE
-  if (resolvePromise) return resolvePromise
-
-  resolvePromise = (async () => {
-    const candidates = candidateBases()
-    for (const base of candidates) {
-      try {
-        const controller = new AbortController()
-        const timer = setTimeout(() => controller.abort(), 2000)
-        const resp = await fetch(`${base}/health`, { signal: controller.signal })
-        clearTimeout(timer)
-        if (resp.ok) {
-          RESOLVED_API_BASE = base
-          return base
-        }
-      } catch {
-        // try next
-      }
-    }
-    // Fallback to first candidate if none reachable
-    RESOLVED_API_BASE = candidates[0]
-    return RESOLVED_API_BASE
-  })()
-
-  return resolvePromise
-}
-
+// Use the centralized API base URL from environment
 function getApiBaseSync(): string {
-  if (RESOLVED_API_BASE) return RESOLVED_API_BASE
-  const list = candidateBases()
-  return list[0]
+  return API_BASE_URL
 }
 
 async function getApiBaseAsync(): Promise<string> {
-  return resolveApiBase()
+  return API_BASE_URL
+}
+
+/** Returns the API base URL from environment configuration */
+export function getApiBase(): string {
+  return API_BASE_URL
 }
 
 // ============================================================================
@@ -81,6 +41,16 @@ export interface ProjectMetadata {
     file: string;
     area_km2: number;
     countries?: string[];  // Countries the AOI covers
+    start_point?: {
+      latitude: number;
+      longitude: number;
+      name?: string;
+    };
+    end_point?: {
+      latitude: number;
+      longitude: number;
+      name?: string;
+    };
   };
   measurement_system?: string;
   units?: Record<string, string>;
@@ -544,28 +514,16 @@ export function subscribeToDatasetJob(
   onUpdate: (job: DatasetFetchJob) => void,
   onError?: (error: Error) => void
 ): () => void {
-  if (typeof window !== 'undefined' && typeof EventSource !== 'undefined') {
-    const source = new EventSource(`${getApiBaseSync()}/dataset-jobs/${jobId}/stream`);
-    source.onmessage = (event) => {
-      try {
-        const payload = JSON.parse(event.data) as DatasetFetchJob;
-        onUpdate(payload);
-      } catch (err) {
-        onError?.(err instanceof Error ? err : new Error('Failed to parse dataset job update.'));
-      }
-    };
-    source.onerror = () => {
-      source.close();
-      onError?.(new Error('Dataset job stream disconnected.'));
-    };
-    return () => source.close();
-  }
-
   let stopped = false;
+  let lastJob: DatasetFetchJob | null = null;
+
+  // Polling function as fallback
   const poll = async () => {
+    if (stopped) return;
     try {
       const payload = await fetchDatasetJob(jobId);
       if (stopped) return;
+      lastJob = payload;
       onUpdate(payload);
       if (payload.status === 'succeeded' || payload.status === 'failed') {
         stopped = true;
@@ -573,14 +531,75 @@ export function subscribeToDatasetJob(
       }
     } catch (err) {
       if (stopped) return;
-      onError?.(err instanceof Error ? err : new Error('Failed to poll dataset job.'));
-      stopped = true;
-      return;
+      // Only report error if we haven't received any updates yet
+      if (!lastJob) {
+        onError?.(err instanceof Error ? err : new Error('Failed to poll dataset job.'));
+        stopped = true;
+        return;
+      }
+      // Otherwise, keep polling silently
+      console.warn('[DatasetJob] Poll failed, retrying...', err);
     }
     if (!stopped) {
-      setTimeout(poll, 2500);
+      setTimeout(poll, 2000);
     }
   };
+
+  // Try SSE first if available
+  if (typeof window !== 'undefined' && typeof EventSource !== 'undefined') {
+    const streamUrl = `${getApiBaseSync()}/dataset-jobs/${jobId}/stream`;
+    console.log('[DatasetJob] Connecting to SSE stream:', streamUrl);
+
+    const source = new EventSource(streamUrl);
+    let receivedFirstMessage = false;
+
+    source.onopen = () => {
+      console.log('[DatasetJob] SSE connection opened');
+    };
+
+    source.onmessage = (event) => {
+      try {
+        receivedFirstMessage = true;
+        const payload = JSON.parse(event.data) as DatasetFetchJob;
+        lastJob = payload;
+        onUpdate(payload);
+
+        // Close connection when job is complete
+        if (payload.status === 'succeeded' || payload.status === 'failed') {
+          console.log('[DatasetJob] Job complete, closing SSE');
+          source.close();
+          stopped = true;
+        }
+      } catch (err) {
+        console.error('[DatasetJob] Failed to parse SSE message:', err);
+        onError?.(err instanceof Error ? err : new Error('Failed to parse dataset job update.'));
+      }
+    };
+
+    source.onerror = (event) => {
+      console.warn('[DatasetJob] SSE error, falling back to polling:', event);
+      source.close();
+
+      // If we never received a message, fall back to polling
+      if (!receivedFirstMessage && !stopped) {
+        console.log('[DatasetJob] Falling back to polling mode');
+        poll();
+      } else if (!stopped && lastJob && lastJob.status !== 'succeeded' && lastJob.status !== 'failed') {
+        // SSE disconnected mid-stream, fall back to polling
+        console.log('[DatasetJob] SSE disconnected, continuing with polling');
+        poll();
+      } else if (!stopped) {
+        onError?.(new Error('Dataset job stream disconnected.'));
+      }
+    };
+
+    return () => {
+      stopped = true;
+      source.close();
+    };
+  }
+
+  // No SSE support, use polling
   poll();
   return () => {
     stopped = true;
@@ -642,6 +661,22 @@ export async function listPirlOutputs(projectName: string): Promise<PirlOutput[]
   const response = await fetch(`${base}/projects/${projectName}/pirl/outputs`);
   if (!response.ok) {
     throw new Error(`Failed to list PIRL outputs: ${response.statusText}`);
+  }
+  return response.json();
+}
+
+export interface PipelineSpecs {
+  product: string;
+  inner_diameter: number;
+  outer_diameter: number;
+  measurement_system: string;
+}
+
+export async function fetchPipelineSpecs(projectName: string): Promise<PipelineSpecs> {
+  const base = await getApiBaseAsync();
+  const response = await fetch(`${base}/projects/${projectName}/pipeline-specs`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch pipeline specs: ${response.statusText}`);
   }
   return response.json();
 }

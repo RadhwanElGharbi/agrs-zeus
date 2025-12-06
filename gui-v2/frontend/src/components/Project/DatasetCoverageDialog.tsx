@@ -19,6 +19,7 @@ import {
 } from 'lucide-react'
 
 import { useProject } from '@/lib/context/ProjectContext'
+import { useOnboarding } from '@/lib/context/OnboardingContext'
 import {
   DatasetCoverageEntry,
   DatasetCoverageResponse,
@@ -329,6 +330,7 @@ function scoreDatasetMatch(dataset: DatasetInfo, keywords: string[]): number {
 
 export function DatasetCoverageDialog({ open, onClose }: DatasetCoverageDialogProps) {
   const { currentProject, refreshProjectData } = useProject()
+  const { reportAction } = useOnboarding()
   const coverageCache = useRef<Record<string, DatasetCoverageResponse>>({})
 
   const [coverageState, setCoverageState] = useState<FetchState>('idle')
@@ -643,6 +645,8 @@ export function DatasetCoverageDialog({ open, onClose }: DatasetCoverageDialogPr
       .then((resp) => {
         setJobId(resp.job_id)
         setProgressDialogOpen(true)
+        // Report action for tour auto-advance
+        reportAction('click-fetch-datasets')
       })
       .catch((err) => {
         setJobBanner({ kind: 'error', message: err?.message || 'Failed to start dataset fetch.' })
@@ -698,6 +702,7 @@ export function DatasetCoverageDialog({ open, onClose }: DatasetCoverageDialogPr
           <button
               onClick={handleStartFetch}
               disabled={selectedCategories.size === 0 || readinessLoading || readinessState !== 'ready' || !!jobId || !currentProject}
+              data-tour="fetch-datasets-btn"
               className={cn(
                   "px-6 py-2 bg-primary text-black text-xs font-bold uppercase tracking-wider rounded-sm transition-all hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2",
                   !jobId && selectedCategories.size > 0 && "shadow-[0_0_15px_rgba(var(--primary),0.4)]"
@@ -725,7 +730,9 @@ export function DatasetCoverageDialog({ open, onClose }: DatasetCoverageDialogPr
           </div>
           
           <div className="fixed inset-0 z-[101] flex items-center justify-center p-4 pointer-events-none">
-            <div className={cn(
+            <div
+              data-tour="dataset-dialog"
+              className={cn(
               "relative z-10 w-[1000px] max-w-[95vw] max-h-[90vh] bg-[#0a0a0a]/95 border border-white/10 rounded-sm shadow-[0_0_50px_-10px_rgba(0,0,0,0.8)] flex flex-col pointer-events-auto overflow-hidden",
               isClosing ? "animate-fade-out" : "animate-fade-in"
             )}>

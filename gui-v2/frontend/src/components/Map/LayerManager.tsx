@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Layers, Eye, EyeOff, ArrowUp, ArrowDown, Info, Loader2, Table, ExternalLink, Paintbrush, Minimize2, Maximize2, Box, Terminal } from 'lucide-react'
+import { Layers, Eye, EyeOff, ArrowUp, ArrowDown, Info, Loader2, Table, Paintbrush, Minimize2, Box, Terminal } from 'lucide-react'
 import { ManagedLayer, VectorDetail, formatMetadata } from '@/lib/map-utils'
 import { cn } from '@/lib/utils'
 
@@ -13,6 +13,7 @@ interface LayerManagerProps {
   onToggleVisibility: (id: string) => void
   onOpacityChange: (id: string, value: number) => void
   onMoveLayer: (id: string, direction: 'up' | 'down') => void
+  onReorderLayers: (draggedId: string, targetId: string, position: 'above' | 'below') => void
   onOpenTable: (layerId: string) => void
   onOpenStyle: (layerId: string) => void
   onZoomToLayer: (layerId: string) => void
@@ -28,15 +29,64 @@ export function LayerManager({
   onToggleVisibility,
   onOpacityChange,
   onMoveLayer,
+  onReorderLayers,
   onOpenTable,
   onOpenStyle,
   onZoomToLayer
 }: LayerManagerProps) {
   const [isCollapsed, setIsCollapsed] = useState(false)
+  const [draggedId, setDraggedId] = useState<string | null>(null)
+  const [dropTarget, setDropTarget] = useState<{ id: string; position: 'above' | 'below' } | null>(null)
+
   const selectedLayer = layers.find(layer => layer.id === selectedLayerId)
   const selectedDetails = selectedLayer ? vectorDetails[selectedLayer.id] : null
   // Sort layers descending by order (Highest order = Top of list = Top of map)
   const orderedLayers = [...layers].sort((a, b) => b.order - a.order)
+
+  const handleDragStart = (e: React.DragEvent, id: string) => {
+    setDraggedId(id)
+    e.dataTransfer.effectAllowed = 'move'
+    // Ghost image
+    const ghost = document.createElement('div')
+    ghost.style.width = '200px'
+    ghost.style.height = '40px'
+    ghost.style.backgroundColor = '#333'
+    ghost.style.opacity = '0.8'
+    ghost.innerText = layers.find(l => l.id === id)?.name || 'Layer'
+    ghost.style.position = 'absolute'
+    ghost.style.top = '-1000px'
+    document.body.appendChild(ghost)
+    e.dataTransfer.setDragImage(ghost, 0, 0)
+    setTimeout(() => document.body.removeChild(ghost), 0)
+  }
+
+  const handleDragOver = (e: React.DragEvent, id: string) => {
+    e.preventDefault()
+    if (id === draggedId) {
+        setDropTarget(null)
+        return
+    }
+
+    const rect = e.currentTarget.getBoundingClientRect()
+    const midY = rect.top + rect.height / 2
+    const position = e.clientY < midY ? 'above' : 'below'
+    
+    setDropTarget({ id, position })
+  }
+
+  const handleDragLeave = () => {
+    // Optional: Clear drop target if leaving the container, but tricky with child elements.
+    // keeping simple for now.
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    if (draggedId && dropTarget) {
+        onReorderLayers(draggedId, dropTarget.id, dropTarget.position)
+    }
+    setDraggedId(null)
+    setDropTarget(null)
+  }
 
   if (isCollapsed) {
     return (
@@ -99,25 +149,44 @@ export function LayerManager({
         )}
 
         {/* Layer List */}
-        <div className="p-1 space-y-0.5 overflow-y-auto max-h-[320px] bg-black/20">
+        <div 
+            className="p-1 space-y-0.5 overflow-y-auto max-h-[320px] bg-black/20"
+            onMouseLeave={() => setDropTarget(null)}
+        >
           {orderedLayers.map((layer) => {
             const isSelected = selectedLayerId === layer.id
             const isError = layer.status === 'error'
+            const isDragged = draggedId === layer.id
             
             return (
             <div
               key={layer.id}
+              draggable
+              onDragStart={(e) => handleDragStart(e, layer.id)}
+              onDragOver={(e) => handleDragOver(e, layer.id)}
+              onDrop={handleDrop}
               title={layer.message || layer.name}
               className={cn(
-                "group relative flex items-center gap-2 p-1.5 border transition-all duration-200 cursor-pointer select-none overflow-hidden",
+                "group relative flex items-center gap-2 p-1.5 border transition-all duration-200 cursor-pointer select-none overflow-visible",
                 isSelected 
                     ? "bg-white/[0.08] border-primary/40 shadow-[inset_2px_0_0_rgba(var(--primary),1)]" 
                     : "bg-transparent border-transparent hover:bg-white/[0.04] hover:border-white/10",
-                isError && "bg-destructive/5 border-destructive/20"
+                isError && "bg-destructive/5 border-destructive/20",
+                isDragged && "opacity-50"
               )}
               onClick={() => onSelectLayer(layer.id)}
               onDoubleClick={() => onZoomToLayer(layer.id)}
             >
+              {/* Drop Indicators */}
+              {dropTarget?.id === layer.id && (
+                  <div 
+                    className={cn(
+                        "absolute left-0 right-0 h-0.5 bg-primary z-50 shadow-[0_0_8px_rgba(var(--primary),0.8)]",
+                        dropTarget.position === 'above' ? "top-0" : "bottom-0"
+                    )} 
+                  />
+              )}
+
               {/* Scan line overlay for selected item */}
               {isSelected && (
                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.02] to-transparent pointer-events-none" />

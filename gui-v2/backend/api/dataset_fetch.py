@@ -97,8 +97,24 @@ class DatasetDefinition:
     def _base_dir(self, ctx: "FetchContext") -> Path:
         return ctx.project_path / "data" / ("rasters" if self.dataset_type == "raster" else "vectors")
 
-    def raw_path(self, ctx: "FetchContext") -> Path:
-        return self._base_dir(ctx) / "raw" / self.raw_filename
+    def get_raw_filename(self, override: Optional[str] = None) -> str:
+        """Get raw filename, potentially modified based on override for DEM datasets."""
+        if self.key == "dem" and override:
+            # Dynamic filename based on DEM source
+            if _is_3dep_override(override):
+                return "dem_usgs_3dep_1m_raw.tif"
+            elif "tinitaly" in override.lower():
+                return "dem_tinitaly_10m_raw.tif"
+            elif "eea" in override.lower() or "cop10" in override.lower():
+                return "dem_copernicus_eea10_raw.tif"
+            elif "srtm" in override.lower():
+                return "dem_srtm_30m_raw.tif"
+            elif _is_copernicus_override(override):
+                return "dem_copernicus_30m_raw.tif"
+        return self.raw_filename
+
+    def raw_path(self, ctx: "FetchContext", override: Optional[str] = None) -> Path:
+        return self._base_dir(ctx) / "raw" / self.get_raw_filename(override)
 
     def processed_path(self, ctx: "FetchContext") -> Path:
         processed_name = f"{self.processed_basename}_epsg{ctx.target_epsg}_processed.{self.processed_extension}"
@@ -107,8 +123,8 @@ class DatasetDefinition:
     def symlink_path(self, ctx: "FetchContext") -> Path:
         return self._base_dir(ctx) / self.symlink_name
 
-    def raw_metadata_path(self, ctx: "FetchContext") -> Path:
-        raw = self.raw_path(ctx)
+    def raw_metadata_path(self, ctx: "FetchContext", override: Optional[str] = None) -> Path:
+        raw = self.raw_path(ctx, override)
         return raw.with_suffix(raw.suffix + ".json")
 
     def processed_metadata_path(self, ctx: "FetchContext") -> Path:
@@ -163,7 +179,7 @@ def _build_agent_prompt(defn: DatasetDefinition, ctx: FetchContext, override: Op
     metadata_blob = _load_project_metadata_blob(ctx)
     protocol_blob = _load_protocol_text()
     data_dir = ctx.project_path / "data"
-    raw_path = defn.raw_path(ctx)
+    raw_path = defn.raw_path(ctx, override)
     processed_path = defn.processed_path(ctx)
     override_text = override or "Use catalog default"
     schema_hint = json.dumps(
@@ -215,20 +231,73 @@ def _build_agent_prompt(defn: DatasetDefinition, ctx: FetchContext, override: Op
 
 
 def _extract_json_payload(text: str) -> Dict[str, Any]:
+    """Extract JSON payload from potentially markdown-wrapped response.
+
+    Enhanced to handle:
+    - JSON in ```json blocks
+    - JSON in ``` blocks (untyped)
+    - Raw JSON in response
+    - JSON with leading/trailing text
+    - Nested JSON objects
+    - Multiple JSON blocks (returns first valid one)
+    """
     candidate = text.strip()
-    if candidate.startswith("```"):
-        parts = candidate.split("```")
-        for part in parts:
-            part = part.strip()
-            if part.startswith("{") and part.endswith("}"):
-                candidate = part
-                break
-    if not candidate.startswith("{"):
-        start = candidate.find("{")
-        end = candidate.rfind("}")
-        if start != -1 and end != -1 and end > start:
-            candidate = candidate[start : end + 1]
-    return json.loads(candidate)
+
+    # First, try to extract from markdown code blocks
+    # Handle ```json ... ``` or ``` ... ``` blocks
+    code_block_patterns = [
+        r'```json\s*([\s\S]*?)\s*```',
+        r'```\s*([\s\S]*?)\s*```',
+    ]
+    for pattern in code_block_patterns:
+        matches = re.findall(pattern, candidate, re.IGNORECASE)
+        for match in matches:
+            match = match.strip()
+            if match.startswith("{") and match.endswith("}"):
+                try:
+                    return json.loads(match)
+                except json.JSONDecodeError:
+                    continue
+
+    # Try to find JSON object directly
+    if candidate.startswith("{"):
+        try:
+            return json.loads(candidate)
+        except json.JSONDecodeError:
+            pass
+
+    # Find the outermost balanced JSON object
+    start = candidate.find("{")
+    if start != -1:
+        # Count braces to find matching end
+        depth = 0
+        end = -1
+        for i, char in enumerate(candidate[start:], start):
+            if char == "{":
+                depth += 1
+            elif char == "}":
+                depth -= 1
+                if depth == 0:
+                    end = i
+                    break
+        if end != -1:
+            json_str = candidate[start:end + 1]
+            try:
+                return json.loads(json_str)
+            except json.JSONDecodeError:
+                pass
+
+    # Last resort: try finding last } and first {
+    start = candidate.find("{")
+    end = candidate.rfind("}")
+    if start != -1 and end != -1 and end > start:
+        json_str = candidate[start:end + 1]
+        try:
+            return json.loads(json_str)
+        except json.JSONDecodeError:
+            pass
+
+    raise json.JSONDecodeError("Could not extract valid JSON from response", candidate, 0)
 
 
 class AgentConversation:
@@ -601,22 +670,57 @@ class AgentConversation:
             """
         ).strip()
     
-    def _call_api(self) -> str:
-        """Make API call with full conversation history."""
+    def _call_api(self, use_extended_thinking: bool = False) -> str:
+        """Make API call with full conversation history.
+
+        Args:
+            use_extended_thinking: If True, use extended thinking for complex reasoning.
+                                   This is especially useful for initial planning and
+                                   error recovery scenarios.
+        """
         try:
-            message = self.client.messages.create(
-                model=AGENT_MODEL,
-                max_tokens=8192,
-                system=self.system_prompt,
-                messages=self.messages,
-            )
+            api_params = {
+                "model": AGENT_MODEL,
+                "max_tokens": 16384,  # Increased for complex responses
+                "system": self.system_prompt,
+                "messages": self.messages,
+            }
+
+            # Use extended thinking for complex dataset operations
+            # Extended thinking allows Claude to reason more thoroughly
+            if use_extended_thinking:
+                api_params["thinking"] = {
+                    "type": "enabled",
+                    "budget_tokens": 10000  # Allow up to 10k tokens for reasoning
+                }
+                # Extended thinking requires higher max_tokens
+                api_params["max_tokens"] = 32000
+
+            message = self.client.messages.create(**api_params)
         except Exception as exc:
+            # Handle API errors gracefully with retry hint
+            error_str = str(exc).lower()
+            if "rate" in error_str or "limit" in error_str:
+                raise RuntimeError(f"ZEUS AI rate limited. Please retry: {exc}") from exc
+            if "timeout" in error_str:
+                raise RuntimeError(f"ZEUS AI request timed out. Please retry: {exc}") from exc
             raise RuntimeError(f"ZEUS AI request failed: {exc}") from exc
-        
+
         content = ""
+        thinking_content = ""
+
         for block in message.content:
+            # Extract thinking content if present (for logging/debugging)
+            if hasattr(block, "thinking"):
+                thinking_content += block.thinking
             if hasattr(block, "text"):
                 content += block.text
+
+        # Log thinking if present (useful for debugging complex failures)
+        if thinking_content:
+            # Store thinking for potential debugging
+            self._last_thinking = thinking_content
+
         if not content:
             raise RuntimeError("ZEUS AI returned an empty response.")
         return content
@@ -630,55 +734,109 @@ class AgentConversation:
         self.messages.append({"role": "assistant", "content": content})
     
     def request_plan(self, defn: "DatasetDefinition", override: Optional[str]) -> Dict[str, Any]:
-        """Request initial plan for a dataset, with full context of previous operations."""
+        """Request initial plan for a dataset, with full context of previous operations.
+
+        Uses extended thinking for complex dataset types (DEM with specific sources,
+        high-resolution data, etc.) to improve reasoning quality.
+        """
         protocol_blob = _load_protocol_text()
         metadata_blob = _load_project_metadata_blob(self.ctx)
-        
+
         # Build context about previous datasets
         previous_context = ""
         if self.completed_datasets or self.failed_datasets:
             previous_context = f"""
-            
+
             PREVIOUS OPERATIONS IN THIS SESSION:
             - Successfully completed: {', '.join(self.completed_datasets) or 'None yet'}
             - Failed (need alternative approach): {', '.join(self.failed_datasets) or 'None'}
             - Total commands executed so far: {self.total_commands_executed}
             """
-        
+
+        # Build source-specific guidance for DEM with 1m/high-res requests
+        source_guidance = ""
+        if defn.key == "dem" and override and _is_3dep_override(override):
+            source_guidance = """
+
+            ═══════════════════════════════════════════════════════════════════════════════════════════
+            USGS 3DEP 1-METER LIDAR DEM - SPECIFIC INSTRUCTIONS
+            ═══════════════════════════════════════════════════════════════════════════════════════════
+
+            You are fetching HIGH-RESOLUTION 1-meter LiDAR DEM from USGS 3DEP. This is the highest
+            quality elevation data available for the United States.
+
+            STEP 1: Query TNM API to discover available tiles
+            ```bash
+            curl -sS "https://tnmaccess.nationalmap.gov/api/v1/products?datasets=Digital%20Elevation%20Model%20(DEM)%201%20meter&bbox=WEST,SOUTH,EAST,NORTH&outputFormat=JSON" > tnm_products.json
+            ```
+
+            STEP 2: Parse response and download tiles
+            - Each item in "items" array has a "downloadURL" field
+            - Download ALL tiles that intersect the AOI
+            - Files are typically large (50-500MB each)
+            - Use curl with timeouts: curl -sSfL --connect-timeout 60 --max-time 600
+
+            STEP 3: Mosaic and reproject
+            - 3DEP tiles are in various UTM projections (NAD83)
+            - Use gdalwarp with -te_srs EPSG:4326 to specify bbox CRS
+            - Mosaic multiple tiles in one gdalwarp call for efficiency
+
+            FALLBACK: If 3DEP 1m is not available for this area:
+            1. Check if 3DEP 10m is available (datasets=Digital%20Elevation%20Model%20(DEM)%2010%20meter)
+            2. Fall back to Copernicus GLO-30 (30m global coverage)
+            3. NEVER create placeholder/synthetic data
+
+            CRITICAL: The user specifically requested 1-meter resolution. Prioritize finding
+            3DEP 1m data. Only fall back to lower resolution if 1m is genuinely unavailable.
+            """
+
         prompt = dedent(
             f"""
             NEW TASK: Fetch and process {defn.label} ({defn.key})
-            
+
             Dataset details:
             - Type: {defn.dataset_type}
             - Preferred source/override: {override or "Use best available"}
-            - Raw output path: {defn.raw_path(self.ctx)}
+            - Raw output path: {defn.raw_path(self.ctx, override)}
             - Processed output path: {defn.processed_path(self.ctx)}
             - Fetch tool (if available): {defn.fetch_tool}
             {previous_context}
-            
+            {source_guidance}
+
             Project metadata:
             {metadata_blob}
-            
+
             Dataset Fetching Protocol (MUST follow):
             {protocol_blob}
-            
+
             REQUIREMENTS:
             1. Fetch raw data covering the entire AOI bbox: {self.ctx.bbox_string}
-            2. Save raw data to: {defn.raw_path(self.ctx)}
+            2. Save raw data to: {defn.raw_path(self.ctx, override)}
             3. Reproject to EPSG:{self.ctx.target_epsg} and clip to AOI using cutline: {self.ctx.cutline_path}
             4. Save processed data to: {defn.processed_path(self.ctx)}
             5. DO NOT create symlinks - the Layer Manager reads directly from /processed folders
             6. Validate outputs exist and are not empty
-            
+
             Provide your plan as JSON with "thinking", "steps", and "post_checks".
             """
         ).strip()
-        
+
         self.add_user_message(prompt)
-        response = self._call_api()
+
+        # Use extended thinking for complex dataset requests
+        # Extended thinking helps with:
+        # - Parsing complex API responses
+        # - Choosing between multiple data sources
+        # - Error recovery strategies
+        use_thinking = (
+            defn.key == "dem" and override and _is_3dep_override(override)
+        ) or (
+            len(self.failed_datasets) > 0  # Previous failures need careful reasoning
+        )
+
+        response = self._call_api(use_extended_thinking=use_thinking)
         self.add_assistant_message(response)
-        
+
         try:
             return _extract_json_payload(response)
         except json.JSONDecodeError as exc:
@@ -695,15 +853,23 @@ class AgentConversation:
         """
         Report the result of a command execution back to ZEUS AI.
         If the command failed and request_next_steps is True, ask for corrective action.
+
+        Uses extended thinking for failed commands to improve error diagnosis
+        and recovery strategy generation.
         """
         self.total_commands_executed += 1
-        
+
         status = "SUCCESS" if exit_code == 0 else f"FAILED (exit code {exit_code})"
-        
+
         # Truncate output if too long but keep important parts
-        if len(output) > 4000:
-            output = output[:1500] + "\n\n... [truncated] ...\n\n" + output[-1500:]
-        
+        # Preserve more context for errors as they're more important
+        max_output = 6000 if exit_code != 0 else 4000
+        if len(output) > max_output:
+            # For errors, keep more of the end (where error messages usually are)
+            head_size = 1500 if exit_code == 0 else 2000
+            tail_size = max_output - head_size - 50
+            output = output[:head_size] + "\n\n... [truncated] ...\n\n" + output[-tail_size:]
+
         result_message = dedent(
             f"""
             COMMAND RESULT:
@@ -716,38 +882,59 @@ class AgentConversation:
             ```
             """
         ).strip()
-        
+
         if exit_code == 0:
             if not request_next_steps:
                 # Just record the success, don't ask for more
                 self.add_user_message(result_message + "\n\nCommand succeeded. Continuing with next step.")
                 return None
-            
+
             self.add_user_message(result_message + "\n\nCommand succeeded. Continue with the next step if any remain, or confirm completion.")
         else:
             self.add_user_message(
                 result_message + dedent(
                     """
-                    
-                    The command failed. Analyze the error and provide corrective steps.
-                    Consider:
-                    - Is the tool/command available? Check with --help or which
-                    - Are the arguments correct?
-                    - Are there alternative approaches (direct download, different tool)?
-                    - Are there missing directories or permissions issues?
-                    
-                    You MUST find a way to complete this task. Respond with JSON containing
-                    "analysis" (your diagnosis) and "steps" (corrective commands).
+
+                    The command failed. Analyze the error THOROUGHLY and provide corrective steps.
+
+                    DIAGNOSTIC CHECKLIST:
+                    1. Is this a network/API error? (timeout, 404, rate limit)
+                       - Try alternative endpoints or add retries
+                    2. Is this a tool availability error?
+                       - Check with 'which <tool>' or '<tool> --help'
+                    3. Is this a data availability error?
+                       - The requested data might not exist for this region
+                       - Consider alternative data sources
+                    4. Is this a path/permissions error?
+                       - Ensure directories exist (mkdir -p)
+                       - Check file permissions
+                    5. Is this a format/parsing error?
+                       - Validate input data format
+                       - Check for corrupted downloads
+
+                    CRITICAL: You MUST provide a concrete fix. Do NOT give up.
+                    - If one API fails, try another
+                    - If one data source is unavailable, find an alternative
+                    - NEVER suggest creating placeholder/synthetic data
+
+                    Respond with JSON containing:
+                    - "analysis": Your detailed diagnosis of what went wrong
+                    - "steps": Array of corrective commands to fix the issue
+                    - "post_checks": Optional validation steps after the fix
                     """
                 )
             )
-        
+
         if not request_next_steps:
             return None
-        
-        response = self._call_api()
+
+        # Use extended thinking for error recovery - complex reasoning helps
+        # diagnose issues and find alternative approaches
+        use_thinking = exit_code != 0
+
+        response = self._call_api(use_extended_thinking=use_thinking)
         self.add_assistant_message(response)
-        
+
         try:
             return _extract_json_payload(response)
         except json.JSONDecodeError:
@@ -2219,9 +2406,39 @@ def _is_copernicus_override(text: str) -> bool:
 
 
 def _is_3dep_override(text: str) -> bool:
-    """Check if the override requests USGS 3DEP / 1m LiDAR DEM."""
-    normalized = (text or "").lower()
-    return any(kw in normalized for kw in ["3dep", "usgs", "1m", "1-meter", "lidar", "opentopo"])
+    """Check if the override requests USGS 3DEP / 1m LiDAR DEM.
+
+    Enhanced to catch more variations including:
+    - Direct mentions: 3dep, usgs, lidar, opentopo
+    - Resolution mentions: 1m, 1-meter, 1 meter, one meter, 1-m
+    - Quality mentions: high resolution, high-res, highest, best
+    - Combined: usgs 1m, 3dep lidar, etc.
+    """
+    normalized = (text or "").lower().strip()
+    if not normalized:
+        return False
+
+    # Direct source keywords
+    direct_keywords = ["3dep", "usgs dem", "usgs 3d", "lidar", "opentopo", "national map", "tnm"]
+    if any(kw in normalized for kw in direct_keywords):
+        return True
+
+    # Resolution-based detection (1 meter DEM)
+    resolution_patterns = [
+        "1m", "1-m", "1 m", "1meter", "1-meter", "1 meter",
+        "one meter", "onemeter", "1 metre", "1-metre",
+        "high res", "high-res", "highres", "highest res",
+        "best resolution", "best quality", "finest"
+    ]
+    if any(pattern in normalized for pattern in resolution_patterns):
+        return True
+
+    # Check for "1" followed by "m" or "meter" with possible spaces/hyphens
+    import re
+    if re.search(r'\b1\s*[-]?\s*m(?:eter|etre)?\b', normalized):
+        return True
+
+    return False
 
 
 def _resolve_profile_key(defn: DatasetDefinition, ctx: FetchContext, override_text: str) -> str:
@@ -2473,6 +2690,62 @@ JOB_REGISTRY: Dict[str, DatasetJobState] = {}
 PROJECT_ACTIVE_JOBS: Dict[str, str] = {}
 JOB_LOCK = threading.Lock()
 
+# Stage names matching frontend expectations
+STAGE_NAMES = [
+    "prefetch_scan",     # Initial scan/setup
+    "fetch",             # Data transfer
+    "zeus_ai",           # AI agent operations
+    "raw_metadata",      # Metadata extraction
+    "validation",        # Integrity check
+    "process",           # Geoprocessing
+    "processed_metadata", # Indexing
+    "layer_publish"      # Map publish
+]
+
+
+def _init_stages() -> Dict[str, Dict[str, Optional[str]]]:
+    """Initialize all stages to queued status."""
+    return {
+        stage: {
+            "status": "queued",
+            "message": None,
+            "started_at": None,
+            "completed_at": None,
+        }
+        for stage in STAGE_NAMES
+    }
+
+
+def _init_category_state() -> Dict[str, Any]:
+    """Create initial category state with stages."""
+    return {
+        "status": "queued",
+        "message": None,
+        "started_at": None,
+        "completed_at": None,
+        "stages": _init_stages(),
+    }
+
+
+def _update_stage(job: DatasetJobState, category: str, stage: str, status: str, message: Optional[str] = None) -> None:
+    """Update a specific stage's status within a category."""
+    with JOB_LOCK:
+        cat_state = job.category_states.get(category)
+        if not cat_state:
+            return
+        stages = cat_state.get("stages")
+        if not stages or stage not in stages:
+            return
+        stage_state = stages[stage]
+        stage_state["status"] = status
+        if message:
+            stage_state["message"] = message
+        if status == "running" and not stage_state.get("started_at"):
+            stage_state["started_at"] = _utc_iso()
+        if status in ("succeeded", "failed", "skipped"):
+            stage_state["completed_at"] = _utc_iso()
+        job.updated_at = _utc_now()
+
 
 def _log_to_job(job: DatasetJobState, ctx: FetchContext, message: str) -> None:
     timestamp = _utc_iso()
@@ -2494,13 +2767,23 @@ def _cancel_if_requested(job: DatasetJobState, ctx: FetchContext) -> bool:
         return False
 
     message = "Cancelled by user"
+    now_iso = _utc_iso()
     with JOB_LOCK:
         for category, state in job.category_states.items():
             status = state.get("status")
             if status in (None, "queued", "running"):
                 state["status"] = "cancelled"
                 state["message"] = message
-                state["completed_at"] = state.get("completed_at") or _utc_iso()
+                state["completed_at"] = state.get("completed_at") or now_iso
+                # Also cancel all stages that haven't completed
+                stages = state.get("stages")
+                if stages:
+                    for stage_name, stage_state in stages.items():
+                        s_status = stage_state.get("status")
+                        if s_status in (None, "queued", "running"):
+                            stage_state["status"] = "cancelled"
+                            stage_state["message"] = message
+                            stage_state["completed_at"] = stage_state.get("completed_at") or now_iso
         job.status = "failed"
         job.error = job.error or message
         job.current_category = None
@@ -3269,8 +3552,20 @@ def _enrich_pipelines(layer, existing_fields: set, job: DatasetJobState, ctx: Fe
 
 
 def _execute_dataset(defn: DatasetDefinition, ctx: FetchContext, job: DatasetJobState) -> None:
-    raw_path = defn.raw_path(ctx)
-    raw_meta = defn.raw_metadata_path(ctx)
+    category = defn.key
+
+    # ========== STAGE: prefetch_scan ==========
+    _update_stage(job, category, "prefetch_scan", "running", "Initializing dataset fetch")
+
+    # Get override first so we can determine correct raw filename
+    override = getattr(job, "overrides", {}).get(defn.key) if hasattr(job, "overrides") else None
+    override_text = (override or "").lower()
+    if override:
+        _log_to_job(job, ctx, f"Applying override '{override}' for {defn.label}")
+
+    # Now get paths with override for dynamic filename
+    raw_path = defn.raw_path(ctx, override)
+    raw_meta = defn.raw_metadata_path(ctx, override)
     raw_path.parent.mkdir(parents=True, exist_ok=True)
     if raw_path.exists():
         raw_path.unlink()
@@ -3281,23 +3576,25 @@ def _execute_dataset(defn: DatasetDefinition, ctx: FetchContext, job: DatasetJob
     if processed_path.exists():
         processed_path.unlink()
 
-    override = getattr(job, "overrides", {}).get(defn.key) if hasattr(job, "overrides") else None
-    override_text = (override or "").lower()
-    if override:
-        _log_to_job(job, ctx, f"Applying override '{override}' for {defn.label}")
+    _update_stage(job, category, "prefetch_scan", "succeeded", "Paths configured")
 
     fetch_info: Dict[str, object] = {}
     fetch_cmd: List[str] = []
     agent_commands: Optional[List[str]] = None
     agent_completed_successfully = False
-    
+
+    # ========== STAGE: zeus_ai ==========
     # Try ZEUS AI agent first - it will persist and retry on errors
     if AGENT_ENABLED:
+        _update_stage(job, category, "zeus_ai", "running", "ZEUS AI agent processing")
         try:
             agent_commands = _run_agent_for_dataset(defn, ctx, job, override)
             if agent_commands:
                 agent_completed_successfully = True
                 fetch_cmd = ["zeus_ai_agent"] + [cmd.strip() for cmd in agent_commands if cmd and cmd.strip()]
+                _update_stage(job, category, "zeus_ai", "succeeded", "Agent completed successfully")
+                # Mark fetch as succeeded since agent handled it
+                _update_stage(job, category, "fetch", "succeeded", "Data transferred via AI agent")
         except RuntimeError as agent_exc:
             # Agent exhausted retries or explicitly failed - check if we should fall back
             error_msg = str(agent_exc)
@@ -3308,6 +3605,7 @@ def _execute_dataset(defn: DatasetDefinition, ctx: FetchContext, job: DatasetJob
                     ctx,
                     f"ZEUS AI unavailable for {defn.label}; using native pipeline: {agent_exc}",
                 )
+                _update_stage(job, category, "zeus_ai", "skipped", "API unavailable, using native pipeline")
             else:
                 # Agent tried but exhausted retries - this is a hard failure, don't fall back
                 _log_to_job(
@@ -3315,83 +3613,122 @@ def _execute_dataset(defn: DatasetDefinition, ctx: FetchContext, job: DatasetJob
                     ctx,
                     f"ZEUS AI failed to complete {defn.label} after retries: {agent_exc}",
                 )
+                _update_stage(job, category, "zeus_ai", "failed", str(agent_exc))
                 raise RuntimeError(f"ZEUS AI could not complete {defn.label}: {agent_exc}")
+    else:
+        _update_stage(job, category, "zeus_ai", "skipped", "Agent disabled")
 
+    # ========== STAGE: fetch ==========
     # Only use native pipeline if agent is not available (not if it failed after trying)
     if not agent_completed_successfully and not agent_commands:
+        _update_stage(job, category, "fetch", "running", "Downloading data via native pipeline")
         _log_to_job(job, ctx, f"Using native pipeline for {defn.label}")
-        if defn.key in OSM_OVERPASS_FILTERS:
-            fetch_cmd, fetch_info = _osm_overpass_fetch(defn.key, ctx, raw_path, job)
-        elif defn.key == "dem" and _is_3dep_override(override_text):
-            # Use direct OpenTopography/TNM API fetch for 3DEP 1m requests
-            _log_to_job(job, ctx, "Using direct OpenTopography/TNM API for USGS 3DEP 1m DEM")
-            fetch_cmd, fetch_info = _opentopo_3dep_fetch(ctx, raw_path, job)
-        elif defn.key == "dem" and _is_copernicus_override(override_text):
-            # Use direct Copernicus fetch for Copernicus 30m
-            fetch_cmd, fetch_info = _copernicus_fetch(ctx, raw_path, job)
-        else:
-            # Use the command builder which handles TINITALY, EEA10, etc.
-            fetch_cmd = defn.command_builder(ctx, raw_path, raw_meta, override)
-            _log_to_job(job, ctx, f"Executing: {' '.join(fetch_cmd)}")
-            try:
-                _run_command(fetch_cmd, ctx.project_path, job, ctx, f"{defn.label} fetch")
-            except RuntimeError as exc:  # noqa: BLE001
-                if defn.key == "landcover":
-                    fallback_cmd = _landcover_fallback_command(ctx, raw_path)
-                    _log_to_job(job, ctx, "ESA WorldCover unavailable, falling back to Google Dynamic World.")
-                    _run_command(fallback_cmd, ctx.project_path, job, ctx, "Landcover fallback fetch")
-                    fetch_cmd = fallback_cmd
-                    fetch_info = {
-                        "landcover_dataset": "google_dynamic_world",
-                        "coverage_date": _utc_iso().split("T")[0],
-                    }
-                elif defn.key == "dem":
-                    # DEM fetch failed - try direct API as last resort
-                    _log_to_job(job, ctx, f"ZEUS CLI DEM fetch failed: {exc}")
-                    _log_to_job(job, ctx, "Attempting direct API fetch as fallback...")
-                    try:
-                        if _is_3dep_override(override_text) or ctx.iso3 == "USA":
-                            fetch_cmd, fetch_info = _opentopo_3dep_fetch(ctx, raw_path, job)
-                        else:
-                            fetch_cmd, fetch_info = _copernicus_fetch(ctx, raw_path, job)
-                    except RuntimeError as api_exc:
-                        _log_to_job(job, ctx, f"Direct API fetch also failed: {api_exc}")
-                        _log_to_job(job, ctx, f"Requested source: {override_text or 'auto'}")
-                        _log_to_job(job, ctx, "NOTE: No automatic fallback to lower resolution DEM - user must explicitly select alternate source.")
-                        raise RuntimeError(f"DEM fetch failed for '{override_text or 'auto'}': {exc}. Direct API also failed: {api_exc}")
-                else:
-                    raise
 
-        if not raw_path.exists() or raw_path.stat().st_size == 0:
-            raise RuntimeError("Raw dataset missing or empty after fetch")
+        try:
+            if defn.key in OSM_OVERPASS_FILTERS:
+                fetch_cmd, fetch_info = _osm_overpass_fetch(defn.key, ctx, raw_path, job)
+            elif defn.key == "dem" and _is_3dep_override(override_text):
+                # Use direct OpenTopography/TNM API fetch for 3DEP 1m requests
+                _log_to_job(job, ctx, "Using direct OpenTopography/TNM API for USGS 3DEP 1m DEM")
+                fetch_cmd, fetch_info = _opentopo_3dep_fetch(ctx, raw_path, job)
+            elif defn.key == "dem" and _is_copernicus_override(override_text):
+                # Use direct Copernicus fetch for Copernicus 30m
+                fetch_cmd, fetch_info = _copernicus_fetch(ctx, raw_path, job)
+            else:
+                # Use the command builder which handles TINITALY, EEA10, etc.
+                fetch_cmd = defn.command_builder(ctx, raw_path, raw_meta, override)
+                _log_to_job(job, ctx, f"Executing: {' '.join(fetch_cmd)}")
+                try:
+                    _run_command(fetch_cmd, ctx.project_path, job, ctx, f"{defn.label} fetch")
+                except RuntimeError as exc:  # noqa: BLE001
+                    if defn.key == "landcover":
+                        fallback_cmd = _landcover_fallback_command(ctx, raw_path)
+                        _log_to_job(job, ctx, "ESA WorldCover unavailable, falling back to Google Dynamic World.")
+                        _run_command(fallback_cmd, ctx.project_path, job, ctx, "Landcover fallback fetch")
+                        fetch_cmd = fallback_cmd
+                        fetch_info = {
+                            "landcover_dataset": "google_dynamic_world",
+                            "coverage_date": _utc_iso().split("T")[0],
+                        }
+                    elif defn.key == "dem":
+                        # DEM fetch failed - try direct API as last resort
+                        _log_to_job(job, ctx, f"ZEUS CLI DEM fetch failed: {exc}")
+                        _log_to_job(job, ctx, "Attempting direct API fetch as fallback...")
+                        try:
+                            if _is_3dep_override(override_text) or ctx.iso3 == "USA":
+                                fetch_cmd, fetch_info = _opentopo_3dep_fetch(ctx, raw_path, job)
+                            else:
+                                fetch_cmd, fetch_info = _copernicus_fetch(ctx, raw_path, job)
+                        except RuntimeError as api_exc:
+                            _log_to_job(job, ctx, f"Direct API fetch also failed: {api_exc}")
+                            _log_to_job(job, ctx, f"Requested source: {override_text or 'auto'}")
+                            _log_to_job(job, ctx, "NOTE: No automatic fallback to lower resolution DEM - user must explicitly select alternate source.")
+                            _update_stage(job, category, "fetch", "failed", f"DEM fetch failed: {api_exc}")
+                            raise RuntimeError(f"DEM fetch failed for '{override_text or 'auto'}': {exc}. Direct API also failed: {api_exc}")
+                    else:
+                        _update_stage(job, category, "fetch", "failed", str(exc))
+                        raise
 
-        if defn.dataset_type == "raster":
-            _process_raster(defn, ctx, raw_path, job)
-        else:
-            _process_vector(defn, ctx, raw_path, job)
+            if not raw_path.exists() or raw_path.stat().st_size == 0:
+                _update_stage(job, category, "fetch", "failed", "Raw dataset missing or empty")
+                raise RuntimeError("Raw dataset missing or empty after fetch")
+
+            _update_stage(job, category, "fetch", "succeeded", "Data downloaded successfully")
+
+            # ========== STAGE: process ==========
+            _update_stage(job, category, "process", "running", "Geoprocessing data")
+            if defn.dataset_type == "raster":
+                _process_raster(defn, ctx, raw_path, job)
+            else:
+                _process_vector(defn, ctx, raw_path, job)
+            _update_stage(job, category, "process", "succeeded", "Geoprocessing complete")
+
+        except RuntimeError:
+            raise
+        except Exception as e:
+            _update_stage(job, category, "fetch", "failed", str(e))
+            raise
+
+    # ========== STAGE: validation ==========
+    _update_stage(job, category, "validation", "running", "Validating raw data")
 
     # Verify raw file exists
     if not raw_path.exists() or raw_path.stat().st_size == 0:
+        _update_stage(job, category, "validation", "failed", "Raw dataset missing or empty")
         raise RuntimeError("Raw dataset missing or empty after fetch")
-    
+
     # If agent completed but processed file is missing/empty, run processing as fallback
     if not processed_path.exists() or processed_path.stat().st_size == 0:
         _log_to_job(job, ctx, f"Processed file missing after agent completion, running native processing for {defn.label}")
+        _update_stage(job, category, "process", "running", "Running native geoprocessing as fallback")
         if defn.dataset_type == "raster":
             _process_raster(defn, ctx, raw_path, job)
         else:
             _process_vector(defn, ctx, raw_path, job)
-    
+        _update_stage(job, category, "process", "succeeded", "Native geoprocessing complete")
+
     # Final validation
     if not processed_path.exists() or processed_path.stat().st_size == 0:
+        _update_stage(job, category, "validation", "failed", "Processed dataset missing or empty")
         raise RuntimeError("Processed dataset missing or empty after processing")
 
+    _update_stage(job, category, "validation", "succeeded", "Data integrity verified")
+
+    # ========== STAGE: raw_metadata ==========
+    _update_stage(job, category, "raw_metadata", "running", "Extracting raw metadata")
     metadata_context = _build_metadata_context(defn, ctx, override, fetch_info)
-
     _generate_raw_metadata(defn, ctx, raw_path, raw_meta, fetch_cmd, metadata_context)
+    _update_stage(job, category, "raw_metadata", "succeeded", "Raw metadata generated")
 
+    # ========== STAGE: processed_metadata ==========
+    _update_stage(job, category, "processed_metadata", "running", "Indexing processed data")
     _generate_processed_metadata(defn, ctx, raw_path, raw_meta, processed_path, metadata_context)
+    _update_stage(job, category, "processed_metadata", "succeeded", "Metadata indexed")
+
+    # ========== STAGE: layer_publish ==========
+    _update_stage(job, category, "layer_publish", "running", "Publishing to map layer")
     # NOTE: Symlinks are deprecated - the Layer Manager now reads directly from /processed folders
+    _update_stage(job, category, "layer_publish", "succeeded", "Layer available in map")
 
 
 def _execute_job(job: DatasetJobState) -> None:
@@ -3401,13 +3738,9 @@ def _execute_job(job: DatasetJobState) -> None:
         job.started_at = _utc_now()
         job.updated_at = job.started_at
         job.progress = 0.0
+        # Initialize category states with nested stages
         job.category_states = {
-            category: {
-                "status": "queued",
-                "message": None,
-                "started_at": None,
-                "completed_at": None,
-            }
+            category: _init_category_state()
             for category in job.categories
         }
 
@@ -3438,6 +3771,10 @@ def _execute_job(job: DatasetJobState) -> None:
                     state["status"] = "skipped"
                     state["message"] = "Already satisfied"
                     state["completed_at"] = _utc_iso()
+                    # Mark all stages as skipped
+                    for stage_name in STAGE_NAMES:
+                        state["stages"][stage_name]["status"] = "skipped"
+                        state["stages"][stage_name]["completed_at"] = _utc_iso()
                     job.progress = (index + 1) / total
                 _log_to_job(job, ctx, f"{defn.label} already processed — skipping fetch.")
                 continue
@@ -3573,6 +3910,23 @@ class DatasetFetchJobResponse(BaseModel):
     job_id: str
 
 
+class StageState(BaseModel):
+    """State of a single processing stage."""
+    status: str
+    message: Optional[str] = None
+    started_at: Optional[str] = None
+    completed_at: Optional[str] = None
+
+
+class CategoryState(BaseModel):
+    """State of a dataset category with its stages."""
+    status: str
+    message: Optional[str] = None
+    started_at: Optional[str] = None
+    completed_at: Optional[str] = None
+    stages: Dict[str, StageState]
+
+
 class DatasetJobResponse(BaseModel):
     id: str
     project: str
@@ -3582,7 +3936,7 @@ class DatasetJobResponse(BaseModel):
     started_at: Optional[datetime]
     updated_at: datetime
     completed_at: Optional[datetime]
-    categories: Dict[str, Dict[str, Optional[str]]]
+    categories: Dict[str, CategoryState]
     logs: List[str]
     force: bool
     error: Optional[str]
@@ -3685,7 +4039,16 @@ async def stream_dataset_job(job_id: str):
                 break
             await asyncio.sleep(1.0)
 
-    return StreamingResponse(event_generator(), media_type="text/event-stream")
+    # SSE requires specific headers to prevent buffering and enable real-time streaming
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "X-Accel-Buffering": "no",  # Disable nginx buffering
+            "Connection": "keep-alive",
+        }
+    )
 
 
 @router.delete("/dataset-jobs/{job_id}", status_code=202)
