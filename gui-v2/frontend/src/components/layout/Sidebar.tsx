@@ -183,10 +183,10 @@ export function Sidebar({ className, devMode = false, activeView, onViewChange }
               )}
 
               {/* Status Tag */}
-              {item.tag && !collapsed && (
+              {(item as { tag?: string }).tag && !collapsed && (
                  <div className="ml-auto pl-2">
                     <div className="px-1.5 py-0.5 rounded-sm bg-red-500/10 border border-red-500/30 shadow-[0_0_5px_rgba(239,68,68,0.4)] animate-pulse">
-                      <span className="text-[8px] font-bold font-mono text-red-500 uppercase tracking-wider whitespace-nowrap block transform scale-90">{item.tag}</span>
+                      <span className="text-[8px] font-bold font-mono text-red-500 uppercase tracking-wider whitespace-nowrap block transform scale-90">{(item as { tag?: string }).tag}</span>
                     </div>
                  </div>
               )}

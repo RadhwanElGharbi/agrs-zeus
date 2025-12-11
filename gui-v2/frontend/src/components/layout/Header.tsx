@@ -15,8 +15,8 @@ interface HeaderProps {
 export function Header({ devMode, onDevModeChange, activeView, onSupplierSearch }: HeaderProps) {
   const { user } = useAuth()
 
-  // Hide Dev Mode toggle for yc-demo users
-  const showDevMode = user?.username !== 'yc-demo'
+  // Show Dev Mode toggle only for admin role users
+  const showDevMode = user?.role === 'admin'
   return (
     <header className="relative h-14 border-b border-white/10 bg-[#0a0a0a]/95 backdrop-blur-xl px-6 flex items-center justify-between z-50 shadow-md">
        {/* Technical Background Grid */}

@@ -17,6 +17,9 @@ interface LayerManagerProps {
   onOpenTable: (layerId: string) => void
   onOpenStyle: (layerId: string) => void
   onZoomToLayer: (layerId: string) => void
+  // Optional external control for collapsed state
+  collapsed?: boolean
+  onCollapsedChange?: (collapsed: boolean) => void
 }
 
 export function LayerManager({
@@ -32,9 +35,20 @@ export function LayerManager({
   onReorderLayers,
   onOpenTable,
   onOpenStyle,
-  onZoomToLayer
+  onZoomToLayer,
+  collapsed: externalCollapsed,
+  onCollapsedChange
 }: LayerManagerProps) {
-  const [isCollapsed, setIsCollapsed] = useState(false)
+  const [internalCollapsed, setInternalCollapsed] = useState(false)
+
+  // Use external control if provided, otherwise use internal state
+  const isCollapsed = externalCollapsed !== undefined ? externalCollapsed : internalCollapsed
+  const setIsCollapsed = (value: boolean) => {
+    if (onCollapsedChange) {
+      onCollapsedChange(value)
+    }
+    setInternalCollapsed(value)
+  }
   const [draggedId, setDraggedId] = useState<string | null>(null)
   const [dropTarget, setDropTarget] = useState<{ id: string; position: 'above' | 'below' } | null>(null)
 
@@ -90,22 +104,20 @@ export function LayerManager({
 
   if (isCollapsed) {
     return (
-      <div className="absolute top-4 right-4 z-10 flex flex-col gap-3">
-        <div className="bg-black/80 backdrop-blur-md border border-white/20 rounded-sm p-2 shadow-[0_0_20px_-5px_rgba(0,0,0,0.5)] group hover:border-primary/50 transition-colors">
-          <button
-            onClick={() => setIsCollapsed(false)}
-            className="flex items-center justify-center p-1 hover:bg-white/10 rounded-sm transition-colors text-white/70 hover:text-primary"
-            title="Expand Layer Manager"
-          >
-            <Layers className="w-5 h-5 group-hover:animate-pulse" />
-          </button>
-        </div>
+      <div className="relative bg-black/80 backdrop-blur-md border border-white/20 rounded-sm p-2 shadow-[0_0_20px_-5px_rgba(0,0,0,0.5)] group hover:border-primary/50 transition-colors">
+        <button
+          onClick={() => setIsCollapsed(false)}
+          className="flex items-center justify-center p-1 hover:bg-white/10 rounded-sm transition-colors text-white/70 hover:text-primary"
+          title="Expand Layer Manager"
+        >
+          <Layers className="w-5 h-5 group-hover:animate-pulse" />
+        </button>
       </div>
     )
   }
 
   return (
-    <div className="absolute top-4 right-4 z-10 flex flex-col gap-3 w-[380px] max-h-[calc(100%-2rem)] overflow-hidden font-mono">
+    <div className="w-[380px] max-h-[50vh] overflow-hidden font-mono">
       {/* Main Layer List Panel */}
       <div className="bg-[#0a0a0a]/95 backdrop-blur-xl border border-white/10 rounded-sm shadow-[0_0_30px_-10px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden">
         

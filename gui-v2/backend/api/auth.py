@@ -23,12 +23,6 @@ router = APIRouter(tags=["auth"])
 
 # Demo users - in production, use a database
 DEMO_USERS = {
-    "yc-demo": {
-        "password_hash": None,  # Will be set from env or default
-        "name": "Y Combinator Demo",
-        "role": "demo",
-        "company": "Y Combinator"
-    },
     "spc-demo": {
         "password_hash": None,  # Will be set from env or default
         "name": "SAIPEM Demo",
@@ -38,6 +32,12 @@ DEMO_USERS = {
     "admin": {
         "password_hash": None,
         "name": "AGRS Admin",
+        "role": "admin",
+        "company": "AGRS Global"
+    },
+    "rad_admin": {
+        "password_hash": None,
+        "name": "RAD Admin",
         "role": "admin",
         "company": "AGRS Global"
     }
@@ -99,13 +99,13 @@ def _hash_password(password: str) -> str:
 
 def _init_users():
     """Initialize user passwords from environment or defaults."""
-    yc_password = os.getenv("YC_DEMO_PASSWORD", "agrs-yc-2025")
     spc_password = os.getenv("SPC_DEMO_PASSWORD", "spc-agrs-2025")
     admin_password = os.getenv("ADMIN_PASSWORD", "agrs-admin-2025")
+    rad_admin_password = os.getenv("RAD_ADMIN_PASSWORD", "agrs_global_rad_admin")
 
-    DEMO_USERS["yc-demo"]["password_hash"] = _hash_password(yc_password)
     DEMO_USERS["spc-demo"]["password_hash"] = _hash_password(spc_password)
     DEMO_USERS["admin"]["password_hash"] = _hash_password(admin_password)
+    DEMO_USERS["rad_admin"]["password_hash"] = _hash_password(rad_admin_password)
 
 
 def _generate_token() -> str:

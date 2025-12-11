@@ -27,7 +27,11 @@ class Settings:
 
     # Data Paths
     DATA_DIR: Path = BASE_DIR / "data"
-    ROUTES_DIR: Path = DATA_DIR / "routes"
+    # Routes are stored under the project's PIRL outputs folder
+    ROUTES_DIR: Path = Path(os.getenv(
+        "ROUTES_DIR",
+        "/opt/agrs/Projects/test_project2/PIRL/outputs"
+    ))
     LAYERS_DIR: Path = DATA_DIR / "layers"
     PROMPTS_DIR: Path = BASE_DIR / "prompts"
     CACHE_DIR: Path = BASE_DIR / ".cache"

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { LayerSpecification, Map as MapLibreMap, MapMouseEvent, MapOptions } from 'maplibre-gl'
-import { ZoomIn, ZoomOut, Maximize2, Loader2, RefreshCw, Layers, Mountain, Brain, Route } from 'lucide-react'
+import { Maximize2, Loader2, RefreshCw, Layers, Mountain, Brain } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useProject } from '@/lib/context/ProjectContext'
@@ -22,6 +22,7 @@ import {
   featureBounds
 } from '@/lib/map-utils'
 import { LayerManager } from './LayerManager'
+import { PIRLManager } from './PIRLManager'
 import { AttributeTable } from './AttributeTable'
 import { StyleEditor } from './StyleEditor'
 import { Compass } from './Compass'
@@ -93,6 +94,7 @@ export function MapViewer() {
   const [analysisError, setAnalysisError] = useState<string | null>(null)
   const [showAnalysisPanel, setShowAnalysisPanel] = useState(false)
   const [showRoutesDialog, setShowRoutesDialog] = useState(false)
+  const [loadedPirlRoutes, setLoadedPirlRoutes] = useState<{ routeId: string; visible: boolean; segmentCount: number }[]>([])
 
   const dockHeightRef = useRef(dockHeight)
   const dockContainerRef = useRef<HTMLDivElement | null>(null)
@@ -1312,8 +1314,6 @@ export function MapViewer() {
     applyLayerOrder(managedLayers)
   }, [applyLayerOrder, applyOpacityToMapLayer, applyVisibilityToMapLayer, managedLayers, mapReady])
 
-  const handleZoomIn = () => mapRef.current?.zoomIn()
-  const handleZoomOut = () => mapRef.current?.zoomOut()
   const handleResetView = () => {
     mapRef.current?.flyTo({
       center: [-80.5449, 43.4723],
@@ -1784,7 +1784,62 @@ export function MapViewer() {
       map.fitBounds(bounds as any, { padding: 60, duration: 800 })
     }
 
+    // Track in loaded PIRL routes
+    const segmentCount = geojson.features?.length || 0
+    setLoadedPirlRoutes(prev => {
+      // Don't add if already exists
+      if (prev.some(r => r.routeId === routeId)) return prev
+      return [...prev, { routeId, visible: true, segmentCount }]
+    })
+
     setToast({ message: `Route "${routeId}" loaded`, type: 'success' })
+  }, [])
+
+  // Toggle PIRL route visibility
+  const handleTogglePirlRouteVisibility = useCallback((routeId: string) => {
+    const map = mapRef.current
+    if (!map) return
+
+    setLoadedPirlRoutes(prev => prev.map(route => {
+      if (route.routeId !== routeId) return route
+
+      const newVisible = !route.visible
+      const sourceId = `agentic-route-${routeId}`
+      const lineLayerId = `${sourceId}-line`
+      const pointsLayerId = `${sourceId}-points`
+
+      if (map.getLayer(lineLayerId)) {
+        map.setLayoutProperty(lineLayerId, 'visibility', newVisible ? 'visible' : 'none')
+      }
+      if (map.getLayer(pointsLayerId)) {
+        map.setLayoutProperty(pointsLayerId, 'visibility', newVisible ? 'visible' : 'none')
+      }
+
+      return { ...route, visible: newVisible }
+    }))
+  }, [])
+
+  // Remove PIRL route from map
+  const handleRemovePirlRoute = useCallback((routeId: string) => {
+    const map = mapRef.current
+    if (!map) return
+
+    const sourceId = `agentic-route-${routeId}`
+    const lineLayerId = `${sourceId}-line`
+    const pointsLayerId = `${sourceId}-points`
+
+    if (map.getLayer(lineLayerId)) map.removeLayer(lineLayerId)
+    if (map.getLayer(pointsLayerId)) map.removeLayer(pointsLayerId)
+    if (map.getSource(sourceId)) map.removeSource(sourceId)
+
+    // Remove from tracking arrays
+    dynamicSourceIdsRef.current = dynamicSourceIdsRef.current.filter(id => id !== sourceId)
+    dynamicLayerIdsRef.current = dynamicLayerIdsRef.current.filter(id => id !== lineLayerId && id !== pointsLayerId)
+
+    // Remove from loaded routes state
+    setLoadedPirlRoutes(prev => prev.filter(r => r.routeId !== routeId))
+
+    setToast({ message: `Route "${routeId}" removed`, type: 'info' })
   }, [])
 
   // Register segment click handler
@@ -1996,20 +2051,14 @@ export function MapViewer() {
 
         {/* Control Module */}
         <div className="flex flex-col gap-1">
-           {[
-             { icon: ZoomIn, label: "ZOOM IN", onClick: handleZoomIn },
-             { icon: ZoomOut, label: "ZOOM OUT", onClick: handleZoomOut },
-             { icon: Maximize2, label: "RESET VIEW", onClick: handleResetView },
-           ].map((btn, i) => (
-             <button
-                key={i}
-                onClick={btn.onClick}
-                className="group w-[240px] flex items-center gap-3 px-4 py-2 bg-black/40 backdrop-blur-sm border border-white/5 hover:border-white/20 hover:bg-white/5 rounded-sm transition-all duration-200"
-             >
-                <btn.icon className="w-3 h-3 text-white/50 group-hover:text-primary transition-colors" />
-                <span className="text-[10px] font-mono text-white/70 group-hover:text-white tracking-widest uppercase">{btn.label}</span>
-             </button>
-           ))}
+           {/* Reset View Button */}
+           <button
+              onClick={handleResetView}
+              className="group w-[240px] flex items-center gap-3 px-4 py-2 bg-black/40 backdrop-blur-sm border border-white/5 hover:border-white/20 hover:bg-white/5 rounded-sm transition-all duration-200"
+           >
+              <Maximize2 className="w-3 h-3 text-white/50 group-hover:text-primary transition-colors" />
+              <span className="text-[10px] font-mono text-white/70 group-hover:text-white tracking-widest uppercase">RESET VIEW</span>
+           </button>
            
            {/* Terrain Toggle */}
            <button
@@ -2034,18 +2083,6 @@ export function MapViewer() {
               {terrainEnabled && (
                   <div className="ml-auto w-1.5 h-1.5 bg-primary rounded-full shadow-[0_0_5px_rgba(var(--primary),0.8)]" />
               )}
-           </button>
-
-           {/* Agentic Routes Button */}
-           <button
-             onClick={() => setShowRoutesDialog(true)}
-             className="group w-[240px] flex items-center gap-3 px-4 py-2 mt-1 backdrop-blur-sm border rounded-sm transition-all duration-200 bg-black/40 border-white/5 hover:border-purple-500/30 hover:bg-purple-900/20 text-white/70"
-             title="Load AI-analyzed routes onto the map"
-           >
-              <Route className="w-3 h-3 text-purple-400/70 group-hover:text-purple-400 transition-colors" />
-              <div className="flex flex-col items-start">
-                  <span className="text-[10px] font-mono tracking-widest uppercase group-hover:text-white">Agentic Routes</span>
-              </div>
            </button>
 
            {/* AI Analyze Button - shows when segment is selected */}
@@ -2079,21 +2116,33 @@ export function MapViewer() {
         </div>
       </div>
 
-      <LayerManager
-        layers={managedLayers}
-        selectedLayerId={selectedLayerId}
-        loadingMessage={loadingMessage}
-        currentProject={currentProject}
-        vectorDetails={vectorDetails}
-        onSelectLayer={setSelectedLayerId}
-        onToggleVisibility={handleToggleVisibility}
-        onOpacityChange={handleOpacityChange}
-        onMoveLayer={handleMoveLayer}
-        onReorderLayers={handleReorderLayers}
-        onOpenTable={handleOpenTable}
-        onOpenStyle={handleOpenStyle}
-        onZoomToLayer={handleZoomToLayer}
-      />
+      {/* Right Side Panel Container - Layer Manager + PIRL Manager */}
+      <div className="absolute top-4 right-4 z-10 flex flex-col gap-3 items-end">
+        <LayerManager
+          layers={managedLayers}
+          selectedLayerId={selectedLayerId}
+          loadingMessage={loadingMessage}
+          currentProject={currentProject}
+          vectorDetails={vectorDetails}
+          onSelectLayer={setSelectedLayerId}
+          onToggleVisibility={handleToggleVisibility}
+          onOpacityChange={handleOpacityChange}
+          onMoveLayer={handleMoveLayer}
+          onReorderLayers={handleReorderLayers}
+          onOpenTable={handleOpenTable}
+          onOpenStyle={handleOpenStyle}
+          onZoomToLayer={handleZoomToLayer}
+        />
+
+        {/* PIRL Manager */}
+        <PIRLManager
+          loadedRoutes={loadedPirlRoutes}
+          onLoadRoute={handleLoadAgenticRoute}
+          onToggleRouteVisibility={handleTogglePirlRouteVisibility}
+          onRemoveRoute={handleRemovePirlRoute}
+          onExpandDialog={() => setShowRoutesDialog(true)}
+        />
+      </div>
 
       {fullTableLayer && fullTableDetails && (
         <AttributeTable
