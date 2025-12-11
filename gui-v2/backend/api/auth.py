@@ -29,6 +29,12 @@ DEMO_USERS = {
         "role": "demo",
         "company": "Y Combinator"
     },
+    "spc-demo": {
+        "password_hash": None,  # Will be set from env or default
+        "name": "SAIPEM Demo",
+        "role": "demo",
+        "company": "SAIPEM"
+    },
     "admin": {
         "password_hash": None,
         "name": "AGRS Admin",
@@ -94,9 +100,11 @@ def _hash_password(password: str) -> str:
 def _init_users():
     """Initialize user passwords from environment or defaults."""
     yc_password = os.getenv("YC_DEMO_PASSWORD", "agrs-yc-2025")
+    spc_password = os.getenv("SPC_DEMO_PASSWORD", "spc-agrs-2025")
     admin_password = os.getenv("ADMIN_PASSWORD", "agrs-admin-2025")
 
     DEMO_USERS["yc-demo"]["password_hash"] = _hash_password(yc_password)
+    DEMO_USERS["spc-demo"]["password_hash"] = _hash_password(spc_password)
     DEMO_USERS["admin"]["password_hash"] = _hash_password(admin_password)
 
 
@@ -141,13 +149,63 @@ def _load_sessions():
             SESSIONS = {}
 
 
+def _get_real_client_ip(request: Request) -> str:
+    """
+    Extract the real client IP address from request headers.
+
+    Architecture: User → OVH VPS (nginx) → WireGuard → Local Machine
+
+    The nginx on VPS sets X-Real-IP and X-Forwarded-For to the visitor's real IP.
+    But request.client.host will be 10.0.0.1 (WireGuard tunnel IP).
+    We MUST use the forwarded headers to get the actual user IP.
+
+    Priority order:
+    1. CF-Connecting-IP (Cloudflare)
+    2. X-Real-IP (nginx - this is what OVH VPS sets)
+    3. X-Forwarded-For (first IP in chain = original client)
+    4. request.client.host (fallback - only for local dev)
+    """
+    # Cloudflare
+    cf_ip = request.headers.get("cf-connecting-ip")
+    if cf_ip:
+        return cf_ip.strip()
+
+    # nginx X-Real-IP - THIS IS THE KEY ONE for our VPS setup
+    real_ip = request.headers.get("x-real-ip")
+    if real_ip:
+        return real_ip.strip()
+
+    # X-Forwarded-For: client, proxy1, proxy2, ...
+    forwarded_for = request.headers.get("x-forwarded-for")
+    if forwarded_for:
+        # First IP is the original client
+        ips = [ip.strip() for ip in forwarded_for.split(",")]
+        if ips and ips[0]:
+            return ips[0]
+
+    # Fallback to direct connection IP (only for local development)
+    return request.client.host if request.client else "unknown"
+
+
 def _get_client_info(request: Request) -> Dict[str, Any]:
     """Extract client information from request."""
+    # Capture all forwarding headers for debugging
+    forwarding_headers = {
+        "cf_connecting_ip": request.headers.get("cf-connecting-ip"),
+        "x_real_ip": request.headers.get("x-real-ip"),
+        "x_forwarded_for": request.headers.get("x-forwarded-for"),
+        "true_client_ip": request.headers.get("true-client-ip"),  # Cloudflare Enterprise
+        "x_client_ip": request.headers.get("x-client-ip"),
+    }
+
     return {
-        "ip": request.client.host if request.client else "unknown",
+        "ip": _get_real_client_ip(request),
         "user_agent": request.headers.get("user-agent", "unknown"),
         "referer": request.headers.get("referer"),
         "origin": request.headers.get("origin"),
+        # Store all forwarding headers for debugging
+        "proxy_ip": request.client.host if request.client else None,
+        "forwarding_headers": {k: v for k, v in forwarding_headers.items() if v},
     }
 
 

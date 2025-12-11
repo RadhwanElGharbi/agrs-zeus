@@ -2,12 +2,28 @@
 API Routes for AGRS ZEUS GUI v2
 """
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from pydantic import BaseModel
 from typing import List, Dict, Any
 import datetime
 
 router = APIRouter()
+
+
+# Debug endpoint to check what headers the backend receives
+@router.get("/debug/headers")
+async def debug_headers(request: Request):
+    """Debug endpoint to see what headers are received by the backend."""
+    return {
+        "client_host": request.client.host if request.client else None,
+        "client_port": request.client.port if request.client else None,
+        "x_real_ip": request.headers.get("x-real-ip"),
+        "x_forwarded_for": request.headers.get("x-forwarded-for"),
+        "x_forwarded_proto": request.headers.get("x-forwarded-proto"),
+        "cf_connecting_ip": request.headers.get("cf-connecting-ip"),
+        "host_header": request.headers.get("host"),
+        "all_headers": dict(request.headers),
+    }
 
 # Response Models
 class HealthResponse(BaseModel):
@@ -54,6 +70,7 @@ async def get_config():
             "dataset_visualization"
         ]
     )
+
 
 
 

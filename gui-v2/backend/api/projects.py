@@ -1505,8 +1505,9 @@ async def create_project(
         feature_collection = _prepare_aoi_payload(aoi_file, drawn_geojson, temp_dir)
         area_km2 = _calculate_area_km2(feature_collection)
 
-        # Validate area limit
-        if area_km2 > MAX_AOI_AREA_KM2:
+        # Validate area limit only for drawn AOIs (not uploaded files)
+        # Uploaded files from real projects can be any size
+        if drawn_geojson and area_km2 > MAX_AOI_AREA_KM2:
             raise HTTPException(
                 status_code=400,
                 detail=f"AOI area ({area_km2:.1f} km²) exceeds the maximum allowed limit of {MAX_AOI_AREA_KM2} km². Please draw a smaller area."

@@ -696,7 +696,28 @@ class AgentConversation:
                 # Extended thinking requires higher max_tokens
                 api_params["max_tokens"] = 32000
 
-            message = self.client.messages.create(**api_params)
+            # Use streaming to avoid "Streaming is required for operations that may
+            # take longer than 10 minutes" error from the Anthropic API
+            content = ""
+            thinking_content = ""
+
+            with self.client.messages.stream(**api_params) as stream:
+                for event in stream:
+                    # Handle different event types from the streaming response
+                    if hasattr(event, 'type'):
+                        if event.type == 'content_block_delta':
+                            delta = event.delta
+                            if hasattr(delta, 'text'):
+                                content += delta.text
+                            elif hasattr(delta, 'thinking'):
+                                thinking_content += delta.thinking
+                        elif event.type == 'content_block_start':
+                            block = event.content_block
+                            if hasattr(block, 'text'):
+                                content += block.text
+                            elif hasattr(block, 'thinking'):
+                                thinking_content += block.thinking
+
         except Exception as exc:
             # Handle API errors gracefully with retry hint
             error_str = str(exc).lower()
@@ -705,16 +726,6 @@ class AgentConversation:
             if "timeout" in error_str:
                 raise RuntimeError(f"ZEUS AI request timed out. Please retry: {exc}") from exc
             raise RuntimeError(f"ZEUS AI request failed: {exc}") from exc
-
-        content = ""
-        thinking_content = ""
-
-        for block in message.content:
-            # Extract thinking content if present (for logging/debugging)
-            if hasattr(block, "thinking"):
-                thinking_content += block.thinking
-            if hasattr(block, "text"):
-                content += block.text
 
         # Log thinking if present (useful for debugging complex failures)
         if thinking_content:
@@ -2674,7 +2685,7 @@ class DatasetJobState:
     force: bool
     overrides: Dict[str, str] = field(default_factory=dict)
     cancel_requested: bool = False
-    status: Literal["pending", "running", "succeeded", "failed"] = "pending"
+    status: Literal["pending", "running", "succeeded", "failed", "partial"] = "pending"
     logs: List[str] = field(default_factory=list)
     created_at: datetime = field(default_factory=_utc_now)
     started_at: Optional[datetime] = None
@@ -3799,24 +3810,51 @@ def _execute_job(job: DatasetJobState) -> None:
                 state["status"] = "failed"
                 state["message"] = str(exc)
                 state["completed_at"] = _utc_iso()
-                job.status = "failed"
-                job.error = str(exc)
+                # Track failed datasets but DON'T stop the pipeline
+                if not hasattr(job, "failed_categories"):
+                    job.failed_categories = []
+                job.failed_categories.append(category)
                 job.progress = (index + 1) / total
                 job.updated_at = _utc_now()
-                job.completed_at = _utc_now()
             _log_to_job(job, ctx, f"{defn.label} failed: {exc}")
-            return
+            _log_to_job(job, ctx, f"Continuing with remaining datasets...")
+            # Continue to next dataset instead of stopping
+            continue
 
     if _cancel_if_requested(job, ctx):
         return
 
+    # Determine final job status based on category results
     with JOB_LOCK:
-        job.status = "succeeded"
+        failed_count = len(getattr(job, "failed_categories", []))
+        succeeded_count = sum(
+            1 for cat_state in job.category_states.values()
+            if cat_state.get("status") == "succeeded"
+        )
+        skipped_count = sum(
+            1 for cat_state in job.category_states.values()
+            if cat_state.get("status") == "skipped"
+        )
+
+        if failed_count == 0:
+            # All datasets succeeded or were skipped
+            job.status = "succeeded"
+            _log_to_job(job, ctx, "Dataset fetch pipeline completed successfully.")
+        elif succeeded_count > 0 or skipped_count > 0:
+            # Partial success - some datasets failed but others succeeded
+            job.status = "partial"
+            job.error = f"{failed_count} dataset(s) failed: {', '.join(getattr(job, 'failed_categories', []))}"
+            _log_to_job(job, ctx, f"Dataset fetch pipeline completed with partial success. {failed_count} failed, {succeeded_count} succeeded, {skipped_count} skipped.")
+        else:
+            # All datasets failed
+            job.status = "failed"
+            job.error = f"All datasets failed: {', '.join(getattr(job, 'failed_categories', []))}"
+            _log_to_job(job, ctx, f"Dataset fetch pipeline failed. All {failed_count} dataset(s) failed.")
+
         job.progress = 1.0
         job.current_category = None
         job.completed_at = _utc_now()
         job.updated_at = job.completed_at
-    _log_to_job(job, ctx, "Dataset fetch pipeline completed successfully.")
 
 
 def _job_thread(job_id: str) -> None:
@@ -3856,22 +3894,28 @@ def _start_job(project: str, categories: List[str], force: bool, overrides: Opti
     return job
 
 
-def _job_to_response(job: DatasetJobState) -> "DatasetJobResponse":
-    return DatasetJobResponse(
-        id=job.id,
-        project=job.project,
-        status=job.status,
-        progress=job.progress,
-        current_category=job.current_category,
-        started_at=job.started_at,
-        updated_at=job.updated_at,
-        completed_at=job.completed_at,
-        categories=job.category_states,
-        logs=job.logs,
-        force=job.force,
-        error=job.error,
-        overrides=job.overrides,
-    )
+def _job_to_response(job: DatasetJobState) -> Dict[str, Any]:
+    """Convert job state to a response dict.
+
+    Returns a plain dict instead of a Pydantic model to avoid validation
+    issues with deeply nested stage state dicts.
+    """
+    import copy
+    return {
+        "id": job.id,
+        "project": job.project,
+        "status": job.status,
+        "progress": job.progress,
+        "current_category": job.current_category,
+        "started_at": job.started_at.isoformat() if job.started_at else None,
+        "updated_at": job.updated_at.isoformat() if job.updated_at else None,
+        "completed_at": job.completed_at.isoformat() if job.completed_at else None,
+        "categories": copy.deepcopy(job.category_states),
+        "logs": list(job.logs),
+        "force": job.force,
+        "error": job.error,
+        "overrides": job.overrides,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -3930,13 +3974,13 @@ class CategoryState(BaseModel):
 class DatasetJobResponse(BaseModel):
     id: str
     project: str
-    status: Literal["pending", "running", "succeeded", "failed"]
+    status: Literal["pending", "running", "succeeded", "failed", "partial"]
     progress: float
     current_category: Optional[str]
     started_at: Optional[datetime]
     updated_at: datetime
     completed_at: Optional[datetime]
-    categories: Dict[str, CategoryState]
+    categories: Dict[str, Any]  # Raw dict to avoid Pydantic validation issues with nested dicts
     logs: List[str]
     force: bool
     error: Optional[str]
@@ -4007,8 +4051,9 @@ def trigger_dataset_fetch(project: str, request: DatasetFetchRequest) -> Dataset
     return DatasetFetchJobResponse(job_id=job.id)
 
 
-@router.get("/dataset-jobs/{job_id}", response_model=DatasetJobResponse)
-def get_dataset_job(job_id: str) -> DatasetJobResponse:
+@router.get("/dataset-jobs/{job_id}")
+def get_dataset_job(job_id: str) -> Dict[str, Any]:
+    """Get the current state of a dataset fetch job."""
     job = JOB_REGISTRY.get(job_id)
     if not job:
         raise HTTPException(status_code=404, detail=f"Job '{job_id}' not found.")
@@ -4019,6 +4064,7 @@ def get_dataset_job(job_id: str) -> DatasetJobResponse:
 
 @router.get("/dataset-jobs/{job_id}/stream")
 async def stream_dataset_job(job_id: str):
+    """Stream real-time updates for a dataset fetch job via SSE."""
     if job_id not in JOB_REGISTRY:
         raise HTTPException(status_code=404, detail=f"Job '{job_id}' not found.")
 
@@ -4030,12 +4076,13 @@ async def stream_dataset_job(job_id: str):
                 snapshot = _job_to_response(job) if job else None
             if not snapshot:
                 break
-            payload = snapshot.model_dump(mode="json")
-            serialized = json.dumps(payload)
+            # snapshot is now a plain dict, serialize directly
+            serialized = json.dumps(snapshot, default=str)
             if serialized != last_serialized:
                 yield f"data: {serialized}\n\n"
                 last_serialized = serialized
-            if snapshot.status in ("succeeded", "failed"):
+            # Check for terminal states including "partial"
+            if snapshot.get("status") in ("succeeded", "failed", "partial"):
                 break
             await asyncio.sleep(1.0)
 

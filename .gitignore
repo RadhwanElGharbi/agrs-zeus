@@ -85,3 +85,4 @@ python/pirl_venv/
 *.tif
 *.zip
 *.pkl
+gui-v2/backend/.tile_cache/

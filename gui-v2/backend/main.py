@@ -24,6 +24,9 @@ from api.projects import router as projects_router
 from api.pirl import router as pirl_router
 from api.data import router as data_router
 from api.dataset_fetch import router as dataset_router
+from api.suppliers import router as suppliers_router
+from api.auth import router as auth_router
+from api.analytics import router as analytics_router
 
 # Create FastAPI app
 app = FastAPI(
@@ -56,6 +59,9 @@ app.include_router(projects_router, prefix="/api")
 app.include_router(pirl_router, prefix="/api")
 app.include_router(data_router, prefix="/api")
 app.include_router(dataset_router, prefix="/api")
+app.include_router(suppliers_router, prefix="/api")
+app.include_router(auth_router, prefix="/api")
+app.include_router(analytics_router, prefix="/api")
 
 @app.get("/")
 async def root():
