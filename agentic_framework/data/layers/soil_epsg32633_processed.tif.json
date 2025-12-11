@@ -1,0 +1,22 @@
+{
+  "name": "soil_soilgrids_250m",
+  "type": "raster",
+  "source": "ISRIC SoilGrids v2.0 250m",
+  "provider": "ISRIC - World Soil Information",
+  "url": "https://soilgrids.org/",
+  "resolution_m": 250,
+  "crs": "EPSG:32633",
+  "bands": [
+    {"name": "clay", "units": "g/kg", "description": "Clay content (0-2 µm)"},
+    {"name": "sand", "units": "g/kg", "description": "Sand content (50-2000 µm)"},
+    {"name": "soc", "units": "g/kg", "description": "Soil organic carbon content"},
+    {"name": "bdod", "units": "kg/dm³", "description": "Bulk density"}
+  ],
+  "depth": "0-5cm",
+  "nodata_value": -32768,
+  "date_acquired": "2025-10-28",
+  "fetch_tool": "soilgrids_fetch",
+  "processing_steps": ["fetch_via_wcs", "reproject", "clip", "validate"],
+  "raw_source": "data/rasters/raw/soil_soilgrids_250m_raw.tif",
+  "validation_status": "passed"
+}

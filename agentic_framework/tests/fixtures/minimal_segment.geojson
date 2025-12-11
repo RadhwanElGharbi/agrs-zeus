@@ -1,0 +1,21 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "seg_minimal",
+      "properties": {
+        "id": "seg_minimal",
+        "terrain_class": "flat",
+        "land_use": "agricultural"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [12.4964, 41.9028],
+          [12.5164, 41.9128]
+        ]
+      }
+    }
+  ]
+}

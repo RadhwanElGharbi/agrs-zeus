@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { LayerSpecification, Map as MapLibreMap, MapMouseEvent, MapOptions } from 'maplibre-gl'
-import { ZoomIn, ZoomOut, Maximize2, Loader2, RefreshCw, Layers, Mountain } from 'lucide-react'
+import { ZoomIn, ZoomOut, Maximize2, Loader2, RefreshCw, Layers, Mountain, Brain, Route } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useProject } from '@/lib/context/ProjectContext'
@@ -25,6 +25,8 @@ import { LayerManager } from './LayerManager'
 import { AttributeTable } from './AttributeTable'
 import { StyleEditor } from './StyleEditor'
 import { Compass } from './Compass'
+import { ExplanationPanel, AgenticRoutesDialog } from '@/components/Analysis'
+import { analyzeSegments, getAssessmentMapColor, type ExplainResponse, type AssessmentLevel } from '@/lib/api/agenticClient'
 
 const BASEMAP_FALLBACK_DEFAULT_OPACITY = 0.75
 
@@ -82,6 +84,16 @@ export function MapViewer() {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; lat: number; lng: number } | null>(null)
   const [cursorElevation, setCursorElevation] = useState<CursorElevationState>({ value: null, status: 'idle' })
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' } | null>(null)
+
+  // Segment analysis state
+  const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>(null)
+  const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null)
+  const [analysisResult, setAnalysisResult] = useState<ExplainResponse | null>(null)
+  const [analysisLoading, setAnalysisLoading] = useState(false)
+  const [analysisError, setAnalysisError] = useState<string | null>(null)
+  const [showAnalysisPanel, setShowAnalysisPanel] = useState(false)
+  const [showRoutesDialog, setShowRoutesDialog] = useState(false)
+
   const dockHeightRef = useRef(dockHeight)
   const dockContainerRef = useRef<HTMLDivElement | null>(null)
   const highlightSourceId = useRef('selected-feature-source')
@@ -1517,7 +1529,7 @@ export function MapViewer() {
     }
   }, [])
 
-  const showFeatureHighlight = useCallback((feature: any) => {
+  const showFeatureHighlight = useCallback((feature: any, fitBounds: boolean = true) => {
     const map = mapRef.current
     if (!map || !feature) return
     ensureHighlightLayers()
@@ -1528,11 +1540,31 @@ export function MapViewer() {
         features: [feature]
       })
     }
-    const bounds = featureBounds(feature)
-    if (bounds) {
-      map.fitBounds(bounds as any, { padding: 60, duration: 350, maxZoom: Math.min(map.getMaxZoom(), 18) })
+    if (fitBounds) {
+      const bounds = featureBounds(feature)
+      if (bounds) {
+        map.fitBounds(bounds as any, { padding: 60, duration: 350, maxZoom: Math.min(map.getMaxZoom(), 18) })
+      }
     }
   }, [ensureHighlightLayers])
+
+  const updateHighlightColor = useCallback((assessment: AssessmentLevel) => {
+    const map = mapRef.current
+    if (!map) return
+    const color = getAssessmentMapColor(assessment)
+    // Update highlight layer colors based on assessment
+    if (map.getLayer(highlightLayerIds.current[0])) {
+      map.setPaintProperty(highlightLayerIds.current[0], 'fill-color', color)
+      map.setPaintProperty(highlightLayerIds.current[0], 'fill-opacity', 0.4)
+    }
+    if (map.getLayer(highlightLayerIds.current[1])) {
+      map.setPaintProperty(highlightLayerIds.current[1], 'line-color', color)
+      map.setPaintProperty(highlightLayerIds.current[1], 'line-width', 4)
+    }
+    if (map.getLayer(highlightLayerIds.current[2])) {
+      map.setPaintProperty(highlightLayerIds.current[2], 'circle-color', color)
+    }
+  }, [])
 
   const handleRowDoubleClick = useCallback(
     (feature: any) => {
@@ -1604,6 +1636,168 @@ export function MapViewer() {
       return prev
     })
   }, [])
+
+  // Segment analysis handlers
+  const handleSegmentClick = useCallback((e: MapMouseEvent) => {
+    const map = mapRef.current
+    if (!map) return
+
+    // Query rendered features at click point - look for route/segment layers
+    const features = map.queryRenderedFeatures(e.point)
+
+    // Find a feature that looks like a route segment (has segment_id or similar property)
+    const segmentFeature = features.find(f => {
+      const props = f.properties || {}
+      return props.segment_id || props.segmentId || props.SEGMENT_ID ||
+             props.route_id || props.routeId || props.ROUTE_ID ||
+             props.id // fallback to generic id
+    })
+
+    if (segmentFeature) {
+      const props = segmentFeature.properties || {}
+      const segmentId = props.segment_id || props.segmentId || props.SEGMENT_ID || props.id || String(segmentFeature.id)
+      const routeId = props.route_id || props.routeId || props.ROUTE_ID || currentProject || 'default'
+
+      // Toggle selection
+      if (selectedSegmentId === segmentId) {
+        setSelectedSegmentId(null)
+        setSelectedRouteId(null)
+        // Clear highlight
+        const source = map.getSource(highlightSourceId.current) as any
+        if (source?.setData) {
+          source.setData({ type: 'FeatureCollection', features: [] })
+        }
+      } else {
+        setSelectedSegmentId(segmentId)
+        setSelectedRouteId(routeId)
+        // Highlight the selected segment
+        showFeatureHighlight(segmentFeature)
+      }
+
+      // Clear previous analysis when selection changes
+      setAnalysisResult(null)
+      setAnalysisError(null)
+    }
+  }, [currentProject, selectedSegmentId, showFeatureHighlight])
+
+  const handleAnalyze = useCallback(async () => {
+    if (!selectedSegmentId || !selectedRouteId) return
+
+    setAnalysisLoading(true)
+    setAnalysisError(null)
+    setShowAnalysisPanel(true)
+
+    try {
+      const results = await analyzeSegments(selectedRouteId, [selectedSegmentId])
+      if (results.length > 0) {
+        setAnalysisResult(results[0])
+        // Update highlight color based on assessment
+        updateHighlightColor(results[0].overall_assessment)
+      } else {
+        setAnalysisError('No analysis results returned')
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Analysis failed'
+      setAnalysisError(message)
+    } finally {
+      setAnalysisLoading(false)
+    }
+  }, [selectedSegmentId, selectedRouteId, updateHighlightColor])
+
+  const resetHighlightColor = useCallback(() => {
+    const map = mapRef.current
+    if (!map) return
+    // Reset to default cyan highlight
+    if (map.getLayer(highlightLayerIds.current[0])) {
+      map.setPaintProperty(highlightLayerIds.current[0], 'fill-color', '#22d3ee')
+      map.setPaintProperty(highlightLayerIds.current[0], 'fill-opacity', 0.35)
+    }
+    if (map.getLayer(highlightLayerIds.current[1])) {
+      map.setPaintProperty(highlightLayerIds.current[1], 'line-color', '#06b6d4')
+      map.setPaintProperty(highlightLayerIds.current[1], 'line-width', 3)
+    }
+    if (map.getLayer(highlightLayerIds.current[2])) {
+      map.setPaintProperty(highlightLayerIds.current[2], 'circle-color', '#22d3ee')
+    }
+  }, [])
+
+  const handleCloseAnalysisPanel = useCallback(() => {
+    setShowAnalysisPanel(false)
+    setAnalysisResult(null)
+    setAnalysisError(null)
+    resetHighlightColor()
+  }, [resetHighlightColor])
+
+  // Load agentic route onto map
+  const handleLoadAgenticRoute = useCallback((routeId: string, geojson: GeoJSON.FeatureCollection) => {
+    const map = mapRef.current
+    if (!map) return
+
+    const sourceId = `agentic-route-${routeId}`
+    const lineLayerId = `${sourceId}-line`
+    const pointsLayerId = `${sourceId}-points`
+
+    // Remove existing if present
+    if (map.getLayer(lineLayerId)) map.removeLayer(lineLayerId)
+    if (map.getLayer(pointsLayerId)) map.removeLayer(pointsLayerId)
+    if (map.getSource(sourceId)) map.removeSource(sourceId)
+
+    // Add source
+    map.addSource(sourceId, {
+      type: 'geojson',
+      data: geojson as any
+    })
+
+    // Add line layer for segments
+    map.addLayer({
+      id: lineLayerId,
+      type: 'line',
+      source: sourceId,
+      paint: {
+        'line-color': '#a855f7',
+        'line-width': 4,
+        'line-opacity': 0.9
+      }
+    })
+
+    // Add circle layer for segment endpoints
+    map.addLayer({
+      id: pointsLayerId,
+      type: 'circle',
+      source: sourceId,
+      paint: {
+        'circle-radius': 3,
+        'circle-color': '#a855f7',
+        'circle-stroke-width': 1,
+        'circle-stroke-color': '#ffffff',
+        'circle-opacity': 0.8
+      }
+    })
+
+    // Track for cleanup
+    dynamicSourceIdsRef.current.push(sourceId)
+    dynamicLayerIdsRef.current.push(lineLayerId, pointsLayerId)
+
+    // Fit to route bounds
+    const bounds = getGeoJSONBounds(geojson)
+    if (bounds) {
+      map.fitBounds(bounds as any, { padding: 60, duration: 800 })
+    }
+
+    setToast({ message: `Route "${routeId}" loaded`, type: 'success' })
+  }, [])
+
+  // Register segment click handler
+  useEffect(() => {
+    if (!mapReady || !mapRef.current) return
+    const map = mapRef.current
+
+    map.on('click', handleSegmentClick)
+
+    return () => {
+      map.off('click', handleSegmentClick)
+    }
+  }, [mapReady, handleSegmentClick])
 
   useEffect(() => {
     dockHeightRef.current = dockHeight
@@ -1823,8 +2017,8 @@ export function MapViewer() {
              disabled={!demLayerName}
              className={cn(
                "group w-[240px] flex items-center gap-3 px-4 py-2 mt-1 backdrop-blur-sm border rounded-sm transition-all duration-200",
-               terrainEnabled 
-                 ? "bg-primary/10 border-primary/30 text-white" 
+               terrainEnabled
+                 ? "bg-primary/10 border-primary/30 text-white"
                  : "bg-black/40 border-white/5 hover:border-white/20 hover:bg-white/5 text-white/70",
                !demLayerName && "opacity-50 cursor-not-allowed"
              )}
@@ -1841,6 +2035,47 @@ export function MapViewer() {
                   <div className="ml-auto w-1.5 h-1.5 bg-primary rounded-full shadow-[0_0_5px_rgba(var(--primary),0.8)]" />
               )}
            </button>
+
+           {/* Agentic Routes Button */}
+           <button
+             onClick={() => setShowRoutesDialog(true)}
+             className="group w-[240px] flex items-center gap-3 px-4 py-2 mt-1 backdrop-blur-sm border rounded-sm transition-all duration-200 bg-black/40 border-white/5 hover:border-purple-500/30 hover:bg-purple-900/20 text-white/70"
+             title="Load AI-analyzed routes onto the map"
+           >
+              <Route className="w-3 h-3 text-purple-400/70 group-hover:text-purple-400 transition-colors" />
+              <div className="flex flex-col items-start">
+                  <span className="text-[10px] font-mono tracking-widest uppercase group-hover:text-white">Agentic Routes</span>
+              </div>
+           </button>
+
+           {/* AI Analyze Button - shows when segment is selected */}
+           {selectedSegmentId && (
+             <button
+               onClick={handleAnalyze}
+               disabled={analysisLoading}
+               className={cn(
+                 "group w-[240px] flex items-center gap-3 px-4 py-2 mt-2 backdrop-blur-sm border rounded-sm transition-all duration-200",
+                 "bg-purple-900/40 border-purple-500/30 hover:border-purple-400/50 hover:bg-purple-800/40 text-white",
+                 analysisLoading && "opacity-70 cursor-wait"
+               )}
+               title="Analyze selected segment with AI agents"
+             >
+               {analysisLoading ? (
+                 <Loader2 className="w-3 h-3 animate-spin text-purple-400" />
+               ) : (
+                 <Brain className="w-3 h-3 text-purple-400 group-hover:text-purple-300 transition-colors" />
+               )}
+               <div className="flex flex-col items-start flex-1">
+                 <span className="text-[10px] font-mono tracking-widest uppercase group-hover:text-white">
+                   {analysisLoading ? 'Analyzing...' : 'AI Analysis'}
+                 </span>
+                 <span className="text-[8px] font-mono text-white/50 truncate max-w-[150px]">
+                   Segment: {selectedSegmentId}
+                 </span>
+               </div>
+               <div className="w-1.5 h-1.5 bg-purple-400 rounded-full shadow-[0_0_5px_rgba(168,85,247,0.8)] animate-pulse" />
+             </button>
+           )}
         </div>
       </div>
 
@@ -1904,6 +2139,26 @@ export function MapViewer() {
           onCancel={() => setStyleLayerId(null)}
         />
       )}
+
+      {/* AI Analysis Panel */}
+      {showAnalysisPanel && (
+        <div className="absolute top-4 right-[320px] z-40 w-[400px] max-h-[calc(100vh-120px)] overflow-hidden">
+          <ExplanationPanel
+            result={analysisResult}
+            loading={analysisLoading}
+            error={analysisError}
+            onClose={handleCloseAnalysisPanel}
+            onRetry={handleAnalyze}
+          />
+        </div>
+      )}
+
+      {/* Agentic Routes Dialog */}
+      <AgenticRoutesDialog
+        open={showRoutesDialog}
+        onClose={() => setShowRoutesDialog(false)}
+        onLoadRoute={handleLoadAgenticRoute}
+      />
 
       <div className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 z-30">
         <div className="bg-black/80 backdrop-blur-md border border-white/10 px-6 py-2 rounded-full shadow-[0_0_20px_-5px_rgba(0,0,0,0.5)] flex items-center gap-6 relative overflow-hidden group">

@@ -1,0 +1,242 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "seg_001",
+      "properties": {
+        "id": "seg_001",
+        "length_m": 1500.0,
+        "start_elevation_m": 150.0,
+        "end_elevation_m": 152.0,
+        "avg_slope_degrees": 0.5,
+        "max_slope_degrees": 1.0,
+        "terrain_class": "flat",
+        "land_use": "agricultural",
+        "soil_type": "clay_loam",
+        "geological_zone": "sedimentary"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [12.4964, 41.9028],
+          [12.5064, 41.9078],
+          [12.5164, 41.9128]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "seg_002",
+      "properties": {
+        "id": "seg_002",
+        "length_m": 1200.0,
+        "start_elevation_m": 152.0,
+        "end_elevation_m": 175.0,
+        "avg_slope_degrees": 5.0,
+        "max_slope_degrees": 8.0,
+        "terrain_class": "rolling_hills",
+        "land_use": "agricultural",
+        "soil_type": "sandy_loam",
+        "geological_zone": "sedimentary"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [12.5164, 41.9128],
+          [12.5264, 41.9178]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "seg_003",
+      "properties": {
+        "id": "seg_003",
+        "length_m": 800.0,
+        "start_elevation_m": 175.0,
+        "end_elevation_m": 220.0,
+        "avg_slope_degrees": 12.0,
+        "max_slope_degrees": 18.0,
+        "terrain_class": "hilly",
+        "land_use": "forest",
+        "soil_type": "rocky",
+        "geological_zone": "igneous"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [12.5264, 41.9178],
+          [12.5324, 41.9208],
+          [12.5384, 41.9238]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "seg_004",
+      "properties": {
+        "id": "seg_004",
+        "length_m": 2000.0,
+        "start_elevation_m": 220.0,
+        "end_elevation_m": 215.0,
+        "avg_slope_degrees": 2.0,
+        "max_slope_degrees": 4.0,
+        "terrain_class": "rolling_hills",
+        "land_use": "agricultural",
+        "soil_type": "clay",
+        "geological_zone": "sedimentary",
+        "protected_area_distance_m": 100.0
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [12.5384, 41.9238],
+          [12.5584, 41.9338]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "seg_005",
+      "properties": {
+        "id": "seg_005",
+        "length_m": 500.0,
+        "start_elevation_m": 215.0,
+        "end_elevation_m": 210.0,
+        "avg_slope_degrees": 1.0,
+        "max_slope_degrees": 2.0,
+        "terrain_class": "flat",
+        "land_use": "wetland",
+        "soil_type": "peat",
+        "geological_zone": "alluvial",
+        "water_crossing": true,
+        "river_width_m": 25.0
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [12.5584, 41.9338],
+          [12.5634, 41.9368]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "seg_006",
+      "properties": {
+        "id": "seg_006",
+        "length_m": 1000.0,
+        "start_elevation_m": 210.0,
+        "end_elevation_m": 205.0,
+        "avg_slope_degrees": 0.5,
+        "max_slope_degrees": 1.5,
+        "terrain_class": "flat",
+        "land_use": "industrial",
+        "soil_type": "fill",
+        "geological_zone": "modified",
+        "road_crossing": true
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [12.5634, 41.9368],
+          [12.5734, 41.9418]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "seg_007",
+      "properties": {
+        "id": "seg_007",
+        "length_m": 1800.0,
+        "start_elevation_m": 205.0,
+        "end_elevation_m": 195.0,
+        "avg_slope_degrees": 1.5,
+        "max_slope_degrees": 3.0,
+        "terrain_class": "flat",
+        "land_use": "urban",
+        "soil_type": "mixed",
+        "geological_zone": "fill"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [12.5734, 41.9418],
+          [12.5934, 41.9518]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "seg_008",
+      "properties": {
+        "id": "seg_008",
+        "length_m": 600.0,
+        "start_elevation_m": 195.0,
+        "end_elevation_m": 190.0,
+        "avg_slope_degrees": 0.8,
+        "max_slope_degrees": 1.5,
+        "terrain_class": "flat",
+        "land_use": "wetland",
+        "soil_type": "peat",
+        "geological_zone": "alluvial"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [12.5934, 41.9518],
+          [12.5984, 41.9548]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "seg_009",
+      "properties": {
+        "id": "seg_009",
+        "length_m": 1100.0,
+        "start_elevation_m": 190.0,
+        "end_elevation_m": 250.0,
+        "avg_slope_degrees": 15.0,
+        "max_slope_degrees": 22.0,
+        "terrain_class": "mountainous",
+        "land_use": "forest",
+        "soil_type": "rocky",
+        "geological_zone": "igneous"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [12.5984, 41.9548],
+          [12.6084, 41.9598],
+          [12.6184, 41.9648]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "seg_010",
+      "properties": {
+        "id": "seg_010",
+        "length_m": 1400.0,
+        "start_elevation_m": 250.0,
+        "end_elevation_m": 252.0,
+        "avg_slope_degrees": 0.3,
+        "max_slope_degrees": 0.8,
+        "terrain_class": "flat",
+        "land_use": "agricultural",
+        "soil_type": "loam",
+        "geological_zone": "sedimentary"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [12.6184, 41.9648],
+          [12.6384, 41.9748]
+        ]
+      }
+    }
+  ]
+}

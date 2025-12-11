@@ -1,0 +1,43 @@
+{
+  "segment_id": "seg_flagged_001",
+  "overall_assessment": "caution",
+  "confidence": "medium",
+  "executive_summary": "This 1.1km segment requires attention due to multiple crossing requirements and wetland proximity. While terrain is manageable at 8% slope, the combination of highway crossing, stream crossing, and 200m buffer to wetland area creates permitting complexity. Construction is feasible with proper planning but requires early stakeholder engagement.",
+  "key_metrics": {
+    "length_km": 1.1,
+    "avg_slope": 8.0,
+    "terrain": "rolling_hills",
+    "land_use": "agricultural_transition",
+    "construction_method": "Trenching with HDD for highway and stream crossings",
+    "estimated_cost": "EUR 1,650,000 - EUR 2,090,000",
+    "crossing_count": 3
+  },
+  "specialist_summaries": {
+    "geotechnical": "Moderate 8% slope within acceptable limits; transition zone between agricultural and riparian areas; soil moisture management needed near stream corridor.",
+    "environmental": "Wetland area 200m from alignment; stream crossing with potential fish habitat; seasonal construction restrictions may apply; enhanced erosion control required.",
+    "engineering": "Highway crossing requires HDD (80m section); stream crossing requires HDD (40m section) with environmental timing windows; adequate access via existing roads.",
+    "cost": "Multiple crossings add significant cost: highway HDD EUR 280K, stream HDD EUR 160K, wetland mitigation measures EUR 80K; terrain baseline applies."
+  },
+  "saipem_compliance": {
+    "criteria_met": ["1", "2", "4", "5", "7"],
+    "criteria_violated": [],
+    "compliance_notes": "Crossings handled per SAIPEM trenchless requirements. Environmental buffer maintained but requires monitoring. Seasonal restrictions may impact schedule."
+  },
+  "flags": [
+    "HIGHWAY_CROSSING: Major highway requires HDD installation - permit coordination required",
+    "STREAM_CROSSING: Perennial stream crossing - environmental timing restrictions likely apply",
+    "WETLAND_PROXIMITY: Wetland buffer zone within 200m - enhanced erosion control and monitoring required",
+    "MULTIPLE_CROSSINGS: Three crossings in single segment increase construction complexity",
+    "SEASONAL_RESTRICTIONS: Fish spawning periods may restrict stream crossing work window",
+    "PERMIT_COMPLEXITY: Multiple jurisdictions involved (highway authority, environmental agency, local municipality)"
+  ],
+  "recommendations": [
+    "Initiate highway crossing permit application immediately - 4-6 month timeline typical",
+    "Commission aquatic habitat assessment for stream crossing timing windows",
+    "Develop detailed erosion and sediment control plan for wetland buffer",
+    "Coordinate with local municipality on construction traffic management",
+    "Consider winter construction for stream crossing if spawning restrictions apply",
+    "Establish baseline water quality monitoring before construction"
+  ],
+  "conflicts": []
+}

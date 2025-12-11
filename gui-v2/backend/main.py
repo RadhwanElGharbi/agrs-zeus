@@ -27,6 +27,7 @@ from api.dataset_fetch import router as dataset_router
 from api.suppliers import router as suppliers_router
 from api.auth import router as auth_router
 from api.analytics import router as analytics_router
+from api.agentic import router as agentic_router
 
 # Create FastAPI app
 app = FastAPI(
@@ -62,6 +63,7 @@ app.include_router(dataset_router, prefix="/api")
 app.include_router(suppliers_router, prefix="/api")
 app.include_router(auth_router, prefix="/api")
 app.include_router(analytics_router, prefix="/api")
+app.include_router(agentic_router, prefix="/api")
 
 @app.get("/")
 async def root():
