@@ -113,11 +113,13 @@ export async function isAgenticAvailable(): Promise<boolean> {
 /**
  * List all routes available in the agentic framework.
  *
+ * @param project - Optional project name. If provided, routes are loaded from project's PIRL/outputs/
  * @returns List of routes or empty array on error
  */
-export async function listAgenticRoutes(): Promise<AgenticRouteListItem[]> {
+export async function listAgenticRoutes(project?: string): Promise<AgenticRouteListItem[]> {
   try {
-    const response = await fetch(`${getApiBase()}/agentic/routes`)
+    const params = project ? `?project=${encodeURIComponent(project)}` : ''
+    const response = await fetch(`${getApiBase()}/agentic/routes${params}`)
     if (!response.ok) {
       console.error('Failed to list agentic routes:', response.statusText)
       return []
@@ -133,11 +135,13 @@ export async function listAgenticRoutes(): Promise<AgenticRouteListItem[]> {
  * Get details of a specific route.
  *
  * @param routeId - Route identifier
+ * @param project - Optional project name
  * @returns Route details or null on error
  */
-export async function getAgenticRoute(routeId: string): Promise<AgenticRouteDetail | null> {
+export async function getAgenticRoute(routeId: string, project?: string): Promise<AgenticRouteDetail | null> {
   try {
-    const response = await fetch(`${getApiBase()}/agentic/routes/${encodeURIComponent(routeId)}`)
+    const params = project ? `?project=${encodeURIComponent(project)}` : ''
+    const response = await fetch(`${getApiBase()}/agentic/routes/${encodeURIComponent(routeId)}${params}`)
     if (!response.ok) return null
     return await response.json()
   } catch (error) {
@@ -152,16 +156,19 @@ export async function getAgenticRoute(routeId: string): Promise<AgenticRouteDeta
  * @param routeId - Route identifier
  * @param limit - Optional max segments to return
  * @param offset - Number to skip for pagination
+ * @param project - Optional project name
  * @returns List of segments
  */
 export async function listAgenticSegments(
   routeId: string,
   limit?: number,
-  offset: number = 0
+  offset: number = 0,
+  project?: string
 ): Promise<AgenticSegmentListItem[]> {
   try {
     const params = new URLSearchParams({ offset: String(offset) })
     if (limit !== undefined) params.set('limit', String(limit))
+    if (project) params.set('project', project)
 
     const response = await fetch(
       `${getApiBase()}/agentic/routes/${encodeURIComponent(routeId)}/segments?${params}`
@@ -241,12 +248,14 @@ export async function analyzeSegment(
  * Get route geometry as GeoJSON.
  *
  * @param routeId - Route identifier
+ * @param project - Optional project name
  * @returns GeoJSON object or null on error
  */
-export async function getAgenticRouteGeometry(routeId: string): Promise<GeoJSON.Feature | GeoJSON.FeatureCollection | null> {
+export async function getAgenticRouteGeometry(routeId: string, project?: string): Promise<GeoJSON.Feature | GeoJSON.FeatureCollection | null> {
   try {
+    const params = project ? `?project=${encodeURIComponent(project)}` : ''
     const response = await fetch(
-      `${getApiBase()}/agentic/routes/${encodeURIComponent(routeId)}/geometry`
+      `${getApiBase()}/agentic/routes/${encodeURIComponent(routeId)}/geometry${params}`
     )
     if (!response.ok) return null
     return await response.json()
@@ -263,12 +272,14 @@ export async function getAgenticRouteGeometry(routeId: string): Promise<GeoJSON.
  * route_id, and metrics in properties - ready for map display.
  *
  * @param routeId - Route identifier
+ * @param project - Optional project name
  * @returns GeoJSON FeatureCollection or null on error
  */
-export async function getAgenticSegmentsGeometry(routeId: string): Promise<GeoJSON.FeatureCollection | null> {
+export async function getAgenticSegmentsGeometry(routeId: string, project?: string): Promise<GeoJSON.FeatureCollection | null> {
   try {
+    const params = project ? `?project=${encodeURIComponent(project)}` : ''
     const response = await fetch(
-      `${getApiBase()}/agentic/routes/${encodeURIComponent(routeId)}/segments/geometry`
+      `${getApiBase()}/agentic/routes/${encodeURIComponent(routeId)}/segments/geometry${params}`
     )
     if (!response.ok) return null
     return await response.json()

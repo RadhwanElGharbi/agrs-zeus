@@ -73,17 +73,18 @@ def transform_coords_to_wgs84(
         return coords
 
 
-def get_segment_feature(route_id: str, segment_id: str) -> Optional[Dict[str, Any]]:
+def get_segment_feature(route_id: str, segment_id: str, project: Optional[str] = None) -> Optional[Dict[str, Any]]:
     """Get a specific segment feature from a route by segment ID.
 
     Args:
         route_id: The route identifier
         segment_id: The segment identifier to find (can be string or will match integer)
+        project: Optional project name for project-specific routes
 
     Returns:
         The segment feature dict if found, None otherwise
     """
-    route_data = load_route(route_id)
+    route_data = load_route(route_id, project)
 
     features = route_data.get("features", [])
     for feature in features:
@@ -274,7 +275,7 @@ def classify_terrain_from_slope(slope_degrees: float) -> str:
         return "mountainous"
 
 
-def extract_segment_data(route_id: str, segment_id: str) -> Optional[SegmentData]:
+def extract_segment_data(route_id: str, segment_id: str, project: Optional[str] = None) -> Optional[SegmentData]:
     """Extract complete segment data from a route.
 
     Loads the route, finds the segment, extracts coordinates and properties,
@@ -285,12 +286,13 @@ def extract_segment_data(route_id: str, segment_id: str) -> Optional[SegmentData
     Args:
         route_id: The route identifier
         segment_id: The segment identifier
+        project: Optional project name for project-specific routes
 
     Returns:
         SegmentData model instance if segment found, None otherwise
     """
-    route_data = load_route(route_id)
-    feature = get_segment_feature(route_id, segment_id)
+    route_data = load_route(route_id, project)
+    feature = get_segment_feature(route_id, segment_id, project)
 
     if feature is None:
         return None
@@ -405,16 +407,17 @@ def extract_segment_data(route_id: str, segment_id: str) -> Optional[SegmentData
         return None
 
 
-def get_all_segment_ids(route_id: str) -> List[str]:
+def get_all_segment_ids(route_id: str, project: Optional[str] = None) -> List[str]:
     """Get all segment IDs from a route.
 
     Args:
         route_id: The route identifier
+        project: Optional project name for project-specific routes
 
     Returns:
         List of segment IDs (as strings)
     """
-    route_data = load_route(route_id)
+    route_data = load_route(route_id, project)
     features = route_data.get("features", [])
 
     segment_ids = []
@@ -438,16 +441,17 @@ def get_all_segment_ids(route_id: str) -> List[str]:
     return segment_ids
 
 
-def get_route_metadata(route_id: str) -> Dict[str, Any]:
+def get_route_metadata(route_id: str, project: Optional[str] = None) -> Dict[str, Any]:
     """Get route-level metadata.
 
     Args:
         route_id: The route identifier
+        project: Optional project name for project-specific routes
 
     Returns:
         Metadata dictionary
     """
-    route_data = load_route(route_id)
+    route_data = load_route(route_id, project)
     metadata = route_data.get("metadata", {})
 
     # Also extract from first feature if it's full_route
@@ -464,16 +468,17 @@ def get_route_metadata(route_id: str) -> Dict[str, Any]:
     return metadata
 
 
-def get_full_route_geometry(route_id: str) -> Optional[List[Tuple[float, float]]]:
+def get_full_route_geometry(route_id: str, project: Optional[str] = None) -> Optional[List[Tuple[float, float]]]:
     """Get the full route geometry as a list of coordinates.
 
     Args:
         route_id: The route identifier
+        project: Optional project name for project-specific routes
 
     Returns:
         List of coordinates for the full route, or None
     """
-    route_data = load_route(route_id)
+    route_data = load_route(route_id, project)
     features = route_data.get("features", [])
 
     if not features:

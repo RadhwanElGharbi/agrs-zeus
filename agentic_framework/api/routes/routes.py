@@ -48,19 +48,23 @@ class SegmentListItem(BaseModel):
 
 
 @router.get("/routes", response_model=List[RouteListItem])
-async def list_routes() -> List[RouteListItem]:
+async def list_routes(project: Optional[str] = None) -> List[RouteListItem]:
     """List all available routes.
+
+    Args:
+        project: Optional project name. If provided, routes are loaded from
+                 /opt/agrs/Projects/{project}/PIRL/outputs/
 
     Returns:
         List of route IDs with optional segment counts
     """
-    route_ids = get_route_ids()
-    logger.info(f"Listing {len(route_ids)} routes")
+    route_ids = get_route_ids(project)
+    logger.info(f"Listing {len(route_ids)} routes for project={project}")
 
     results = []
     for route_id in route_ids:
         try:
-            segment_ids = get_all_segment_ids(route_id)
+            segment_ids = get_all_segment_ids(route_id, project)
             results.append(RouteListItem(
                 route_id=route_id,
                 segment_count=len(segment_ids)
@@ -73,11 +77,12 @@ async def list_routes() -> List[RouteListItem]:
 
 
 @router.get("/routes/{route_id}", response_model=RouteDetail)
-async def get_route_detail(route_id: str) -> RouteDetail:
+async def get_route_detail(route_id: str, project: Optional[str] = None) -> RouteDetail:
     """Get detailed information about a route.
 
     Args:
         route_id: Route identifier
+        project: Optional project name for project-specific routes
 
     Returns:
         RouteDetail with segment count, metadata, and bounds
@@ -86,7 +91,7 @@ async def get_route_detail(route_id: str) -> RouteDetail:
         HTTPException: 404 if route not found
     """
     try:
-        load_route(route_id)  # Validate route exists
+        load_route(route_id, project)  # Validate route exists
     except RouteNotFoundError:
         raise HTTPException(
             status_code=404,
@@ -94,15 +99,15 @@ async def get_route_detail(route_id: str) -> RouteDetail:
         )
 
     # Get segment IDs
-    segment_ids = get_all_segment_ids(route_id)
+    segment_ids = get_all_segment_ids(route_id, project)
 
     # Get route metadata
-    metadata = get_route_metadata(route_id)
+    metadata = get_route_metadata(route_id, project)
 
     # Calculate bounds from geometry
     bounds = None
     try:
-        geometry = get_full_route_geometry(route_id)
+        geometry = get_full_route_geometry(route_id, project)
         if geometry:
             x_coords = [p[0] for p in geometry]
             y_coords = [p[1] for p in geometry]
@@ -127,7 +132,8 @@ async def get_route_detail(route_id: str) -> RouteDetail:
 async def list_route_segments(
     route_id: str,
     limit: Optional[int] = None,
-    offset: int = 0
+    offset: int = 0,
+    project: Optional[str] = None
 ) -> List[SegmentListItem]:
     """List segments in a route with basic info.
 
@@ -135,6 +141,7 @@ async def list_route_segments(
         route_id: Route identifier
         limit: Maximum number of segments to return
         offset: Number of segments to skip
+        project: Optional project name for project-specific routes
 
     Returns:
         List of segment IDs with basic information
@@ -143,7 +150,7 @@ async def list_route_segments(
         HTTPException: 404 if route not found
     """
     try:
-        load_route(route_id)
+        load_route(route_id, project)
     except RouteNotFoundError:
         raise HTTPException(
             status_code=404,
@@ -151,7 +158,7 @@ async def list_route_segments(
         )
 
     # Get all segment IDs
-    segment_ids = get_all_segment_ids(route_id)
+    segment_ids = get_all_segment_ids(route_id, project)
 
     # Apply pagination
     if offset > 0:
@@ -163,7 +170,7 @@ async def list_route_segments(
     results = []
     for segment_id in segment_ids:
         try:
-            segment_data = extract_segment_data(route_id, segment_id)
+            segment_data = extract_segment_data(route_id, segment_id, project)
             if segment_data:
                 results.append(SegmentListItem(
                     segment_id=segment_id,
@@ -182,7 +189,7 @@ async def list_route_segments(
 
 # NOTE: segments/geometry must come BEFORE segments/{segment_id} for proper route matching
 @router.get("/routes/{route_id}/segments/geometry")
-async def get_segments_geometry(route_id: str) -> dict:
+async def get_segments_geometry(route_id: str, project: Optional[str] = None) -> dict:
     """Get route segments as a GeoJSON FeatureCollection.
 
     Each segment is returned as a Feature with properties including
@@ -190,6 +197,7 @@ async def get_segments_geometry(route_id: str) -> dict:
 
     Args:
         route_id: Route identifier
+        project: Optional project name for project-specific routes
 
     Returns:
         GeoJSON FeatureCollection with segment features
@@ -198,7 +206,7 @@ async def get_segments_geometry(route_id: str) -> dict:
         HTTPException: 404 if route not found
     """
     try:
-        route_data = load_route(route_id)
+        route_data = load_route(route_id, project)
     except RouteNotFoundError:
         raise HTTPException(
             status_code=404,
@@ -207,12 +215,12 @@ async def get_segments_geometry(route_id: str) -> dict:
 
     # Get CRS for coordinate transformation
     src_crs = get_route_crs(route_data)
-    segment_ids = get_all_segment_ids(route_id)
+    segment_ids = get_all_segment_ids(route_id, project)
     features = []
 
     for segment_id in segment_ids:
         try:
-            segment_data = extract_segment_data(route_id, segment_id)
+            segment_data = extract_segment_data(route_id, segment_id, project)
             if segment_data and segment_data.coordinates.start and segment_data.coordinates.end:
                 # Transform coordinates to WGS84 for map display
                 coords_raw = [
@@ -240,6 +248,32 @@ async def get_segments_geometry(route_id: str) -> dict:
         except Exception as e:
             logger.warning(f"Failed to build geometry for segment {segment_id}: {e}")
 
+    # Fallback: if no segments found, return full route geometry as single feature
+    if not features:
+        full_geometry = get_full_route_geometry(route_id, project)
+        if full_geometry:
+            # Transform to WGS84
+            coords_wgs84 = transform_coords_to_wgs84(full_geometry, src_crs)
+
+            # Get metadata for properties
+            metadata = get_route_metadata(route_id, project)
+
+            feature = {
+                "type": "Feature",
+                "properties": {
+                    "segment_id": "0",
+                    "route_id": route_id,
+                    "name": metadata.get("name", route_id),
+                    "algorithm": metadata.get("algorithm", "unknown"),
+                    "length_m": metadata.get("total_length_m"),
+                },
+                "geometry": {
+                    "type": "LineString",
+                    "coordinates": [list(c) for c in coords_wgs84]
+                }
+            }
+            features.append(feature)
+
     return {
         "type": "FeatureCollection",
         "features": features,
@@ -247,12 +281,13 @@ async def get_segments_geometry(route_id: str) -> dict:
 
 
 @router.get("/routes/{route_id}/segments/{segment_id}")
-async def get_segment_detail(route_id: str, segment_id: str) -> dict:
+async def get_segment_detail(route_id: str, segment_id: str, project: Optional[str] = None) -> dict:
     """Get detailed information about a specific segment.
 
     Args:
         route_id: Route identifier
         segment_id: Segment identifier
+        project: Optional project name for project-specific routes
 
     Returns:
         Full segment data as dict
@@ -261,14 +296,14 @@ async def get_segment_detail(route_id: str, segment_id: str) -> dict:
         HTTPException: 404 if route or segment not found
     """
     try:
-        load_route(route_id)
+        load_route(route_id, project)
     except RouteNotFoundError:
         raise HTTPException(
             status_code=404,
             detail=f"Route '{route_id}' not found"
         )
 
-    segment_data = extract_segment_data(route_id, segment_id)
+    segment_data = extract_segment_data(route_id, segment_id, project)
     if segment_data is None:
         raise HTTPException(
             status_code=404,
@@ -303,20 +338,21 @@ async def get_segment_detail(route_id: str, segment_id: str) -> dict:
 
 
 @router.get("/routes/{route_id}/geometry")
-async def get_route_geometry(route_id: str) -> dict:
+async def get_route_geometry(route_id: str, project: Optional[str] = None) -> dict:
     """Get the full route geometry as GeoJSON.
 
     Args:
         route_id: Route identifier
+        project: Optional project name for project-specific routes
 
     Returns:
-        GeoJSON geometry object
+        GeoJSON geometry object with coordinates transformed to WGS84
 
     Raises:
         HTTPException: 404 if route not found
     """
     try:
-        route_data = load_route(route_id)
+        route_data = load_route(route_id, project)
     except RouteNotFoundError:
         raise HTTPException(
             status_code=404,
@@ -324,7 +360,7 @@ async def get_route_geometry(route_id: str) -> dict:
         )
 
     # Get full route geometry
-    geometry = get_full_route_geometry(route_id)
+    geometry = get_full_route_geometry(route_id, project)
 
     if geometry is None:
         return {
@@ -332,11 +368,17 @@ async def get_route_geometry(route_id: str) -> dict:
             "features": route_data.get("features", []),
         }
 
+    # Transform coordinates to WGS84 for map display
+    crs = get_route_crs(route_data)
+    if crs and crs != "EPSG:4326":
+        geometry = transform_coords_to_wgs84(geometry, crs)
+
     return {
         "type": "Feature",
-        "properties": get_route_metadata(route_id),
+        "properties": get_route_metadata(route_id, project),
         "geometry": {
             "type": "LineString",
             "coordinates": geometry,
-        }
+        },
+        "crs": "EPSG:4326"  # Always return WGS84 for map display
     }

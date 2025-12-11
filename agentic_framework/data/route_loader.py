@@ -5,12 +5,31 @@ from typing import Dict, Any, List, Optional
 
 from config.settings import settings
 
+# Base projects directory
+PROJECTS_BASE = Path("/opt/agrs/Projects")
+
+
+def get_routes_dir(project: Optional[str] = None) -> Path:
+    """Get the routes directory for a project.
+
+    Args:
+        project: Optional project name. If None, uses default from settings.
+
+    Returns:
+        Path to the routes directory
+    """
+    if project:
+        return PROJECTS_BASE / project / "PIRL" / "outputs"
+    return settings.ROUTES_DIR
+
 
 class RouteNotFoundError(Exception):
     """Raised when a requested route file does not exist."""
-    def __init__(self, route_id: str):
+    def __init__(self, route_id: str, project: Optional[str] = None):
         self.route_id = route_id
-        super().__init__(f"Route '{route_id}' not found at {settings.ROUTES_DIR / f'{route_id}.geojson'}")
+        self.project = project
+        routes_dir = get_routes_dir(project)
+        super().__init__(f"Route '{route_id}' not found at {routes_dir / f'{route_id}.geojson'}")
 
 
 class InvalidRouteError(Exception):
@@ -22,14 +41,23 @@ class InvalidRouteError(Exception):
 
 
 # Module-level cache for loaded routes
+# Key format: "project:route_id" or just "route_id" for default project
 _route_cache: Dict[str, Dict[str, Any]] = {}
 
 
-def load_route(route_id: str) -> Dict[str, Any]:
+def _cache_key(route_id: str, project: Optional[str] = None) -> str:
+    """Generate cache key for route."""
+    if project:
+        return f"{project}:{route_id}"
+    return route_id
+
+
+def load_route(route_id: str, project: Optional[str] = None) -> Dict[str, Any]:
     """Load a GeoJSON route file by route ID.
 
     Args:
         route_id: The route identifier (filename without .geojson extension)
+        project: Optional project name for project-specific routes
 
     Returns:
         The parsed GeoJSON as a dictionary
@@ -38,15 +66,18 @@ def load_route(route_id: str) -> Dict[str, Any]:
         RouteNotFoundError: If the route file does not exist
         InvalidRouteError: If the route file contains invalid JSON
     """
-    # Check cache first
-    if route_id in _route_cache:
-        return _route_cache[route_id]
+    cache_key = _cache_key(route_id, project)
 
-    route_path = settings.ROUTES_DIR / f"{route_id}.geojson"
+    # Check cache first
+    if cache_key in _route_cache:
+        return _route_cache[cache_key]
+
+    routes_dir = get_routes_dir(project)
+    route_path = routes_dir / f"{route_id}.geojson"
 
     # Check if file exists
     if not route_path.exists():
-        raise RouteNotFoundError(route_id)
+        raise RouteNotFoundError(route_id, project)
 
     try:
         with open(route_path, 'r', encoding='utf-8') as f:
@@ -55,21 +86,26 @@ def load_route(route_id: str) -> Dict[str, Any]:
         raise InvalidRouteError(route_id, e)
 
     # Store in cache
-    _route_cache[route_id] = route_data
+    _route_cache[cache_key] = route_data
 
     return route_data
 
 
-def get_route_ids() -> List[str]:
+def get_route_ids(project: Optional[str] = None) -> List[str]:
     """Get list of all available route IDs.
+
+    Args:
+        project: Optional project name for project-specific routes
 
     Returns:
         List of route IDs (filenames without .geojson extension)
     """
-    if not settings.ROUTES_DIR.exists():
+    routes_dir = get_routes_dir(project)
+
+    if not routes_dir.exists():
         return []
 
-    route_files = settings.ROUTES_DIR.glob("*.geojson")
+    route_files = routes_dir.glob("*.geojson")
     return [f.stem for f in route_files]
 
 

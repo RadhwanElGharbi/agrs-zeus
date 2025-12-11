@@ -141,33 +141,46 @@ async def agentic_health():
 
 
 @router.get("/agentic/routes")
-async def list_agentic_routes():
+async def list_agentic_routes(project: Optional[str] = Query(None, description="Project name for project-specific routes")):
     """List all routes available in the agentic framework.
+
+    Args:
+        project: Optional project name. If provided, routes are loaded from
+                 /opt/agrs/Projects/{project}/PIRL/outputs/
 
     Returns:
         List of route IDs with segment counts
     """
-    return await _proxy_get("/api/routes")
+    params = {}
+    if project:
+        params["project"] = project
+    return await _proxy_get("/api/routes", params=params if params else None)
 
 
 @router.get("/agentic/routes/{route_id}")
-async def get_agentic_route(route_id: str):
+async def get_agentic_route(
+    route_id: str,
+    project: Optional[str] = Query(None, description="Project name for project-specific routes")
+):
     """Get details of a specific route.
 
     Args:
         route_id: Route identifier
+        project: Optional project name
 
     Returns:
         Route details including segment count and metadata
     """
-    return await _proxy_get(f"/api/routes/{route_id}")
+    params = {"project": project} if project else None
+    return await _proxy_get(f"/api/routes/{route_id}", params=params)
 
 
 @router.get("/agentic/routes/{route_id}/segments")
 async def list_agentic_segments(
     route_id: str,
     limit: Optional[int] = Query(None, description="Max segments to return"),
-    offset: int = Query(0, description="Number of segments to skip")
+    offset: int = Query(0, description="Number of segments to skip"),
+    project: Optional[str] = Query(None, description="Project name for project-specific routes")
 ):
     """List segments in a route.
 
@@ -175,6 +188,7 @@ async def list_agentic_segments(
         route_id: Route identifier
         limit: Optional limit on results
         offset: Number to skip for pagination
+        project: Optional project name
 
     Returns:
         List of segment info
@@ -182,38 +196,54 @@ async def list_agentic_segments(
     params = {"offset": offset}
     if limit is not None:
         params["limit"] = limit
+    if project:
+        params["project"] = project
     return await _proxy_get(f"/api/routes/{route_id}/segments", params=params)
 
 
 @router.get("/agentic/routes/{route_id}/segments/{segment_id}")
-async def get_agentic_segment(route_id: str, segment_id: str):
+async def get_agentic_segment(
+    route_id: str,
+    segment_id: str,
+    project: Optional[str] = Query(None, description="Project name for project-specific routes")
+):
     """Get details of a specific segment.
 
     Args:
         route_id: Route identifier
         segment_id: Segment identifier
+        project: Optional project name
 
     Returns:
         Full segment data
     """
-    return await _proxy_get(f"/api/routes/{route_id}/segments/{segment_id}")
+    params = {"project": project} if project else None
+    return await _proxy_get(f"/api/routes/{route_id}/segments/{segment_id}", params=params)
 
 
 @router.get("/agentic/routes/{route_id}/geometry")
-async def get_agentic_route_geometry(route_id: str):
+async def get_agentic_route_geometry(
+    route_id: str,
+    project: Optional[str] = Query(None, description="Project name for project-specific routes")
+):
     """Get route geometry as GeoJSON.
 
     Args:
         route_id: Route identifier
+        project: Optional project name
 
     Returns:
         GeoJSON Feature or FeatureCollection
     """
-    return await _proxy_get(f"/api/routes/{route_id}/geometry")
+    params = {"project": project} if project else None
+    return await _proxy_get(f"/api/routes/{route_id}/geometry", params=params)
 
 
 @router.get("/agentic/routes/{route_id}/segments/geometry")
-async def get_agentic_segments_geometry(route_id: str):
+async def get_agentic_segments_geometry(
+    route_id: str,
+    project: Optional[str] = Query(None, description="Project name for project-specific routes")
+):
     """Get route segments as GeoJSON FeatureCollection.
 
     Each segment is a Feature with segment_id, route_id, and metrics
@@ -221,11 +251,13 @@ async def get_agentic_segments_geometry(route_id: str):
 
     Args:
         route_id: Route identifier
+        project: Optional project name
 
     Returns:
         GeoJSON FeatureCollection with segment features
     """
-    return await _proxy_get(f"/api/routes/{route_id}/segments/geometry")
+    params = {"project": project} if project else None
+    return await _proxy_get(f"/api/routes/{route_id}/segments/geometry", params=params)
 
 
 @router.post("/agentic/explain")

@@ -24,6 +24,7 @@ import {
 import { LayerManager } from './LayerManager'
 import { PIRLManager } from './PIRLManager'
 import { AttributeTable } from './AttributeTable'
+import { PIRLAttributeTable } from './PIRLAttributeTable'
 import { StyleEditor } from './StyleEditor'
 import { Compass } from './Compass'
 import { ExplanationPanel, AgenticRoutesDialog } from '@/components/Analysis'
@@ -95,6 +96,10 @@ export function MapViewer() {
   const [showAnalysisPanel, setShowAnalysisPanel] = useState(false)
   const [showRoutesDialog, setShowRoutesDialog] = useState(false)
   const [loadedPirlRoutes, setLoadedPirlRoutes] = useState<{ routeId: string; visible: boolean; segmentCount: number }[]>([])
+
+  // PIRL Attribute Table state
+  const [pirlTableRouteId, setPirlTableRouteId] = useState<string | null>(null)
+  const [pirlTableDocked, setPirlTableDocked] = useState(false)
 
   const dockHeightRef = useRef(dockHeight)
   const dockContainerRef = useRef<HTMLDivElement | null>(null)
@@ -2141,6 +2146,7 @@ export function MapViewer() {
           onToggleRouteVisibility={handleTogglePirlRouteVisibility}
           onRemoveRoute={handleRemovePirlRoute}
           onExpandDialog={() => setShowRoutesDialog(true)}
+          onOpenTable={(routeId) => setPirlTableRouteId(routeId)}
         />
       </div>
 
@@ -2156,6 +2162,19 @@ export function MapViewer() {
           onToggleDock={handleToggleDock}
           onSort={handleSort}
           onRowDoubleClick={handleRowDoubleClick}
+          onResizeStart={handleDockResizeMouseDown}
+          dockContainerRef={dockContainerRef}
+        />
+      )}
+
+      {/* PIRL Attribute Table */}
+      {pirlTableRouteId && (
+        <PIRLAttributeTable
+          routeId={pirlTableRouteId}
+          isDocked={pirlTableDocked}
+          dockHeight={dockHeight}
+          onClose={() => setPirlTableRouteId(null)}
+          onToggleDock={() => setPirlTableDocked(!pirlTableDocked)}
           onResizeStart={handleDockResizeMouseDown}
           dockContainerRef={dockContainerRef}
         />
