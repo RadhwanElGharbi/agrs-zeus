@@ -5,7 +5,7 @@ import { X, Loader2, TrendingUp, TrendingDown, Minus, Mountain, TreePine, AlertT
 import { cn } from '@/lib/utils'
 import { useProject } from '@/lib/context/ProjectContext'
 import { getAgenticRoute, listAgenticSegments } from '@/lib/api/agenticClient'
-import { fetchPIRLRouteMetadata, RouteDetailedMetadata } from '@/lib/api/dataClient'
+import { fetchPIRLRouteMetadata, fetchPIRLRoute, RouteDetailedMetadata } from '@/lib/api/dataClient'
 
 interface RouteComparisonData {
   routeId: string
@@ -100,11 +100,36 @@ export function CompareRoutesDialog({ isOpen, onClose, selectedRouteIds }: Compa
       const data: RouteComparisonData[] = []
 
       for (const routeId of selectedRouteIds) {
-        const routeDetail = await getAgenticRoute(routeId, currentProject)
-        if (!routeDetail) throw new Error(`Failed to fetch route ${routeId}`)
+        // Try agentic API first, fall back to PIRL API
+        let routeDetail = await getAgenticRoute(routeId, currentProject)
+        let segments: any[] = []
+        let routeGeojson: any = null
 
-        // Get segments for more detailed analysis
-        const segments = await listAgenticSegments(routeId, 1000, 0, currentProject)
+        if (routeDetail) {
+          // Get segments from agentic API
+          segments = await listAgenticSegments(routeId, 1000, 0, currentProject)
+        } else {
+          // Fall back to PIRL API - fetch the GeoJSON directly
+          try {
+            routeGeojson = await fetchPIRLRoute(currentProject, routeId)
+            // Create a basic routeDetail from the GeoJSON
+            const features = routeGeojson?.features || []
+            const metadata = routeGeojson?.metadata || {}
+            routeDetail = {
+              route_id: routeId,
+              segment_count: features.length,
+              metadata: metadata
+            }
+            // Convert features to segments format
+            segments = features.map((f: any, idx: number) => ({
+              segment_id: f.properties?.segment_id || String(idx),
+              length_m: f.properties?.length_m || 0,
+              ...f.properties
+            }))
+          } catch (pirlErr) {
+            throw new Error(`Failed to fetch route ${routeId}`)
+          }
+        }
 
         // Try to fetch detailed metadata from sidecar file
         let detailedMetadata: RouteDetailedMetadata | null = null

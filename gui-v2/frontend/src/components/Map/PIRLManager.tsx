@@ -8,6 +8,11 @@ import {
   getAgenticSegmentsGeometry,
   type AgenticRouteListItem
 } from '@/lib/api/agenticClient'
+import {
+  fetchPIRLRoutes,
+  fetchPIRLRoute,
+  type RouteMetadata
+} from '@/lib/api/dataClient'
 import { CompareRoutesDialog } from './CompareRoutesDialog'
 import { CostMatrixDialog } from './CostMatrixDialog'
 import { useProject } from '@/lib/context/ProjectContext'
@@ -75,14 +80,43 @@ export function PIRLManager({
   }
 
   // Fetch routes when expanded and project is loaded
+  // Try agentic API first, fall back to PIRL API if unavailable
   useEffect(() => {
     if (!isCollapsed && currentProject) {
       setLoading(true)
       setError(null)
+
+      // Try agentic API first
       listAgenticRoutes(currentProject)
-        .then(setRoutes)
-        .catch(err => setError(err.message))
-        .finally(() => setLoading(false))
+        .then(agenticRoutes => {
+          if (agenticRoutes && agenticRoutes.length > 0) {
+            // Agentic framework is available, use its routes
+            setRoutes(agenticRoutes)
+            setLoading(false)
+          } else {
+            // Fall back to PIRL API
+            return fetchPIRLRoutes(currentProject)
+              .then(pirlRoutes => {
+                // Convert PIRL routes to AgenticRouteListItem format
+                const convertedRoutes: AgenticRouteListItem[] = pirlRoutes.map(r => ({
+                  route_id: r.filename,
+                  segment_count: r.num_segments || 0,
+                  total_length_m: r.total_length_m || undefined,
+                  total_cost_usd: r.total_cost_usd || undefined,
+                  is_real_route: r.is_real_route || false,
+                  generation_method: r.generation_method || undefined,
+                  constraint_compliant: r.constraint_compliant || undefined,
+                  cost_per_km: r.cost_per_km || undefined
+                }))
+                setRoutes(convertedRoutes)
+              })
+              .finally(() => setLoading(false))
+          }
+        })
+        .catch(err => {
+          setError(err.message)
+          setLoading(false)
+        })
     } else if (!currentProject) {
       setRoutes([])
     }
@@ -102,7 +136,17 @@ export function PIRLManager({
     setLoadingRouteId(routeId)
     setError(null)
     try {
-      const geojson = await getAgenticSegmentsGeometry(routeId, currentProject)
+      // Try agentic API first for segmented geometry
+      let geojson = await getAgenticSegmentsGeometry(routeId, currentProject)
+
+      // Fall back to PIRL API if agentic fails
+      if (!geojson) {
+        const pirlGeojson = await fetchPIRLRoute(currentProject, routeId)
+        if (pirlGeojson) {
+          geojson = pirlGeojson as GeoJSON.FeatureCollection
+        }
+      }
+
       if (geojson) {
         onLoadRoute(routeId, geojson)
       } else {

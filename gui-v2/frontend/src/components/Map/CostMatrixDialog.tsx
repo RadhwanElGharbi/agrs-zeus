@@ -37,7 +37,8 @@ export function CostMatrixDialog({ isOpen, onClose, routeId, project }: CostMatr
 
   if (!isOpen) return null
 
-  const costMatrix = metadata?.cost_matrix as Record<string, unknown> | undefined
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const costMatrix = metadata?.cost_matrix as Record<string, any> | undefined
 
   // Format currency
   const formatCurrency = (value: number) => {

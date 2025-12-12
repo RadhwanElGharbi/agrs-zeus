@@ -15,10 +15,128 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 
+try:
+    from pyproj import Transformer
+    HAS_PYPROJ = True
+except ImportError:
+    HAS_PYPROJ = False
+
 router = APIRouter()
 
 # Base projects directory
 PROJECTS_ROOT = Path("/opt/agrs/Projects")
+
+
+# ============================================================================
+# Coordinate Transformation Helpers
+# ============================================================================
+
+def get_project_crs(project_path: Path) -> Optional[int]:
+    """Get the EPSG code for a project from its metadata."""
+    metadata_file = project_path / "project_metadata.json"
+    if metadata_file.exists():
+        try:
+            with open(metadata_file) as f:
+                metadata = json.load(f)
+            return metadata.get("crs", {}).get("epsg")
+        except Exception:
+            pass
+    return None
+
+
+def transform_coordinates(coords: List, from_epsg: int, to_epsg: int = 4326) -> List:
+    """
+    Transform coordinates from one CRS to another.
+
+    Args:
+        coords: Coordinate array (can be nested for LineString, Polygon, etc.)
+        from_epsg: Source EPSG code
+        to_epsg: Target EPSG code (default WGS84)
+
+    Returns:
+        Transformed coordinate array
+    """
+    if not HAS_PYPROJ:
+        return coords
+
+    transformer = Transformer.from_crs(f"EPSG:{from_epsg}", f"EPSG:{to_epsg}", always_xy=True)
+
+    def transform_point(point: List) -> List:
+        if len(point) >= 2:
+            x, y = transformer.transform(point[0], point[1])
+            if len(point) > 2:
+                return [x, y] + point[2:]
+            return [x, y]
+        return point
+
+    def transform_nested(arr: List) -> List:
+        if not arr:
+            return arr
+        # Check if this is a coordinate pair (list of numbers)
+        if isinstance(arr[0], (int, float)):
+            return transform_point(arr)
+        # Otherwise recurse
+        return [transform_nested(item) for item in arr]
+
+    return transform_nested(coords)
+
+
+def transform_geojson(geojson: Dict, from_epsg: int, to_epsg: int = 4326) -> Dict:
+    """
+    Transform all coordinates in a GeoJSON object from one CRS to another.
+
+    Args:
+        geojson: GeoJSON dictionary
+        from_epsg: Source EPSG code
+        to_epsg: Target EPSG code (default WGS84)
+
+    Returns:
+        GeoJSON with transformed coordinates
+    """
+    if not HAS_PYPROJ or from_epsg == to_epsg:
+        return geojson
+
+    result = geojson.copy()
+
+    if "features" in result:
+        # FeatureCollection
+        result["features"] = [
+            transform_geojson(feature, from_epsg, to_epsg)
+            for feature in result["features"]
+        ]
+    elif "geometry" in result:
+        # Feature
+        result = result.copy()
+        result["geometry"] = transform_geojson(result["geometry"], from_epsg, to_epsg)
+    elif "coordinates" in result:
+        # Geometry object
+        result = result.copy()
+        result["coordinates"] = transform_coordinates(result["coordinates"], from_epsg, to_epsg)
+
+    return result
+
+
+def coords_need_transformation(coords: List) -> bool:
+    """
+    Check if coordinates appear to be in a projected CRS (not WGS84).
+
+    UTM coordinates are typically large numbers (100,000s to millions),
+    while WGS84 lat/lng are -180 to 180 and -90 to 90.
+    """
+    def get_first_point(arr: List) -> Optional[List]:
+        if not arr:
+            return None
+        if isinstance(arr[0], (int, float)):
+            return arr
+        return get_first_point(arr[0])
+
+    point = get_first_point(coords)
+    if point and len(point) >= 2:
+        x, y = point[0], point[1]
+        # If values are outside WGS84 bounds, likely projected
+        if abs(x) > 180 or abs(y) > 90:
+            return True
+    return False
 
 
 # ============================================================================
@@ -408,6 +526,7 @@ async def get_route(project: str, route_name: str):
     Get a specific PIRL route GeoJSON file
 
     Returns the GeoJSON directly for display on the map.
+    Coordinates are automatically transformed to WGS84 (EPSG:4326) if needed.
     """
     project_path = PROJECTS_ROOT / project
 
@@ -428,12 +547,35 @@ async def get_route(project: str, route_name: str):
     if not route_file.suffix == '.geojson':
         raise HTTPException(status_code=400, detail="Route file must be a GeoJSON file")
 
-    # Return GeoJSON file
-    return FileResponse(
-        route_file,
-        media_type="application/geo+json",
-        filename=route_file.name
-    )
+    # Load GeoJSON
+    try:
+        with open(route_file) as f:
+            geojson = json.load(f)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to read route file: {str(e)}")
+
+    # Check if coordinates need transformation (UTM to WGS84)
+    needs_transform = False
+    first_coords = None
+
+    if "features" in geojson and geojson["features"]:
+        first_geom = geojson["features"][0].get("geometry", {})
+        first_coords = first_geom.get("coordinates", [])
+    elif "geometry" in geojson:
+        first_coords = geojson["geometry"].get("coordinates", [])
+    elif "coordinates" in geojson:
+        first_coords = geojson["coordinates"]
+
+    if first_coords and coords_need_transformation(first_coords):
+        needs_transform = True
+
+    # Transform coordinates if needed
+    if needs_transform and HAS_PYPROJ:
+        project_epsg = get_project_crs(project_path)
+        if project_epsg and project_epsg != 4326:
+            geojson = transform_geojson(geojson, project_epsg, 4326)
+
+    return JSONResponse(content=geojson, media_type="application/geo+json")
 
 
 # ============================================================================
