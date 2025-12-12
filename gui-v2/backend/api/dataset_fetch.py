@@ -4099,7 +4099,14 @@ async def stream_dataset_job(job_id: str):
 
 
 @router.delete("/dataset-jobs/{job_id}", status_code=202)
-def cancel_dataset_job(job_id: str):
+def cancel_dataset_job(job_id: str, cleanup: bool = True):
+    """
+    Cancel a running dataset fetch job.
+
+    Args:
+        job_id: The job ID to cancel
+        cleanup: If True, attempts to delete incomplete/partial downloads
+    """
     with JOB_LOCK:
         job = JOB_REGISTRY.get(job_id)
         if not job:
@@ -4108,5 +4115,105 @@ def cancel_dataset_job(job_id: str):
             return Response(status_code=204)
         job.cancel_requested = True
         job.error = job.error or "Cancelled by user"
-        job.updated_at = _utc_now()
+        job.status = "failed"  # Mark as failed immediately
+        job.completed_at = _utc_now()
+        job.updated_at = job.completed_at
+
+        # Store cleanup info before releasing lock
+        project = job.project
+        categories_to_cleanup = []
+        if cleanup:
+            for category, state in job.category_states.items():
+                status = state.get("status")
+                if status in ("running", "queued", None):
+                    state["status"] = "cancelled"
+                    state["message"] = "Cancelled by user"
+                    state["completed_at"] = _utc_iso()
+                    categories_to_cleanup.append(category)
+                    # Also mark stages as cancelled
+                    stages = state.get("stages")
+                    if stages:
+                        for stage_state in stages.values():
+                            if stage_state.get("status") in ("running", "queued", None):
+                                stage_state["status"] = "cancelled"
+                                stage_state["message"] = "Cancelled by user"
+                                stage_state["completed_at"] = _utc_iso()
+
+        # CRITICAL: Remove from active jobs so new jobs can start
+        PROJECT_ACTIVE_JOBS.pop(project, None)
+
+    # Cleanup incomplete downloads outside of lock
+    if cleanup and categories_to_cleanup:
+        try:
+            _cleanup_incomplete_downloads(project, categories_to_cleanup)
+        except Exception as e:
+            # Log but don't fail the cancel operation
+            print(f"[DatasetFetch] Cleanup failed for job {job_id}: {e}")
+
+    # Cleanup conversation memory
+    _cleanup_conversation(job_id)
+
     return Response(status_code=202)
+
+
+def _cleanup_incomplete_downloads(project: str, categories: List[str]) -> None:
+    """
+    Clean up incomplete/partial downloads for cancelled job categories.
+
+    Removes:
+    - Temporary files (.tmp.*)
+    - Partial raw files that may be incomplete
+    - Download staging directories
+    """
+    from pathlib import Path
+    import shutil
+
+    project_path = resolve_project_path(project)
+    if not project_path or not project_path.exists():
+        return
+
+    data_path = project_path / "data"
+    if not data_path.exists():
+        return
+
+    # Get dataset definitions to find paths
+    for category in categories:
+        defn = DATASET_DEFINITIONS.get(category)
+        if not defn:
+            continue
+
+        base_dir = data_path / ("rasters" if defn.dataset_type == "raster" else "vectors")
+        raw_dir = base_dir / "raw"
+        processed_dir = base_dir / "processed"
+
+        # Clean up temp files
+        for pattern in ["*.tmp.*", "*.partial", "*.downloading"]:
+            for tmp_file in raw_dir.glob(pattern):
+                try:
+                    tmp_file.unlink()
+                    print(f"[Cleanup] Removed temp file: {tmp_file}")
+                except OSError:
+                    pass
+            for tmp_file in processed_dir.glob(pattern):
+                try:
+                    tmp_file.unlink()
+                    print(f"[Cleanup] Removed temp file: {tmp_file}")
+                except OSError:
+                    pass
+
+        # Clean up download staging directories (used by some fetchers)
+        staging_dir = raw_dir / f"{category}_download"
+        if staging_dir.exists():
+            try:
+                shutil.rmtree(staging_dir)
+                print(f"[Cleanup] Removed staging dir: {staging_dir}")
+            except OSError:
+                pass
+
+        # Clean up tile download directories (used by DEM fetchers)
+        for tile_dir in raw_dir.glob(f"*_tiles"):
+            try:
+                shutil.rmtree(tile_dir)
+                print(f"[Cleanup] Removed tile dir: {tile_dir}")
+            except OSError:
+                pass

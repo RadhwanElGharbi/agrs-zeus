@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { Route, Eye, EyeOff, Loader2, Minimize2, Expand, Brain, MapPin, Trash2, GitCompare, Check, FolderOpen, Table } from 'lucide-react'
+import { Route, Eye, EyeOff, Loader2, Minimize2, Expand, Brain, MapPin, Trash2, GitCompare, Check, FolderOpen, Table, DollarSign } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   listAgenticRoutes,
@@ -9,6 +9,7 @@ import {
   type AgenticRouteListItem
 } from '@/lib/api/agenticClient'
 import { CompareRoutesDialog } from './CompareRoutesDialog'
+import { CostMatrixDialog } from './CostMatrixDialog'
 import { useProject } from '@/lib/context/ProjectContext'
 
 interface LoadedRoute {
@@ -56,6 +57,10 @@ export function PIRLManager({
   const [compareMode, setCompareMode] = useState(false)
   const [selectedForCompare, setSelectedForCompare] = useState<string[]>([])
   const [showCompareDialog, setShowCompareDialog] = useState(false)
+
+  // Cost matrix dialog state
+  const [showCostMatrixDialog, setShowCostMatrixDialog] = useState(false)
+  const [costMatrixRouteId, setCostMatrixRouteId] = useState<string | null>(null)
 
   // Context menu state
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
@@ -151,6 +156,14 @@ export function PIRLManager({
       setContextMenu(null)
     }
   }, [contextMenu, onOpenTable])
+
+  const handleShowCostMatrix = useCallback(() => {
+    if (contextMenu) {
+      setCostMatrixRouteId(contextMenu.routeId)
+      setShowCostMatrixDialog(true)
+      setContextMenu(null)
+    }
+  }, [contextMenu])
 
   // Close context menu on outside click
   useEffect(() => {
@@ -407,9 +420,11 @@ export function PIRLManager({
                       "w-full flex items-center gap-2 p-2 rounded-sm transition-all duration-200 text-left",
                       compareMode && isSelectedForCompare
                         ? "bg-blue-500/20 border border-blue-500/40"
-                        : isLoaded
-                          ? "bg-purple-500/10 border border-purple-500/30"
-                          : "bg-white/[0.02] border border-transparent hover:bg-purple-900/20 hover:border-purple-500/20",
+                        : route.is_real_route
+                          ? "bg-yellow-500/10 border border-yellow-500/30 hover:bg-yellow-500/20 hover:border-yellow-500/40"
+                          : isLoaded
+                            ? "bg-purple-500/10 border border-purple-500/30"
+                            : "bg-white/[0.02] border border-transparent hover:bg-purple-900/20 hover:border-purple-500/20",
                       isLoading && "opacity-70"
                     )}
                   >
@@ -435,7 +450,7 @@ export function PIRLManager({
                       ) : (
                         <Route className={cn(
                           "w-3.5 h-3.5 shrink-0",
-                          isLoaded ? "text-purple-400" : "text-white/30"
+                          route.is_real_route ? "text-yellow-400" : isLoaded ? "text-purple-400" : "text-white/30"
                         )} />
                       )
                     )}
@@ -454,17 +469,27 @@ export function PIRLManager({
                     >
                       <p className={cn(
                         "text-[10px] font-medium truncate",
-                        isLoaded ? "text-purple-300" : "text-white/70"
+                        route.is_real_route ? "text-yellow-300" : isLoaded ? "text-purple-300" : "text-white/70"
                       )}>
                         {formatRouteName(route.route_id)}
                       </p>
-                      <p className="text-[9px] text-white/30 font-mono">
-                        {route.segment_count ?? '?'} segments
+                      <p className={cn(
+                        "text-[9px] font-mono",
+                        route.is_real_route ? "text-yellow-400/60" : "text-white/30"
+                      )}>
+                        {route.is_real_route ? "Real Infrastructure" : `${route.segment_count ?? '?'} segments`}
                       </p>
                     </button>
 
+                    {/* Real Route Badge */}
+                    {!compareMode && route.is_real_route && (
+                      <span className="text-[8px] font-bold text-yellow-400 uppercase px-1.5 py-0.5 bg-yellow-500/20 rounded-sm border border-yellow-500/30">
+                        Real
+                      </span>
+                    )}
+
                     {/* Loaded Badge */}
-                    {!compareMode && isLoaded && (
+                    {!compareMode && isLoaded && !route.is_real_route && (
                       <span className="text-[8px] font-bold text-purple-400 uppercase px-1.5 py-0.5 bg-purple-500/20 rounded-sm">
                         Loaded
                       </span>
@@ -510,7 +535,7 @@ export function PIRLManager({
       {/* Context Menu */}
       {contextMenu && (
         <div
-          className="fixed z-[100] bg-black/95 backdrop-blur-md border border-purple-500/30 rounded-lg shadow-[0_0_20px_-5px_rgba(147,51,234,0.5)] py-1 min-w-[160px]"
+          className="fixed z-[100] bg-black/95 backdrop-blur-md border border-purple-500/30 rounded-lg shadow-[0_0_20px_-5px_rgba(147,51,234,0.5)] py-1 min-w-[180px]"
           style={{
             left: contextMenu.x,
             top: contextMenu.y,
@@ -524,7 +549,27 @@ export function PIRLManager({
             <Table className="w-3.5 h-3.5 text-purple-400" />
             <span>Inspect layer</span>
           </button>
+          <button
+            onClick={handleShowCostMatrix}
+            className="w-full flex items-center gap-2 px-3 py-2 text-left text-[11px] text-white hover:bg-green-500/20 transition-colors"
+          >
+            <DollarSign className="w-3.5 h-3.5 text-green-400" />
+            <span>Show cost matrix</span>
+          </button>
         </div>
+      )}
+
+      {/* Cost Matrix Dialog */}
+      {costMatrixRouteId && currentProject && (
+        <CostMatrixDialog
+          isOpen={showCostMatrixDialog}
+          onClose={() => {
+            setShowCostMatrixDialog(false)
+            setCostMatrixRouteId(null)
+          }}
+          routeId={costMatrixRouteId}
+          project={currentProject}
+        />
       )}
     </>
   )

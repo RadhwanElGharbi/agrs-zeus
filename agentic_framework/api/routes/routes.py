@@ -29,6 +29,12 @@ class RouteListItem(BaseModel):
     """Model for route list item."""
     route_id: str
     segment_count: Optional[int] = None
+    # Enhanced metadata from sidecar files
+    generation_method: Optional[str] = None
+    is_real_route: Optional[bool] = False
+    constraint_compliant: Optional[bool] = None
+    total_length_m: Optional[float] = None
+    cost_per_km: Optional[float] = None
 
 
 class RouteDetail(BaseModel):
@@ -47,6 +53,29 @@ class SegmentListItem(BaseModel):
     end_coord: Optional[tuple] = None
 
 
+def load_sidecar_metadata(route_id: str, project: Optional[str] = None) -> Optional[dict]:
+    """Load metadata from sidecar JSON file if it exists."""
+    import json
+    from pathlib import Path
+
+    if project:
+        base_path = Path(f"/opt/agrs/Projects/{project}/PIRL/outputs")
+    else:
+        base_path = Path("/opt/agrs/agentic_framework/data/routes")
+
+    # Try with .geojson suffix
+    route_filename = route_id if route_id.endswith('.geojson') else f"{route_id}.geojson"
+    sidecar_path = base_path / route_filename.replace('.geojson', '.metadata.json')
+
+    if sidecar_path.exists():
+        try:
+            with open(sidecar_path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            logger.warning(f"Error reading sidecar {sidecar_path}: {e}")
+    return None
+
+
 @router.get("/routes", response_model=List[RouteListItem])
 async def list_routes(project: Optional[str] = None) -> List[RouteListItem]:
     """List all available routes.
@@ -56,7 +85,7 @@ async def list_routes(project: Optional[str] = None) -> List[RouteListItem]:
                  /opt/agrs/Projects/{project}/PIRL/outputs/
 
     Returns:
-        List of route IDs with optional segment counts
+        List of route IDs with optional segment counts and metadata
     """
     route_ids = get_route_ids(project)
     logger.info(f"Listing {len(route_ids)} routes for project={project}")
@@ -65,10 +94,30 @@ async def list_routes(project: Optional[str] = None) -> List[RouteListItem]:
     for route_id in route_ids:
         try:
             segment_ids = get_all_segment_ids(route_id, project)
-            results.append(RouteListItem(
+
+            # Load sidecar metadata if available
+            sidecar = load_sidecar_metadata(route_id, project)
+
+            item = RouteListItem(
                 route_id=route_id,
                 segment_count=len(segment_ids)
-            ))
+            )
+
+            if sidecar:
+                gen_method = sidecar.get('generation_method', {})
+                item.generation_method = gen_method.get('method')
+                item.is_real_route = gen_method.get('is_real_route', False)
+
+                compliance = sidecar.get('constraint_compliance', {})
+                item.constraint_compliant = compliance.get('overall_compliant')
+
+                route_info = sidecar.get('route_info', {})
+                item.total_length_m = route_info.get('length_m')
+
+                cost_breakdown = sidecar.get('cost_breakdown', {})
+                item.cost_per_km = cost_breakdown.get('cost_per_km')
+
+            results.append(item)
         except Exception as e:
             logger.warning(f"Failed to get segment count for route {route_id}: {e}")
             results.append(RouteListItem(route_id=route_id))

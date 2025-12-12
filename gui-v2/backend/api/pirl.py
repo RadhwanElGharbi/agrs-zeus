@@ -204,6 +204,12 @@ class RouteMetadata(BaseModel):
     total_cost_usd: Optional[float] = None
     model_path: Optional[str] = None
     timestamp: Optional[str] = None
+    # Enhanced metadata from sidecar files
+    has_metadata_sidecar: Optional[bool] = False
+    generation_method: Optional[str] = None
+    constraint_compliant: Optional[bool] = None
+    cost_per_km: Optional[float] = None
+    is_real_route: Optional[bool] = False  # True for actual infrastructure data
 
 
 def extract_route_metadata(geojson_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -237,85 +243,191 @@ def extract_route_metadata(geojson_data: Dict[str, Any]) -> Dict[str, Any]:
     return metadata
 
 
+def load_sidecar_metadata(geojson_file: Path) -> Optional[Dict[str, Any]]:
+    """Load metadata from sidecar JSON file if it exists"""
+    sidecar_path = geojson_file.with_suffix('.metadata.json')
+    if sidecar_path.exists():
+        try:
+            with open(sidecar_path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"Error reading sidecar {sidecar_path}: {e}")
+    return None
+
+
 @router.get("/pirl/{project}/routes", response_model=List[RouteMetadata])
 async def list_routes(project: str):
     """
     List all available PIRL routes for a project
-    
-    Scans PIRL/outputs/ directory for route_*.geojson files.
+
+    Scans PIRL/outputs/ directory for *.geojson files.
+    Also loads enhanced metadata from sidecar .metadata.json files if present.
     """
     project_path = PROJECTS_ROOT / project
-    
+
     if not project_path.exists():
         raise HTTPException(status_code=404, detail=f"Project '{project}' not found")
-    
+
     pirl_outputs_dir = project_path / "PIRL" / "outputs"
-    
+
     if not pirl_outputs_dir.exists():
         return []
-    
+
     routes = []
-    
-    # Scan for route_*.geojson files
-    for geojson_file in pirl_outputs_dir.glob("route_*.geojson"):
+
+    # Scan for all *.geojson files (not just route_*)
+    for geojson_file in pirl_outputs_dir.glob("*.geojson"):
+        # Skip metadata sidecar files
+        if geojson_file.name.endswith('.metadata.json'):
+            continue
+
         try:
             with open(geojson_file, 'r', encoding='utf-8') as f:
                 geojson_data = json.load(f)
-            
+
             metadata = extract_route_metadata(geojson_data)
             metadata['filename'] = geojson_file.name
-            
+
+            # Check for enhanced metadata sidecar
+            sidecar_data = load_sidecar_metadata(geojson_file)
+            if sidecar_data:
+                metadata['has_metadata_sidecar'] = True
+
+                # Extract key info from sidecar
+                gen_method = sidecar_data.get('generation_method', {})
+                metadata['generation_method'] = gen_method.get('method', 'Unknown')
+                metadata['is_real_route'] = gen_method.get('is_real_route', False)
+
+                compliance = sidecar_data.get('constraint_compliance', {})
+                metadata['constraint_compliant'] = compliance.get('overall_compliant')
+
+                cost_breakdown = sidecar_data.get('cost_breakdown', {})
+                metadata['total_cost_usd'] = cost_breakdown.get('total')
+                metadata['cost_per_km'] = cost_breakdown.get('cost_per_km')
+
+                route_info = sidecar_data.get('route_info', {})
+                metadata['total_length_m'] = route_info.get('length_m')
+
             routes.append(RouteMetadata(**metadata))
         except Exception as e:
             print(f"Error reading {geojson_file}: {e}")
-            # Add route with filename only
             routes.append(RouteMetadata(filename=geojson_file.name))
-    
+
     # Also check subdirectories
     for subdir in pirl_outputs_dir.iterdir():
         if subdir.is_dir():
-            for geojson_file in subdir.glob("route_*.geojson"):
+            for geojson_file in subdir.glob("*.geojson"):
+                if geojson_file.name.endswith('.metadata.json'):
+                    continue
                 try:
                     with open(geojson_file, 'r', encoding='utf-8') as f:
                         geojson_data = json.load(f)
-                    
+
                     metadata = extract_route_metadata(geojson_data)
                     metadata['filename'] = f"{subdir.name}/{geojson_file.name}"
-                    
+
+                    # Check for sidecar
+                    sidecar_data = load_sidecar_metadata(geojson_file)
+                    if sidecar_data:
+                        metadata['has_metadata_sidecar'] = True
+                        gen_method = sidecar_data.get('generation_method', {})
+                        metadata['generation_method'] = gen_method.get('method', 'Unknown')
+                        metadata['is_real_route'] = gen_method.get('is_real_route', False)
+                        compliance = sidecar_data.get('constraint_compliance', {})
+                        metadata['constraint_compliant'] = compliance.get('overall_compliant')
+
                     routes.append(RouteMetadata(**metadata))
                 except Exception as e:
                     print(f"Error reading {geojson_file}: {e}")
                     routes.append(RouteMetadata(filename=f"{subdir.name}/{geojson_file.name}"))
-    
+
     return routes
+
+
+@router.get("/pirl/{project}/routes/{route_name}/metadata")
+async def get_route_metadata(project: str, route_name: str):
+    """
+    Get enhanced metadata for a specific route from sidecar file.
+
+    Returns detailed metadata including:
+    - Generation method and algorithm used
+    - Cost matrix applied
+    - SAIPEM constraint compliance audit
+    - Detailed cost breakdown (trenching, landcover, crossings)
+    - Terrain and landcover statistics
+
+    NOTE: This endpoint must be defined BEFORE the general route endpoint
+    to avoid path parameter conflicts with :path converter.
+    """
+    project_path = PROJECTS_ROOT / project
+
+    if not project_path.exists():
+        raise HTTPException(status_code=404, detail=f"Project '{project}' not found")
+
+    pirl_outputs_dir = project_path / "PIRL" / "outputs"
+
+    if not pirl_outputs_dir.exists():
+        raise HTTPException(status_code=404, detail=f"PIRL outputs directory not found for '{project}'")
+
+    # Construct route file path - handle both with and without .geojson extension
+    route_file = pirl_outputs_dir / route_name
+    if not route_file.exists() and not route_name.endswith('.geojson'):
+        route_file = pirl_outputs_dir / f"{route_name}.geojson"
+
+    if not route_file.exists():
+        raise HTTPException(status_code=404, detail=f"Route '{route_name}' not found")
+
+    # Look for sidecar metadata file
+    sidecar_path = route_file.with_suffix('.metadata.json')
+
+    if not sidecar_path.exists():
+        # Return basic info if no sidecar exists
+        return JSONResponse(content={
+            "route_file": route_name,
+            "has_sidecar": False,
+            "message": "No detailed metadata available for this route. Metadata sidecar file not found."
+        })
+
+    try:
+        with open(sidecar_path, 'r', encoding='utf-8') as f:
+            metadata = json.load(f)
+
+        metadata['has_sidecar'] = True
+        return JSONResponse(content=metadata)
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error reading metadata: {str(e)}"
+        )
 
 
 @router.get("/pirl/{project}/routes/{route_name:path}")
 async def get_route(project: str, route_name: str):
     """
     Get a specific PIRL route GeoJSON file
-    
+
     Returns the GeoJSON directly for display on the map.
     """
     project_path = PROJECTS_ROOT / project
-    
+
     if not project_path.exists():
         raise HTTPException(status_code=404, detail=f"Project '{project}' not found")
-    
+
     pirl_outputs_dir = project_path / "PIRL" / "outputs"
-    
+
     if not pirl_outputs_dir.exists():
         raise HTTPException(status_code=404, detail=f"PIRL outputs directory not found for '{project}'")
-    
+
     # Construct route file path
     route_file = pirl_outputs_dir / route_name
-    
+
     if not route_file.exists():
         raise HTTPException(status_code=404, detail=f"Route '{route_name}' not found")
-    
+
     if not route_file.suffix == '.geojson':
         raise HTTPException(status_code=400, detail="Route file must be a GeoJSON file")
-    
+
     # Return GeoJSON file
     return FileResponse(
         route_file,

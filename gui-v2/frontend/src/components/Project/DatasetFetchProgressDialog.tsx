@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { AlertTriangle, PauseOctagon, X, Terminal, Activity, Check, Loader2, Cpu } from 'lucide-react'
+import { AlertTriangle, PauseOctagon, X, Terminal, Activity, Check, Loader2, Cpu, Minimize2 } from 'lucide-react'
 import {
   DatasetFetchJob,
   DatasetStageState,
@@ -38,9 +38,10 @@ interface DatasetFetchProgressDialogProps {
   open: boolean
   onClose: () => void
   onJobFinished?: (job: DatasetFetchJob) => void
+  onRunInBackground?: () => void
 }
 
-export function DatasetFetchProgressDialog({ jobId, open, onClose, onJobFinished }: DatasetFetchProgressDialogProps) {
+export function DatasetFetchProgressDialog({ jobId, open, onClose, onJobFinished, onRunInBackground }: DatasetFetchProgressDialogProps) {
   const [job, setJob] = useState<DatasetFetchJob | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isCancelling, setIsCancelling] = useState(false)
@@ -88,9 +89,30 @@ export function DatasetFetchProgressDialog({ jobId, open, onClose, onJobFinished
     if (!jobId) return
     setIsCancelling(true)
     cancelDatasetJob(jobId)
-      .catch((err) => setError(err?.message || 'Failed to cancel dataset job.'))
-      .finally(() => setIsCancelling(false))
-  }, [jobId])
+      .then(() => {
+        // Wait a moment for the job status to update, then close
+        setTimeout(() => {
+          setIsClosing(true)
+          setTimeout(() => {
+            onClose()
+            setIsCancelling(false)
+          }, 150)
+        }, 500)
+      })
+      .catch((err) => {
+        setError(err?.message || 'Failed to cancel dataset job.')
+        setIsCancelling(false)
+      })
+  }, [jobId, onClose])
+
+  const handleRunInBackground = useCallback(() => {
+    if (onRunInBackground) {
+      setIsClosing(true)
+      setTimeout(() => {
+        onRunInBackground()
+      }, 150)
+    }
+  }, [onRunInBackground])
 
   const handleClose = () => {
     if (isComplete) {
@@ -166,6 +188,17 @@ export function DatasetFetchProgressDialog({ jobId, open, onClose, onJobFinished
             </div>
             <div className="flex items-center gap-3">
               {!isComplete && (
+                <>
+                  {onRunInBackground && (
+                    <button
+                      onClick={handleRunInBackground}
+                      disabled={isCancelling}
+                      className="px-4 py-2 border border-primary/30 text-primary/80 hover:bg-primary/10 hover:text-primary rounded-sm text-[10px] uppercase font-bold tracking-wider transition-all flex items-center gap-2"
+                    >
+                      <Minimize2 className="w-3 h-3" />
+                      Run in Background
+                    </button>
+                  )}
                   <button
                     onClick={handleCancel}
                     disabled={isCancelling}
@@ -174,6 +207,7 @@ export function DatasetFetchProgressDialog({ jobId, open, onClose, onJobFinished
                     <PauseOctagon className="w-3 h-3" />
                     {isCancelling ? 'ABORTING...' : 'ABORT JOB'}
                   </button>
+                </>
               )}
               <button
                 onClick={handleClose}

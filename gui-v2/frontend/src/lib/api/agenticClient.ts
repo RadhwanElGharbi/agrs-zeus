@@ -59,6 +59,12 @@ export interface AgenticHealthResponse {
 export interface AgenticRouteListItem {
   route_id: string
   segment_count: number | null
+  // Enhanced metadata
+  generation_method?: string
+  is_real_route?: boolean
+  constraint_compliant?: boolean
+  total_length_m?: number
+  cost_per_km?: number
 }
 
 export interface AgenticRouteDetail {

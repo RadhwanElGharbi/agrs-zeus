@@ -223,6 +223,12 @@ export interface RouteMetadata {
   total_cost_usd?: number;
   model_path?: string;
   timestamp?: string;
+  // Enhanced metadata from sidecar files
+  has_metadata_sidecar?: boolean;
+  generation_method?: string;
+  constraint_compliant?: boolean;
+  cost_per_km?: number;
+  is_real_route?: boolean;  // True for actual infrastructure data (highlighted in yellow)
 }
 
 export interface GeoJSON {
@@ -311,11 +317,113 @@ export async function fetchPIRLRoutes(project: string): Promise<RouteMetadata[]>
 export async function fetchPIRLRoute(project: string, routeName: string): Promise<GeoJSON> {
   const base = await getApiBaseAsync()
   const response = await fetch(`${base}/pirl/${project}/routes/${routeName}`);
-  
+
   if (!response.ok) {
     throw new Error(`Failed to fetch route ${routeName}: ${response.statusText}`);
   }
-  
+
+  return response.json();
+}
+
+/**
+ * Route metadata from sidecar file
+ */
+export interface RouteDetailedMetadata {
+  route_file: string
+  has_sidecar: boolean
+  message?: string
+  generated_at?: string
+  metadata_version?: string
+  route_info?: {
+    length_m: number
+    length_km: number
+    start_point: [number, number]
+    end_point: [number, number]
+    crs: string
+  }
+  generation_method?: {
+    method: string
+    algorithm: string
+    constraint_enforcement: string
+    description: string
+    source: string
+  }
+  cost_matrix?: Record<string, unknown>
+  saipem_constraints?: Record<string, unknown>
+  constraint_compliance?: {
+    overall_compliant: boolean
+    slope: {
+      compliant: boolean
+      max_allowed: number
+      max_found?: number
+      violation_count?: number
+      total_violation_length_m: number
+    }
+    built_up: {
+      compliant: boolean
+      total_violation_length_m: number
+    }
+    water: {
+      compliant: boolean
+      total_violation_length_m: number
+    }
+  }
+  terrain_statistics?: {
+    slope: {
+      min: number
+      max: number
+      mean: number
+      median: number
+      std: number
+    }
+    elevation: {
+      min: number
+      max: number
+      range: number
+      total_gain: number
+    }
+    terrain_distribution: {
+      flat_pct: number
+      rolling_pct: number
+      hilly_pct: number
+      mountainous_pct: number
+      steep_pct: number
+    }
+  }
+  landcover_distribution?: Record<string, {
+    length_m: number
+    percentage: number
+    landcover_class: number
+  }>
+  infrastructure_crossings?: {
+    roads: { total: number; by_type: Record<string, number>; cost: number }
+    railways: { total: number; by_type: Record<string, number>; cost: number }
+    waterways: { total: number; by_type: Record<string, number>; cost: number }
+    powerlines: { total: number; cost: number }
+  }
+  cost_breakdown?: {
+    base_construction: { cost: number; rate_per_m: number }
+    trenching: { cost: number; breakdown: Record<string, { length_m: number; cost: number }> }
+    landcover: { cost: number; breakdown: Record<string, { length_m: number; cost: number }> }
+    crossings: { cost: number; breakdown: { roads: number; railways: number; waterways: number; powerlines: number } }
+    subtotal: number
+    regional_multiplier: number
+    total: number
+    cost_per_km: number
+  }
+}
+
+/**
+ * Fetch detailed metadata for a PIRL route from sidecar file
+ */
+export async function fetchPIRLRouteMetadata(project: string, routeName: string): Promise<RouteDetailedMetadata> {
+  const base = await getApiBaseAsync()
+  const response = await fetch(`${base}/pirl/${project}/routes/${routeName}/metadata`);
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch route metadata for ${routeName}: ${response.statusText}`);
+  }
+
   return response.json();
 }
 

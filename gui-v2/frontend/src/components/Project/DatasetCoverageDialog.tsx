@@ -42,6 +42,7 @@ import { cn } from '@/lib/utils'
 type DatasetCoverageDialogProps = {
   open: boolean
   onClose: () => void
+  onRunInBackground?: (jobId: string) => void
 }
 
 type FetchState = 'idle' | 'loading' | 'ready' | 'error'
@@ -328,7 +329,7 @@ function scoreDatasetMatch(dataset: DatasetInfo, keywords: string[]): number {
   return score
 }
 
-export function DatasetCoverageDialog({ open, onClose }: DatasetCoverageDialogProps) {
+export function DatasetCoverageDialog({ open, onClose, onRunInBackground }: DatasetCoverageDialogProps) {
   const { currentProject, refreshProjectData } = useProject()
   const { reportAction } = useOnboarding()
   const coverageCache = useRef<Record<string, DatasetCoverageResponse>>({})
@@ -670,6 +671,15 @@ export function DatasetCoverageDialog({ open, onClose }: DatasetCoverageDialogPr
     setJobId(null)
   }
 
+  const handleRunInBackground = () => {
+    if (jobId && onRunInBackground) {
+      onRunInBackground(jobId)
+      setProgressDialogOpen(false)
+      // Close the coverage dialog too
+      handleClose()
+    }
+  }
+
   const minimumMet = datasetStatus?.minimum_requirements_met
   const readinessLoading = readinessState === 'loading'
 
@@ -986,6 +996,7 @@ export function DatasetCoverageDialog({ open, onClose }: DatasetCoverageDialogPr
         open={progressDialogOpen && Boolean(jobId)}
         onClose={handleProgressDialogClose}
         onJobFinished={handleJobFinished}
+        onRunInBackground={onRunInBackground ? handleRunInBackground : undefined}
       />
     </>,
     document.body

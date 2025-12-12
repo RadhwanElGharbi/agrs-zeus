@@ -31,9 +31,10 @@ interface SidebarProps {
   devMode?: boolean
   activeView: 'map' | 'digital-twin' | 'project-management'
   onViewChange: (view: 'map' | 'digital-twin' | 'project-management') => void
+  onDatasetRunInBackground?: (jobId: string) => void
 }
 
-export function Sidebar({ className, devMode = false, activeView, onViewChange }: SidebarProps) {
+export function Sidebar({ className, devMode = false, activeView, onViewChange, onDatasetRunInBackground }: SidebarProps) {
   const { currentProject } = useProject()
   const { reportAction } = useOnboarding()
   const [collapsed, setCollapsed] = useState(false)
@@ -243,7 +244,11 @@ export function Sidebar({ className, devMode = false, activeView, onViewChange }
       {!devMode && (
         <ZeusLoadingDialog open={isZeusAnalyzing} onComplete={handleAnalysisComplete} />
       )}
-      <DatasetCoverageDialog open={showDatasets} onClose={() => setShowDatasets(false)} />
+      <DatasetCoverageDialog
+        open={showDatasets}
+        onClose={() => setShowDatasets(false)}
+        onRunInBackground={onDatasetRunInBackground}
+      />
       <ProjectProfileDialog open={showProfile} onClose={() => setShowProfile(false)} />
       <PirlAiDialog open={showPirlAi} onClose={() => setShowPirlAi(false)} />
     </div>
