@@ -773,6 +773,62 @@ export async function listPirlOutputs(projectName: string): Promise<PirlOutput[]
   return response.json();
 }
 
+// PIRL Job Types and API
+export interface PirlJobPhase {
+  name: string;
+  status: 'pending' | 'in_progress' | 'completed' | 'failed';
+}
+
+export interface PirlJob {
+  job_id: string;
+  status: 'processing' | 'completed' | 'failed' | 'unknown' | 'error';
+  created_at: string;
+  estimated_completion: string;
+  remaining_seconds: number;
+  progress_percent: number;
+  current_phase: string;
+  phases: PirlJobPhase[];
+  active_profile: string;
+  directory: string;
+  error?: string;
+}
+
+export interface PirlJobCreateResponse {
+  success: boolean;
+  message: string;
+  job: {
+    job_id: string;
+    status: string;
+    created_at: string;
+    estimated_completion: string;
+    duration_hours: number;
+    directory: string;
+  };
+  files: {
+    request: string;
+    cost_matrix: string;
+    status: string;
+  };
+}
+
+export async function listPirlJobs(projectName: string): Promise<PirlJob[]> {
+  const base = await getApiBaseAsync();
+  const response = await fetch(`${base}/pirl/${projectName}/jobs`);
+  if (!response.ok) {
+    throw new Error(`Failed to list PIRL jobs: ${response.statusText}`);
+  }
+  return response.json();
+}
+
+export async function getPirlJob(projectName: string, jobId: string): Promise<PirlJob> {
+  const base = await getApiBaseAsync();
+  const response = await fetch(`${base}/pirl/${projectName}/jobs/${jobId}`);
+  if (!response.ok) {
+    throw new Error(`Failed to get PIRL job: ${response.statusText}`);
+  }
+  return response.json();
+}
+
 export interface PipelineSpecs {
   product: string;
   inner_diameter: number;
@@ -785,6 +841,130 @@ export async function fetchPipelineSpecs(projectName: string): Promise<PipelineS
   const response = await fetch(`${base}/projects/${projectName}/pipeline-specs`);
   if (!response.ok) {
     throw new Error(`Failed to fetch pipeline specs: ${response.statusText}`);
+  }
+  return response.json();
+}
+
+// Route profile types
+export interface ElevationPoint {
+  distance: number;
+  elevation: number | null;
+  x: number;
+  y: number;
+}
+
+export interface LandcoverPoint {
+  distance: number;
+  landcover_class: number | null;
+}
+
+export interface RouteProfileStatistics {
+  min_elevation: number;
+  max_elevation: number;
+  elevation_range: number;
+  total_distance: number;
+  sample_count: number;
+  total_climb: number;
+  total_descent: number;
+}
+
+export interface RouteProfileResponse {
+  route: string;
+  elevation_profile: ElevationPoint[];
+  landcover_profile: LandcoverPoint[];
+  statistics: RouteProfileStatistics;
+}
+
+/**
+ * Fetch elevation and landcover profile for a route by sampling DEM data
+ */
+export async function fetchRouteProfile(projectName: string, routeName: string, samples: number = 500): Promise<RouteProfileResponse> {
+  const base = await getApiBaseAsync();
+  const response = await fetch(`${base}/data/${projectName}/route-profile/${encodeURIComponent(routeName)}?samples=${samples}`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch route profile: ${response.statusText}`);
+  }
+  return response.json();
+}
+
+// Earthworks Analysis Types
+export interface EarthworksCrossSection {
+  chainage: number;
+  center_x: number;
+  center_y: number;
+  ground_elevation: number;
+  grading_elevation: number;
+  transect_offsets: number[];
+  transect_elevations: (number | null)[];
+  transversal_slope: number;
+  cut_area: number;
+  fill_area: number;
+  cut_volume: number;
+  fill_volume: number;
+  mass_haul: number;
+}
+
+export interface MassHaulPoint {
+  chainage: number;
+  cut: number;
+  fill: number;
+  balance: number;
+}
+
+export interface EarthworksParameters {
+  row_width: number;
+  section_spacing: number;
+  grading_slope: number;
+  batter_cut_angle: number;
+  batter_fill_angle: number;
+}
+
+export interface EarthworksSummary {
+  total_length_m: number;
+  num_sections: number;
+  total_cut_m3: number;
+  total_fill_m3: number;
+  mass_haul_balance_m3: number;
+  cut_fill_ratio: number | null;
+}
+
+export interface EarthworksResponse {
+  route: string;
+  parameters: EarthworksParameters;
+  summary: EarthworksSummary;
+  cross_sections: EarthworksCrossSection[];
+  mass_haul_diagram: MassHaulPoint[];
+}
+
+/**
+ * Fetch earthworks analysis for a route
+ * Computes cut/fill volumes along the pipeline ROW using cross-section method
+ */
+export async function fetchEarthworksAnalysis(
+  projectName: string,
+  routeName: string,
+  params?: {
+    row_width?: number;
+    section_spacing?: number;
+    grading_slope?: number;
+    batter_cut_angle?: number;
+    batter_fill_angle?: number;
+  }
+): Promise<EarthworksResponse> {
+  const base = await getApiBaseAsync();
+  const queryParams = new URLSearchParams();
+  if (params?.row_width) queryParams.set('row_width', params.row_width.toString());
+  if (params?.section_spacing) queryParams.set('section_spacing', params.section_spacing.toString());
+  if (params?.grading_slope) queryParams.set('grading_slope', params.grading_slope.toString());
+  if (params?.batter_cut_angle) queryParams.set('batter_cut_angle', params.batter_cut_angle.toString());
+  if (params?.batter_fill_angle) queryParams.set('batter_fill_angle', params.batter_fill_angle.toString());
+
+  const queryString = queryParams.toString();
+  const url = `${base}/data/${projectName}/earthworks/${encodeURIComponent(routeName)}${queryString ? '?' + queryString : ''}`;
+
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch earthworks analysis: ${response.statusText}`);
   }
   return response.json();
 }

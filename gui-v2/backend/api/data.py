@@ -1050,10 +1050,525 @@ async def clear_cache():
             disk_entries_removed = 0
         shutil.rmtree(TILE_CACHE_ROOT, ignore_errors=True)
     _ensure_cache_root()
-    
+
     return {
         "message": f"Cache cleared ({cache_size} memory entries, {disk_entries_removed} disk namespaces)",
         "status": "success"
     }
+
+
+@router.get("/data/{project}/route-profile/{route_name}")
+async def get_route_elevation_profile(project: str, route_name: str, samples: int = 500):
+    """
+    Extract elevation and landcover profile along a route by sampling DEM and landcover rasters.
+
+    Args:
+        project: Project name
+        route_name: Route filename (with or without .geojson extension)
+        samples: Number of sample points along the route (default 500)
+
+    Returns:
+        JSON with elevation_profile and landcover_profile arrays
+    """
+    try:
+        import rasterio
+    except ImportError:
+        raise HTTPException(status_code=500, detail="Rasterio not available for elevation extraction")
+
+    project_path = get_project_path_or_404(project)
+
+    # Find the route file
+    pirl_outputs = project_path / "PIRL" / "outputs"
+    route_file = pirl_outputs / route_name
+    if not route_file.exists() and not route_name.endswith('.geojson'):
+        route_file = pirl_outputs / f"{route_name}.geojson"
+
+    if not route_file.exists():
+        raise HTTPException(status_code=404, detail=f"Route '{route_name}' not found")
+
+    # Load route GeoJSON
+    with open(route_file, 'r') as f:
+        route_geojson = json.load(f)
+
+    # Extract all coordinates from the route (handling multi-segment routes)
+    all_coords = []
+    for feature in route_geojson.get('features', []):
+        geom = feature.get('geometry', {})
+        coords = geom.get('coordinates', [])
+        if geom.get('type') == 'LineString':
+            all_coords.extend(coords)
+        elif geom.get('type') == 'MultiLineString':
+            for line in coords:
+                all_coords.extend(line)
+
+    if not all_coords:
+        raise HTTPException(status_code=400, detail="Route has no coordinates")
+
+    # Calculate cumulative distances along the route
+    distances = [0.0]
+    for i in range(1, len(all_coords)):
+        dx = all_coords[i][0] - all_coords[i-1][0]
+        dy = all_coords[i][1] - all_coords[i-1][1]
+        dist = math.sqrt(dx*dx + dy*dy)
+        distances.append(distances[-1] + dist)
+
+    total_distance = distances[-1]
+
+    # Generate evenly spaced sample points along the route
+    sample_distances = [i * total_distance / (samples - 1) for i in range(samples)]
+    sample_points = []
+
+    coord_idx = 0
+    for target_dist in sample_distances:
+        # Find the segment containing this distance
+        while coord_idx < len(distances) - 1 and distances[coord_idx + 1] < target_dist:
+            coord_idx += 1
+
+        if coord_idx >= len(all_coords) - 1:
+            sample_points.append(all_coords[-1])
+        else:
+            # Interpolate between coords
+            seg_start = distances[coord_idx]
+            seg_end = distances[coord_idx + 1]
+            seg_length = seg_end - seg_start
+
+            if seg_length > 0:
+                t = (target_dist - seg_start) / seg_length
+            else:
+                t = 0
+
+            x = all_coords[coord_idx][0] + t * (all_coords[coord_idx + 1][0] - all_coords[coord_idx][0])
+            y = all_coords[coord_idx][1] + t * (all_coords[coord_idx + 1][1] - all_coords[coord_idx][1])
+            sample_points.append([x, y])
+
+    # Find DEM raster
+    raster_dir = project_path / "data" / "rasters" / "processed"
+    dem_file = None
+    landcover_file = None
+
+    for f in raster_dir.glob("dem*.tif"):
+        dem_file = f
+        break
+
+    for f in raster_dir.glob("landcover*.tif"):
+        landcover_file = f
+        break
+
+    elevation_profile = []
+    landcover_profile = []
+
+    # Sample DEM using rasterio
+    if dem_file and dem_file.exists():
+        with rasterio.open(dem_file) as ds:
+            nodata = ds.nodata
+
+            for i, (x, y) in enumerate(sample_points):
+                try:
+                    # Get row, col from coordinates
+                    row, col = ds.index(x, y)
+
+                    # Check bounds
+                    if 0 <= row < ds.height and 0 <= col < ds.width:
+                        # Read single pixel value
+                        window = rasterio.windows.Window(col, row, 1, 1)
+                        val = ds.read(1, window=window)
+                        elev = float(val[0, 0])
+                        if nodata is not None and elev == nodata:
+                            elev = None
+                    else:
+                        elev = None
+                except Exception:
+                    elev = None
+
+                elevation_profile.append({
+                    "distance": sample_distances[i],
+                    "elevation": elev,
+                    "x": x,
+                    "y": y
+                })
+
+    # Sample landcover using rasterio
+    if landcover_file and landcover_file.exists():
+        with rasterio.open(landcover_file) as ds:
+            nodata = ds.nodata
+
+            for i, (x, y) in enumerate(sample_points):
+                try:
+                    row, col = ds.index(x, y)
+
+                    if 0 <= row < ds.height and 0 <= col < ds.width:
+                        window = rasterio.windows.Window(col, row, 1, 1)
+                        val = ds.read(1, window=window)
+                        lc = int(val[0, 0])
+                        if nodata is not None and lc == nodata:
+                            lc = None
+                    else:
+                        lc = None
+                except Exception:
+                    lc = None
+
+                landcover_profile.append({
+                    "distance": sample_distances[i],
+                    "landcover_class": lc
+                })
+
+    # Apply smoothing to elevation data to remove noise
+    valid_elevations = [p["elevation"] for p in elevation_profile if p["elevation"] is not None]
+
+    if valid_elevations and len(valid_elevations) > 5:
+        # Apply moving average smoothing
+        window_size = max(5, len(valid_elevations) // 50)  # Adaptive window size
+        smoothed = []
+
+        for i in range(len(valid_elevations)):
+            start_idx = max(0, i - window_size // 2)
+            end_idx = min(len(valid_elevations), i + window_size // 2 + 1)
+            window_vals = valid_elevations[start_idx:end_idx]
+            smoothed.append(sum(window_vals) / len(window_vals))
+
+        # Update elevation profile with smoothed values
+        smooth_idx = 0
+        for p in elevation_profile:
+            if p["elevation"] is not None:
+                p["elevation"] = smoothed[smooth_idx]
+                smooth_idx += 1
+
+        valid_elevations = smoothed
+
+    stats = {}
+    if valid_elevations:
+        stats = {
+            "min_elevation": min(valid_elevations),
+            "max_elevation": max(valid_elevations),
+            "elevation_range": max(valid_elevations) - min(valid_elevations),
+            "total_distance": total_distance,
+            "sample_count": len(elevation_profile)
+        }
+
+        # Calculate total climb and descent from smoothed data
+        total_climb = 0
+        total_descent = 0
+        for i in range(1, len(valid_elevations)):
+            diff = valid_elevations[i] - valid_elevations[i-1]
+            if diff > 0:
+                total_climb += diff
+            else:
+                total_descent += abs(diff)
+
+        stats["total_climb"] = total_climb
+        stats["total_descent"] = total_descent
+
+    return JSONResponse(content={
+        "route": route_name,
+        "elevation_profile": elevation_profile,
+        "landcover_profile": landcover_profile,
+        "statistics": stats
+    })
+
+
+@router.get("/data/{project}/earthworks/{route_name}")
+async def get_earthworks_analysis(
+    project: str,
+    route_name: str,
+    row_width: float = 20.0,
+    section_spacing: float = 50.0,
+    grading_slope: float = 10.0,
+    batter_cut_angle: float = 45.0,
+    batter_fill_angle: float = 35.0
+):
+    """
+    Earthworks analysis: compute cut/fill volumes along pipeline ROW.
+
+    Uses cross-section method with Torricelli formula: V = d/2 * (F1 + F2)
+
+    Args:
+        project: Project name
+        route_name: Route filename (with or without .geojson extension)
+        row_width: Right-of-way width in meters (default 20m, typical working width)
+        section_spacing: Distance between cross-sections in meters (default 50m)
+        grading_slope: Max slope % for grading plane (default 10%)
+        batter_cut_angle: Cut slope angle in degrees (default 45)
+        batter_fill_angle: Fill slope angle in degrees (default 35)
+
+    Returns:
+        JSON with cross-section data, cut/fill volumes, mass haul balance
+    """
+    try:
+        import rasterio
+        from rasterio.transform import rowcol
+    except ImportError:
+        raise HTTPException(status_code=500, detail="Rasterio not available for earthworks analysis")
+
+    project_path = get_project_path_or_404(project)
+
+    # Find the route file
+    pirl_outputs = project_path / "PIRL" / "outputs"
+    route_file = pirl_outputs / route_name
+    if not route_file.exists() and not route_name.endswith('.geojson'):
+        route_file = pirl_outputs / f"{route_name}.geojson"
+
+    if not route_file.exists():
+        raise HTTPException(status_code=404, detail=f"Route '{route_name}' not found")
+
+    # Load route GeoJSON
+    with open(route_file, 'r') as f:
+        route_geojson = json.load(f)
+
+    # Extract all coordinates from the route
+    all_coords = []
+    for feature in route_geojson.get('features', []):
+        geom = feature.get('geometry', {})
+        coords = geom.get('coordinates', [])
+        if geom.get('type') == 'LineString':
+            all_coords.extend(coords)
+        elif geom.get('type') == 'MultiLineString':
+            for line in coords:
+                all_coords.extend(line)
+
+    if len(all_coords) < 2:
+        raise HTTPException(status_code=400, detail="Route has insufficient coordinates")
+
+    # Calculate cumulative distances along the route
+    distances = [0.0]
+    for i in range(1, len(all_coords)):
+        dx = all_coords[i][0] - all_coords[i-1][0]
+        dy = all_coords[i][1] - all_coords[i-1][1]
+        dist = math.sqrt(dx*dx + dy*dy)
+        distances.append(distances[-1] + dist)
+
+    total_distance = distances[-1]
+
+    # Find DEM raster
+    raster_dir = project_path / "data" / "rasters" / "processed"
+    dem_file = None
+    for f in raster_dir.glob("dem*.tif"):
+        dem_file = f
+        break
+
+    if not dem_file or not dem_file.exists():
+        raise HTTPException(status_code=404, detail="DEM raster not found for earthworks analysis")
+
+    # Open DEM for sampling
+    with rasterio.open(dem_file) as dem_ds:
+        dem_nodata = dem_ds.nodata
+        dem_transform = dem_ds.transform
+        dem_crs = dem_ds.crs
+
+        # Helper to sample DEM at a point
+        def sample_dem(x, y):
+            try:
+                row, col = dem_ds.index(x, y)
+                if 0 <= row < dem_ds.height and 0 <= col < dem_ds.width:
+                    window = rasterio.windows.Window(col, row, 1, 1)
+                    val = dem_ds.read(1, window=window)
+                    elev = float(val[0, 0])
+                    if dem_nodata is not None and elev == dem_nodata:
+                        return None
+                    return elev
+            except Exception:
+                pass
+            return None
+
+        # Helper to get point at distance along route
+        def get_point_at_distance(target_dist):
+            for i in range(len(distances) - 1):
+                if distances[i] <= target_dist <= distances[i + 1]:
+                    seg_length = distances[i + 1] - distances[i]
+                    if seg_length > 0:
+                        t = (target_dist - distances[i]) / seg_length
+                    else:
+                        t = 0
+                    x = all_coords[i][0] + t * (all_coords[i + 1][0] - all_coords[i][0])
+                    y = all_coords[i][1] + t * (all_coords[i + 1][1] - all_coords[i][1])
+
+                    # Calculate direction vector for cross-section perpendicular
+                    dx = all_coords[i + 1][0] - all_coords[i][0]
+                    dy = all_coords[i + 1][1] - all_coords[i][1]
+                    length = math.sqrt(dx*dx + dy*dy)
+                    if length > 0:
+                        # Perpendicular unit vector (rotated 90 degrees)
+                        perp_x = -dy / length
+                        perp_y = dx / length
+                    else:
+                        perp_x, perp_y = 1, 0
+
+                    return x, y, perp_x, perp_y
+            return all_coords[-1][0], all_coords[-1][1], 1, 0
+
+        # Generate cross-sections at EVERY vertex along the route (all DEM points)
+        cross_sections = []
+        half_width = row_width / 2
+        transect_samples = 21  # Number of sample points per cross-section
+
+        for vertex_idx in range(len(all_coords)):
+            chainage = distances[vertex_idx]
+            cx, cy = all_coords[vertex_idx][0], all_coords[vertex_idx][1]
+
+            # Calculate perpendicular direction from adjacent vertices
+            if vertex_idx < len(all_coords) - 1:
+                dx = all_coords[vertex_idx + 1][0] - all_coords[vertex_idx][0]
+                dy = all_coords[vertex_idx + 1][1] - all_coords[vertex_idx][1]
+            elif vertex_idx > 0:
+                dx = all_coords[vertex_idx][0] - all_coords[vertex_idx - 1][0]
+                dy = all_coords[vertex_idx][1] - all_coords[vertex_idx - 1][1]
+            else:
+                dx, dy = 1, 0
+
+            length = math.sqrt(dx*dx + dy*dy)
+            if length > 0:
+                # Perpendicular unit vector (rotated 90 degrees)
+                perp_x = -dy / length
+                perp_y = dx / length
+            else:
+                perp_x, perp_y = 1, 0
+
+            # Sample elevations across the transect
+            transect_elevations = []
+            transect_offsets = []
+
+            for j in range(transect_samples):
+                # Offset from -half_width to +half_width
+                offset = -half_width + (j / (transect_samples - 1)) * row_width
+                sample_x = cx + offset * perp_x
+                sample_y = cy + offset * perp_y
+                elev = sample_dem(sample_x, sample_y)
+
+                transect_offsets.append(offset)
+                transect_elevations.append(elev if elev is not None else 0)
+
+            # Get centerline elevation
+            center_elev = sample_dem(cx, cy)
+            if center_elev is None:
+                center_elev = sum(e for e in transect_elevations if e) / max(1, len([e for e in transect_elevations if e]))
+
+            # Calculate transversal slope (%)
+            left_elev = transect_elevations[0] if transect_elevations[0] else center_elev
+            right_elev = transect_elevations[-1] if transect_elevations[-1] else center_elev
+            transversal_slope = abs(right_elev - left_elev) / row_width * 100 if row_width > 0 else 0
+
+            cross_sections.append({
+                "chainage": round(chainage, 2),
+                "center_x": round(cx, 2),
+                "center_y": round(cy, 2),
+                "ground_elevation": round(center_elev, 2),
+                "transect_offsets": [round(o, 2) for o in transect_offsets],
+                "transect_elevations": [round(e, 2) if e else None for e in transect_elevations],
+                "transversal_slope": round(transversal_slope, 2)
+            })
+
+    # Calculate grading plane elevations
+    # Strategy: minimize mass haul balance by adjusting grade elevation
+    # Start with simple approach: use smoothed centerline profile with max slope constraint
+
+    centerline_elevations = [cs["ground_elevation"] for cs in cross_sections]
+    section_chainages = [cs["chainage"] for cs in cross_sections]
+
+    # Apply slope constraint to create grading plane
+    grading_elevations = centerline_elevations.copy()
+
+    # Forward pass - constrain uphill (using actual distance between vertices)
+    for i in range(1, len(grading_elevations)):
+        segment_distance = section_chainages[i] - section_chainages[i-1]
+        max_rise = segment_distance * grading_slope / 100
+        max_elev = grading_elevations[i-1] + max_rise
+        min_elev = grading_elevations[i-1] - max_rise
+        grading_elevations[i] = max(min_elev, min(max_elev, grading_elevations[i]))
+
+    # Backward pass - constrain downhill (using actual distance between vertices)
+    for i in range(len(grading_elevations) - 2, -1, -1):
+        segment_distance = section_chainages[i+1] - section_chainages[i]
+        max_rise = segment_distance * grading_slope / 100
+        max_elev = grading_elevations[i+1] + max_rise
+        min_elev = grading_elevations[i+1] - max_rise
+        grading_elevations[i] = max(min_elev, min(max_elev, grading_elevations[i]))
+
+    # Calculate cut and fill volumes using Torricelli formula
+    # V = d/2 * (F1 + F2) where F1 and F2 are cut/fill areas at adjacent sections
+
+    cumulative_cut = 0.0
+    cumulative_fill = 0.0
+    mass_haul_balance = []
+
+    for i, cs in enumerate(cross_sections):
+        ground_elevs = cs["transect_elevations"]
+        grading_elev = grading_elevations[i]
+        offsets = cs["transect_offsets"]
+
+        # Calculate cut and fill areas for this cross-section
+        cut_area = 0.0
+        fill_area = 0.0
+
+        for j in range(len(offsets) - 1):
+            # Width of this unit element
+            di = abs(offsets[j+1] - offsets[j])
+
+            # Average ground elevation in this segment
+            g1 = ground_elevs[j] if ground_elevs[j] else grading_elev
+            g2 = ground_elevs[j+1] if ground_elevs[j+1] else grading_elev
+            avg_ground = (g1 + g2) / 2
+
+            # Difference from grading plane
+            diff = avg_ground - grading_elev
+
+            if diff > 0:
+                # Cut required (ground is above grading plane)
+                cut_area += diff * di
+            else:
+                # Fill required (ground is below grading plane)
+                fill_area += abs(diff) * di
+
+        cs["grading_elevation"] = round(grading_elev, 2)
+        cs["cut_area"] = round(cut_area, 2)
+        cs["fill_area"] = round(fill_area, 2)
+
+        # Calculate volumes using Torricelli formula between sections
+        if i > 0:
+            prev_cs = cross_sections[i-1]
+            # Distance between this section and the previous one
+            d = cs["chainage"] - prev_cs["chainage"]
+
+            # V = d/2 * (F1 + F2)
+            cut_volume = d / 2 * (prev_cs["cut_area"] + cut_area)
+            fill_volume = d / 2 * (prev_cs["fill_area"] + fill_area)
+
+            cumulative_cut += cut_volume
+            cumulative_fill += fill_volume
+
+        cs["cut_volume"] = round(cumulative_cut, 2)
+        cs["fill_volume"] = round(cumulative_fill, 2)
+        cs["mass_haul"] = round(cumulative_cut - cumulative_fill, 2)
+
+        mass_haul_balance.append({
+            "chainage": cs["chainage"],
+            "cut": round(cumulative_cut, 2),
+            "fill": round(cumulative_fill, 2),
+            "balance": round(cumulative_cut - cumulative_fill, 2)
+        })
+
+    # Summary statistics
+    total_cut = cross_sections[-1]["cut_volume"] if cross_sections else 0
+    total_fill = cross_sections[-1]["fill_volume"] if cross_sections else 0
+    final_balance = total_cut - total_fill
+
+    return JSONResponse(content={
+        "route": route_name,
+        "parameters": {
+            "row_width": row_width,
+            "section_spacing": section_spacing,
+            "grading_slope": grading_slope,
+            "batter_cut_angle": batter_cut_angle,
+            "batter_fill_angle": batter_fill_angle
+        },
+        "summary": {
+            "total_length_m": round(total_distance, 2),
+            "num_sections": len(cross_sections),
+            "total_cut_m3": round(total_cut, 2),
+            "total_fill_m3": round(total_fill, 2),
+            "mass_haul_balance_m3": round(final_balance, 2),
+            "cut_fill_ratio": round(total_cut / total_fill, 3) if total_fill > 0 else None
+        },
+        "cross_sections": cross_sections,
+        "mass_haul_diagram": mass_haul_balance
+    })
 
 
