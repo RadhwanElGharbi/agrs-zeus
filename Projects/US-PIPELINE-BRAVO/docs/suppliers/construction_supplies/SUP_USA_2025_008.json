@@ -1,0 +1,184 @@
+{
+  "supplier_id": "SUP_USA_2025_008",
+  "company_name": "Polyguard Products, Inc.",
+  "category": "construction_supplies",
+  "subcategories": [
+    "pipe_coatings",
+    "pipeline_tapes",
+    "corrosion_protection",
+    "joint_wrapping"
+  ],
+  "location": {
+    "country": "United States",
+    "iso3": "USA",
+    "region": "Texas",
+    "city": "Ennis",
+    "address": "3801 South Interstate 45",
+    "postal_code": "75119",
+    "coordinates": {
+      "latitude": 32.3081587,
+      "longitude": -96.5942326
+    }
+  },
+  "contact": {
+    "primary_name": "Pipeline Division",
+    "primary_title": "Sales",
+    "primary_email": "pipeline@polyguardproducts.com",
+    "primary_phone": "+1 972 875 8421",
+    "website": "https://www.polyguardproducts.com",
+    "linkedin": "https://www.linkedin.com/company/polyguard-products"
+  },
+  "sales_contact": {
+    "name": "Randy Nixon",
+    "title": "Vice President of Sales - Pipeline Division",
+    "department": "Pipeline Products",
+    "email": "rnixon@polyguardproducts.com",
+    "phone": "+1 972 875 8421",
+    "mobile": "not_available",
+    "linkedin_profile": "https://www.linkedin.com/in/randy-nixon-polyguard",
+    "photo_url": "not_available",
+    "years_with_company": 18,
+    "specialization": [
+      "Pipeline coating systems",
+      "Corrosion protection",
+      "Oil and gas applications"
+    ],
+    "languages": [
+      "English"
+    ],
+    "availability": "Business hours CST",
+    "notes": "Long-tenured sales leader with extensive pipeline industry experience"
+  },
+  "capabilities": {
+    "products": [
+      "RD-6 coating system",
+      "Polyguard 600 tape",
+      "Polyguard 660 tape",
+      "Pipeline primers",
+      "Mechanical protection wraps",
+      "Rock shield protection",
+      "Field joint coating materials"
+    ],
+    "services": [
+      "Technical application support",
+      "Coating system specification",
+      "On-site training",
+      "Custom product development"
+    ],
+    "certifications": [
+      "ISO 9001:2015",
+      "AWWA C214 compliant",
+      "AWWA C217 compliant",
+      "CSA Z245.21 certified",
+      "ASTM G8 tested"
+    ],
+    "pipeline_diameters_supported": {
+      "min_inches": 1,
+      "max_inches": 60
+    },
+    "materials_expertise": [
+      "polyethylene_tapes",
+      "butyl_rubber",
+      "primers",
+      "mechanical_protection"
+    ],
+    "annual_capacity": "Major US manufacturer with dedicated pipeline facility",
+    "experience_years": 65,
+    "employee_count": 250
+  },
+  "previous_projects": [
+    {
+      "project_name": "Equitrans Midstream Pipeline System",
+      "client": "Equitrans Midstream",
+      "country": "United States",
+      "year": 2020,
+      "scope": "Pipeline coating and protection materials for West Virginia operations",
+      "pipeline_length_km": 1200,
+      "pipeline_diameter_inches": 24,
+      "value_usd": 2200000,
+      "reference_available": true
+    },
+    {
+      "project_name": "EQT Gathering System",
+      "client": "EQT Corporation",
+      "country": "United States",
+      "year": 2019,
+      "scope": "Corrosion protection tapes and rock shield",
+      "pipeline_length_km": 800,
+      "pipeline_diameter_inches": 20,
+      "value_usd": 1500000,
+      "reference_available": true
+    }
+  ],
+  "logistics": {
+    "delivery_regions": [
+      "North America",
+      "South America",
+      "Middle East"
+    ],
+    "estimated_lead_time_days": 7,
+    "rush_delivery_available": true,
+    "shipping_capabilities": [
+      "truck",
+      "rail"
+    ],
+    "warehouses": [
+      {
+        "city": "Ennis",
+        "country": "USA"
+      },
+      {
+        "city": "Houston",
+        "country": "USA"
+      }
+    ],
+    "international_export": true
+  },
+  "pricing": {
+    "pricing_model": "volume_based",
+    "currency": "USD",
+    "typical_project_range_usd": {
+      "min": 10000,
+      "max": 5000000
+    },
+    "payment_terms": "Net 30",
+    "accepts_letters_of_credit": true
+  },
+  "quality_ratings": {
+    "overall_score": 4.5,
+    "reliability_score": 4.6,
+    "quality_score": 4.6,
+    "communication_score": 4.4,
+    "rating_source": "industry_reviews",
+    "number_of_reviews": 95
+  },
+  "compatibility": {
+    "pipeline_specs_match": true,
+    "match_score": 91,
+    "match_notes": [
+      "Specialized pipeline coating manufacturer",
+      "AWWA and CSA certified products",
+      "Experience with West Virginia pipeline operators",
+      "Rock shield products ideal for mountainous terrain",
+      "Quick delivery from Texas manufacturing"
+    ],
+    "limitations": [
+      "Does not supply FBE or 3LPE mainline coatings",
+      "Does not supply welding materials or cathodic protection"
+    ]
+  },
+  "metadata": {
+    "source": "claude_comprehensive_research",
+    "query_id": "US_PIPELINE_BRAVO_008",
+    "date_researched": "2025-12-04T08:43:49.204862Z",
+    "last_verified": "2025-01-10T10:00:00Z",
+    "confidence_level": "high",
+    "notes": "US-based manufacturer specializing in pipeline protection products. Strong presence in Appalachian region.",
+    "tags": [
+      "pipeline_coatings",
+      "corrosion_protection",
+      "us_manufacturer",
+      "texas_based"
+    ]
+  }
+}

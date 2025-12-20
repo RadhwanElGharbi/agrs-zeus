@@ -118,7 +118,8 @@ export function CompareRoutesDialog({ isOpen, onClose, selectedRouteIds }: Compa
             routeDetail = {
               route_id: routeId,
               segment_count: features.length,
-              metadata: metadata
+              metadata: metadata,
+              bounds: null
             }
             // Convert features to segments format
             segments = features.map((f: any, idx: number) => ({

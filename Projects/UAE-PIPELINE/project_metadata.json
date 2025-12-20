@@ -1,0 +1,16 @@
+{
+    "project_name": "UAE-PIPELINE",
+    "project_id": "AGRS_UAE_PIPELINE_ARE_2025_001",
+    "date_created": "2025-12-06T14:31:26Z",
+    "status": "active",
+    "project_creator": "Raaid Tamjeed",
+    "collaborators": [],
+    "organization": "AGRS",
+    "country": "United Arab Emirates",
+    "iso3": "ARE",
+    "measurement_system": "SI",
+    "crs": {
+        "epsg": 32640,
+        "name": "WGS 84 / UTM zone 40N"
+    }
+}

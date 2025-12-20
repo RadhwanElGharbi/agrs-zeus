@@ -1,0 +1,75 @@
+{
+  "dataset_name": "USGS 3DEP LiDAR DEM 1m (Processed)",
+  "category": "dem",
+  "project": "YC-PIPELINE-DEMO",
+  "processing_date": "2025-12-12T19:16:29.414773Z",
+  "target_crs": "EPSG:32610",
+  "target_crs_name": "WGS 84 / UTM zone 10N",
+  "data_type": "Raster",
+  "format": "GeoTIFF",
+  "processed_path": "/opt/agrs/Projects/YC-PIPELINE-DEMO/data/rasters/processed/dem_epsg32610_processed.tif",
+  "raw_path": "/opt/agrs/Projects/YC-PIPELINE-DEMO/data/rasters/raw/dem_usgs_3dep_1m_raw.tif",
+  "raw_metadata_file": "/opt/agrs/Projects/YC-PIPELINE-DEMO/data/rasters/raw/dem_usgs_3dep_1m_raw.tif.json",
+  "source_files": [
+    {
+      "filename": "dem_usgs_3dep_1m_raw.tif",
+      "metadata": "dem_usgs_3dep_1m_raw.tif.json"
+    }
+  ],
+  "operations_applied": [
+    {
+      "operation": "reproject",
+      "tool": "gdalwarp",
+      "target_epsg": 32610
+    },
+    {
+      "operation": "clip",
+      "tool": "AOI cutline",
+      "source": "/opt/agrs/Projects/YC-PIPELINE-DEMO/aoi/aoi.geojson"
+    }
+  ],
+  "file_size_bytes": 405943438,
+  "validation_status": "passed",
+  "validation_date": "2025-12-12T19:16:29.414802Z",
+  "protocol_reference": "/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md",
+  "protocol_version": "1.0",
+  "zeus_version": "0.1.0",
+  "notes": "Highest quality national elevation data for the US. LiDAR-derived bare-earth DEM with vertical accuracy typically better than 10cm RMSE.",
+  "source": "USGS 3D Elevation Program (3DEP) LiDAR",
+  "provider": "U.S. Geological Survey",
+  "provider_url": "https://www.usgs.gov/3d-elevation-program",
+  "coverage_date": "Current (continuously updated)",
+  "documentation_url": "https://www.usgs.gov/3d-elevation-program",
+  "license": "Public Domain (US Government Work)",
+  "attribution": "U.S. Geological Survey 3D Elevation Program (3DEP).",
+  "resolution_m": {
+    "x": 1.0000321342200438,
+    "y": 0.9999678703632097
+  },
+  "selected_override": "LiDAR DEM 1m",
+  "dimensions": {
+    "width": 11816,
+    "height": 8974
+  },
+  "extent": {
+    "minx": 520965.072,
+    "miny": 4228280.251,
+    "maxx": 532781.452,
+    "maxy": 4237253.963,
+    "crs": "EPSG:4326"
+  },
+  "bbox_wgs84": {
+    "west": -122.7605517,
+    "south": 38.2018764,
+    "east": -122.6251805,
+    "north": 38.2831043,
+    "crs": "EPSG:4326"
+  },
+  "statistics": {
+    "min": 1.1242516040802,
+    "max": 196.17842102051,
+    "mean": 60.169034592327,
+    "stddev": 39.469861061325,
+    "valid_percent": 95.14
+  }
+}

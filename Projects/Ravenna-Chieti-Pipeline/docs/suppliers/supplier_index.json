@@ -1,0 +1,258 @@
+{
+  "project": "test_project2",
+  "total_suppliers": 42,
+  "suppliers": [
+    {
+      "supplier_id": "SUP_PM_2025_001",
+      "company_name": "CTA Group",
+      "category": "pipeline_manufacturer",
+      "file_path": "pipeline_manufacturers/SUP_ITA_2025_006.json"
+    },
+    {
+      "supplier_id": "SUP_PM_2025_002",
+      "company_name": "Cimolai",
+      "category": "pipeline_manufacturer",
+      "file_path": "pipeline_manufacturers/SUP_ITA_2025_002.json"
+    },
+    {
+      "supplier_id": "SUP_PM_2025_003",
+      "company_name": "Terranova Steel",
+      "category": "pipeline_manufacturer",
+      "file_path": "pipeline_manufacturers/SUP_ITA_2025_003.json"
+    },
+    {
+      "supplier_id": "SUP_PM_2025_004",
+      "company_name": "Pietra S.p.A.",
+      "category": "pipeline_manufacturer",
+      "file_path": "pipeline_manufacturers/SUP_ITA_2025_008.json"
+    },
+    {
+      "supplier_id": "SUP_PM_2025_005",
+      "company_name": "Acciaitubi",
+      "category": "pipeline_manufacturer",
+      "file_path": "pipeline_manufacturers/SUP_ITA_2025_005.json"
+    },
+    {
+      "supplier_id": "SUP_PM_2025_006",
+      "company_name": "Tenaris S.p.A.",
+      "category": "pipeline_manufacturer",
+      "file_path": "pipeline_manufacturers/SUP_ITA_2025_010.json"
+    },
+    {
+      "supplier_id": "SUP_PM_2025_007",
+      "company_name": "Tubificio Lombardo",
+      "category": "pipeline_manufacturer",
+      "file_path": "pipeline_manufacturers/SUP_ITA_2025_004.json"
+    },
+    {
+      "supplier_id": "SUP_PM_2025_008",
+      "company_name": "TUBI S.p.A.",
+      "category": "pipeline_manufacturer",
+      "file_path": "pipeline_manufacturers/SUP_ITA_2025_001.json"
+    },
+    {
+      "supplier_id": "SUP_PM_2025_009",
+      "company_name": "Ronconi SpA",
+      "category": "pipeline_manufacturer",
+      "file_path": "pipeline_manufacturers/SUP_ITA_2025_009.json"
+    },
+    {
+      "supplier_id": "SUP_PM_2025_010",
+      "company_name": "Tectubi Raccordi",
+      "category": "pipeline_manufacturer",
+      "file_path": "pipeline_manufacturers/SUP_ITA_2025_007.json"
+    },
+    {
+      "supplier_id": "SUP_CS_2025_011",
+      "company_name": "Rovetta Metal Steel srl",
+      "category": "construction_supplies",
+      "file_path": "construction_supplies/SUP_ITA_2025_006.json"
+    },
+    {
+      "supplier_id": "SUP_CS_2025_012",
+      "company_name": "Cogne Acciai Speciali S.p.A.",
+      "category": "construction_supplies",
+      "file_path": "construction_supplies/SUP_ITA_2025_002.json"
+    },
+    {
+      "supplier_id": "SUP_CS_2025_013",
+      "company_name": "RIZZINOX",
+      "category": "construction_supplies",
+      "file_path": "construction_supplies/SUP_ITA_2025_003.json"
+    },
+    {
+      "supplier_id": "SUP_CS_2025_014",
+      "company_name": "G & B INOX s.r.l",
+      "category": "construction_supplies",
+      "file_path": "construction_supplies/SUP_ITA_2025_008.json"
+    },
+    {
+      "supplier_id": "SUP_CS_2025_015",
+      "company_name": "Rubiera Special Steel SpA",
+      "category": "construction_supplies",
+      "file_path": "construction_supplies/SUP_ITA_2025_005.json"
+    },
+    {
+      "supplier_id": "SUP_CS_2025_016",
+      "company_name": "Acciaierie Bertoli Safau SpA",
+      "category": "construction_supplies",
+      "file_path": "construction_supplies/SUP_ITA_2025_010.json"
+    },
+    {
+      "supplier_id": "SUP_CS_2025_017",
+      "company_name": "EURAL Gnutti",
+      "category": "construction_supplies",
+      "file_path": "construction_supplies/SUP_ITA_2025_004.json"
+    },
+    {
+      "supplier_id": "SUP_CS_2025_018",
+      "company_name": "Alfa Acciai Group",
+      "category": "construction_supplies",
+      "file_path": "construction_supplies/SUP_ITA_2025_001.json"
+    },
+    {
+      "supplier_id": "SUP_CS_2025_019",
+      "company_name": "Steel Net",
+      "category": "construction_supplies",
+      "file_path": "construction_supplies/SUP_ITA_2025_009.json"
+    },
+    {
+      "supplier_id": "SUP_CS_2025_020",
+      "company_name": "Meccanica Lombarda s.r.l.",
+      "category": "construction_supplies",
+      "file_path": "construction_supplies/SUP_ITA_2025_007.json"
+    },
+    {
+      "supplier_id": "SUP_EM_2025_021",
+      "company_name": "VF VENIERI S.p.A.",
+      "category": "equipment_manufacturer",
+      "file_path": "equipment_manufacturers/SUP_ITA_2025_006.json"
+    },
+    {
+      "supplier_id": "SUP_EM_2025_022",
+      "company_name": "Bonatti S.p.A.",
+      "category": "equipment_manufacturer",
+      "file_path": "equipment_manufacturers/SUP_ITA_2025_002.json"
+    },
+    {
+      "supplier_id": "SUP_EM_2025_023",
+      "company_name": "MAX STREICHER S.p.A.",
+      "category": "equipment_manufacturer",
+      "file_path": "equipment_manufacturers/SUP_ITA_2025_003.json"
+    },
+    {
+      "supplier_id": "SUP_EM_2025_024",
+      "company_name": "Propipe Holding Group",
+      "category": "equipment_manufacturer",
+      "file_path": "equipment_manufacturers/SUP_ITA_2025_005.json"
+    },
+    {
+      "supplier_id": "SUP_EM_2025_025",
+      "company_name": "Saipem SpA",
+      "category": "equipment_manufacturer",
+      "file_path": "equipment_manufacturers/SUP_ITA_2025_004.json"
+    },
+    {
+      "supplier_id": "SUP_EM_2025_026",
+      "company_name": "Tenaris S.p.A.",
+      "category": "equipment_manufacturer",
+      "file_path": "equipment_manufacturers/SUP_ITA_2025_001.json"
+    },
+    {
+      "supplier_id": "SUP_EM_2025_027",
+      "company_name": "AlmaCrawler Company",
+      "category": "equipment_manufacturer",
+      "file_path": "equipment_manufacturers/SUP_ITA_2025_007.json"
+    },
+    {
+      "supplier_id": "SUP_SV_2025_028",
+      "company_name": "Maire Tecnimont S.p.A.",
+      "category": "construction_services",
+      "file_path": "construction_services/SUP_ITA_2025_006.json"
+    },
+    {
+      "supplier_id": "SUP_SV_2025_029",
+      "company_name": "Saipem SpA",
+      "category": "construction_services",
+      "file_path": "construction_services/SUP_ITA_2025_002.json"
+    },
+    {
+      "supplier_id": "SUP_SV_2025_030",
+      "company_name": "Bonatti S.p.A.",
+      "category": "construction_services",
+      "file_path": "construction_services/SUP_ITA_2025_003.json"
+    },
+    {
+      "supplier_id": "SUP_SV_2025_031",
+      "company_name": "Impresa Pizzarotti & C. S.p.A.",
+      "category": "construction_services",
+      "file_path": "construction_services/SUP_ITA_2025_008.json"
+    },
+    {
+      "supplier_id": "SUP_SV_2025_032",
+      "company_name": "Webuild S.p.A.",
+      "category": "construction_services",
+      "file_path": "construction_services/SUP_ITA_2025_005.json"
+    },
+    {
+      "supplier_id": "SUP_SV_2025_033",
+      "company_name": "Terna S.p.A.",
+      "category": "construction_services",
+      "file_path": "construction_services/SUP_ITA_2025_010.json"
+    },
+    {
+      "supplier_id": "SUP_SV_2025_034",
+      "company_name": "SICIM S.p.A.",
+      "category": "construction_services",
+      "file_path": "construction_services/SUP_ITA_2025_004.json"
+    },
+    {
+      "supplier_id": "SUP_SV_2025_035",
+      "company_name": "MAX STREICHER S.p.A.",
+      "category": "construction_services",
+      "file_path": "construction_services/SUP_ITA_2025_001.json"
+    },
+    {
+      "supplier_id": "SUP_SV_2025_036",
+      "company_name": "Effegidi International S.p.A.",
+      "category": "construction_services",
+      "file_path": "construction_services/SUP_ITA_2025_009.json"
+    },
+    {
+      "supplier_id": "SUP_SV_2025_037",
+      "company_name": "ASTM S.p.A.",
+      "category": "construction_services",
+      "file_path": "construction_services/SUP_ITA_2025_007.json"
+    },
+    {
+      "supplier_id": "SUP_CO_2025_038",
+      "company_name": "Ramboll Environment & Health",
+      "category": "consultancy",
+      "file_path": "consultancies/SUP_ITA_2025_002.json"
+    },
+    {
+      "supplier_id": "SUP_CO_2025_039",
+      "company_name": "Montana S.p.A.",
+      "category": "consultancy",
+      "file_path": "consultancies/SUP_ITA_2025_003.json"
+    },
+    {
+      "supplier_id": "SUP_CO_2025_040",
+      "company_name": "AECOM Italia",
+      "category": "consultancy",
+      "file_path": "consultancies/SUP_ITA_2025_005.json"
+    },
+    {
+      "supplier_id": "SUP_CO_2025_041",
+      "company_name": "ESA | Engineering Consultancy & Sustainability",
+      "category": "consultancy",
+      "file_path": "consultancies/SUP_ITA_2025_004.json"
+    },
+    {
+      "supplier_id": "SUP_CO_2025_042",
+      "company_name": "CESI SpA",
+      "category": "consultancy",
+      "file_path": "consultancies/SUP_ITA_2025_001.json"
+    }
+  ]
+}

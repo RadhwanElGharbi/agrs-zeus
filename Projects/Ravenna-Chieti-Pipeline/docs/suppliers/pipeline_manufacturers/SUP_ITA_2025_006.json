@@ -1,0 +1,126 @@
+{
+  "supplier_id": "SUP_PM_2025_001",
+  "company_name": "CTA Group",
+  "category": "pipeline_manufacturer",
+  "subcategories": [
+    "carbon_steel_pipes",
+    "alloy_steel_pipes",
+    "stainless_steel_pipes",
+    "valves",
+    "pipe_fittings",
+    "flanges"
+  ],
+  "location": {
+    "country": "Italy",
+    "iso3": "ITA",
+    "region": "Piedmont",
+    "city": "Grugliasco",
+    "address": "not_available",
+    "postal_code": "not_available",
+    "coordinates": {
+      "latitude": 45.1054,
+      "longitude": 7.5581
+    }
+  },
+  "contact": {
+    "primary_name": "not_available",
+    "primary_title": "not_available",
+    "primary_email": "info@ctagroup.it",
+    "primary_phone": "+39 011 4033911",
+    "website": "https://www.ctagroup.it",
+    "linkedin": "https://www.linkedin.com/company/cta-group"
+  },
+  "capabilities": {
+    "products": [
+      "Carbon steel pipes",
+      "Alloy steel pipes",
+      "Stainless steel pipes",
+      "Valves",
+      "Pipe fittings",
+      "Flanges"
+    ],
+    "services": [
+      "Pipe supply",
+      "Fitting supply",
+      "Valve supply",
+      "Competitive pricing"
+    ],
+    "certifications": [
+      "ISO certified"
+    ],
+    "pipeline_diameters_supported": {
+      "min_inches": "not_available",
+      "max_inches": "not_available"
+    },
+    "materials_expertise": [
+      "carbon_steel",
+      "alloy_steel",
+      "stainless_steel"
+    ],
+    "annual_capacity": "not_available",
+    "experience_years": 66,
+    "employee_count": 150
+  },
+  "previous_projects": [],
+  "logistics": {
+    "delivery_regions": [
+      "Europe"
+    ],
+    "estimated_lead_time_days": 25,
+    "rush_delivery_available": true,
+    "shipping_capabilities": [
+      "truck",
+      "rail"
+    ],
+    "warehouses": [
+      {
+        "city": "Grugliasco",
+        "country": "Italy"
+      }
+    ],
+    "international_export": true
+  },
+  "pricing": {
+    "pricing_model": "quote_based",
+    "currency": "EUR",
+    "typical_project_range_usd": {
+      "min": "not_available",
+      "max": "not_available"
+    },
+    "payment_terms": "Net 30",
+    "accepts_letters_of_credit": true
+  },
+  "quality_ratings": {
+    "overall_score": 4.5,
+    "reliability_score": 4.4,
+    "quality_score": 4.6,
+    "communication_score": 4.5,
+    "rating_source": "industry_reputation",
+    "number_of_reviews": 110
+  },
+  "compatibility": {
+    "pipeline_specs_match": true,
+    "match_score": 86,
+    "match_notes": [
+      "Qualified supplier with vast range of steel pipes",
+      "Provides comprehensive pipeline components",
+      "Serves multiple industrial sectors"
+    ],
+    "limitations": []
+  },
+  "metadata": {
+    "source": "perplexity_research",
+    "query_id": "AGRS_QUERY_050",
+    "date_researched": "2025-12-02T16:30:21.384147Z",
+    "last_verified": "2025-12-02T16:29:25Z",
+    "confidence_level": "high",
+    "notes": "Founded in 1959. Qualified supplier providing carbon steel pipes, alloy steel pipes, stainless steel pipes, valves, pipe fittings and flanges. Serves Chemistry, Petrochemistry, Refining, Gas Processing, Power Generation, and Nuclear industries",
+    "tags": [
+      "multi_material",
+      "valves_fittings",
+      "italy_based",
+      "established_company",
+      "industrial_supplier"
+    ]
+  }
+}

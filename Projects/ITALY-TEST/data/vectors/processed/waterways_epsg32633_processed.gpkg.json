@@ -1,0 +1,59 @@
+{
+    "dataset_name": "OpenStreetMap Waterways",
+    "category": "waterways",
+    "project": "ITALY-TEST",
+    "processing_date": "2025-12-17T13:53:49Z",
+    "target_crs": "EPSG:32633",
+    "target_crs_name": "WGS 84 / UTM zone 33N",
+    "data_type": "Vector",
+    "geometry_type": "LineString",
+    "format": "GeoPackage",
+    "layer_name": "waterways",
+    "feature_count": 126,
+    "operations_applied": [
+        {
+            "operation": "reproject",
+            "tool": "ogr2ogr",
+            "source_crs": "EPSG:4326",
+            "target_crs": "EPSG:32633"
+        },
+        {
+            "operation": "clip",
+            "tool": "ogr2ogr",
+            "clipsrc": "aoi/aoi.geojson"
+        }
+    ],
+    "source_files": [
+        {
+            "filename": "osm_waterways_raw.gpkg",
+            "metadata": "osm_waterways_raw.gpkg.json"
+        }
+    ],
+    "schema": {
+        "osm_id": "OSM way ID",
+        "name": "Waterway name",
+        "waterway": "Waterway type (river, stream, canal, drain, ditch)",
+        "width": "Raw width tag from OSM",
+        "width_m": "Width in meters (computed or estimated)",
+        "width_class": "Classification (small/medium/large/major)",
+        "crossing_cost_cat": "Cost category for pipeline crossing",
+        "depth": "Depth",
+        "seasonal": "Seasonal flag",
+        "intermittent": "Intermittent flag",
+        "tunnel": "Tunnel flag"
+    },
+    "width_classification": {
+        "small": "< 3m - open cut crossing",
+        "medium": "3-10m - open cut crossing",
+        "large": "10-50m - HDD crossing required",
+        "major": "> 50m - major HDD crossing"
+    },
+    "crossing_cost_estimates": {
+        "low": "0K-20K (open cut)",
+        "medium": "0K-70K (open cut)",
+        "high": "00K-400K (HDD)",
+        "very_high": "00K+ (major HDD)"
+    },
+    "validation_status": "passed",
+    "protocol_version": "1.0"
+}

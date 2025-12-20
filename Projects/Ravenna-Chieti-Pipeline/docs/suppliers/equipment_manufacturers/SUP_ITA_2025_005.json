@@ -1,0 +1,123 @@
+{
+  "supplier_id": "SUP_EM_2025_024",
+  "company_name": "Propipe Holding Group",
+  "category": "equipment_manufacturer",
+  "subcategories": [
+    "pipeline_repair",
+    "pipeline_maintenance",
+    "connection_systems",
+    "hydrocarbon_pipelines"
+  ],
+  "location": {
+    "country": "Italy",
+    "iso3": "ITA",
+    "region": "not_available",
+    "city": "Milan",
+    "address": "not_available",
+    "postal_code": "not_available",
+    "coordinates": {
+      "latitude": 45.4642,
+      "longitude": 9.19
+    }
+  },
+  "contact": {
+    "primary_name": "not_available",
+    "primary_title": "not_available",
+    "primary_email": "info@propipe.com",
+    "primary_phone": "+39 02 48519301",
+    "website": "https://propipe.com",
+    "linkedin": "https://www.linkedin.com/company/propipe-holding-grou"
+  },
+  "capabilities": {
+    "products": [
+      "Pipeline connection systems",
+      "Pipeline repair equipment"
+    ],
+    "services": [
+      "Leak-free connections",
+      "Pipeline repair",
+      "Maintenance services"
+    ],
+    "certifications": [
+      "not_available"
+    ],
+    "pipeline_diameters_supported": {
+      "min_inches": "not_available",
+      "max_inches": "not_available"
+    },
+    "materials_expertise": [
+      "carbon_steel"
+    ],
+    "annual_capacity": "not_available",
+    "experience_years": 25,
+    "employee_count": 120
+  },
+  "previous_projects": [
+    {
+      "project_name": "not_available",
+      "client": "not_available",
+      "country": "not_available",
+      "year": "not_available",
+      "scope": "Pipeline repair and maintenance",
+      "pipeline_length_km": "not_available",
+      "pipeline_diameter_inches": "not_available",
+      "value_usd": "not_available",
+      "reference_available": "not_available"
+    }
+  ],
+  "logistics": {
+    "delivery_regions": [
+      "Europe",
+      "Italy"
+    ],
+    "estimated_lead_time_days": 30,
+    "rush_delivery_available": true,
+    "shipping_capabilities": [
+      "not_available"
+    ],
+    "warehouses": [
+      {
+        "city": "not_available",
+        "country": "Italy"
+      }
+    ],
+    "international_export": true
+  },
+  "pricing": {
+    "pricing_model": "quote_based",
+    "currency": "EUR",
+    "typical_project_range_usd": {
+      "min": "not_available",
+      "max": "not_available"
+    },
+    "payment_terms": "Net 30",
+    "accepts_letters_of_credit": true
+  },
+  "quality_ratings": {
+    "overall_score": 4.4,
+    "reliability_score": 4.3,
+    "quality_score": 4.5,
+    "communication_score": 4.4,
+    "rating_source": "industry_reputation",
+    "number_of_reviews": 55
+  },
+  "compatibility": {
+    "pipeline_specs_match": true,
+    "match_score": 82,
+    "match_notes": [
+      "Specializes in hydrocarbon pipeline solutions"
+    ],
+    "limitations": []
+  },
+  "metadata": {
+    "source": "perplexity_research",
+    "date_researched": "2025-12-02T16:35:40.064353Z",
+    "last_verified": "2025-12-02",
+    "confidence_level": "high",
+    "notes": "Pipeline solutions and repair company in Italy",
+    "tags": [
+      "pipeline_services",
+      "italy_based"
+    ]
+  }
+}

@@ -1,0 +1,7373 @@
+{
+  "type": "FeatureCollection",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "EPSG:32633"
+    }
+  },
+  "metadata": {
+    "project_name": "test_project2",
+    "algorithm": "A* with SAIPEM criteria",
+    "crs": "EPSG:32633",
+    "total_segments": 96,
+    "total_length_m": 36429.41,
+    "total_cost_usd": 81505235.62,
+    "max_segment_length_m": 400.0,
+    "criteria": {
+      "max_slope": "20%",
+      "powerline_clearance": "6m",
+      "railway_crossing": "HDD required",
+      "minimize_crossings": true,
+      "prefer_pipeline_parallelism": true
+    },
+    "pipeline_specs": {
+      "type": "Natural gas",
+      "diameter": "26 inch",
+      "material": "Carbon steel",
+      "mop": "70 bar",
+      "dp": "75 bar",
+      "cover_depth": "1.5m"
+    },
+    "generated_at": "2025-12-12T12:15:56.496932",
+    "distance_weight": 1.0
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            379622.91,
+            4805069.06
+          ],
+          [
+            379649.58,
+            4805042.4
+          ],
+          [
+            379676.26,
+            4805069.06
+          ],
+          [
+            379702.93,
+            4805095.72
+          ],
+          [
+            379729.6,
+            4805095.72
+          ],
+          [
+            379756.27,
+            4805095.72
+          ],
+          [
+            379782.95,
+            4805095.72
+          ],
+          [
+            379809.62,
+            4805095.72
+          ],
+          [
+            379836.29,
+            4805095.72
+          ],
+          [
+            379862.96,
+            4805095.72
+          ],
+          [
+            379889.63,
+            4805069.06
+          ],
+          [
+            379916.31,
+            4805042.4
+          ],
+          [
+            379942.98,
+            4805015.73
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 1,
+        "step": 1,
+        "length_m": 386.32,
+        "elevation_start": 161.69,
+        "elevation_end": 143.83,
+        "slope_percent": 4.62,
+        "cost_usd": 903986.95,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 903986.95,
+        "cumulative_distance_m": 386.32,
+        "land_cover_class": 10,
+        "land_cover_name": "tree_cover",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            379942.98,
+            4805015.73
+          ],
+          [
+            379969.65,
+            4804989.07
+          ],
+          [
+            379996.32,
+            4804962.41
+          ],
+          [
+            380023.0,
+            4804935.74
+          ],
+          [
+            380049.67,
+            4804909.08
+          ],
+          [
+            380076.34,
+            4804882.41
+          ],
+          [
+            380103.01,
+            4804855.75
+          ],
+          [
+            380129.68,
+            4804855.75
+          ],
+          [
+            380156.36,
+            4804855.75
+          ],
+          [
+            380183.03,
+            4804829.09
+          ],
+          [
+            380209.7,
+            4804802.42
+          ],
+          [
+            380236.37,
+            4804775.76
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 2,
+        "step": 2,
+        "length_m": 392.77,
+        "elevation_start": 143.83,
+        "elevation_end": 139.07,
+        "slope_percent": 1.21,
+        "cost_usd": 857816.32,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 1761803.28,
+        "cumulative_distance_m": 779.09,
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            380236.37,
+            4804775.76
+          ],
+          [
+            380263.05,
+            4804749.09
+          ],
+          [
+            380289.72,
+            4804722.43
+          ],
+          [
+            380316.39,
+            4804695.77
+          ],
+          [
+            380343.06,
+            4804669.1
+          ],
+          [
+            380369.74,
+            4804642.44
+          ],
+          [
+            380396.41,
+            4804615.78
+          ],
+          [
+            380423.08,
+            4804615.78
+          ],
+          [
+            380449.75,
+            4804615.78
+          ],
+          [
+            380476.42,
+            4804615.78
+          ],
+          [
+            380503.1,
+            4804615.78
+          ],
+          [
+            380529.77,
+            4804589.11
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 3,
+        "step": 3,
+        "length_m": 370.69,
+        "elevation_start": 139.07,
+        "elevation_end": 112.18,
+        "slope_percent": 7.25,
+        "cost_usd": 836274.35,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 2598077.63,
+        "cumulative_distance_m": 1149.78,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "rolling",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            380529.77,
+            4804589.11
+          ],
+          [
+            380556.44,
+            4804562.45
+          ],
+          [
+            380583.11,
+            4804535.78
+          ],
+          [
+            380609.79,
+            4804509.12
+          ],
+          [
+            380636.46,
+            4804482.46
+          ],
+          [
+            380663.13,
+            4804455.79
+          ],
+          [
+            380689.8,
+            4804429.13
+          ],
+          [
+            380716.47,
+            4804402.47
+          ],
+          [
+            380743.15,
+            4804375.8
+          ],
+          [
+            380769.82,
+            4804349.14
+          ],
+          [
+            380796.49,
+            4804322.47
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 4,
+        "step": 4,
+        "length_m": 377.14,
+        "elevation_start": 112.18,
+        "elevation_end": 106.63,
+        "slope_percent": 1.47,
+        "cost_usd": 850834.19,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 3448911.82,
+        "cumulative_distance_m": 1526.92,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            380796.49,
+            4804322.47
+          ],
+          [
+            380823.16,
+            4804295.81
+          ],
+          [
+            380849.84,
+            4804269.15
+          ],
+          [
+            380876.51,
+            4804242.48
+          ],
+          [
+            380876.51,
+            4804215.82
+          ],
+          [
+            380903.18,
+            4804189.16
+          ],
+          [
+            380929.85,
+            4804162.49
+          ],
+          [
+            380956.52,
+            4804135.83
+          ],
+          [
+            380983.2,
+            4804109.16
+          ],
+          [
+            381009.87,
+            4804082.5
+          ],
+          [
+            381036.54,
+            4804055.84
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 5,
+        "step": 5,
+        "length_m": 366.09,
+        "elevation_start": 106.63,
+        "elevation_end": 109.59,
+        "slope_percent": 0.81,
+        "cost_usd": 812724.97,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 4261636.79,
+        "cumulative_distance_m": 1893.02,
+        "land_cover_class": 20,
+        "land_cover_name": "shrubland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            381036.54,
+            4804055.84
+          ],
+          [
+            381063.21,
+            4804029.17
+          ],
+          [
+            381089.89,
+            4804002.51
+          ],
+          [
+            381116.56,
+            4803975.84
+          ],
+          [
+            381143.23,
+            4803949.18
+          ],
+          [
+            381169.9,
+            4803949.18
+          ],
+          [
+            381196.57,
+            4803949.18
+          ],
+          [
+            381223.25,
+            4803922.52
+          ],
+          [
+            381249.92,
+            4803895.85
+          ],
+          [
+            381276.59,
+            4803869.19
+          ],
+          [
+            381303.26,
+            4803842.53
+          ],
+          [
+            381329.94,
+            4803815.86
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 6,
+        "step": 6,
+        "length_m": 392.77,
+        "elevation_start": 109.59,
+        "elevation_end": 81.34,
+        "slope_percent": 7.19,
+        "cost_usd": 857816.32,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 5119453.12,
+        "cumulative_distance_m": 2285.79,
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "rolling",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            381329.94,
+            4803815.86
+          ],
+          [
+            381356.61,
+            4803789.2
+          ],
+          [
+            381383.28,
+            4803762.53
+          ],
+          [
+            381409.95,
+            4803735.87
+          ],
+          [
+            381436.63,
+            4803709.21
+          ],
+          [
+            381463.3,
+            4803682.54
+          ],
+          [
+            381489.97,
+            4803655.88
+          ],
+          [
+            381516.64,
+            4803629.22
+          ],
+          [
+            381543.31,
+            4803629.22
+          ],
+          [
+            381569.99,
+            4803629.22
+          ],
+          [
+            381596.66,
+            4803629.22
+          ],
+          [
+            381623.33,
+            4803629.22
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 7,
+        "step": 7,
+        "length_m": 370.69,
+        "elevation_start": 81.34,
+        "elevation_end": 72.45,
+        "slope_percent": 2.4,
+        "cost_usd": 836274.35,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 5955727.47,
+        "cumulative_distance_m": 2656.48,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            381623.33,
+            4803629.22
+          ],
+          [
+            381650.0,
+            4803602.55
+          ],
+          [
+            381676.68,
+            4803575.89
+          ],
+          [
+            381703.35,
+            4803549.22
+          ],
+          [
+            381730.02,
+            4803522.56
+          ],
+          [
+            381756.69,
+            4803495.9
+          ],
+          [
+            381783.36,
+            4803469.23
+          ],
+          [
+            381810.04,
+            4803442.57
+          ],
+          [
+            381836.71,
+            4803415.91
+          ],
+          [
+            381863.38,
+            4803389.24
+          ],
+          [
+            381890.05,
+            4803362.58
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 8,
+        "step": 8,
+        "length_m": 377.14,
+        "elevation_start": 72.45,
+        "elevation_end": 62.91,
+        "slope_percent": 2.53,
+        "cost_usd": 850834.19,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 6806561.66,
+        "cumulative_distance_m": 3033.62,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            381890.05,
+            4803362.58
+          ],
+          [
+            381916.73,
+            4803335.91
+          ],
+          [
+            381943.4,
+            4803309.25
+          ],
+          [
+            381970.07,
+            4803282.59
+          ],
+          [
+            381996.74,
+            4803255.92
+          ],
+          [
+            382023.41,
+            4803229.26
+          ],
+          [
+            382050.09,
+            4803202.59
+          ],
+          [
+            382076.76,
+            4803175.93
+          ],
+          [
+            382103.43,
+            4803149.27
+          ],
+          [
+            382130.1,
+            4803122.6
+          ],
+          [
+            382156.78,
+            4803095.94
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 9,
+        "step": 9,
+        "length_m": 377.14,
+        "elevation_start": 62.91,
+        "elevation_end": 59.12,
+        "slope_percent": 1.01,
+        "cost_usd": 850834.19,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 7657395.86,
+        "cumulative_distance_m": 3410.76,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            382156.78,
+            4803095.94
+          ],
+          [
+            382183.45,
+            4803069.28
+          ],
+          [
+            382210.12,
+            4803042.61
+          ],
+          [
+            382236.79,
+            4803042.61
+          ],
+          [
+            382263.47,
+            4803015.95
+          ],
+          [
+            382290.14,
+            4802989.28
+          ],
+          [
+            382316.81,
+            4802989.28
+          ],
+          [
+            382343.48,
+            4802989.28
+          ],
+          [
+            382370.15,
+            4802962.62
+          ],
+          [
+            382396.83,
+            4802935.96
+          ],
+          [
+            382423.5,
+            4802909.29
+          ],
+          [
+            382450.17,
+            4802909.29
+          ],
+          [
+            382476.84,
+            4802909.29
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 10,
+        "step": 10,
+        "length_m": 397.36,
+        "elevation_start": 59.12,
+        "elevation_end": 46.43,
+        "slope_percent": 3.19,
+        "cost_usd": 896446.95,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 8553842.81,
+        "cumulative_distance_m": 3808.13,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            382476.84,
+            4802909.29
+          ],
+          [
+            382503.52,
+            4802909.29
+          ],
+          [
+            382530.19,
+            4802882.63
+          ],
+          [
+            382556.86,
+            4802855.97
+          ],
+          [
+            382583.53,
+            4802829.3
+          ],
+          [
+            382610.2,
+            4802802.64
+          ],
+          [
+            382636.88,
+            4802775.97
+          ],
+          [
+            382663.55,
+            4802749.31
+          ],
+          [
+            382690.22,
+            4802722.65
+          ],
+          [
+            382716.89,
+            4802722.65
+          ],
+          [
+            382743.57,
+            4802722.65
+          ],
+          [
+            382770.24,
+            4802722.65
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 11,
+        "step": 11,
+        "length_m": 370.69,
+        "elevation_start": 46.43,
+        "elevation_end": 47.33,
+        "slope_percent": 0.24,
+        "cost_usd": 836274.35,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 9390117.16,
+        "cumulative_distance_m": 4178.81,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            382770.24,
+            4802722.65
+          ],
+          [
+            382796.91,
+            4802695.98
+          ],
+          [
+            382823.58,
+            4802695.98
+          ],
+          [
+            382850.25,
+            4802695.98
+          ],
+          [
+            382876.93,
+            4802695.98
+          ],
+          [
+            382903.6,
+            4802695.98
+          ],
+          [
+            382930.27,
+            4802695.98
+          ],
+          [
+            382956.94,
+            4802695.98
+          ],
+          [
+            382983.62,
+            4802669.32
+          ],
+          [
+            383010.29,
+            4802642.66
+          ],
+          [
+            383036.96,
+            4802615.99
+          ],
+          [
+            383063.63,
+            4802589.33
+          ],
+          [
+            383090.3,
+            4802562.66
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 12,
+        "step": 12,
+        "length_m": 386.32,
+        "elevation_start": 47.33,
+        "elevation_end": 41.87,
+        "slope_percent": 1.41,
+        "cost_usd": 871536.14,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 10261653.3,
+        "cumulative_distance_m": 4565.13,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            383090.3,
+            4802562.66
+          ],
+          [
+            383116.98,
+            4802536.0
+          ],
+          [
+            383143.65,
+            4802509.34
+          ],
+          [
+            383170.32,
+            4802482.67
+          ],
+          [
+            383196.99,
+            4802456.01
+          ],
+          [
+            383223.67,
+            4802429.34
+          ],
+          [
+            383250.34,
+            4802402.68
+          ],
+          [
+            383277.01,
+            4802376.02
+          ],
+          [
+            383303.68,
+            4802349.35
+          ],
+          [
+            383330.36,
+            4802322.69
+          ],
+          [
+            383357.03,
+            4802296.03
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 13,
+        "step": 13,
+        "length_m": 377.14,
+        "elevation_start": 41.87,
+        "elevation_end": 40.87,
+        "slope_percent": 0.26,
+        "cost_usd": 850834.19,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 11112487.49,
+        "cumulative_distance_m": 4942.28,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            383357.03,
+            4802296.03
+          ],
+          [
+            383383.7,
+            4802269.36
+          ],
+          [
+            383410.37,
+            4802242.7
+          ],
+          [
+            383437.04,
+            4802216.03
+          ],
+          [
+            383463.72,
+            4802189.37
+          ],
+          [
+            383490.39,
+            4802162.71
+          ],
+          [
+            383517.06,
+            4802136.04
+          ],
+          [
+            383543.73,
+            4802109.38
+          ],
+          [
+            383570.41,
+            4802109.38
+          ],
+          [
+            383597.08,
+            4802082.72
+          ],
+          [
+            383623.75,
+            4802056.05
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 14,
+        "step": 14,
+        "length_m": 366.1,
+        "elevation_start": 40.87,
+        "elevation_end": 36.8,
+        "slope_percent": 1.11,
+        "cost_usd": 825923.38,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 11938410.87,
+        "cumulative_distance_m": 5308.38,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            383623.75,
+            4802056.05
+          ],
+          [
+            383650.42,
+            4802029.39
+          ],
+          [
+            383677.09,
+            4802002.72
+          ],
+          [
+            383703.77,
+            4801976.06
+          ],
+          [
+            383730.44,
+            4801949.4
+          ],
+          [
+            383757.11,
+            4801922.73
+          ],
+          [
+            383783.78,
+            4801896.07
+          ],
+          [
+            383810.46,
+            4801869.41
+          ],
+          [
+            383837.13,
+            4801869.41
+          ],
+          [
+            383863.8,
+            4801869.41
+          ],
+          [
+            383890.47,
+            4801869.41
+          ],
+          [
+            383917.14,
+            4801842.74
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 15,
+        "step": 15,
+        "length_m": 381.73,
+        "elevation_start": 36.8,
+        "elevation_end": 35.86,
+        "slope_percent": 0.25,
+        "cost_usd": 861185.17,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 12799596.04,
+        "cumulative_distance_m": 5690.11,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            383917.14,
+            4801842.74
+          ],
+          [
+            383943.82,
+            4801816.08
+          ],
+          [
+            383970.49,
+            4801789.41
+          ],
+          [
+            383997.16,
+            4801762.75
+          ],
+          [
+            384023.83,
+            4801762.75
+          ],
+          [
+            384050.51,
+            4801762.75
+          ],
+          [
+            384077.18,
+            4801762.75
+          ],
+          [
+            384103.85,
+            4801762.75
+          ],
+          [
+            384130.52,
+            4801762.75
+          ],
+          [
+            384157.2,
+            4801762.75
+          ],
+          [
+            384183.87,
+            4801736.09
+          ],
+          [
+            384210.54,
+            4801709.42
+          ],
+          [
+            384237.21,
+            4801709.42
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 16,
+        "step": 16,
+        "length_m": 375.28,
+        "elevation_start": 35.86,
+        "elevation_end": 43.88,
+        "slope_percent": 2.14,
+        "cost_usd": 846625.32,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 13646221.36,
+        "cumulative_distance_m": 6065.39,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            384237.21,
+            4801709.42
+          ],
+          [
+            384263.88,
+            4801736.09
+          ],
+          [
+            384290.56,
+            4801736.09
+          ],
+          [
+            384317.23,
+            4801736.09
+          ],
+          [
+            384343.9,
+            4801736.09
+          ],
+          [
+            384370.57,
+            4801736.09
+          ],
+          [
+            384397.25,
+            4801736.09
+          ],
+          [
+            384423.92,
+            4801736.09
+          ],
+          [
+            384450.59,
+            4801736.09
+          ],
+          [
+            384477.26,
+            4801709.42
+          ],
+          [
+            384503.93,
+            4801682.76
+          ],
+          [
+            384530.61,
+            4801656.09
+          ],
+          [
+            384557.28,
+            4801629.43
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 17,
+        "step": 17,
+        "length_m": 375.28,
+        "elevation_start": 43.88,
+        "elevation_end": 46.8,
+        "slope_percent": 0.78,
+        "cost_usd": 846625.32,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 14492846.69,
+        "cumulative_distance_m": 6440.66,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            384557.28,
+            4801629.43
+          ],
+          [
+            384583.95,
+            4801602.77
+          ],
+          [
+            384610.62,
+            4801576.1
+          ],
+          [
+            384637.3,
+            4801549.44
+          ],
+          [
+            384663.97,
+            4801522.78
+          ],
+          [
+            384690.64,
+            4801522.78
+          ],
+          [
+            384717.31,
+            4801522.78
+          ],
+          [
+            384743.98,
+            4801496.11
+          ],
+          [
+            384743.98,
+            4801469.45
+          ],
+          [
+            384743.98,
+            4801442.78
+          ],
+          [
+            384743.98,
+            4801416.12
+          ],
+          [
+            384770.66,
+            4801389.46
+          ],
+          [
+            384797.33,
+            4801389.46
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 18,
+        "step": 18,
+        "length_m": 386.29,
+        "elevation_start": 46.8,
+        "elevation_end": 54.19,
+        "slope_percent": 1.91,
+        "cost_usd": 871478.89,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 15364325.57,
+        "cumulative_distance_m": 6826.96,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            384797.33,
+            4801389.46
+          ],
+          [
+            384824.0,
+            4801416.12
+          ],
+          [
+            384850.67,
+            4801389.46
+          ],
+          [
+            384877.35,
+            4801362.79
+          ],
+          [
+            384904.02,
+            4801336.13
+          ],
+          [
+            384930.69,
+            4801309.47
+          ],
+          [
+            384957.36,
+            4801282.8
+          ],
+          [
+            384984.03,
+            4801256.14
+          ],
+          [
+            385010.71,
+            4801229.47
+          ],
+          [
+            385037.38,
+            4801229.47
+          ],
+          [
+            385064.05,
+            4801229.47
+          ],
+          [
+            385090.72,
+            4801229.47
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 19,
+        "step": 19,
+        "length_m": 381.73,
+        "elevation_start": 54.19,
+        "elevation_end": 64.01,
+        "slope_percent": 2.57,
+        "cost_usd": 833700.53,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 16198026.11,
+        "cumulative_distance_m": 7208.69,
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            385090.72,
+            4801229.47
+          ],
+          [
+            385117.4,
+            4801202.81
+          ],
+          [
+            385144.07,
+            4801176.15
+          ],
+          [
+            385170.74,
+            4801149.48
+          ],
+          [
+            385197.41,
+            4801149.48
+          ],
+          [
+            385224.09,
+            4801149.48
+          ],
+          [
+            385250.76,
+            4801149.48
+          ],
+          [
+            385277.43,
+            4801149.48
+          ],
+          [
+            385304.1,
+            4801149.48
+          ],
+          [
+            385330.77,
+            4801122.82
+          ],
+          [
+            385357.45,
+            4801096.15
+          ],
+          [
+            385384.12,
+            4801096.15
+          ],
+          [
+            385410.79,
+            4801096.15
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 20,
+        "step": 20,
+        "length_m": 375.28,
+        "elevation_start": 64.01,
+        "elevation_end": 71.06,
+        "slope_percent": 1.88,
+        "cost_usd": 819605.37,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 17017631.47,
+        "cumulative_distance_m": 7583.96,
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            385410.79,
+            4801096.15
+          ],
+          [
+            385437.46,
+            4801069.49
+          ],
+          [
+            385464.14,
+            4801042.83
+          ],
+          [
+            385490.81,
+            4801016.16
+          ],
+          [
+            385517.48,
+            4800989.5
+          ],
+          [
+            385544.15,
+            4800989.5
+          ],
+          [
+            385570.82,
+            4800989.5
+          ],
+          [
+            385597.5,
+            4800989.5
+          ],
+          [
+            385624.17,
+            4800989.5
+          ],
+          [
+            385650.84,
+            4800962.84
+          ],
+          [
+            385677.51,
+            4800936.17
+          ],
+          [
+            385704.19,
+            4800909.51
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 21,
+        "step": 21,
+        "length_m": 370.69,
+        "elevation_start": 71.06,
+        "elevation_end": 90.8,
+        "slope_percent": 5.32,
+        "cost_usd": 836274.35,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 17853905.82,
+        "cumulative_distance_m": 7954.65,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "rolling",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            385704.19,
+            4800909.51
+          ],
+          [
+            385730.86,
+            4800882.84
+          ],
+          [
+            385757.53,
+            4800856.18
+          ],
+          [
+            385784.2,
+            4800829.52
+          ],
+          [
+            385810.87,
+            4800802.85
+          ],
+          [
+            385837.55,
+            4800776.19
+          ],
+          [
+            385864.22,
+            4800749.53
+          ],
+          [
+            385890.89,
+            4800722.86
+          ],
+          [
+            385917.56,
+            4800696.2
+          ],
+          [
+            385944.24,
+            4800669.53
+          ],
+          [
+            385970.91,
+            4800642.87
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 22,
+        "step": 22,
+        "length_m": 377.14,
+        "elevation_start": 90.8,
+        "elevation_end": 114.45,
+        "slope_percent": 6.27,
+        "cost_usd": 850834.19,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 18704740.02,
+        "cumulative_distance_m": 8331.8,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "rolling",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            385970.91,
+            4800642.87
+          ],
+          [
+            385997.58,
+            4800616.21
+          ],
+          [
+            386024.25,
+            4800589.54
+          ],
+          [
+            386050.92,
+            4800562.88
+          ],
+          [
+            386077.6,
+            4800536.22
+          ],
+          [
+            386104.27,
+            4800509.55
+          ],
+          [
+            386130.94,
+            4800482.89
+          ],
+          [
+            386157.61,
+            4800456.22
+          ],
+          [
+            386184.29,
+            4800429.56
+          ],
+          [
+            386210.96,
+            4800429.56
+          ],
+          [
+            386237.63,
+            4800429.56
+          ],
+          [
+            386264.3,
+            4800429.56
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 23,
+        "step": 23,
+        "length_m": 381.73,
+        "elevation_start": 114.45,
+        "elevation_end": 152.47,
+        "slope_percent": 9.96,
+        "cost_usd": 833700.53,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 19538440.55,
+        "cumulative_distance_m": 8713.53,
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "rolling",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            386264.3,
+            4800429.56
+          ],
+          [
+            386290.98,
+            4800429.56
+          ],
+          [
+            386317.65,
+            4800429.56
+          ],
+          [
+            386344.32,
+            4800402.9
+          ],
+          [
+            386370.99,
+            4800376.23
+          ],
+          [
+            386397.66,
+            4800349.57
+          ],
+          [
+            386424.34,
+            4800322.9
+          ],
+          [
+            386424.34,
+            4800296.24
+          ],
+          [
+            386424.34,
+            4800269.58
+          ],
+          [
+            386451.01,
+            4800242.91
+          ],
+          [
+            386477.68,
+            4800216.25
+          ],
+          [
+            386504.35,
+            4800189.59
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 24,
+        "step": 24,
+        "length_m": 370.67,
+        "elevation_start": 152.47,
+        "elevation_end": 127.36,
+        "slope_percent": 6.77,
+        "cost_usd": 809547.8,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 20347988.35,
+        "cumulative_distance_m": 9084.2,
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "rolling",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            386504.35,
+            4800189.59
+          ],
+          [
+            386531.03,
+            4800162.92
+          ],
+          [
+            386557.7,
+            4800136.26
+          ],
+          [
+            386584.37,
+            4800109.59
+          ],
+          [
+            386611.04,
+            4800082.93
+          ],
+          [
+            386611.04,
+            4800056.27
+          ],
+          [
+            386611.04,
+            4800029.6
+          ],
+          [
+            386611.04,
+            4800002.94
+          ],
+          [
+            386611.04,
+            4799976.28
+          ],
+          [
+            386611.04,
+            4799949.61
+          ],
+          [
+            386637.71,
+            4799922.95
+          ],
+          [
+            386637.71,
+            4799896.28
+          ],
+          [
+            386637.71,
+            4799869.62
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 25,
+        "step": 25,
+        "length_m": 375.22,
+        "elevation_start": 127.36,
+        "elevation_end": 89.28,
+        "slope_percent": 10.15,
+        "cost_usd": 819476.05,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 21167464.39,
+        "cumulative_distance_m": 9459.42,
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "hilly",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            386637.71,
+            4799869.62
+          ],
+          [
+            386637.71,
+            4799842.96
+          ],
+          [
+            386637.71,
+            4799816.29
+          ],
+          [
+            386637.71,
+            4799789.63
+          ],
+          [
+            386637.71,
+            4799762.97
+          ],
+          [
+            386637.71,
+            4799736.3
+          ],
+          [
+            386637.71,
+            4799709.64
+          ],
+          [
+            386637.71,
+            4799682.97
+          ],
+          [
+            386637.71,
+            4799656.31
+          ],
+          [
+            386637.71,
+            4799629.65
+          ],
+          [
+            386637.71,
+            4799602.98
+          ],
+          [
+            386637.71,
+            4799576.32
+          ],
+          [
+            386637.71,
+            4799549.65
+          ],
+          [
+            386637.71,
+            4799522.99
+          ],
+          [
+            386637.71,
+            4799496.33
+          ],
+          [
+            386637.71,
+            4799469.66
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 26,
+        "step": 26,
+        "length_m": 399.96,
+        "elevation_start": 89.28,
+        "elevation_end": 74.34,
+        "slope_percent": 3.74,
+        "cost_usd": 902302.81,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 22069767.2,
+        "cumulative_distance_m": 9859.37,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            386637.71,
+            4799469.66
+          ],
+          [
+            386637.71,
+            4799443.0
+          ],
+          [
+            386637.71,
+            4799416.34
+          ],
+          [
+            386637.71,
+            4799389.67
+          ],
+          [
+            386637.71,
+            4799363.01
+          ],
+          [
+            386637.71,
+            4799336.34
+          ],
+          [
+            386637.71,
+            4799309.68
+          ],
+          [
+            386637.71,
+            4799283.02
+          ],
+          [
+            386637.71,
+            4799256.35
+          ],
+          [
+            386637.71,
+            4799229.69
+          ],
+          [
+            386637.71,
+            4799203.03
+          ],
+          [
+            386637.71,
+            4799176.36
+          ],
+          [
+            386664.39,
+            4799149.7
+          ],
+          [
+            386691.06,
+            4799123.03
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 27,
+        "step": 27,
+        "length_m": 368.73,
+        "elevation_start": 74.34,
+        "elevation_end": 63.37,
+        "slope_percent": 2.98,
+        "cost_usd": 831855.56,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 22901622.77,
+        "cumulative_distance_m": 10228.1,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            386691.06,
+            4799123.03
+          ],
+          [
+            386717.73,
+            4799096.37
+          ],
+          [
+            386744.4,
+            4799069.71
+          ],
+          [
+            386771.08,
+            4799043.04
+          ],
+          [
+            386771.08,
+            4799016.38
+          ],
+          [
+            386771.08,
+            4798989.72
+          ],
+          [
+            386771.08,
+            4798963.05
+          ],
+          [
+            386771.08,
+            4798936.39
+          ],
+          [
+            386771.08,
+            4798909.72
+          ],
+          [
+            386771.08,
+            4798883.06
+          ],
+          [
+            386771.08,
+            4798856.4
+          ],
+          [
+            386771.08,
+            4798829.73
+          ],
+          [
+            386771.08,
+            4798803.07
+          ],
+          [
+            386797.75,
+            4798776.4
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 28,
+        "step": 28,
+        "length_m": 390.83,
+        "elevation_start": 63.37,
+        "elevation_end": 63.51,
+        "slope_percent": 0.04,
+        "cost_usd": 853575.51,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 23755198.28,
+        "cumulative_distance_m": 10618.94,
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            386797.75,
+            4798776.4
+          ],
+          [
+            386797.75,
+            4798749.74
+          ],
+          [
+            386797.75,
+            4798723.08
+          ],
+          [
+            386797.75,
+            4798696.41
+          ],
+          [
+            386824.42,
+            4798669.75
+          ],
+          [
+            386851.09,
+            4798643.09
+          ],
+          [
+            386851.09,
+            4798616.42
+          ],
+          [
+            386851.09,
+            4798589.76
+          ],
+          [
+            386851.09,
+            4798563.09
+          ],
+          [
+            386851.09,
+            4798536.43
+          ],
+          [
+            386851.09,
+            4798509.77
+          ],
+          [
+            386851.09,
+            4798483.1
+          ],
+          [
+            386851.09,
+            4798456.44
+          ],
+          [
+            386851.09,
+            4798429.78
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 29,
+        "step": 29,
+        "length_m": 368.73,
+        "elevation_start": 63.51,
+        "elevation_end": 91.59,
+        "slope_percent": 7.61,
+        "cost_usd": 805306.98,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 24560505.26,
+        "cumulative_distance_m": 10987.67,
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "rolling",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            386851.09,
+            4798429.78
+          ],
+          [
+            386877.76,
+            4798403.11
+          ],
+          [
+            386904.44,
+            4798376.45
+          ],
+          [
+            386931.11,
+            4798349.78
+          ],
+          [
+            386957.78,
+            4798323.12
+          ],
+          [
+            386984.45,
+            4798296.46
+          ],
+          [
+            387011.13,
+            4798269.79
+          ],
+          [
+            387011.13,
+            4798243.13
+          ],
+          [
+            387011.13,
+            4798216.47
+          ],
+          [
+            387011.13,
+            4798189.8
+          ],
+          [
+            387011.13,
+            4798163.14
+          ],
+          [
+            387037.8,
+            4798136.47
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 30,
+        "step": 30,
+        "length_m": 370.66,
+        "elevation_start": 91.59,
+        "elevation_end": 124.59,
+        "slope_percent": 8.9,
+        "cost_usd": 836198.02,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 25396703.28,
+        "cumulative_distance_m": 11358.32,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "rolling",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            387037.8,
+            4798136.47
+          ],
+          [
+            387064.47,
+            4798109.81
+          ],
+          [
+            387091.14,
+            4798083.15
+          ],
+          [
+            387091.14,
+            4798056.48
+          ],
+          [
+            387091.14,
+            4798029.82
+          ],
+          [
+            387091.14,
+            4798003.15
+          ],
+          [
+            387091.14,
+            4797976.49
+          ],
+          [
+            387091.14,
+            4797949.83
+          ],
+          [
+            387117.82,
+            4797923.16
+          ],
+          [
+            387117.82,
+            4797896.5
+          ],
+          [
+            387117.82,
+            4797869.84
+          ],
+          [
+            387117.82,
+            4797843.17
+          ],
+          [
+            387144.49,
+            4797816.51
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 31,
+        "step": 31,
+        "length_m": 364.17,
+        "elevation_start": 124.59,
+        "elevation_end": 175.05,
+        "slope_percent": 13.86,
+        "cost_usd": 795341.78,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 26192045.06,
+        "cumulative_distance_m": 11722.49,
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "hilly",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            387144.49,
+            4797816.51
+          ],
+          [
+            387171.16,
+            4797789.84
+          ],
+          [
+            387197.83,
+            4797763.18
+          ],
+          [
+            387224.5,
+            4797736.52
+          ],
+          [
+            387251.18,
+            4797709.85
+          ],
+          [
+            387251.18,
+            4797683.19
+          ],
+          [
+            387251.18,
+            4797656.53
+          ],
+          [
+            387251.18,
+            4797629.86
+          ],
+          [
+            387251.18,
+            4797603.2
+          ],
+          [
+            387251.18,
+            4797576.53
+          ],
+          [
+            387251.18,
+            4797549.87
+          ],
+          [
+            387251.18,
+            4797523.21
+          ],
+          [
+            387251.18,
+            4797496.54
+          ],
+          [
+            387251.18,
+            4797469.88
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 32,
+        "step": 32,
+        "length_m": 390.83,
+        "elevation_start": 175.05,
+        "elevation_end": 153.49,
+        "slope_percent": 5.52,
+        "cost_usd": 853575.51,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 27045620.57,
+        "cumulative_distance_m": 12113.32,
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "rolling",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            387251.18,
+            4797469.88
+          ],
+          [
+            387251.18,
+            4797443.22
+          ],
+          [
+            387251.18,
+            4797416.55
+          ],
+          [
+            387251.18,
+            4797389.89
+          ],
+          [
+            387251.18,
+            4797363.22
+          ],
+          [
+            387251.18,
+            4797336.56
+          ],
+          [
+            387251.18,
+            4797309.9
+          ],
+          [
+            387251.18,
+            4797283.23
+          ],
+          [
+            387251.18,
+            4797256.57
+          ],
+          [
+            387251.18,
+            4797229.9
+          ],
+          [
+            387251.18,
+            4797203.24
+          ],
+          [
+            387277.85,
+            4797176.58
+          ],
+          [
+            387304.52,
+            4797149.91
+          ],
+          [
+            387331.19,
+            4797123.25
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 33,
+        "step": 33,
+        "length_m": 379.78,
+        "elevation_start": 153.49,
+        "elevation_end": 137.68,
+        "slope_percent": 4.16,
+        "cost_usd": 829441.25,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 27875061.81,
+        "cumulative_distance_m": 12493.1,
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            387331.19,
+            4797123.25
+          ],
+          [
+            387357.87,
+            4797096.59
+          ],
+          [
+            387384.54,
+            4797069.92
+          ],
+          [
+            387411.21,
+            4797043.26
+          ],
+          [
+            387437.88,
+            4797016.59
+          ],
+          [
+            387464.55,
+            4796989.93
+          ],
+          [
+            387491.23,
+            4796963.27
+          ],
+          [
+            387517.9,
+            4796936.6
+          ],
+          [
+            387544.57,
+            4796909.94
+          ],
+          [
+            387571.24,
+            4796883.28
+          ],
+          [
+            387597.92,
+            4796856.61
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 34,
+        "step": 34,
+        "length_m": 377.14,
+        "elevation_start": 137.68,
+        "elevation_end": 127.41,
+        "slope_percent": 2.72,
+        "cost_usd": 850834.19,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 28725896.01,
+        "cumulative_distance_m": 12870.24,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            387597.92,
+            4796856.61
+          ],
+          [
+            387624.59,
+            4796829.95
+          ],
+          [
+            387651.26,
+            4796803.28
+          ],
+          [
+            387677.93,
+            4796776.62
+          ],
+          [
+            387704.6,
+            4796749.96
+          ],
+          [
+            387731.28,
+            4796723.29
+          ],
+          [
+            387757.95,
+            4796696.63
+          ],
+          [
+            387784.62,
+            4796669.97
+          ],
+          [
+            387811.29,
+            4796643.3
+          ],
+          [
+            387837.97,
+            4796616.64
+          ],
+          [
+            387864.64,
+            4796589.97
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 35,
+        "step": 35,
+        "length_m": 377.14,
+        "elevation_start": 127.41,
+        "elevation_end": 110.33,
+        "slope_percent": 4.53,
+        "cost_usd": 850834.19,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 29576730.2,
+        "cumulative_distance_m": 13247.39,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            387864.64,
+            4796589.97
+          ],
+          [
+            387891.31,
+            4796563.31
+          ],
+          [
+            387917.98,
+            4796536.65
+          ],
+          [
+            387944.65,
+            4796509.98
+          ],
+          [
+            387944.65,
+            4796483.32
+          ],
+          [
+            387944.65,
+            4796456.65
+          ],
+          [
+            387944.65,
+            4796429.99
+          ],
+          [
+            387944.65,
+            4796403.33
+          ],
+          [
+            387944.65,
+            4796376.66
+          ],
+          [
+            387944.65,
+            4796350.0
+          ],
+          [
+            387944.65,
+            4796323.34
+          ],
+          [
+            387944.65,
+            4796296.67
+          ],
+          [
+            387971.33,
+            4796270.01
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 36,
+        "step": 36,
+        "length_m": 364.17,
+        "elevation_start": 110.33,
+        "elevation_end": 117.16,
+        "slope_percent": 1.87,
+        "cost_usd": 821561.84,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 30398292.04,
+        "cumulative_distance_m": 13611.55,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            387971.33,
+            4796270.01
+          ],
+          [
+            387998.0,
+            4796243.34
+          ],
+          [
+            388024.67,
+            4796216.68
+          ],
+          [
+            388051.34,
+            4796190.02
+          ],
+          [
+            388078.02,
+            4796163.35
+          ],
+          [
+            388078.02,
+            4796136.69
+          ],
+          [
+            388078.02,
+            4796110.03
+          ],
+          [
+            388078.02,
+            4796083.36
+          ],
+          [
+            388078.02,
+            4796056.7
+          ],
+          [
+            388078.02,
+            4796030.03
+          ],
+          [
+            388078.02,
+            4796003.37
+          ],
+          [
+            388078.02,
+            4795976.71
+          ],
+          [
+            388078.02,
+            4795950.04
+          ],
+          [
+            388078.02,
+            4795923.38
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 37,
+        "step": 37,
+        "length_m": 390.83,
+        "elevation_start": 117.16,
+        "elevation_end": 116.91,
+        "slope_percent": 0.07,
+        "cost_usd": 881715.36,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 31280007.41,
+        "cumulative_distance_m": 14002.39,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            388078.02,
+            4795923.38
+          ],
+          [
+            388078.02,
+            4795896.72
+          ],
+          [
+            388078.02,
+            4795870.05
+          ],
+          [
+            388078.02,
+            4795843.39
+          ],
+          [
+            388078.02,
+            4795816.72
+          ],
+          [
+            388078.02,
+            4795790.06
+          ],
+          [
+            388078.02,
+            4795763.4
+          ],
+          [
+            388078.02,
+            4795736.73
+          ],
+          [
+            388078.02,
+            4795710.07
+          ],
+          [
+            388078.02,
+            4795683.4
+          ],
+          [
+            388078.02,
+            4795656.74
+          ],
+          [
+            388078.02,
+            4795630.08
+          ],
+          [
+            388078.02,
+            4795603.41
+          ],
+          [
+            388078.02,
+            4795576.75
+          ],
+          [
+            388078.02,
+            4795550.09
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 38,
+        "step": 38,
+        "length_m": 373.29,
+        "elevation_start": 116.91,
+        "elevation_end": 95.65,
+        "slope_percent": 5.7,
+        "cost_usd": 842149.29,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 32122156.69,
+        "cumulative_distance_m": 14375.68,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "rolling",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            388078.02,
+            4795550.09
+          ],
+          [
+            388104.69,
+            4795523.42
+          ],
+          [
+            388131.36,
+            4795496.76
+          ],
+          [
+            388131.36,
+            4795470.09
+          ],
+          [
+            388131.36,
+            4795443.43
+          ],
+          [
+            388158.03,
+            4795416.77
+          ],
+          [
+            388184.71,
+            4795390.1
+          ],
+          [
+            388211.38,
+            4795363.44
+          ],
+          [
+            388238.05,
+            4795336.78
+          ],
+          [
+            388264.72,
+            4795310.11
+          ],
+          [
+            388264.72,
+            4795283.45
+          ],
+          [
+            388264.72,
+            4795256.78
+          ],
+          [
+            388264.72,
+            4795230.12
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 39,
+        "step": 39,
+        "length_m": 397.32,
+        "elevation_start": 95.65,
+        "elevation_end": 87.15,
+        "slope_percent": 2.14,
+        "cost_usd": 896351.54,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 33018508.23,
+        "cumulative_distance_m": 14773.0,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            388264.72,
+            4795230.12
+          ],
+          [
+            388264.72,
+            4795203.46
+          ],
+          [
+            388264.72,
+            4795176.79
+          ],
+          [
+            388264.72,
+            4795150.13
+          ],
+          [
+            388264.72,
+            4795123.47
+          ],
+          [
+            388264.72,
+            4795096.8
+          ],
+          [
+            388264.72,
+            4795070.14
+          ],
+          [
+            388264.72,
+            4795043.47
+          ],
+          [
+            388264.72,
+            4795016.81
+          ],
+          [
+            388264.72,
+            4794990.15
+          ],
+          [
+            388264.72,
+            4794963.48
+          ],
+          [
+            388264.72,
+            4794936.82
+          ],
+          [
+            388264.72,
+            4794910.15
+          ],
+          [
+            388264.72,
+            4794883.49
+          ],
+          [
+            388264.72,
+            4794856.83
+          ],
+          [
+            388264.72,
+            4794830.16
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 40,
+        "step": 40,
+        "length_m": 399.96,
+        "elevation_start": 87.15,
+        "elevation_end": 81.08,
+        "slope_percent": 1.52,
+        "cost_usd": 902302.81,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 33920811.04,
+        "cumulative_distance_m": 15172.95,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            388264.72,
+            4794830.16
+          ],
+          [
+            388264.72,
+            4794803.5
+          ],
+          [
+            388264.72,
+            4794776.84
+          ],
+          [
+            388264.72,
+            4794750.17
+          ],
+          [
+            388264.72,
+            4794723.51
+          ],
+          [
+            388264.72,
+            4794696.84
+          ],
+          [
+            388291.39,
+            4794670.18
+          ],
+          [
+            388291.39,
+            4794643.52
+          ],
+          [
+            388291.39,
+            4794616.85
+          ],
+          [
+            388291.39,
+            4794590.19
+          ],
+          [
+            388291.39,
+            4794563.53
+          ],
+          [
+            388291.39,
+            4794536.86
+          ],
+          [
+            388291.39,
+            4794510.2
+          ],
+          [
+            388291.39,
+            4794483.53
+          ],
+          [
+            388291.39,
+            4794456.87
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 41,
+        "step": 41,
+        "length_m": 384.34,
+        "elevation_start": 81.08,
+        "elevation_end": 64.25,
+        "slope_percent": 4.38,
+        "cost_usd": 839406.45,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 34760217.48,
+        "cumulative_distance_m": 15557.3,
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            388291.39,
+            4794456.87
+          ],
+          [
+            388291.39,
+            4794430.21
+          ],
+          [
+            388291.39,
+            4794403.54
+          ],
+          [
+            388291.39,
+            4794376.88
+          ],
+          [
+            388291.39,
+            4794350.21
+          ],
+          [
+            388291.39,
+            4794323.55
+          ],
+          [
+            388291.39,
+            4794296.89
+          ],
+          [
+            388291.39,
+            4794270.22
+          ],
+          [
+            388291.39,
+            4794243.56
+          ],
+          [
+            388291.39,
+            4794216.9
+          ],
+          [
+            388318.07,
+            4794190.23
+          ],
+          [
+            388344.74,
+            4794163.57
+          ],
+          [
+            388371.41,
+            4794136.9
+          ],
+          [
+            388398.08,
+            4794110.24
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 42,
+        "step": 42,
+        "length_m": 390.83,
+        "elevation_start": 64.25,
+        "elevation_end": 65.24,
+        "slope_percent": 0.25,
+        "cost_usd": 881715.36,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 35641932.85,
+        "cumulative_distance_m": 15948.13,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            388398.08,
+            4794110.24
+          ],
+          [
+            388398.08,
+            4794083.58
+          ],
+          [
+            388398.08,
+            4794056.91
+          ],
+          [
+            388398.08,
+            4794030.25
+          ],
+          [
+            388398.08,
+            4794003.59
+          ],
+          [
+            388398.08,
+            4793976.92
+          ],
+          [
+            388398.08,
+            4793950.26
+          ],
+          [
+            388398.08,
+            4793923.59
+          ],
+          [
+            388398.08,
+            4793896.93
+          ],
+          [
+            388398.08,
+            4793870.27
+          ],
+          [
+            388398.08,
+            4793843.6
+          ],
+          [
+            388398.08,
+            4793816.94
+          ],
+          [
+            388398.08,
+            4793790.28
+          ],
+          [
+            388398.08,
+            4793763.61
+          ],
+          [
+            388398.08,
+            4793736.95
+          ],
+          [
+            388398.08,
+            4793710.28
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 43,
+        "step": 43,
+        "length_m": 399.96,
+        "elevation_start": 65.24,
+        "elevation_end": 57.33,
+        "slope_percent": 1.98,
+        "cost_usd": 887904.36,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 36529837.2,
+        "cumulative_distance_m": 16348.09,
+        "land_cover_class": 20,
+        "land_cover_name": "shrubland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            388398.08,
+            4793710.28
+          ],
+          [
+            388398.08,
+            4793683.62
+          ],
+          [
+            388398.08,
+            4793656.96
+          ],
+          [
+            388398.08,
+            4793630.29
+          ],
+          [
+            388398.08,
+            4793603.63
+          ],
+          [
+            388424.76,
+            4793576.96
+          ],
+          [
+            388451.43,
+            4793550.3
+          ],
+          [
+            388478.1,
+            4793523.64
+          ],
+          [
+            388504.77,
+            4793496.97
+          ],
+          [
+            388531.44,
+            4793470.31
+          ],
+          [
+            388504.77,
+            4793443.65
+          ],
+          [
+            388504.77,
+            4793416.98
+          ],
+          [
+            388504.77,
+            4793390.32
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 44,
+        "step": 44,
+        "length_m": 386.27,
+        "elevation_start": 57.33,
+        "elevation_end": 45.94,
+        "slope_percent": 2.95,
+        "cost_usd": 871421.64,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 37401258.84,
+        "cumulative_distance_m": 16734.35,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            388504.77,
+            4793390.32
+          ],
+          [
+            388504.77,
+            4793363.65
+          ],
+          [
+            388504.77,
+            4793336.99
+          ],
+          [
+            388504.77,
+            4793310.33
+          ],
+          [
+            388504.77,
+            4793283.66
+          ],
+          [
+            388531.44,
+            4793257.0
+          ],
+          [
+            388558.12,
+            4793230.34
+          ],
+          [
+            388584.79,
+            4793203.67
+          ],
+          [
+            388611.46,
+            4793177.01
+          ],
+          [
+            388638.13,
+            4793150.34
+          ],
+          [
+            388664.81,
+            4793123.68
+          ],
+          [
+            388691.48,
+            4793097.02
+          ],
+          [
+            388691.48,
+            4793070.35
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 45,
+        "step": 45,
+        "length_m": 397.32,
+        "elevation_start": 45.94,
+        "elevation_end": 41.6,
+        "slope_percent": 1.09,
+        "cost_usd": 867744.57,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 38269003.42,
+        "cumulative_distance_m": 17131.67,
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            388691.48,
+            4793070.35
+          ],
+          [
+            388691.48,
+            4793043.69
+          ],
+          [
+            388691.48,
+            4793017.03
+          ],
+          [
+            388691.48,
+            4792990.36
+          ],
+          [
+            388691.48,
+            4792963.7
+          ],
+          [
+            388691.48,
+            4792937.03
+          ],
+          [
+            388691.48,
+            4792910.37
+          ],
+          [
+            388691.48,
+            4792883.71
+          ],
+          [
+            388691.48,
+            4792857.04
+          ],
+          [
+            388718.15,
+            4792830.38
+          ],
+          [
+            388744.82,
+            4792803.71
+          ],
+          [
+            388771.49,
+            4792777.05
+          ],
+          [
+            388798.17,
+            4792750.39
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 46,
+        "step": 46,
+        "length_m": 364.17,
+        "elevation_start": 41.6,
+        "elevation_end": 40.19,
+        "slope_percent": 0.39,
+        "cost_usd": 1005102.25,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 39274105.67,
+        "cumulative_distance_m": 17495.84,
+        "land_cover_class": 50,
+        "land_cover_name": "built_up",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            388798.17,
+            4792750.39
+          ],
+          [
+            388824.84,
+            4792723.72
+          ],
+          [
+            388851.51,
+            4792697.06
+          ],
+          [
+            388878.18,
+            4792670.4
+          ],
+          [
+            388904.86,
+            4792643.73
+          ],
+          [
+            388931.53,
+            4792617.07
+          ],
+          [
+            388958.2,
+            4792590.4
+          ],
+          [
+            388984.87,
+            4792563.74
+          ],
+          [
+            389011.55,
+            4792563.74
+          ],
+          [
+            389038.22,
+            4792563.74
+          ],
+          [
+            389064.89,
+            4792563.74
+          ],
+          [
+            389091.56,
+            4792563.74
+          ],
+          [
+            389118.23,
+            4792563.74
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 47,
+        "step": 47,
+        "length_m": 397.36,
+        "elevation_start": 40.19,
+        "elevation_end": 38.23,
+        "slope_percent": 0.49,
+        "cost_usd": 867836.95,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 40141942.62,
+        "cumulative_distance_m": 17893.2,
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            389118.23,
+            4792563.74
+          ],
+          [
+            389144.91,
+            4792563.74
+          ],
+          [
+            389171.58,
+            4792563.74
+          ],
+          [
+            389198.25,
+            4792537.08
+          ],
+          [
+            389224.92,
+            4792510.41
+          ],
+          [
+            389251.6,
+            4792483.75
+          ],
+          [
+            389278.27,
+            4792457.09
+          ],
+          [
+            389278.27,
+            4792430.42
+          ],
+          [
+            389304.94,
+            4792403.76
+          ],
+          [
+            389331.61,
+            4792377.09
+          ],
+          [
+            389358.28,
+            4792350.43
+          ],
+          [
+            389384.96,
+            4792323.77
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 48,
+        "step": 48,
+        "length_m": 381.72,
+        "elevation_start": 38.23,
+        "elevation_end": 37.54,
+        "slope_percent": 0.18,
+        "cost_usd": 833682.06,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 40975624.68,
+        "cumulative_distance_m": 18274.92,
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            389384.96,
+            4792323.77
+          ],
+          [
+            389411.63,
+            4792297.1
+          ],
+          [
+            389438.3,
+            4792270.44
+          ],
+          [
+            389464.97,
+            4792243.78
+          ],
+          [
+            389491.65,
+            4792243.78
+          ],
+          [
+            389518.32,
+            4792243.78
+          ],
+          [
+            389544.99,
+            4792243.78
+          ],
+          [
+            389571.66,
+            4792243.78
+          ],
+          [
+            389598.33,
+            4792243.78
+          ],
+          [
+            389625.01,
+            4792243.78
+          ],
+          [
+            389651.68,
+            4792243.78
+          ],
+          [
+            389678.35,
+            4792217.11
+          ],
+          [
+            389705.02,
+            4792190.45
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 49,
+        "step": 49,
+        "length_m": 375.28,
+        "elevation_start": 37.54,
+        "elevation_end": 34.8,
+        "slope_percent": 0.73,
+        "cost_usd": 819605.37,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 41795230.04,
+        "cumulative_distance_m": 18650.2,
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            389705.02,
+            4792190.45
+          ],
+          [
+            389731.7,
+            4792163.78
+          ],
+          [
+            389758.37,
+            4792163.78
+          ],
+          [
+            389785.04,
+            4792163.78
+          ],
+          [
+            389811.71,
+            4792163.78
+          ],
+          [
+            389838.38,
+            4792163.78
+          ],
+          [
+            389865.06,
+            4792163.78
+          ],
+          [
+            389891.73,
+            4792163.78
+          ],
+          [
+            389918.4,
+            4792163.78
+          ],
+          [
+            389945.07,
+            4792163.78
+          ],
+          [
+            389971.75,
+            4792163.78
+          ],
+          [
+            389998.42,
+            4792163.78
+          ],
+          [
+            390025.09,
+            4792163.78
+          ],
+          [
+            390051.76,
+            4792163.78
+          ],
+          [
+            390078.44,
+            4792163.78
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 50,
+        "step": 50,
+        "length_m": 384.45,
+        "elevation_start": 34.8,
+        "elevation_end": 34.79,
+        "slope_percent": 0.0,
+        "cost_usd": 839646.61,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 42634876.65,
+        "cumulative_distance_m": 19034.66,
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            390078.44,
+            4792163.78
+          ],
+          [
+            390105.11,
+            4792163.78
+          ],
+          [
+            390131.78,
+            4792163.78
+          ],
+          [
+            390158.45,
+            4792137.12
+          ],
+          [
+            390185.12,
+            4792110.46
+          ],
+          [
+            390211.8,
+            4792083.79
+          ],
+          [
+            390238.47,
+            4792057.13
+          ],
+          [
+            390265.14,
+            4792030.46
+          ],
+          [
+            390291.81,
+            4792003.8
+          ],
+          [
+            390318.49,
+            4791977.14
+          ],
+          [
+            390345.16,
+            4791977.14
+          ],
+          [
+            390371.83,
+            4791977.14
+          ],
+          [
+            390398.5,
+            4791977.14
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 51,
+        "step": 51,
+        "length_m": 397.36,
+        "elevation_start": 34.79,
+        "elevation_end": 28.75,
+        "slope_percent": 1.52,
+        "cost_usd": 929825.3,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 43564701.95,
+        "cumulative_distance_m": 19432.02,
+        "land_cover_class": 10,
+        "land_cover_name": "tree_cover",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            390398.5,
+            4791977.14
+          ],
+          [
+            390425.17,
+            4791950.47
+          ],
+          [
+            390451.85,
+            4791923.81
+          ],
+          [
+            390478.52,
+            4791897.15
+          ],
+          [
+            390505.19,
+            4791870.48
+          ],
+          [
+            390531.86,
+            4791843.82
+          ],
+          [
+            390558.54,
+            4791817.15
+          ],
+          [
+            390585.21,
+            4791817.15
+          ],
+          [
+            390611.88,
+            4791817.15
+          ],
+          [
+            390638.55,
+            4791817.15
+          ],
+          [
+            390665.22,
+            4791817.15
+          ],
+          [
+            390691.9,
+            4791790.49
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 52,
+        "step": 52,
+        "length_m": 370.69,
+        "elevation_start": 28.75,
+        "elevation_end": 31.14,
+        "slope_percent": 0.64,
+        "cost_usd": 809584.74,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 44374286.69,
+        "cumulative_distance_m": 19802.71,
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            390691.9,
+            4791790.49
+          ],
+          [
+            390718.57,
+            4791763.83
+          ],
+          [
+            390745.24,
+            4791737.16
+          ],
+          [
+            390771.91,
+            4791710.5
+          ],
+          [
+            390798.59,
+            4791683.84
+          ],
+          [
+            390825.26,
+            4791657.17
+          ],
+          [
+            390825.26,
+            4791630.51
+          ],
+          [
+            390825.26,
+            4791603.84
+          ],
+          [
+            390825.26,
+            4791577.18
+          ],
+          [
+            390825.26,
+            4791550.52
+          ],
+          [
+            390825.26,
+            4791523.85
+          ],
+          [
+            390851.93,
+            4791497.19
+          ],
+          [
+            390878.6,
+            4791470.53
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 53,
+        "step": 53,
+        "length_m": 397.32,
+        "elevation_start": 31.14,
+        "elevation_end": 30.15,
+        "slope_percent": 0.25,
+        "cost_usd": 867744.57,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 45242031.27,
+        "cumulative_distance_m": 20200.02,
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            390878.6,
+            4791470.53
+          ],
+          [
+            390905.28,
+            4791443.86
+          ],
+          [
+            390931.95,
+            4791417.2
+          ],
+          [
+            390958.62,
+            4791390.53
+          ],
+          [
+            390985.29,
+            4791363.87
+          ],
+          [
+            391011.96,
+            4791337.21
+          ],
+          [
+            391011.96,
+            4791310.54
+          ],
+          [
+            391011.96,
+            4791283.88
+          ],
+          [
+            391011.96,
+            4791257.21
+          ],
+          [
+            391038.64,
+            4791230.55
+          ],
+          [
+            391065.31,
+            4791203.89
+          ],
+          [
+            391091.98,
+            4791177.22
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 54,
+        "step": 54,
+        "length_m": 381.71,
+        "elevation_start": 30.15,
+        "elevation_end": 33.33,
+        "slope_percent": 0.83,
+        "cost_usd": 833645.11,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 46075676.38,
+        "cumulative_distance_m": 20581.73,
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            391091.98,
+            4791177.22
+          ],
+          [
+            391118.65,
+            4791150.56
+          ],
+          [
+            391145.33,
+            4791123.9
+          ],
+          [
+            391172.0,
+            4791097.23
+          ],
+          [
+            391198.67,
+            4791070.57
+          ],
+          [
+            391225.34,
+            4791043.9
+          ],
+          [
+            391252.01,
+            4791017.24
+          ],
+          [
+            391278.69,
+            4790990.58
+          ],
+          [
+            391305.36,
+            4790963.91
+          ],
+          [
+            391332.03,
+            4790937.25
+          ],
+          [
+            391358.7,
+            4790910.59
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 55,
+        "step": 55,
+        "length_m": 377.14,
+        "elevation_start": 33.33,
+        "elevation_end": 58.31,
+        "slope_percent": 6.63,
+        "cost_usd": 823679.91,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 46899356.29,
+        "cumulative_distance_m": 20958.87,
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "rolling",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            391358.7,
+            4790910.59
+          ],
+          [
+            391385.38,
+            4790883.92
+          ],
+          [
+            391412.05,
+            4790857.26
+          ],
+          [
+            391438.72,
+            4790830.59
+          ],
+          [
+            391465.39,
+            4790803.93
+          ],
+          [
+            391492.06,
+            4790777.27
+          ],
+          [
+            391518.74,
+            4790750.6
+          ],
+          [
+            391545.41,
+            4790723.94
+          ],
+          [
+            391572.08,
+            4790697.28
+          ],
+          [
+            391572.08,
+            4790670.61
+          ],
+          [
+            391572.08,
+            4790643.95
+          ],
+          [
+            391572.08,
+            4790617.28
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 56,
+        "step": 56,
+        "length_m": 381.71,
+        "elevation_start": 58.31,
+        "elevation_end": 86.32,
+        "slope_percent": 7.34,
+        "cost_usd": 861127.92,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 47760484.21,
+        "cumulative_distance_m": 21340.58,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "rolling",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            391572.08,
+            4790617.28
+          ],
+          [
+            391572.08,
+            4790590.62
+          ],
+          [
+            391572.08,
+            4790563.96
+          ],
+          [
+            391572.08,
+            4790537.29
+          ],
+          [
+            391572.08,
+            4790510.63
+          ],
+          [
+            391572.08,
+            4790483.96
+          ],
+          [
+            391572.08,
+            4790457.3
+          ],
+          [
+            391572.08,
+            4790430.64
+          ],
+          [
+            391572.08,
+            4790403.97
+          ],
+          [
+            391572.08,
+            4790377.31
+          ],
+          [
+            391572.08,
+            4790350.65
+          ],
+          [
+            391572.08,
+            4790323.98
+          ],
+          [
+            391572.08,
+            4790297.32
+          ],
+          [
+            391598.75,
+            4790270.65
+          ],
+          [
+            391625.43,
+            4790243.99
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 57,
+        "step": 57,
+        "length_m": 395.39,
+        "elevation_start": 86.32,
+        "elevation_end": 94.78,
+        "slope_percent": 2.14,
+        "cost_usd": 892009.08,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 48652493.29,
+        "cumulative_distance_m": 21735.97,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            391625.43,
+            4790243.99
+          ],
+          [
+            391652.1,
+            4790217.33
+          ],
+          [
+            391652.1,
+            4790190.66
+          ],
+          [
+            391652.1,
+            4790164.0
+          ],
+          [
+            391652.1,
+            4790137.34
+          ],
+          [
+            391625.43,
+            4790110.67
+          ],
+          [
+            391625.43,
+            4790084.01
+          ],
+          [
+            391625.43,
+            4790057.34
+          ],
+          [
+            391625.43,
+            4790030.68
+          ],
+          [
+            391625.43,
+            4790004.02
+          ],
+          [
+            391652.1,
+            4789977.35
+          ],
+          [
+            391678.77,
+            4789950.69
+          ],
+          [
+            391678.77,
+            4789924.03
+          ],
+          [
+            391678.77,
+            4789897.36
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 58,
+        "step": 58,
+        "length_m": 390.83,
+        "elevation_start": 94.78,
+        "elevation_end": 44.96,
+        "slope_percent": 12.75,
+        "cost_usd": 881715.36,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 49534208.65,
+        "cumulative_distance_m": 22126.8,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "hilly",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            391678.77,
+            4789897.36
+          ],
+          [
+            391678.77,
+            4789870.7
+          ],
+          [
+            391678.77,
+            4789844.03
+          ],
+          [
+            391678.77,
+            4789817.37
+          ],
+          [
+            391678.77,
+            4789790.71
+          ],
+          [
+            391678.77,
+            4789764.04
+          ],
+          [
+            391678.77,
+            4789737.38
+          ],
+          [
+            391678.77,
+            4789710.71
+          ],
+          [
+            391678.77,
+            4789684.05
+          ],
+          [
+            391678.77,
+            4789657.39
+          ],
+          [
+            391678.77,
+            4789630.72
+          ],
+          [
+            391678.77,
+            4789604.06
+          ],
+          [
+            391678.77,
+            4789577.4
+          ],
+          [
+            391705.44,
+            4789550.73
+          ],
+          [
+            391732.11,
+            4789524.07
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 59,
+        "step": 59,
+        "length_m": 395.39,
+        "elevation_start": 44.96,
+        "elevation_end": 40.27,
+        "slope_percent": 1.19,
+        "cost_usd": 863540.71,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 50397749.36,
+        "cumulative_distance_m": 22522.2,
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            391732.11,
+            4789524.07
+          ],
+          [
+            391758.79,
+            4789497.4
+          ],
+          [
+            391785.46,
+            4789470.74
+          ],
+          [
+            391812.13,
+            4789444.08
+          ],
+          [
+            391838.8,
+            4789417.41
+          ],
+          [
+            391865.48,
+            4789390.75
+          ],
+          [
+            391892.15,
+            4789364.09
+          ],
+          [
+            391918.82,
+            4789337.42
+          ],
+          [
+            391945.49,
+            4789310.76
+          ],
+          [
+            391972.17,
+            4789284.09
+          ],
+          [
+            391998.84,
+            4789257.43
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 60,
+        "step": 60,
+        "length_m": 377.14,
+        "elevation_start": 40.27,
+        "elevation_end": 44.19,
+        "slope_percent": 1.04,
+        "cost_usd": 823679.91,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 51221429.27,
+        "cumulative_distance_m": 22899.34,
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            391998.84,
+            4789257.43
+          ],
+          [
+            391998.84,
+            4789230.77
+          ],
+          [
+            391998.84,
+            4789204.1
+          ],
+          [
+            391998.84,
+            4789177.44
+          ],
+          [
+            391998.84,
+            4789150.78
+          ],
+          [
+            391998.84,
+            4789124.11
+          ],
+          [
+            391998.84,
+            4789097.45
+          ],
+          [
+            391998.84,
+            4789070.78
+          ],
+          [
+            391998.84,
+            4789044.12
+          ],
+          [
+            391998.84,
+            4789017.46
+          ],
+          [
+            391998.84,
+            4788990.79
+          ],
+          [
+            391972.17,
+            4788964.13
+          ],
+          [
+            391972.17,
+            4788937.46
+          ],
+          [
+            391972.17,
+            4788910.8
+          ],
+          [
+            391972.17,
+            4788884.14
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 61,
+        "step": 61,
+        "length_m": 384.34,
+        "elevation_start": 44.19,
+        "elevation_end": 54.74,
+        "slope_percent": 2.74,
+        "cost_usd": 867079.19,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 52088508.46,
+        "cumulative_distance_m": 23283.68,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            391972.17,
+            4788884.14
+          ],
+          [
+            391998.84,
+            4788857.47
+          ],
+          [
+            392025.51,
+            4788830.81
+          ],
+          [
+            392025.51,
+            4788804.15
+          ],
+          [
+            392025.51,
+            4788777.48
+          ],
+          [
+            392025.51,
+            4788750.82
+          ],
+          [
+            392025.51,
+            4788724.15
+          ],
+          [
+            392025.51,
+            4788697.49
+          ],
+          [
+            392025.51,
+            4788670.83
+          ],
+          [
+            392025.51,
+            4788644.16
+          ],
+          [
+            392025.51,
+            4788617.5
+          ],
+          [
+            392025.51,
+            4788590.84
+          ],
+          [
+            392025.51,
+            4788564.17
+          ],
+          [
+            392025.51,
+            4788537.51
+          ],
+          [
+            392025.51,
+            4788510.84
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 62,
+        "step": 62,
+        "length_m": 395.39,
+        "elevation_start": 54.74,
+        "elevation_end": 48.2,
+        "slope_percent": 1.65,
+        "cost_usd": 863540.71,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 52952049.17,
+        "cumulative_distance_m": 23679.08,
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            392025.51,
+            4788510.84
+          ],
+          [
+            392025.51,
+            4788484.18
+          ],
+          [
+            392025.51,
+            4788457.52
+          ],
+          [
+            392025.51,
+            4788430.85
+          ],
+          [
+            392025.51,
+            4788404.19
+          ],
+          [
+            392025.51,
+            4788377.52
+          ],
+          [
+            392025.51,
+            4788350.86
+          ],
+          [
+            392025.51,
+            4788324.2
+          ],
+          [
+            392025.51,
+            4788297.53
+          ],
+          [
+            392025.51,
+            4788270.87
+          ],
+          [
+            392025.51,
+            4788244.21
+          ],
+          [
+            392025.51,
+            4788217.54
+          ],
+          [
+            392025.51,
+            4788190.88
+          ],
+          [
+            392025.51,
+            4788164.21
+          ],
+          [
+            392025.51,
+            4788137.55
+          ],
+          [
+            392025.51,
+            4788110.89
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 63,
+        "step": 63,
+        "length_m": 399.96,
+        "elevation_start": 48.2,
+        "elevation_end": 38.81,
+        "slope_percent": 2.35,
+        "cost_usd": 902302.81,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 53854351.98,
+        "cumulative_distance_m": 24079.04,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            392025.51,
+            4788110.89
+          ],
+          [
+            392025.51,
+            4788084.22
+          ],
+          [
+            392025.51,
+            4788057.56
+          ],
+          [
+            391998.84,
+            4788030.9
+          ],
+          [
+            391972.17,
+            4788004.23
+          ],
+          [
+            391972.17,
+            4787977.57
+          ],
+          [
+            391972.17,
+            4787950.9
+          ],
+          [
+            391998.84,
+            4787924.24
+          ],
+          [
+            391972.17,
+            4787897.58
+          ],
+          [
+            391972.17,
+            4787870.91
+          ],
+          [
+            391972.17,
+            4787844.25
+          ],
+          [
+            391972.17,
+            4787817.59
+          ],
+          [
+            391945.49,
+            4787790.92
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 64,
+        "step": 64,
+        "length_m": 375.22,
+        "elevation_start": 38.81,
+        "elevation_end": 31.87,
+        "slope_percent": 1.85,
+        "cost_usd": 846491.74,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 54700843.72,
+        "cumulative_distance_m": 24454.25,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            391945.49,
+            4787790.92
+          ],
+          [
+            391918.82,
+            4787764.26
+          ],
+          [
+            391892.15,
+            4787737.59
+          ],
+          [
+            391865.48,
+            4787710.93
+          ],
+          [
+            391838.8,
+            4787684.27
+          ],
+          [
+            391812.13,
+            4787657.6
+          ],
+          [
+            391785.46,
+            4787630.94
+          ],
+          [
+            391758.79,
+            4787604.27
+          ],
+          [
+            391732.11,
+            4787577.61
+          ],
+          [
+            391705.44,
+            4787550.95
+          ],
+          [
+            391678.77,
+            4787524.28
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 65,
+        "step": 65,
+        "length_m": 377.14,
+        "elevation_start": 31.87,
+        "elevation_end": 42.18,
+        "slope_percent": 2.73,
+        "cost_usd": 850834.19,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 55551677.91,
+        "cumulative_distance_m": 24831.4,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            391678.77,
+            4787524.28
+          ],
+          [
+            391652.1,
+            4787497.62
+          ],
+          [
+            391625.43,
+            4787470.96
+          ],
+          [
+            391625.43,
+            4787444.29
+          ],
+          [
+            391625.43,
+            4787417.63
+          ],
+          [
+            391625.43,
+            4787390.96
+          ],
+          [
+            391625.43,
+            4787364.3
+          ],
+          [
+            391625.43,
+            4787337.64
+          ],
+          [
+            391625.43,
+            4787310.97
+          ],
+          [
+            391598.75,
+            4787284.31
+          ],
+          [
+            391572.08,
+            4787257.65
+          ],
+          [
+            391545.41,
+            4787230.98
+          ],
+          [
+            391518.74,
+            4787204.32
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 66,
+        "step": 66,
+        "length_m": 386.27,
+        "elevation_start": 42.18,
+        "elevation_end": 33.71,
+        "slope_percent": 2.19,
+        "cost_usd": 843610.31,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 56395288.22,
+        "cumulative_distance_m": 25217.66,
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            391518.74,
+            4787204.32
+          ],
+          [
+            391492.06,
+            4787177.65
+          ],
+          [
+            391492.06,
+            4787150.99
+          ],
+          [
+            391492.06,
+            4787124.33
+          ],
+          [
+            391492.06,
+            4787097.66
+          ],
+          [
+            391492.06,
+            4787071.0
+          ],
+          [
+            391492.06,
+            4787044.34
+          ],
+          [
+            391492.06,
+            4787017.67
+          ],
+          [
+            391492.06,
+            4786991.01
+          ],
+          [
+            391492.06,
+            4786964.34
+          ],
+          [
+            391492.06,
+            4786937.68
+          ],
+          [
+            391492.06,
+            4786911.02
+          ],
+          [
+            391492.06,
+            4786884.35
+          ],
+          [
+            391492.06,
+            4786857.69
+          ],
+          [
+            391465.39,
+            4786831.02
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 67,
+        "step": 67,
+        "length_m": 395.39,
+        "elevation_start": 33.71,
+        "elevation_end": 43.6,
+        "slope_percent": 2.5,
+        "cost_usd": 892009.08,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 57287297.31,
+        "cumulative_distance_m": 25613.06,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            391465.39,
+            4786831.02
+          ],
+          [
+            391438.72,
+            4786804.36
+          ],
+          [
+            391412.05,
+            4786777.7
+          ],
+          [
+            391385.38,
+            4786751.03
+          ],
+          [
+            391358.7,
+            4786724.37
+          ],
+          [
+            391358.7,
+            4786697.71
+          ],
+          [
+            391358.7,
+            4786671.04
+          ],
+          [
+            391358.7,
+            4786644.38
+          ],
+          [
+            391358.7,
+            4786617.71
+          ],
+          [
+            391358.7,
+            4786591.05
+          ],
+          [
+            391358.7,
+            4786564.39
+          ],
+          [
+            391358.7,
+            4786537.72
+          ],
+          [
+            391358.7,
+            4786511.06
+          ],
+          [
+            391358.7,
+            4786484.4
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 68,
+        "step": 68,
+        "length_m": 390.83,
+        "elevation_start": 43.6,
+        "elevation_end": 37.92,
+        "slope_percent": 1.45,
+        "cost_usd": 914545.19,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 58201842.5,
+        "cumulative_distance_m": 26003.89,
+        "land_cover_class": 10,
+        "land_cover_name": "tree_cover",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            391358.7,
+            4786484.4
+          ],
+          [
+            391358.7,
+            4786457.73
+          ],
+          [
+            391358.7,
+            4786431.07
+          ],
+          [
+            391358.7,
+            4786404.4
+          ],
+          [
+            391358.7,
+            4786377.74
+          ],
+          [
+            391358.7,
+            4786351.08
+          ],
+          [
+            391358.7,
+            4786324.41
+          ],
+          [
+            391358.7,
+            4786297.75
+          ],
+          [
+            391358.7,
+            4786271.09
+          ],
+          [
+            391358.7,
+            4786244.42
+          ],
+          [
+            391358.7,
+            4786217.76
+          ],
+          [
+            391358.7,
+            4786191.09
+          ],
+          [
+            391358.7,
+            4786164.43
+          ],
+          [
+            391358.7,
+            4786137.77
+          ],
+          [
+            391358.7,
+            4786111.1
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 69,
+        "step": 69,
+        "length_m": 373.29,
+        "elevation_start": 37.92,
+        "elevation_end": 47.63,
+        "slope_percent": 2.6,
+        "cost_usd": 815272.18,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 59017114.68,
+        "cumulative_distance_m": 26377.18,
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            391358.7,
+            4786111.1
+          ],
+          [
+            391385.38,
+            4786084.44
+          ],
+          [
+            391412.05,
+            4786057.77
+          ],
+          [
+            391438.72,
+            4786031.11
+          ],
+          [
+            391465.39,
+            4786004.45
+          ],
+          [
+            391492.06,
+            4785977.78
+          ],
+          [
+            391518.74,
+            4785951.12
+          ],
+          [
+            391545.41,
+            4785924.46
+          ],
+          [
+            391572.08,
+            4785924.46
+          ],
+          [
+            391598.75,
+            4785924.46
+          ],
+          [
+            391625.43,
+            4785924.46
+          ],
+          [
+            391652.1,
+            4785924.46
+          ],
+          [
+            391678.77,
+            4785924.46
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 70,
+        "step": 70,
+        "length_m": 397.36,
+        "elevation_start": 47.63,
+        "elevation_end": 62.31,
+        "slope_percent": 3.7,
+        "cost_usd": 896446.95,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 59913561.63,
+        "cumulative_distance_m": 26774.54,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            391678.77,
+            4785924.46
+          ],
+          [
+            391705.44,
+            4785924.46
+          ],
+          [
+            391732.11,
+            4785924.46
+          ],
+          [
+            391758.79,
+            4785924.46
+          ],
+          [
+            391785.46,
+            4785924.46
+          ],
+          [
+            391812.13,
+            4785924.46
+          ],
+          [
+            391838.8,
+            4785951.12
+          ],
+          [
+            391865.48,
+            4785977.78
+          ],
+          [
+            391892.15,
+            4786004.45
+          ],
+          [
+            391918.82,
+            4786004.45
+          ],
+          [
+            391945.49,
+            4786004.45
+          ],
+          [
+            391972.17,
+            4786004.45
+          ],
+          [
+            391998.84,
+            4786031.11
+          ],
+          [
+            392025.51,
+            4786031.11
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 71,
+        "step": 71,
+        "length_m": 390.91,
+        "elevation_start": 62.31,
+        "elevation_end": 78.13,
+        "slope_percent": 4.05,
+        "cost_usd": 914723.33,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 60828284.97,
+        "cumulative_distance_m": 27165.45,
+        "land_cover_class": 10,
+        "land_cover_name": "tree_cover",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            392025.51,
+            4786031.11
+          ],
+          [
+            392052.18,
+            4786057.77
+          ],
+          [
+            392078.85,
+            4786084.44
+          ],
+          [
+            392105.53,
+            4786111.1
+          ],
+          [
+            392132.2,
+            4786137.77
+          ],
+          [
+            392132.2,
+            4786164.43
+          ],
+          [
+            392158.87,
+            4786191.09
+          ],
+          [
+            392185.54,
+            4786217.76
+          ],
+          [
+            392212.22,
+            4786244.42
+          ],
+          [
+            392238.89,
+            4786271.09
+          ],
+          [
+            392265.56,
+            4786297.75
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 72,
+        "step": 72,
+        "length_m": 366.09,
+        "elevation_start": 78.13,
+        "elevation_end": 107.21,
+        "slope_percent": 7.94,
+        "cost_usd": 825904.3,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 61654189.26,
+        "cumulative_distance_m": 27531.54,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "rolling",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            392265.56,
+            4786297.75
+          ],
+          [
+            392292.23,
+            4786324.41
+          ],
+          [
+            392318.9,
+            4786324.41
+          ],
+          [
+            392345.58,
+            4786324.41
+          ],
+          [
+            392372.25,
+            4786324.41
+          ],
+          [
+            392398.92,
+            4786297.75
+          ],
+          [
+            392425.59,
+            4786271.09
+          ],
+          [
+            392452.27,
+            4786271.09
+          ],
+          [
+            392478.94,
+            4786271.09
+          ],
+          [
+            392505.61,
+            4786244.42
+          ],
+          [
+            392532.28,
+            4786244.42
+          ],
+          [
+            392558.95,
+            4786244.42
+          ],
+          [
+            392585.63,
+            4786244.42
+          ],
+          [
+            392612.3,
+            4786244.42
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 73,
+        "step": 73,
+        "length_m": 390.91,
+        "elevation_start": 107.21,
+        "elevation_end": 162.75,
+        "slope_percent": 14.21,
+        "cost_usd": 881887.11,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 62536076.37,
+        "cumulative_distance_m": 27922.45,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "hilly",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            392612.3,
+            4786244.42
+          ],
+          [
+            392638.97,
+            4786244.42
+          ],
+          [
+            392665.64,
+            4786244.42
+          ],
+          [
+            392692.32,
+            4786244.42
+          ],
+          [
+            392718.99,
+            4786244.42
+          ],
+          [
+            392745.66,
+            4786244.42
+          ],
+          [
+            392772.33,
+            4786217.76
+          ],
+          [
+            392799.01,
+            4786217.76
+          ],
+          [
+            392825.68,
+            4786217.76
+          ],
+          [
+            392852.35,
+            4786217.76
+          ],
+          [
+            392879.02,
+            4786217.76
+          ],
+          [
+            392905.69,
+            4786217.76
+          ],
+          [
+            392932.37,
+            4786217.76
+          ],
+          [
+            392959.04,
+            4786244.42
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 74,
+        "step": 74,
+        "length_m": 368.82,
+        "elevation_start": 162.75,
+        "elevation_end": 210.85,
+        "slope_percent": 13.04,
+        "cost_usd": 832065.48,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 63368141.85,
+        "cumulative_distance_m": 28291.28,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "hilly",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            392959.04,
+            4786244.42
+          ],
+          [
+            392985.71,
+            4786271.09
+          ],
+          [
+            393012.38,
+            4786244.42
+          ],
+          [
+            393039.06,
+            4786217.76
+          ],
+          [
+            393065.73,
+            4786217.76
+          ],
+          [
+            393092.4,
+            4786217.76
+          ],
+          [
+            393119.07,
+            4786217.76
+          ],
+          [
+            393145.74,
+            4786217.76
+          ],
+          [
+            393172.42,
+            4786217.76
+          ],
+          [
+            393199.09,
+            4786244.42
+          ],
+          [
+            393225.76,
+            4786271.09
+          ],
+          [
+            393252.43,
+            4786271.09
+          ],
+          [
+            393279.11,
+            4786271.09
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 75,
+        "step": 75,
+        "length_m": 375.28,
+        "elevation_start": 210.85,
+        "elevation_end": 167.33,
+        "slope_percent": 11.6,
+        "cost_usd": 846625.32,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 64214767.17,
+        "cumulative_distance_m": 28666.55,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "hilly",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            393279.11,
+            4786271.09
+          ],
+          [
+            393305.78,
+            4786271.09
+          ],
+          [
+            393332.45,
+            4786271.09
+          ],
+          [
+            393359.12,
+            4786271.09
+          ],
+          [
+            393385.79,
+            4786271.09
+          ],
+          [
+            393412.47,
+            4786271.09
+          ],
+          [
+            393439.14,
+            4786271.09
+          ],
+          [
+            393465.81,
+            4786271.09
+          ],
+          [
+            393492.48,
+            4786271.09
+          ],
+          [
+            393519.16,
+            4786271.09
+          ],
+          [
+            393545.83,
+            4786271.09
+          ],
+          [
+            393572.5,
+            4786271.09
+          ],
+          [
+            393599.17,
+            4786271.09
+          ],
+          [
+            393625.84,
+            4786271.09
+          ],
+          [
+            393652.52,
+            4786271.09
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 76,
+        "step": 76,
+        "length_m": 373.41,
+        "elevation_start": 167.33,
+        "elevation_end": 121.35,
+        "slope_percent": 12.31,
+        "cost_usd": 873783.02,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 65088550.2,
+        "cumulative_distance_m": 29039.96,
+        "land_cover_class": 10,
+        "land_cover_name": "tree_cover",
+        "geohazard_risk": 0.0,
+        "terrain_class": "hilly",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            393652.52,
+            4786271.09
+          ],
+          [
+            393679.19,
+            4786271.09
+          ],
+          [
+            393705.86,
+            4786271.09
+          ],
+          [
+            393732.53,
+            4786244.42
+          ],
+          [
+            393759.21,
+            4786217.76
+          ],
+          [
+            393785.88,
+            4786191.09
+          ],
+          [
+            393812.55,
+            4786164.43
+          ],
+          [
+            393839.22,
+            4786137.77
+          ],
+          [
+            393865.9,
+            4786111.1
+          ],
+          [
+            393892.57,
+            4786084.44
+          ],
+          [
+            393919.24,
+            4786057.77
+          ],
+          [
+            393919.24,
+            4786031.11
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 77,
+        "step": 77,
+        "length_m": 381.72,
+        "elevation_start": 121.35,
+        "elevation_end": 100.35,
+        "slope_percent": 5.5,
+        "cost_usd": 833682.06,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 65922232.26,
+        "cumulative_distance_m": 29421.69,
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "rolling",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            393919.24,
+            4786031.11
+          ],
+          [
+            393919.24,
+            4786004.45
+          ],
+          [
+            393919.24,
+            4785977.78
+          ],
+          [
+            393919.24,
+            4785951.12
+          ],
+          [
+            393945.91,
+            4785924.46
+          ],
+          [
+            393972.58,
+            4785897.79
+          ],
+          [
+            393999.26,
+            4785871.13
+          ],
+          [
+            394025.93,
+            4785844.46
+          ],
+          [
+            394052.6,
+            4785817.8
+          ],
+          [
+            394079.27,
+            4785791.14
+          ],
+          [
+            394105.95,
+            4785764.47
+          ],
+          [
+            394132.62,
+            4785737.81
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 78,
+        "step": 78,
+        "length_m": 381.71,
+        "elevation_start": 100.35,
+        "elevation_end": 87.36,
+        "slope_percent": 3.4,
+        "cost_usd": 833645.11,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 66755877.37,
+        "cumulative_distance_m": 29803.39,
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            394132.62,
+            4785737.81
+          ],
+          [
+            394159.29,
+            4785711.15
+          ],
+          [
+            394185.96,
+            4785684.48
+          ],
+          [
+            394212.63,
+            4785657.82
+          ],
+          [
+            394239.31,
+            4785631.15
+          ],
+          [
+            394265.98,
+            4785604.49
+          ],
+          [
+            394292.65,
+            4785577.83
+          ],
+          [
+            394319.32,
+            4785551.16
+          ],
+          [
+            394346.0,
+            4785524.5
+          ],
+          [
+            394372.67,
+            4785497.84
+          ],
+          [
+            394399.34,
+            4785471.17
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 79,
+        "step": 79,
+        "length_m": 377.14,
+        "elevation_start": 87.36,
+        "elevation_end": 75.59,
+        "slope_percent": 3.12,
+        "cost_usd": 823679.91,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 67579557.28,
+        "cumulative_distance_m": 30180.53,
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            394399.34,
+            4785471.17
+          ],
+          [
+            394426.01,
+            4785444.51
+          ],
+          [
+            394452.68,
+            4785417.84
+          ],
+          [
+            394479.36,
+            4785391.18
+          ],
+          [
+            394506.03,
+            4785364.52
+          ],
+          [
+            394532.7,
+            4785337.85
+          ],
+          [
+            394559.37,
+            4785311.19
+          ],
+          [
+            394586.05,
+            4785284.52
+          ],
+          [
+            394612.72,
+            4785257.86
+          ],
+          [
+            394639.39,
+            4785231.2
+          ],
+          [
+            394666.06,
+            4785204.53
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 80,
+        "step": 80,
+        "length_m": 377.14,
+        "elevation_start": 75.59,
+        "elevation_end": 68.87,
+        "slope_percent": 1.78,
+        "cost_usd": 837257.05,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 68416814.33,
+        "cumulative_distance_m": 30557.68,
+        "land_cover_class": 20,
+        "land_cover_name": "shrubland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            394666.06,
+            4785204.53
+          ],
+          [
+            394692.74,
+            4785177.87
+          ],
+          [
+            394692.74,
+            4785151.21
+          ],
+          [
+            394719.41,
+            4785124.54
+          ],
+          [
+            394746.08,
+            4785097.88
+          ],
+          [
+            394772.75,
+            4785071.21
+          ],
+          [
+            394799.42,
+            4785044.55
+          ],
+          [
+            394826.1,
+            4785017.89
+          ],
+          [
+            394852.77,
+            4784991.22
+          ],
+          [
+            394879.44,
+            4784964.56
+          ],
+          [
+            394906.11,
+            4784937.9
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 81,
+        "step": 81,
+        "length_m": 366.09,
+        "elevation_start": 68.87,
+        "elevation_end": 59.37,
+        "slope_percent": 2.6,
+        "cost_usd": 825904.3,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 69242718.63,
+        "cumulative_distance_m": 30923.77,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            394906.11,
+            4784937.9
+          ],
+          [
+            394932.79,
+            4784911.23
+          ],
+          [
+            394959.46,
+            4784884.57
+          ],
+          [
+            394986.13,
+            4784884.57
+          ],
+          [
+            395012.8,
+            4784884.57
+          ],
+          [
+            395039.47,
+            4784884.57
+          ],
+          [
+            395066.15,
+            4784884.57
+          ],
+          [
+            395092.82,
+            4784884.57
+          ],
+          [
+            395119.49,
+            4784884.57
+          ],
+          [
+            395146.16,
+            4784884.57
+          ],
+          [
+            395172.84,
+            4784884.57
+          ],
+          [
+            395199.51,
+            4784911.23
+          ],
+          [
+            395226.18,
+            4784937.9
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 82,
+        "step": 82,
+        "length_m": 364.24,
+        "elevation_start": 59.37,
+        "elevation_end": 54.57,
+        "slope_percent": 1.32,
+        "cost_usd": 821714.51,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 70064433.13,
+        "cumulative_distance_m": 31288.01,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            395226.18,
+            4784937.9
+          ],
+          [
+            395252.85,
+            4784964.56
+          ],
+          [
+            395279.52,
+            4784991.22
+          ],
+          [
+            395306.2,
+            4785017.89
+          ],
+          [
+            395332.87,
+            4785044.55
+          ],
+          [
+            395359.54,
+            4785071.21
+          ],
+          [
+            395386.21,
+            4785097.88
+          ],
+          [
+            395412.89,
+            4785124.54
+          ],
+          [
+            395439.56,
+            4785151.21
+          ],
+          [
+            395466.23,
+            4785177.87
+          ],
+          [
+            395492.9,
+            4785177.87
+          ],
+          [
+            395519.57,
+            4785177.87
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 83,
+        "step": 83,
+        "length_m": 392.77,
+        "elevation_start": 54.57,
+        "elevation_end": 47.28,
+        "slope_percent": 1.86,
+        "cost_usd": 886095.98,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 70950529.12,
+        "cumulative_distance_m": 31680.78,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            395519.57,
+            4785177.87
+          ],
+          [
+            395546.25,
+            4785177.87
+          ],
+          [
+            395572.92,
+            4785177.87
+          ],
+          [
+            395599.59,
+            4785177.87
+          ],
+          [
+            395626.26,
+            4785177.87
+          ],
+          [
+            395652.94,
+            4785177.87
+          ],
+          [
+            395679.61,
+            4785177.87
+          ],
+          [
+            395706.28,
+            4785177.87
+          ],
+          [
+            395732.95,
+            4785177.87
+          ],
+          [
+            395759.63,
+            4785177.87
+          ],
+          [
+            395786.3,
+            4785177.87
+          ],
+          [
+            395812.97,
+            4785177.87
+          ],
+          [
+            395839.64,
+            4785204.53
+          ],
+          [
+            395866.31,
+            4785231.2
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 84,
+        "step": 84,
+        "length_m": 368.82,
+        "elevation_start": 47.28,
+        "elevation_end": 41.94,
+        "slope_percent": 1.45,
+        "cost_usd": 818787.84,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 71769316.96,
+        "cumulative_distance_m": 32049.6,
+        "land_cover_class": 20,
+        "land_cover_name": "shrubland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            395866.31,
+            4785231.2
+          ],
+          [
+            395892.99,
+            4785257.86
+          ],
+          [
+            395919.66,
+            4785284.52
+          ],
+          [
+            395946.33,
+            4785311.19
+          ],
+          [
+            395973.0,
+            4785311.19
+          ],
+          [
+            395999.68,
+            4785311.19
+          ],
+          [
+            396026.35,
+            4785337.85
+          ],
+          [
+            396053.02,
+            4785364.52
+          ],
+          [
+            396079.69,
+            4785364.52
+          ],
+          [
+            396106.36,
+            4785364.52
+          ],
+          [
+            396133.04,
+            4785364.52
+          ],
+          [
+            396159.71,
+            4785364.52
+          ],
+          [
+            396186.38,
+            4785364.52
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 85,
+        "step": 85,
+        "length_m": 375.28,
+        "elevation_start": 41.94,
+        "elevation_end": 40.99,
+        "slope_percent": 0.25,
+        "cost_usd": 819605.37,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 72588922.32,
+        "cumulative_distance_m": 32424.88,
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            396186.38,
+            4785364.52
+          ],
+          [
+            396213.05,
+            4785364.52
+          ],
+          [
+            396239.73,
+            4785364.52
+          ],
+          [
+            396266.4,
+            4785364.52
+          ],
+          [
+            396293.07,
+            4785337.85
+          ],
+          [
+            396319.74,
+            4785311.19
+          ],
+          [
+            396346.41,
+            4785284.52
+          ],
+          [
+            396373.09,
+            4785257.86
+          ],
+          [
+            396399.76,
+            4785231.2
+          ],
+          [
+            396426.43,
+            4785204.53
+          ],
+          [
+            396453.1,
+            4785177.87
+          ],
+          [
+            396479.78,
+            4785151.21
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 86,
+        "step": 86,
+        "length_m": 381.73,
+        "elevation_start": 40.99,
+        "elevation_end": 32.49,
+        "slope_percent": 2.23,
+        "cost_usd": 893250.57,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 73482172.89,
+        "cumulative_distance_m": 32806.61,
+        "land_cover_class": 10,
+        "land_cover_name": "tree_cover",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            396479.78,
+            4785151.21
+          ],
+          [
+            396506.45,
+            4785124.54
+          ],
+          [
+            396533.12,
+            4785097.88
+          ],
+          [
+            396559.79,
+            4785071.21
+          ],
+          [
+            396586.47,
+            4785044.55
+          ],
+          [
+            396613.14,
+            4785017.89
+          ],
+          [
+            396639.81,
+            4784991.22
+          ],
+          [
+            396666.48,
+            4784964.56
+          ],
+          [
+            396693.15,
+            4784937.9
+          ],
+          [
+            396719.83,
+            4784937.9
+          ],
+          [
+            396746.5,
+            4784911.23
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 87,
+        "step": 87,
+        "length_m": 366.1,
+        "elevation_start": 32.49,
+        "elevation_end": 26.13,
+        "slope_percent": 1.74,
+        "cost_usd": 799564.12,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 74281737.01,
+        "cumulative_distance_m": 33172.71,
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            396746.5,
+            4784911.23
+          ],
+          [
+            396773.17,
+            4784884.57
+          ],
+          [
+            396799.84,
+            4784857.9
+          ],
+          [
+            396826.52,
+            4784831.24
+          ],
+          [
+            396853.19,
+            4784804.58
+          ],
+          [
+            396879.86,
+            4784777.91
+          ],
+          [
+            396906.53,
+            4784751.25
+          ],
+          [
+            396933.2,
+            4784724.59
+          ],
+          [
+            396959.88,
+            4784697.92
+          ],
+          [
+            396986.55,
+            4784697.92
+          ],
+          [
+            397013.22,
+            4784671.26
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 88,
+        "step": 88,
+        "length_m": 366.1,
+        "elevation_start": 26.13,
+        "elevation_end": 31.64,
+        "slope_percent": 1.51,
+        "cost_usd": 799564.12,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 75081301.14,
+        "cumulative_distance_m": 33538.81,
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            397013.22,
+            4784671.26
+          ],
+          [
+            397039.89,
+            4784644.59
+          ],
+          [
+            397066.57,
+            4784617.93
+          ],
+          [
+            397093.24,
+            4784591.27
+          ],
+          [
+            397119.91,
+            4784564.6
+          ],
+          [
+            397146.58,
+            4784564.6
+          ],
+          [
+            397173.25,
+            4784564.6
+          ],
+          [
+            397199.93,
+            4784564.6
+          ],
+          [
+            397226.6,
+            4784564.6
+          ],
+          [
+            397253.27,
+            4784564.6
+          ],
+          [
+            397279.94,
+            4784564.6
+          ],
+          [
+            397306.62,
+            4784564.6
+          ],
+          [
+            397333.29,
+            4784564.6
+          ],
+          [
+            397359.96,
+            4784564.6
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 89,
+        "step": 89,
+        "length_m": 390.91,
+        "elevation_start": 31.64,
+        "elevation_end": 34.45,
+        "slope_percent": 0.72,
+        "cost_usd": 881887.11,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 75963188.25,
+        "cumulative_distance_m": 33929.72,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            397359.96,
+            4784564.6
+          ],
+          [
+            397386.63,
+            4784564.6
+          ],
+          [
+            397413.3,
+            4784564.6
+          ],
+          [
+            397439.98,
+            4784564.6
+          ],
+          [
+            397466.65,
+            4784564.6
+          ],
+          [
+            397493.32,
+            4784537.94
+          ],
+          [
+            397519.99,
+            4784511.27
+          ],
+          [
+            397546.67,
+            4784484.61
+          ],
+          [
+            397573.34,
+            4784457.95
+          ],
+          [
+            397600.01,
+            4784431.28
+          ],
+          [
+            397626.68,
+            4784404.62
+          ],
+          [
+            397653.36,
+            4784377.96
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 90,
+        "step": 90,
+        "length_m": 370.69,
+        "elevation_start": 34.45,
+        "elevation_end": 44.45,
+        "slope_percent": 2.7,
+        "cost_usd": 836274.35,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 76799462.6,
+        "cumulative_distance_m": 34300.41,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            397653.36,
+            4784377.96
+          ],
+          [
+            397680.03,
+            4784351.29
+          ],
+          [
+            397706.7,
+            4784324.63
+          ],
+          [
+            397733.37,
+            4784297.96
+          ],
+          [
+            397760.04,
+            4784271.3
+          ],
+          [
+            397786.72,
+            4784244.64
+          ],
+          [
+            397813.39,
+            4784217.97
+          ],
+          [
+            397840.06,
+            4784191.31
+          ],
+          [
+            397840.06,
+            4784164.65
+          ],
+          [
+            397840.06,
+            4784137.98
+          ],
+          [
+            397840.06,
+            4784111.32
+          ],
+          [
+            397840.06,
+            4784084.65
+          ],
+          [
+            397840.06,
+            4784057.99
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 91,
+        "step": 91,
+        "length_m": 397.32,
+        "elevation_start": 44.45,
+        "elevation_end": 48.26,
+        "slope_percent": 0.96,
+        "cost_usd": 867744.57,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 77667207.17,
+        "cumulative_distance_m": 34697.73,
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            397840.06,
+            4784057.99
+          ],
+          [
+            397840.06,
+            4784031.33
+          ],
+          [
+            397840.06,
+            4784004.66
+          ],
+          [
+            397840.06,
+            4783978.0
+          ],
+          [
+            397840.06,
+            4783951.34
+          ],
+          [
+            397840.06,
+            4783924.67
+          ],
+          [
+            397840.06,
+            4783898.01
+          ],
+          [
+            397840.06,
+            4783871.34
+          ],
+          [
+            397840.06,
+            4783844.68
+          ],
+          [
+            397840.06,
+            4783818.02
+          ],
+          [
+            397840.06,
+            4783791.35
+          ],
+          [
+            397840.06,
+            4783764.69
+          ],
+          [
+            397840.06,
+            4783738.02
+          ],
+          [
+            397840.06,
+            4783711.36
+          ],
+          [
+            397840.06,
+            4783684.7
+          ],
+          [
+            397840.06,
+            4783658.03
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 92,
+        "step": 92,
+        "length_m": 399.96,
+        "elevation_start": 48.26,
+        "elevation_end": 47.15,
+        "slope_percent": 0.28,
+        "cost_usd": 902302.81,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 78569509.98,
+        "cumulative_distance_m": 35097.68,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            397840.06,
+            4783658.03
+          ],
+          [
+            397840.06,
+            4783631.37
+          ],
+          [
+            397840.06,
+            4783604.71
+          ],
+          [
+            397840.06,
+            4783578.04
+          ],
+          [
+            397840.06,
+            4783551.38
+          ],
+          [
+            397840.06,
+            4783524.71
+          ],
+          [
+            397840.06,
+            4783498.05
+          ],
+          [
+            397840.06,
+            4783471.39
+          ],
+          [
+            397840.06,
+            4783444.72
+          ],
+          [
+            397813.39,
+            4783418.06
+          ],
+          [
+            397786.72,
+            4783391.4
+          ],
+          [
+            397760.04,
+            4783364.73
+          ],
+          [
+            397760.04,
+            4783338.07
+          ],
+          [
+            397760.04,
+            4783311.4
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 93,
+        "step": 93,
+        "length_m": 379.78,
+        "elevation_start": 47.15,
+        "elevation_end": 53.25,
+        "slope_percent": 1.6,
+        "cost_usd": 829441.25,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 79398951.23,
+        "cumulative_distance_m": 35477.46,
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            397760.04,
+            4783311.4
+          ],
+          [
+            397733.37,
+            4783284.74
+          ],
+          [
+            397706.7,
+            4783258.08
+          ],
+          [
+            397680.03,
+            4783231.41
+          ],
+          [
+            397653.36,
+            4783204.75
+          ],
+          [
+            397626.68,
+            4783178.09
+          ],
+          [
+            397600.01,
+            4783151.42
+          ],
+          [
+            397573.34,
+            4783124.76
+          ],
+          [
+            397546.67,
+            4783098.09
+          ],
+          [
+            397519.99,
+            4783071.43
+          ],
+          [
+            397493.32,
+            4783044.77
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 94,
+        "step": 94,
+        "length_m": 377.14,
+        "elevation_start": 53.25,
+        "elevation_end": 58.01,
+        "slope_percent": 1.26,
+        "cost_usd": 823679.91,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 80222631.14,
+        "cumulative_distance_m": 35854.61,
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            397493.32,
+            4783044.77
+          ],
+          [
+            397466.65,
+            4783018.1
+          ],
+          [
+            397439.98,
+            4782991.44
+          ],
+          [
+            397413.3,
+            4782964.77
+          ],
+          [
+            397386.63,
+            4782938.11
+          ],
+          [
+            397359.96,
+            4782911.45
+          ],
+          [
+            397333.29,
+            4782884.78
+          ],
+          [
+            397306.62,
+            4782858.12
+          ],
+          [
+            397279.94,
+            4782831.46
+          ],
+          [
+            397253.27,
+            4782804.79
+          ],
+          [
+            397226.6,
+            4782778.13
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 95,
+        "step": 95,
+        "length_m": 377.14,
+        "elevation_start": 58.01,
+        "elevation_end": 64.95,
+        "slope_percent": 1.84,
+        "cost_usd": 850834.19,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 81073465.33,
+        "cumulative_distance_m": 36231.75,
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            397226.6,
+            4782778.13
+          ],
+          [
+            397226.6,
+            4782751.46
+          ],
+          [
+            397226.6,
+            4782724.8
+          ],
+          [
+            397226.6,
+            4782698.14
+          ],
+          [
+            397226.6,
+            4782671.47
+          ],
+          [
+            397226.6,
+            4782644.81
+          ],
+          [
+            397226.6,
+            4782618.15
+          ],
+          [
+            397199.93,
+            4782591.48
+          ],
+          [
+            397199.24,
+            4782587.63
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 96,
+        "step": 96,
+        "length_m": 197.7,
+        "elevation_start": 64.95,
+        "elevation_end": 68.13,
+        "slope_percent": 1.61,
+        "cost_usd": 431770.35,
+        "cost_per_m": 1800.0,
+        "cumulative_cost": 81505235.69,
+        "cumulative_distance_m": 36429.45,
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "terrain_class": "flat",
+        "crs": "EPSG:32633"
+      }
+    }
+  ]
+}

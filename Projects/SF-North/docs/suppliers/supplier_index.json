@@ -1,0 +1,312 @@
+{
+  "project_id": "ARTEMIS_SF_North_USA_2025_001",
+  "last_updated": "2025-12-09T01:16:35Z",
+  "total_suppliers": 30,
+  "suppliers_by_category": {
+    "construction_supplies": 10,
+    "pipeline_manufacturer": 10,
+    "equipment_manufacturer": 10
+  },
+  "suppliers": [
+    {
+      "supplier_id": "SUP_USA_2025_011",
+      "company_name": "Lincoln Electric Holdings, Inc.",
+      "category": "construction_supplies",
+      "file": "construction_supplies/SUP_USA_2025_011.json",
+      "coordinates": {
+        "latitude": 41.5881538,
+        "longitude": -81.519485
+      }
+    },
+    {
+      "supplier_id": "SUP_USA_2025_001",
+      "company_name": "Tenaris Bay City",
+      "category": "pipeline_manufacturer",
+      "file": "pipeline_manufacturers/SUP_USA_2025_001.json",
+      "coordinates": {
+        "latitude": 43.5962107,
+        "longitude": -83.8881711
+      }
+    },
+    {
+      "supplier_id": "SUP_USA_2025_021",
+      "company_name": "Emerson Electric Co.",
+      "category": "equipment_manufacturer",
+      "file": "equipment_manufacturers/SUP_USA_2025_021.json",
+      "coordinates": {
+        "latitude": 38.6508443,
+        "longitude": -90.3404841
+      }
+    },
+    {
+      "supplier_id": "SUP_USA_2025_024",
+      "company_name": "T.D. Williamson, Inc.",
+      "category": "equipment_manufacturer",
+      "file": "equipment_manufacturers/SUP_USA_2025_024.json",
+      "coordinates": {
+        "latitude": 36.1563122,
+        "longitude": -95.9927516
+      }
+    },
+    {
+      "supplier_id": "SUP_USA_2025_016",
+      "company_name": "Farwest Corrosion Control Company",
+      "category": "construction_supplies",
+      "file": "construction_supplies/SUP_USA_2025_016.json",
+      "coordinates": {
+        "latitude": 33.8727508,
+        "longitude": -118.3017494
+      }
+    },
+    {
+      "supplier_id": "SUP_USA_2025_014",
+      "company_name": "ESAB Corporation",
+      "category": "construction_supplies",
+      "file": "construction_supplies/SUP_USA_2025_014.json",
+      "coordinates": {
+        "latitude": 40.5871782,
+        "longitude": -105.0770113
+      }
+    },
+    {
+      "supplier_id": "SUP_USA_2025_023",
+      "company_name": "Honeywell Process Solutions",
+      "category": "equipment_manufacturer",
+      "file": "equipment_manufacturers/SUP_USA_2025_023.json",
+      "coordinates": {
+        "latitude": 29.7497685,
+        "longitude": -95.5584401
+      }
+    },
+    {
+      "supplier_id": "SUP_USA_2025_030",
+      "company_name": "Dresser Natural Gas Solutions (Baker Hughes)",
+      "category": "equipment_manufacturer",
+      "file": "equipment_manufacturers/SUP_USA_2025_030.json",
+      "coordinates": {
+        "latitude": 29.9497603,
+        "longitude": -95.3581156
+      }
+    },
+    {
+      "supplier_id": "SUP_USA_2025_022",
+      "company_name": "Flowserve Corporation",
+      "category": "equipment_manufacturer",
+      "file": "equipment_manufacturers/SUP_USA_2025_022.json",
+      "coordinates": {
+        "latitude": 32.8295183,
+        "longitude": -96.9442177
+      }
+    },
+    {
+      "supplier_id": "SUP_USA_2025_012",
+      "company_name": "Aegion Corporation (Corrpro Companies)",
+      "category": "construction_supplies",
+      "file": "construction_supplies/SUP_USA_2025_012.json",
+      "coordinates": {
+        "latitude": 29.7589382,
+        "longitude": -95.3676974
+      }
+    },
+    {
+      "supplier_id": "SUP_USA_2025_029",
+      "company_name": "ABB Inc.",
+      "category": "equipment_manufacturer",
+      "file": "equipment_manufacturers/SUP_USA_2025_029.json",
+      "coordinates": {
+        "latitude": 35.7322098,
+        "longitude": -78.8046671
+      }
+    },
+    {
+      "supplier_id": "SUP_USA_2025_026",
+      "company_name": "Cameron (Schlumberger)",
+      "category": "equipment_manufacturer",
+      "file": "equipment_manufacturers/SUP_USA_2025_026.json",
+      "coordinates": {
+        "latitude": 29.7589382,
+        "longitude": -95.3676974
+      }
+    },
+    {
+      "supplier_id": "SUP_USA_2025_015",
+      "company_name": "Denso North America",
+      "category": "construction_supplies",
+      "file": "construction_supplies/SUP_USA_2025_015.json",
+      "coordinates": {
+        "latitude": 29.7686947,
+        "longitude": -95.3362931
+      }
+    },
+    {
+      "supplier_id": "SUP_USA_2025_019",
+      "company_name": "Canusa-CPS (A Shawflex Company)",
+      "category": "construction_supplies",
+      "file": "construction_supplies/SUP_USA_2025_019.json",
+      "coordinates": {
+        "latitude": 29.5742117,
+        "longitude": -95.1143185
+      }
+    },
+    {
+      "supplier_id": "SUP_USA_2025_025",
+      "company_name": "Ariel Corporation",
+      "category": "equipment_manufacturer",
+      "file": "equipment_manufacturers/SUP_USA_2025_025.json",
+      "coordinates": {
+        "latitude": 40.3407197,
+        "longitude": -82.4852229
+      }
+    },
+    {
+      "supplier_id": "SUP_USA_2025_002",
+      "company_name": "Stupp Corporation",
+      "category": "pipeline_manufacturer",
+      "file": "pipeline_manufacturers/SUP_USA_2025_002.json",
+      "coordinates": {
+        "latitude": 30.5618347,
+        "longitude": -91.1805375
+      }
+    },
+    {
+      "supplier_id": "SUP_USA_2025_013",
+      "company_name": "Shawflex (A Division of Prysmian Group)",
+      "category": "construction_supplies",
+      "file": "construction_supplies/SUP_USA_2025_013.json",
+      "coordinates": {
+        "latitude": 29.6145458,
+        "longitude": -95.2034836
+      }
+    },
+    {
+      "supplier_id": "SUP_USA_2025_005",
+      "company_name": "Welspun Tubular LLC USA",
+      "category": "pipeline_manufacturer",
+      "file": "pipeline_manufacturers/SUP_USA_2025_005.json",
+      "coordinates": {
+        "latitude": 34.7465071,
+        "longitude": -92.2896267
+      }
+    },
+    {
+      "supplier_id": "SUP_USA_2025_028",
+      "company_name": "Pall Corporation (Danaher)",
+      "category": "equipment_manufacturer",
+      "file": "equipment_manufacturers/SUP_USA_2025_028.json",
+      "coordinates": {
+        "latitude": 40.8109465,
+        "longitude": -73.6629265
+      }
+    },
+    {
+      "supplier_id": "SUP_USA_2025_003",
+      "company_name": "Berg Steel Pipe Corp.",
+      "category": "pipeline_manufacturer",
+      "file": "pipeline_manufacturers/SUP_USA_2025_003.json",
+      "coordinates": {
+        "latitude": 30.1811996,
+        "longitude": -85.7311934
+      }
+    },
+    {
+      "supplier_id": "SUP_USA_2025_020",
+      "company_name": "Anode Systems Company",
+      "category": "construction_supplies",
+      "file": "construction_supplies/SUP_USA_2025_020.json",
+      "coordinates": {
+        "latitude": 29.6168656,
+        "longitude": -95.0879119
+      }
+    },
+    {
+      "supplier_id": "SUP_USA_2025_009",
+      "company_name": "Jindal SAW USA LLC",
+      "category": "pipeline_manufacturer",
+      "file": "pipeline_manufacturers/SUP_USA_2025_009.json",
+      "coordinates": {
+        "latitude": 29.7860488,
+        "longitude": -95.0390687
+      }
+    },
+    {
+      "supplier_id": "SUP_USA_2025_006",
+      "company_name": "Northwest Pipe Company",
+      "category": "pipeline_manufacturer",
+      "file": "pipeline_manufacturers/SUP_USA_2025_006.json",
+      "coordinates": {
+        "latitude": 45.6306954,
+        "longitude": -122.6744557
+      }
+    },
+    {
+      "supplier_id": "SUP_USA_2025_027",
+      "company_name": "CIRCOR International, Inc.",
+      "category": "equipment_manufacturer",
+      "file": "equipment_manufacturers/SUP_USA_2025_027.json",
+      "coordinates": {
+        "latitude": 44.4761601,
+        "longitude": -73.212906
+      }
+    },
+    {
+      "supplier_id": "SUP_USA_2025_017",
+      "company_name": "Polyguard Products, Inc.",
+      "category": "construction_supplies",
+      "file": "construction_supplies/SUP_USA_2025_017.json",
+      "coordinates": {
+        "latitude": 32.306205,
+        "longitude": -96.5899175
+      }
+    },
+    {
+      "supplier_id": "SUP_USA_2025_018",
+      "company_name": "Nucor Skyline",
+      "category": "construction_supplies",
+      "file": "construction_supplies/SUP_USA_2025_018.json",
+      "coordinates": {
+        "latitude": 41.7820008,
+        "longitude": -87.6190094
+      }
+    },
+    {
+      "supplier_id": "SUP_USA_2025_010",
+      "company_name": "Dura-Bond Industries",
+      "category": "pipeline_manufacturer",
+      "file": "pipeline_manufacturers/SUP_USA_2025_010.json",
+      "coordinates": {
+        "latitude": 40.4146214,
+        "longitude": -79.6174932
+      }
+    },
+    {
+      "supplier_id": "SUP_USA_2025_004",
+      "company_name": "Nucor Tubular Products",
+      "category": "pipeline_manufacturer",
+      "file": "pipeline_manufacturers/SUP_USA_2025_004.json",
+      "coordinates": {
+        "latitude": 29.7589382,
+        "longitude": -95.3676974
+      }
+    },
+    {
+      "supplier_id": "SUP_USA_2025_007",
+      "company_name": "American Cast Iron Pipe Company (ACIPCO)",
+      "category": "pipeline_manufacturer",
+      "file": "pipeline_manufacturers/SUP_USA_2025_007.json",
+      "coordinates": {
+        "latitude": 33.548077,
+        "longitude": -86.833969
+      }
+    },
+    {
+      "supplier_id": "SUP_USA_2025_008",
+      "company_name": "TMK IPSCO",
+      "category": "pipeline_manufacturer",
+      "file": "pipeline_manufacturers/SUP_USA_2025_008.json",
+      "coordinates": {
+        "latitude": 29.7589382,
+        "longitude": -95.3676974
+      }
+    }
+  ]
+}

@@ -1,0 +1,298 @@
+{
+  "dataset_name": "TINITALY DEM 10m",
+  "category": "dem",
+  "project": "ITALY-TEST",
+  "raw_path": "/opt/agrs/Projects/ITALY-TEST/data/rasters/raw/dem_global_30m_raw.tif",
+  "fetch_tool": "dem_fetch",
+  "fetch_command": "zeus_ai_agent ls -la /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/dem*.tif 2>/dev/null || echo 'No existing raw DEM found'; ls -la /opt/agrs/Projects/ITALY-TEST/data/rasters/processed/dem*.tif 2>/dev/null || echo 'No existing processed DEM found' mkdir -p /opt/agrs/Projects/ITALY-TEST/data/rasters/raw /opt/agrs/Projects/ITALY-TEST/data/rasters/processed /opt/agrs/Projects/ITALY-TEST/scripts curl -s \"https://planetarycomputer.microsoft.com/api/stac/v1/search\" -H \"Content-Type: application/json\" -d '{\"collections\":[\"cop-dem-glo-30\"],\"bbox\":[12.15523421889559,43.01558367463844,12.302134619613025,43.1321977103725],\"limit\":10}' | jq '.features[] | {id: .id, assets: .assets.data.href}' cd /opt/agrs/Projects/ITALY-TEST/data/rasters/raw && gdalinfo \"/vsicurl/https://copernicus-dem-30m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_10_N43_00_E012_00_DEM/Copernicus_DSM_COG_10_N43_00_E012_00_DEM.tif\" 2>&1 | head -30 cd /opt/agrs/Projects/ITALY-TEST/data/rasters/raw && gdal_translate -of GTiff -co COMPRESS=LZW -projwin 12.10 43.18 12.35 42.97 \"/vsicurl/https://copernicus-dem-30m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_10_N43_00_E012_00_DEM/Copernicus_DSM_COG_10_N43_00_E012_00_DEM.tif\" dem_global_30m_raw.tif gdalinfo /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/dem_global_30m_raw.tif | head -40 cat > /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/dem_global_30m_raw.tif.json << 'EOF'\n{\n    \"dataset_name\": \"Copernicus DEM GLO-30\",\n    \"source\": \"European Space Agency / Copernicus\",\n    \"provider\": \"ESA\",\n    \"provider_url\": \"https://spacedata.copernicus.eu/collections/copernicus-digital-elevation-model\",\n    \"coverage_date\": \"2021\",\n    \"fetch_date\": \"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'\",\n    \"fetch_tool\": \"gdal_translate via vsicurl\",\n    \"raw_crs\": \"EPSG:4326\",\n    \"resolution_m\": 30,\n    \"data_type\": \"Raster\",\n    \"format\": \"GeoTIFF\",\n    \"nodata_value\": -9999,\n    \"bbox_wgs84\": {\n        \"west\": 12.10,\n        \"south\": 42.97,\n        \"east\": 12.35,\n        \"north\": 43.18\n    },\n    \"documentation_url\": \"https://spacedata.copernicus.eu/collections/copernicus-digital-elevation-model\",\n    \"license\": \"CC-BY-4.0\",\n    \"attribution\": \"Copernicus DEM - GLO-30 \u00a9 DLR e.V. 2010-2014 and \u00a9 Airbus Defence and Space GmbH 2014-2018\",\n    \"tiles_downloaded\": [\"Copernicus_DSM_COG_10_N43_00_E012_00_DEM\"],\n    \"notes\": \"30m global DEM derived from TanDEM-X mission\"\n}\nEOF gdalwarp -t_srs EPSG:32633 -cutline /opt/agrs/Projects/ITALY-TEST/aoi/aoi.geojson -crop_to_cutline -dstnodata -9999 -r bilinear -co COMPRESS=LZW -co TILED=YES /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/dem_global_30m_raw.tif /opt/agrs/Projects/ITALY-TEST/data/rasters/processed/dem_epsg32633_processed.tif gdalinfo -stats /opt/agrs/Projects/ITALY-TEST/data/rasters/processed/dem_epsg32633_processed.tif | grep -E '(Size|CRS|Origin|Pixel|STATISTICS)' STATS=$(gdalinfo -json /opt/agrs/Projects/ITALY-TEST/data/rasters/processed/dem_epsg32633_processed.tif)\ncat > /opt/agrs/Projects/ITALY-TEST/data/rasters/processed/dem_epsg32633_processed.tif.json << EOF\n{\n    \"dataset_name\": \"Copernicus DEM GLO-30\",\n    \"category\": \"dem\",\n    \"project\": \"ITALY-TEST\",\n    \"processing_date\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\n    \"target_crs\": \"EPSG:32633\",\n    \"target_crs_name\": \"WGS 84 / UTM zone 33N\",\n    \"resolution_m\": 30,\n    \"data_type\": \"Raster\",\n    \"format\": \"GeoTIFF\",\n    \"nodata_value\": -9999,\n    \"operations_applied\": [\n        {\n            \"operation\": \"reproject\",\n            \"tool\": \"gdalwarp\",\n            \"source_crs\": \"EPSG:4326\",\n            \"target_crs\": \"EPSG:32633\",\n            \"resampling\": \"bilinear\"\n        },\n        {\n            \"operation\": \"clip\",\n            \"tool\": \"gdalwarp\",\n            \"cutline\": \"aoi/aoi.geojson\"\n        }\n    ],\n    \"source_files\": [\n        {\n            \"filename\": \"dem_global_30m_raw.tif\",\n            \"metadata\": \"dem_global_30m_raw.tif.json\"\n        }\n    ],\n    \"validation_status\": \"passed\",\n    \"protocol_version\": \"1.0\"\n}\nEOF RAW_FILE=/opt/agrs/Projects/ITALY-TEST/data/rasters/raw/dem_global_30m_raw.tif; if [ -f \"$RAW_FILE\" ]; then SIZE=$(stat -f%z \"$RAW_FILE\" 2>/dev/null || stat -c%s \"$RAW_FILE\"); if [ $SIZE -gt 100000 ]; then echo \"\u2713 Raw DEM exists: $SIZE bytes\"; else echo \"\u2717 Raw DEM too small: $SIZE bytes\"; fi; else echo \"\u2717 Raw DEM file not found\"; fi PROC_FILE=/opt/agrs/Projects/ITALY-TEST/data/rasters/processed/dem_epsg32633_processed.tif; if [ -f \"$PROC_FILE\" ]; then SIZE=$(stat -f%z \"$PROC_FILE\" 2>/dev/null || stat -c%s \"$PROC_FILE\"); if [ $SIZE -gt 50000 ]; then echo \"\u2713 Processed DEM exists: $SIZE bytes\"; else echo \"\u2717 Processed DEM too small: $SIZE bytes\"; fi; else echo \"\u2717 Processed DEM file not found\"; fi CRS=$(gdalsrsinfo -o epsg /opt/agrs/Projects/ITALY-TEST/data/rasters/processed/dem_epsg32633_processed.tif 2>/dev/null); if echo \"$CRS\" | grep -q 32633; then echo \"\u2713 CRS is EPSG:32633\"; else echo \"\u2717 CRS mismatch: $CRS\"; fi gdalinfo -mm /opt/agrs/Projects/ITALY-TEST/data/rasters/processed/dem_epsg32633_processed.tif 2>/dev/null | grep -E 'Computed Min/Max' && echo '\u2713 DEM has valid elevation range' || echo '\u26a0 Could not verify elevation range' [ -f /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/dem_global_30m_raw.tif.json ] && echo '\u2713 Raw metadata JSON exists' || echo '\u2717 Raw metadata JSON missing'; [ -f /opt/agrs/Projects/ITALY-TEST/data/rasters/processed/dem_epsg32633_processed.tif.json ] && echo '\u2713 Processed metadata JSON exists' || echo '\u2717 Processed metadata JSON missing'",
+  "fetch_date": "2025-12-17T13:36:00.179230Z",
+  "data_type": "Raster",
+  "format": "GeoTIFF",
+  "file_size_bytes": 2104832,
+  "protocol_reference": "/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md",
+  "protocol_version": "1.0",
+  "zeus_version": "0.1.0",
+  "tiles_downloaded": [],
+  "notes": "Core elevation surface used for slope, hydraulics and terrain costs.",
+  "requested_bbox_wgs84": {
+    "west": 12.15523421889559,
+    "south": 43.01558367463844,
+    "east": 12.302134619613025,
+    "north": 43.1321977103725,
+    "crs": "EPSG:4326"
+  },
+  "validation_status": "passed",
+  "validation_date": "2025-12-17T13:36:00.280048Z",
+  "nodata_value": -32768.0,
+  "source": "TINITALY/01 square km Digital Elevation Model",
+  "provider": "INGV - Istituto Nazionale di Geofisica e Vulcanologia",
+  "provider_url": "https://tinitaly.pi.ingv.it/",
+  "coverage_date": "2011",
+  "documentation_url": "https://tinitaly.pi.ingv.it/Download_Area1.html",
+  "license": "CC BY 4.0",
+  "attribution": "TINITALY DEM \u00a9 INGV.",
+  "resolution_m": 10,
+  "metadata": {
+    "description": "/opt/agrs/Projects/ITALY-TEST/data/rasters/raw/dem_global_30m_raw.tif",
+    "driverShortName": "GTiff",
+    "driverLongName": "GeoTIFF",
+    "files": [
+      "/opt/agrs/Projects/ITALY-TEST/data/rasters/raw/dem_global_30m_raw.tif"
+    ],
+    "size": [
+      900,
+      756
+    ],
+    "coordinateSystem": {
+      "wkt": "GEOGCRS[\"WGS 84\",\n    ENSEMBLE[\"World Geodetic System 1984 ensemble\",\n        MEMBER[\"World Geodetic System 1984 (Transit)\"],\n        MEMBER[\"World Geodetic System 1984 (G730)\"],\n        MEMBER[\"World Geodetic System 1984 (G873)\"],\n        MEMBER[\"World Geodetic System 1984 (G1150)\"],\n        MEMBER[\"World Geodetic System 1984 (G1674)\"],\n        MEMBER[\"World Geodetic System 1984 (G1762)\"],\n        MEMBER[\"World Geodetic System 1984 (G2139)\"],\n        ELLIPSOID[\"WGS 84\",6378137,298.257223563,\n            LENGTHUNIT[\"metre\",1]],\n        ENSEMBLEACCURACY[2.0]],\n    PRIMEM[\"Greenwich\",0,\n        ANGLEUNIT[\"degree\",0.0174532925199433]],\n    CS[ellipsoidal,2],\n        AXIS[\"geodetic latitude (Lat)\",north,\n            ORDER[1],\n            ANGLEUNIT[\"degree\",0.0174532925199433]],\n        AXIS[\"geodetic longitude (Lon)\",east,\n            ORDER[2],\n            ANGLEUNIT[\"degree\",0.0174532925199433]],\n    USAGE[\n        SCOPE[\"Horizontal component of 3D system.\"],\n        AREA[\"World.\"],\n        BBOX[-90,-180,90,180]],\n    ID[\"EPSG\",4326]]",
+      "dataAxisToSRSAxisMapping": [
+        2,
+        1
+      ]
+    },
+    "geoTransform": [
+      12.09986111111111,
+      0.0002777777777778,
+      0.0,
+      43.18013888888889,
+      0.0,
+      -0.0002777777777778
+    ],
+    "metadata": {
+      "": {
+        "AREA_OR_POINT": "Point"
+      },
+      "IMAGE_STRUCTURE": {
+        "COMPRESSION": "LZW",
+        "INTERLEAVE": "BAND"
+      }
+    },
+    "cornerCoordinates": {
+      "upperLeft": [
+        12.0998611,
+        43.1801389
+      ],
+      "lowerLeft": [
+        12.0998611,
+        42.9701389
+      ],
+      "lowerRight": [
+        12.3498611,
+        42.9701389
+      ],
+      "upperRight": [
+        12.3498611,
+        43.1801389
+      ],
+      "center": [
+        12.2248611,
+        43.0751389
+      ]
+    },
+    "wgs84Extent": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            12.0998611,
+            43.1801389
+          ],
+          [
+            12.0998611,
+            42.9701389
+          ],
+          [
+            12.3498611,
+            42.9701389
+          ],
+          [
+            12.3498611,
+            43.1801389
+          ],
+          [
+            12.0998611,
+            43.1801389
+          ]
+        ]
+      ]
+    },
+    "bands": [
+      {
+        "band": 1,
+        "block": [
+          900,
+          2
+        ],
+        "type": "Float32",
+        "colorInterpretation": "Gray",
+        "minimum": 0.0,
+        "maximum": 654.742,
+        "mean": 247.297,
+        "stdDev": 121.338,
+        "metadata": {
+          "": {
+            "STATISTICS_MAXIMUM": "654.74194335938",
+            "STATISTICS_MEAN": "247.2969899712",
+            "STATISTICS_MINIMUM": "0",
+            "STATISTICS_STDDEV": "121.33795579167",
+            "STATISTICS_VALID_PERCENT": "100"
+          }
+        }
+      }
+    ],
+    "stac": {
+      "proj:shape": [
+        900,
+        756
+      ],
+      "proj:wkt2": "GEOGCRS[\"WGS 84\",\n    ENSEMBLE[\"World Geodetic System 1984 ensemble\",\n        MEMBER[\"World Geodetic System 1984 (Transit)\"],\n        MEMBER[\"World Geodetic System 1984 (G730)\"],\n        MEMBER[\"World Geodetic System 1984 (G873)\"],\n        MEMBER[\"World Geodetic System 1984 (G1150)\"],\n        MEMBER[\"World Geodetic System 1984 (G1674)\"],\n        MEMBER[\"World Geodetic System 1984 (G1762)\"],\n        MEMBER[\"World Geodetic System 1984 (G2139)\"],\n        ELLIPSOID[\"WGS 84\",6378137,298.257223563,\n            LENGTHUNIT[\"metre\",1]],\n        ENSEMBLEACCURACY[2.0]],\n    PRIMEM[\"Greenwich\",0,\n        ANGLEUNIT[\"degree\",0.0174532925199433]],\n    CS[ellipsoidal,2],\n        AXIS[\"geodetic latitude (Lat)\",north,\n            ORDER[1],\n            ANGLEUNIT[\"degree\",0.0174532925199433]],\n        AXIS[\"geodetic longitude (Lon)\",east,\n            ORDER[2],\n            ANGLEUNIT[\"degree\",0.0174532925199433]],\n    USAGE[\n        SCOPE[\"Horizontal component of 3D system.\"],\n        AREA[\"World.\"],\n        BBOX[-90,-180,90,180]],\n    ID[\"EPSG\",4326]]",
+      "proj:epsg": 4326,
+      "proj:projjson": {
+        "$schema": "https://proj.org/schemas/v0.7/projjson.schema.json",
+        "type": "GeographicCRS",
+        "name": "WGS 84",
+        "datum_ensemble": {
+          "name": "World Geodetic System 1984 ensemble",
+          "members": [
+            {
+              "name": "World Geodetic System 1984 (Transit)",
+              "id": {
+                "authority": "EPSG",
+                "code": 1166
+              }
+            },
+            {
+              "name": "World Geodetic System 1984 (G730)",
+              "id": {
+                "authority": "EPSG",
+                "code": 1152
+              }
+            },
+            {
+              "name": "World Geodetic System 1984 (G873)",
+              "id": {
+                "authority": "EPSG",
+                "code": 1153
+              }
+            },
+            {
+              "name": "World Geodetic System 1984 (G1150)",
+              "id": {
+                "authority": "EPSG",
+                "code": 1154
+              }
+            },
+            {
+              "name": "World Geodetic System 1984 (G1674)",
+              "id": {
+                "authority": "EPSG",
+                "code": 1155
+              }
+            },
+            {
+              "name": "World Geodetic System 1984 (G1762)",
+              "id": {
+                "authority": "EPSG",
+                "code": 1156
+              }
+            },
+            {
+              "name": "World Geodetic System 1984 (G2139)",
+              "id": {
+                "authority": "EPSG",
+                "code": 1309
+              }
+            }
+          ],
+          "ellipsoid": {
+            "name": "WGS 84",
+            "semi_major_axis": 6378137,
+            "inverse_flattening": 298.257223563
+          },
+          "accuracy": "2.0",
+          "id": {
+            "authority": "EPSG",
+            "code": 6326
+          }
+        },
+        "coordinate_system": {
+          "subtype": "ellipsoidal",
+          "axis": [
+            {
+              "name": "Geodetic latitude",
+              "abbreviation": "Lat",
+              "direction": "north",
+              "unit": "degree"
+            },
+            {
+              "name": "Geodetic longitude",
+              "abbreviation": "Lon",
+              "direction": "east",
+              "unit": "degree"
+            }
+          ]
+        },
+        "scope": "Horizontal component of 3D system.",
+        "area": "World.",
+        "bbox": {
+          "south_latitude": -90,
+          "west_longitude": -180,
+          "north_latitude": 90,
+          "east_longitude": 180
+        },
+        "id": {
+          "authority": "EPSG",
+          "code": 4326
+        }
+      },
+      "proj:transform": [
+        12.09986111111111,
+        0.0002777777777778,
+        0.0,
+        43.18013888888889,
+        0.0,
+        -0.0002777777777778
+      ],
+      "raster:bands": [
+        {
+          "data_type": "float32",
+          "stats": {
+            "minimum": 0.0,
+            "maximum": 654.742,
+            "mean": 247.297,
+            "stddev": 121.338
+          }
+        }
+      ],
+      "eo:bands": [
+        {
+          "name": "b1",
+          "description": "Gray"
+        }
+      ]
+    }
+  },
+  "raw_crs": "EPSG:4326",
+  "extent": {
+    "minx": 12.0998611,
+    "miny": 42.9701389,
+    "maxx": 12.3498611,
+    "maxy": 43.1801389,
+    "crs": "EPSG:4326"
+  },
+  "bbox_wgs84": {
+    "west": 12.0998611,
+    "south": 42.9701389,
+    "east": 12.3498611,
+    "north": 43.1801389,
+    "crs": "EPSG:4326"
+  },
+  "statistics": {
+    "min": 0.0,
+    "max": 654.74194335938,
+    "mean": 247.2969899712,
+    "stddev": 121.33795579167,
+    "valid_percent": 100.0
+  },
+  "checksum_sha256": "ea89d734a4b089713c149863c1f926af1f01ff540c46340d2cc964ea2ebf6c0a"
+}

@@ -1,0 +1,453 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://agrs.ca/schemas/supplier_profile_v1.json",
+  "title": "AGRS Supplier Profile",
+  "description": "Standard schema for supplier profiles in AGRS pipeline projects",
+  "type": "object",
+  "required": [
+    "supplier_id",
+    "company_name",
+    "category",
+    "location",
+    "contact",
+    "capabilities",
+    "metadata"
+  ],
+  "properties": {
+    "supplier_id": {
+      "type": "string",
+      "description": "Unique supplier identifier: SUP_{ISO3}_{YEAR}_{SEQ}",
+      "pattern": "^SUP_[A-Z]{3}_\\d{4}_\\d{3}$",
+      "examples": ["SUP_ITA_2025_001", "SUP_USA_2025_042"]
+    },
+    "company_name": {
+      "type": "string",
+      "description": "Official registered company name",
+      "minLength": 2
+    },
+    "category": {
+      "type": "string",
+      "description": "Primary supplier category",
+      "enum": [
+        "construction_supplies",
+        "construction_services",
+        "pipeline_manufacturer",
+        "equipment_manufacturer",
+        "consultancy"
+      ]
+    },
+    "subcategories": {
+      "type": "array",
+      "description": "Specific areas of expertise within the category",
+      "items": { "type": "string" },
+      "examples": [
+        ["welding_materials", "coating_systems"],
+        ["environmental_assessment", "permitting_support"]
+      ]
+    },
+    "location": {
+      "type": "object",
+      "description": "Supplier headquarters/primary location",
+      "required": ["country", "iso3", "city", "coordinates"],
+      "properties": {
+        "country": {
+          "type": "string",
+          "description": "Full country name"
+        },
+        "iso3": {
+          "type": "string",
+          "description": "ISO 3166-1 alpha-3 country code",
+          "pattern": "^[A-Z]{3}$"
+        },
+        "region": {
+          "type": "string",
+          "description": "State/province/region"
+        },
+        "city": {
+          "type": "string",
+          "description": "City name"
+        },
+        "address": {
+          "type": "string",
+          "description": "Full street address"
+        },
+        "postal_code": {
+          "type": "string",
+          "description": "Postal/ZIP code"
+        },
+        "coordinates": {
+          "type": "object",
+          "description": "Geographic coordinates for map display",
+          "required": ["latitude", "longitude"],
+          "properties": {
+            "latitude": {
+              "type": "number",
+              "minimum": -90,
+              "maximum": 90
+            },
+            "longitude": {
+              "type": "number",
+              "minimum": -180,
+              "maximum": 180
+            }
+          }
+        }
+      }
+    },
+    "contact": {
+      "type": "object",
+      "description": "Company contact information",
+      "required": ["primary_email"],
+      "properties": {
+        "primary_name": {
+          "type": "string",
+          "description": "Primary contact person name"
+        },
+        "primary_title": {
+          "type": "string",
+          "description": "Contact person's job title"
+        },
+        "primary_email": {
+          "type": "string",
+          "format": "email",
+          "description": "Primary contact email"
+        },
+        "primary_phone": {
+          "type": "string",
+          "description": "Primary phone number with country code"
+        },
+        "secondary_email": {
+          "type": "string",
+          "format": "email"
+        },
+        "secondary_phone": {
+          "type": "string"
+        },
+        "website": {
+          "type": "string",
+          "format": "uri",
+          "description": "Company website URL"
+        },
+        "linkedin": {
+          "type": "string",
+          "format": "uri",
+          "description": "LinkedIn company page URL"
+        }
+      }
+    },
+    "sales_contact": {
+      "type": "object",
+      "description": "Dedicated sales/business development contact for the specific product/service category",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Full name of the sales contact person"
+        },
+        "title": {
+          "type": "string",
+          "description": "Job title (e.g., Sales Director, Business Development Manager, Account Manager)"
+        },
+        "department": {
+          "type": "string",
+          "description": "Department name",
+          "examples": ["Commercial Sales", "Business Development", "Strategic Accounts"]
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Direct business email of the sales contact"
+        },
+        "phone": {
+          "type": "string",
+          "description": "Direct business phone number with country code"
+        },
+        "mobile": {
+          "type": "string",
+          "description": "Mobile phone number if available"
+        },
+        "linkedin_profile": {
+          "type": "string",
+          "format": "uri",
+          "description": "LinkedIn profile URL of the sales contact"
+        },
+        "photo_url": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL to professional photo (from LinkedIn or company website)"
+        },
+        "years_with_company": {
+          "type": "integer",
+          "description": "How many years the person has been with the company",
+          "minimum": 0
+        },
+        "specialization": {
+          "type": "array",
+          "description": "Areas of specialization or product lines they handle",
+          "items": { "type": "string" }
+        },
+        "languages": {
+          "type": "array",
+          "description": "Languages spoken by the contact",
+          "items": { "type": "string" },
+          "examples": [["English", "Spanish"], ["English", "French", "Italian"]]
+        },
+        "availability": {
+          "type": "string",
+          "description": "Typical availability or preferred contact method",
+          "examples": ["Available 9-5 EST", "Email preferred", "Response within 24hrs"]
+        },
+        "notes": {
+          "type": "string",
+          "description": "Additional notes about the sales contact"
+        }
+      }
+    },
+    "capabilities": {
+      "type": "object",
+      "description": "Supplier capabilities and qualifications",
+      "properties": {
+        "products": {
+          "type": "array",
+          "description": "Products offered",
+          "items": { "type": "string" }
+        },
+        "services": {
+          "type": "array",
+          "description": "Services offered",
+          "items": { "type": "string" }
+        },
+        "certifications": {
+          "type": "array",
+          "description": "Industry certifications held",
+          "items": { "type": "string" },
+          "examples": [["ISO 9001:2015", "ISO 14001:2015", "API Q1", "ASME U Stamp"]]
+        },
+        "pipeline_diameters_supported": {
+          "type": "object",
+          "description": "Range of pipeline diameters supported (in inches)",
+          "properties": {
+            "min_inches": { "type": "number" },
+            "max_inches": { "type": "number" }
+          }
+        },
+        "materials_expertise": {
+          "type": "array",
+          "description": "Materials the supplier works with",
+          "items": { "type": "string" },
+          "examples": [["carbon_steel", "stainless_steel", "HDPE", "composite"]]
+        },
+        "annual_capacity": {
+          "type": "string",
+          "description": "Annual production/service capacity"
+        },
+        "experience_years": {
+          "type": "integer",
+          "description": "Years of experience in the industry",
+          "minimum": 0
+        },
+        "employee_count": {
+          "type": "integer",
+          "description": "Approximate number of employees"
+        }
+      }
+    },
+    "previous_projects": {
+      "type": "array",
+      "description": "Notable past projects demonstrating capability",
+      "items": {
+        "type": "object",
+        "properties": {
+          "project_name": { "type": "string" },
+          "client": { "type": "string" },
+          "country": { "type": "string" },
+          "year": { "type": "integer" },
+          "scope": { "type": "string" },
+          "pipeline_length_km": { "type": "number" },
+          "pipeline_diameter_inches": { "type": "number" },
+          "value_usd": { "type": "number" },
+          "reference_available": { "type": "boolean" }
+        }
+      }
+    },
+    "logistics": {
+      "type": "object",
+      "description": "Delivery and logistics capabilities",
+      "properties": {
+        "delivery_regions": {
+          "type": "array",
+          "description": "Regions/countries the supplier can deliver to",
+          "items": { "type": "string" }
+        },
+        "estimated_lead_time_days": {
+          "type": "integer",
+          "description": "Typical lead time in days",
+          "minimum": 0
+        },
+        "rush_delivery_available": {
+          "type": "boolean",
+          "description": "Whether expedited delivery is available"
+        },
+        "shipping_capabilities": {
+          "type": "array",
+          "description": "Available shipping methods",
+          "items": {
+            "type": "string",
+            "enum": ["truck", "rail", "sea", "air", "multimodal"]
+          }
+        },
+        "warehouses": {
+          "type": "array",
+          "description": "Warehouse/distribution center locations",
+          "items": {
+            "type": "object",
+            "properties": {
+              "city": { "type": "string" },
+              "country": { "type": "string" }
+            }
+          }
+        },
+        "international_export": {
+          "type": "boolean",
+          "description": "Whether international export is supported"
+        }
+      }
+    },
+    "pricing": {
+      "type": "object",
+      "description": "Pricing information and terms",
+      "properties": {
+        "pricing_model": {
+          "type": "string",
+          "enum": ["quote_based", "fixed_catalog", "negotiable", "framework_agreement"],
+          "description": "How pricing is determined"
+        },
+        "currency": {
+          "type": "string",
+          "description": "Primary currency for transactions",
+          "examples": ["USD", "EUR", "GBP", "CAD"]
+        },
+        "typical_project_range_usd": {
+          "type": "object",
+          "description": "Typical project value range in USD",
+          "properties": {
+            "min": { "type": "number" },
+            "max": { "type": "number" }
+          }
+        },
+        "payment_terms": {
+          "type": "string",
+          "description": "Standard payment terms",
+          "examples": ["Net 30", "Net 60", "50% advance, 50% on delivery"]
+        },
+        "accepts_letters_of_credit": {
+          "type": "boolean"
+        }
+      }
+    },
+    "quality_ratings": {
+      "type": "object",
+      "description": "Quality and reliability ratings",
+      "properties": {
+        "overall_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 5,
+          "description": "Overall rating out of 5"
+        },
+        "reliability_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "quality_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "communication_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "rating_source": {
+          "type": "string",
+          "description": "Source of the ratings",
+          "examples": ["industry_reviews", "client_feedback", "perplexity_research"]
+        },
+        "number_of_reviews": {
+          "type": "integer"
+        }
+      }
+    },
+    "compatibility": {
+      "type": "object",
+      "description": "Compatibility with project requirements",
+      "properties": {
+        "pipeline_specs_match": {
+          "type": "boolean",
+          "description": "Whether supplier can meet pipeline_specs.json requirements"
+        },
+        "match_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Compatibility score percentage"
+        },
+        "match_notes": {
+          "type": "array",
+          "description": "Notes on how supplier matches project needs",
+          "items": { "type": "string" }
+        },
+        "limitations": {
+          "type": "array",
+          "description": "Any limitations relative to project requirements",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Profile metadata and provenance",
+      "required": ["source", "date_researched", "confidence_level"],
+      "properties": {
+        "source": {
+          "type": "string",
+          "description": "How this profile was created",
+          "enum": ["perplexity_research", "manual_entry", "industry_database", "client_referral"]
+        },
+        "query_id": {
+          "type": "string",
+          "description": "Perplexity query ID if applicable"
+        },
+        "date_researched": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the information was gathered"
+        },
+        "last_verified": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When information was last verified"
+        },
+        "confidence_level": {
+          "type": "string",
+          "enum": ["high", "medium", "low"],
+          "description": "Confidence in the accuracy of this profile"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Additional notes about this supplier"
+        },
+        "tags": {
+          "type": "array",
+          "description": "Searchable tags",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  }
+}
+
+
+
+

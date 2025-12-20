@@ -2,7 +2,7 @@
   "dataset_name": "ESA WorldCover 2021 (Processed)",
   "category": "landcover",
   "project": "US-PIPELINE-BRAVO",
-  "processing_date": "2025-11-27T13:12:55.763538Z",
+  "processing_date": "2025-12-04T18:20:46.356712Z",
   "target_crs": "EPSG:32617",
   "target_crs_name": "WGS 84 / UTM zone 17N",
   "data_type": "Raster",
@@ -28,9 +28,9 @@
       "source": "/opt/agrs/Projects/US-PIPELINE-BRAVO/aoi/aoi.geojson"
     }
   ],
-  "file_size_bytes": 146709,
+  "file_size_bytes": 146685,
   "validation_status": "passed",
-  "validation_date": "2025-11-27T13:12:55.763622Z",
+  "validation_date": "2025-12-04T18:20:46.356767Z",
   "protocol_reference": "/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md",
   "protocol_version": "1.0",
   "zeus_version": "0.1.0",
@@ -46,7 +46,6 @@
     "x": 8.260145389395266,
     "y": 8.260472818399215
   },
-  "selected_override": "ESA WorldCover 10m",
   "dimensions": {
     "width": 2108,
     "height": 2155

@@ -1,0 +1,86 @@
+{
+  "supplier_id": "SUP_CO_2025_040",
+  "company_name": "AECOM Italia",
+  "category": "consultancy",
+  "subcategories": [
+    "engineering_design",
+    "environmental_consulting",
+    "infrastructure_design",
+    "project_management",
+    "EIA"
+  ],
+  "location": {
+    "country": "Italy",
+    "iso3": "ITA",
+    "region": "Lombardy",
+    "city": "Milan",
+    "address": "not_available",
+    "postal_code": "not_available",
+    "coordinates": {
+      "latitude": 45.4642,
+      "longitude": 9.19
+    }
+  },
+  "contact": {
+    "primary_name": "not_available",
+    "primary_title": "not_available",
+    "primary_email": "italy@aecom.com",
+    "primary_phone": "+39 02 77331",
+    "website": "https://aecom.com/en-it/",
+    "linkedin": "https://www.linkedin.com/company/aecom"
+  },
+  "capabilities": {
+    "products": [
+      "not_available"
+    ],
+    "services": [
+      "Engineering design",
+      "Environmental consulting",
+      "Infrastructure design and development",
+      "Project management",
+      "Environmental impact assessment"
+    ],
+    "certifications": [
+      "not_available"
+    ],
+    "experience_years": 30,
+    "employee_count": 52000
+  },
+  "previous_projects": [
+    "not_available"
+  ],
+  "logistics": {
+    "delivery_regions": [
+      "Europe",
+      "Italy"
+    ],
+    "international_export": true,
+    "estimated_lead_time_days": 21,
+    "rush_delivery_available": true
+  },
+  "metadata": {
+    "source": "perplexity_research",
+    "date_researched": "2025-12-02T16:37:05.604174Z",
+    "last_verified": "2025-12-02T16:36:35Z",
+    "confidence_level": "high",
+    "notes": "One of Italy's top engineering design and environmental consulting firms with established reputation"
+  },
+  "quality_ratings": {
+    "overall_score": 4.7,
+    "reliability_score": 4.6,
+    "quality_score": 4.8,
+    "communication_score": 4.7,
+    "rating_source": "industry_reputation",
+    "number_of_reviews": 580
+  },
+  "pricing": {
+    "pricing_model": "quote_based",
+    "currency": "EUR",
+    "payment_terms": "Net 30",
+    "accepts_letters_of_credit": true
+  },
+  "compatibility": {
+    "match_score": 88,
+    "pipeline_specs_match": true
+  }
+}

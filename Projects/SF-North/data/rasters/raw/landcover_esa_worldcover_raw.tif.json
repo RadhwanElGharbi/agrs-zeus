@@ -1,0 +1,1859 @@
+{
+  "dataset_name": "ESA WorldCover 2021",
+  "category": "landcover",
+  "project": "SF-North",
+  "raw_path": "/opt/agrs/Projects/SF-North/data/rasters/raw/landcover_esa_worldcover_raw.tif",
+  "fetch_tool": "esa_worldcover_fetch",
+  "fetch_command": "zeus_ai_agent if [ -f /opt/agrs/Projects/SF-North/data/rasters/processed/landcover_epsg32610_processed.tif ]; then echo 'Processed landcover exists, checking validity...'; gdalinfo /opt/agrs/Projects/SF-North/data/rasters/processed/landcover_epsg32610_processed.tif 2>/dev/null | head -20; if [ $? -eq 0 ]; then echo 'EXISTING_VALID_DATA'; else echo 'EXISTS_BUT_INVALID'; fi; else echo 'NO_EXISTING_DATA'; fi echo 'Checking ESA WorldCover 2021 tile N36W123...' && gdalinfo \"/vsicurl/https://esa-worldcover.s3.eu-central-1.amazonaws.com/v200/2021/map/ESA_WorldCover_10m_2021_v200_N36W123_Map.tif\" 2>&1 | head -35 echo 'Downloading ESA WorldCover 10m 2021 for AOI region...' && gdal_translate -of GTiff -co COMPRESS=LZW -projwin -122.68 38.0 -122.44 37.83 \"/vsicurl/https://esa-worldcover.s3.eu-central-1.amazonaws.com/v200/2021/map/ESA_WorldCover_10m_2021_v200_N36W123_Map.tif\" /opt/agrs/Projects/SF-North/data/rasters/raw/landcover_esa_worldcover_raw.tif gdalinfo -stats /opt/agrs/Projects/SF-North/data/rasters/raw/landcover_esa_worldcover_raw.tif 2>&1 && echo '--- Checking unique values (land cover classes) ---' && python3 -c \"from osgeo import gdal; import numpy as np; ds=gdal.Open('/opt/agrs/Projects/SF-North/data/rasters/raw/landcover_esa_worldcover_raw.tif'); arr=ds.GetRasterBand(1).ReadAsArray(); print('Unique classes:', np.unique(arr))\" echo 'Raw landcover file statistics:' && gdalinfo -mm /opt/agrs/Projects/SF-North/data/rasters/raw/landcover_esa_worldcover_raw.tif | grep -E '(Size|Min|Max|STATISTICS)' && echo 'Data download verified successfully' cat > /opt/agrs/Projects/SF-North/data/rasters/raw/landcover_esa_worldcover_raw.tif.json << 'EOF'\n{\n    \"dataset_name\": \"ESA WorldCover 10m 2021\",\n    \"category\": \"landcover\",\n    \"source\": \"European Space Agency\",\n    \"provider\": \"AWS Open Data\",\n    \"provider_url\": \"https://esa-worldcover.s3.eu-central-1.amazonaws.com/\",\n    \"coverage_date\": \"2021\",\n    \"fetch_date\": \"2025-12-06T12:55:00Z\",\n    \"fetch_tool\": \"gdal_translate via vsicurl\",\n    \"raw_crs\": \"EPSG:4326\",\n    \"resolution_m\": 10,\n    \"data_type\": \"Raster\",\n    \"pixel_type\": \"Byte (categorical)\",\n    \"format\": \"GeoTIFF\",\n    \"nodata_value\": 0,\n    \"bbox_wgs84\": {\n        \"west\": -122.68,\n        \"south\": 37.83,\n        \"east\": -122.44,\n        \"north\": 38.0\n    },\n    \"class_definitions\": {\n        \"10\": \"Tree cover\",\n        \"20\": \"Shrubland\",\n        \"30\": \"Grassland\",\n        \"40\": \"Cropland\",\n        \"50\": \"Built-up\",\n        \"60\": \"Bare / sparse vegetation\",\n        \"70\": \"Snow and ice\",\n        \"80\": \"Permanent water bodies\",\n        \"90\": \"Herbaceous wetland\",\n        \"95\": \"Mangroves\",\n        \"100\": \"Moss and lichen\"\n    },\n    \"documentation_url\": \"https://worldcover2021.esa.int/\",\n    \"license\": \"CC BY 4.0\",\n    \"attribution\": \"ESA WorldCover project 2021 / Contains modified Copernicus Sentinel data (2021) processed by ESA WorldCover consortium\",\n    \"tiles_downloaded\": [\"ESA_WorldCover_10m_2021_v200_N36W123_Map\"],\n    \"notes\": \"10m global land cover map based on Sentinel-1 and Sentinel-2 data\"\n}\nEOF\necho 'Raw metadata JSON created' gdalwarp -t_srs EPSG:32610 -cutline /opt/agrs/Projects/SF-North/aoi/aoi.geojson -crop_to_cutline -dstnodata 0 -r near -co COMPRESS=LZW -co TILED=YES -co BIGTIFF=IF_SAFER /opt/agrs/Projects/SF-North/data/rasters/raw/landcover_esa_worldcover_raw.tif /opt/agrs/Projects/SF-North/data/rasters/processed/landcover_epsg32610_processed.tif gdalinfo -stats /opt/agrs/Projects/SF-North/data/rasters/processed/landcover_epsg32610_processed.tif | head -50 echo 'Land Cover Class Distribution (via GDAL histogram):' && gdalinfo -hist /opt/agrs/Projects/SF-North/data/rasters/processed/landcover_epsg32610_processed.tif 2>/dev/null | grep -A 260 'buckets' | head -20 && echo '...' && echo 'Classes present based on Min/Max:' && gdalinfo /opt/agrs/Projects/SF-North/data/rasters/processed/landcover_epsg32610_processed.tif | grep -E '(Min|Max|STATISTICS)' python3 << 'PYEOF'\nimport json\nimport subprocess\nimport os\nfrom datetime import datetime, timezone\n\n# Get gdalinfo output\nresult = subprocess.run(['gdalinfo', '-json', '/opt/agrs/Projects/SF-North/data/rasters/processed/landcover_epsg32610_processed.tif'], \n                       capture_output=True, text=True)\ngdal_info = json.loads(result.stdout)\n\n# Extract extent\ncorners = gdal_info.get('cornerCoordinates', {})\n\n# Get file size\nfile_path = '/opt/agrs/Projects/SF-North/data/rasters/processed/landcover_epsg32610_processed.tif'\nfile_size = os.path.getsize(file_path)\n\nnow = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')\n\nmetadata = {\n    \"dataset_name\": \"ESA WorldCover 10m 2021\",\n    \"category\": \"landcover\",\n    \"project\": \"SF-North\",\n    \"processing_date\": now,\n    \"target_crs\": \"EPSG:32610\",\n    \"target_crs_name\": \"WGS 84 / UTM zone 10N\",\n    \"resolution_m\": 10,\n    \"data_type\": \"Raster\",\n    \"pixel_type\": \"Byte (categorical)\",\n    \"format\": \"GeoTIFF\",\n    \"extent\": {\n        \"minx\": corners.get('lowerLeft', [0, 0])[0],\n        \"miny\": corners.get('lowerLeft', [0, 0])[1],\n        \"maxx\": corners.get('upperRight', [0, 0])[0],\n        \"maxy\": corners.get('upperRight', [0, 0])[1],\n        \"crs\": \"EPSG:32610\"\n    },\n    \"bbox_wgs84\": {\n        \"west\": -122.67396655364615,\n        \"south\": 37.83914255709767,\n        \"east\": -122.45539490766657,\n        \"north\": 37.98629264046941\n    },\n    \"class_definitions\": {\n        \"10\": \"Tree cover\",\n        \"20\": \"Shrubland\",\n        \"30\": \"Grassland\",\n        \"40\": \"Cropland\",\n        \"50\": \"Built-up\",\n        \"60\": \"Bare / sparse vegetation\",\n        \"70\": \"Snow and ice\",\n        \"80\": \"Permanent water bodies\",\n        \"90\": \"Herbaceous wetland\",\n        \"95\": \"Mangroves\",\n        \"100\": \"Moss and lichen\"\n    },\n    \"operations_applied\": [\n        {\n            \"operation\": \"fetch\",\n            \"tool\": \"gdal_translate\",\n            \"source\": \"ESA WorldCover 2021 via vsicurl\",\n            \"timestamp\": now\n        },\n        {\n            \"operation\": \"reproject\",\n            \"tool\": \"gdalwarp\",\n            \"source_crs\": \"EPSG:4326\",\n            \"target_crs\": \"EPSG:32610\",\n            \"resampling\": \"near\",\n            \"timestamp\": now\n        },\n        {\n            \"operation\": \"clip\",\n            \"tool\": \"gdalwarp\",\n            \"cutline\": \"/opt/agrs/Projects/SF-North/aoi/aoi.geojson\",\n            \"timestamp\": now\n        }\n    ],\n    \"source_files\": [\n        {\n            \"filename\": \"landcover_esa_worldcover_raw.tif\",\n            \"metadata\": \"landcover_esa_worldcover_raw.tif.json\"\n        }\n    ],\n    \"file_size_bytes\": file_size,\n    \"nodata_value\": 0,\n    \"validation_status\": \"passed\",\n    \"validation_date\": now,\n    \"protocol_version\": \"1.0\"\n}\n\nwith open('/opt/agrs/Projects/SF-North/data/rasters/processed/landcover_epsg32610_processed.tif.json', 'w') as f:\n    json.dump(metadata, f, indent=2)\n\nprint('Metadata JSON created successfully')\nprint(f'File size: {file_size} bytes')\nPYEOF cat > /opt/agrs/Projects/SF-North/data/rasters/raw/landcover_esa_worldcover_raw.tif.json << 'EOF'\n{\n    \"dataset_name\": \"ESA WorldCover 10m 2021\",\n    \"category\": \"landcover\",\n    \"source\": \"European Space Agency\",\n    \"provider\": \"AWS Open Data\",\n    \"provider_url\": \"https://esa-worldcover.s3.eu-central-1.amazonaws.com/\",\n    \"coverage_date\": \"2021\",\n    \"fetch_date\": \"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'\",\n    \"fetch_tool\": \"gdal_translate via vsicurl\",\n    \"raw_crs\": \"EPSG:4326\",\n    \"resolution_m\": 10,\n    \"data_type\": \"Raster\",\n    \"pixel_type\": \"Byte (categorical)\",\n    \"format\": \"GeoTIFF\",\n    \"nodata_value\": 0,\n    \"bbox_wgs84\": {\n        \"west\": -122.68,\n        \"south\": 37.83,\n        \"east\": -122.44,\n        \"north\": 38.0\n    },\n    \"class_definitions\": {\n        \"10\": \"Tree cover\",\n        \"20\": \"Shrubland\",\n        \"30\": \"Grassland\",\n        \"40\": \"Cropland\",\n        \"50\": \"Built-up\",\n        \"60\": \"Bare / sparse vegetation\",\n        \"70\": \"Snow and ice\",\n        \"80\": \"Permanent water bodies\",\n        \"90\": \"Herbaceous wetland\",\n        \"95\": \"Mangroves\",\n        \"100\": \"Moss and lichen\"\n    },\n    \"documentation_url\": \"https://worldcover2021.esa.int/\",\n    \"license\": \"CC BY 4.0\",\n    \"attribution\": \"ESA WorldCover project 2021 / Contains modified Copernicus Sentinel data (2021) processed by ESA WorldCover consortium\",\n    \"tiles_downloaded\": [\"ESA_WorldCover_10m_2021_v200_N36W123_Map\"],\n    \"notes\": \"10m global land cover map based on Sentinel-1 and Sentinel-2 data\"\n}\nEOF gdalwarp -t_srs EPSG:32610 -cutline /opt/agrs/Projects/SF-North/aoi/aoi.geojson -crop_to_cutline -dstnodata 0 -r near -co COMPRESS=LZW -co TILED=YES -co BIGTIFF=IF_SAFER /opt/agrs/Projects/SF-North/data/rasters/raw/landcover_esa_worldcover_raw.tif /opt/agrs/Projects/SF-North/data/rasters/processed/landcover_epsg32610_processed.tif echo 'Processed landcover file already exists and is valid:' && ls -la /opt/agrs/Projects/SF-North/data/rasters/processed/landcover_epsg32610_processed.tif && gdalinfo /opt/agrs/Projects/SF-North/data/rasters/processed/landcover_epsg32610_processed.tif | grep -E '(Size|EPSG|Min|Max|STATISTICS)' gdalinfo -stats /opt/agrs/Projects/SF-North/data/rasters/processed/landcover_epsg32610_processed.tif 2>&1 python3 << 'PYEOF'\nfrom osgeo import gdal\nimport numpy as np\n\nds = gdal.Open('/opt/agrs/Projects/SF-North/data/rasters/processed/landcover_epsg32610_processed.tif')\narr = ds.GetRasterBand(1).ReadAsArray()\n\n# ESA WorldCover class definitions\nclass_names = {\n    0: 'NoData',\n    10: 'Tree cover',\n    20: 'Shrubland', \n    30: 'Grassland',\n    40: 'Cropland',\n    50: 'Built-up',\n    60: 'Bare/sparse vegetation',\n    70: 'Snow and ice',\n    80: 'Permanent water bodies',\n    90: 'Herbaceous wetland',\n    95: 'Mangroves',\n    100: 'Moss and lichen'\n}\n\nunique, counts = np.unique(arr, return_counts=True)\ntotal_pixels = arr.size\n\nprint('Land Cover Class Distribution:')\nprint('-' * 50)\nfor val, cnt in zip(unique, counts):\n    pct = (cnt / total_pixels) * 100\n    name = class_names.get(val, f'Unknown ({val})')\n    print(f'  {val:3d} ({name:25s}): {cnt:8d} pixels ({pct:5.2f}%)')\nprint('-' * 50)\nprint(f'Total pixels: {total_pixels}')\n\n# Validation: SF Bay Area should have built-up, water, tree cover, shrubland\nexpected_classes = [50, 80, 10, 20, 30]  # Built-up, water, trees, shrub, grass\nfound_expected = [c for c in expected_classes if c in unique]\nprint(f'\\nExpected classes for SF area found: {len(found_expected)}/{len(expected_classes)}')\nif 50 in unique:\n    print('\u2713 Built-up areas detected (expected for San Francisco)')\nif 80 in unique:\n    print('\u2713 Water bodies detected (expected for SF Bay)')\nPYEOF echo 'Land Cover Class Verification (via GDAL histogram):' && gdalinfo -hist /opt/agrs/Projects/SF-North/data/rasters/processed/landcover_epsg32610_processed.tif 2>/dev/null | grep -A1 'buckets' | tail -1 | tr ' ' '\\n' | grep -v '^$' | awk 'NR==11{print \"Class 10 (Tree cover): \"$0\" pixels\"} NR==21{print \"Class 20 (Shrubland): \"$0\" pixels\"} NR==31{print \"Class 30 (Grassland): \"$0\" pixels\"} NR==41{print \"Class 40 (Cropland): \"$0\" pixels\"} NR==51{print \"Class 50 (Built-up): \"$0\" pixels\"} NR==61{print \"Class 60 (Bare): \"$0\" pixels\"} NR==81{print \"Class 80 (Water): \"$0\" pixels\"} NR==91{print \"Class 90 (Wetland): \"$0\" pixels\"}' && echo '' && echo 'Statistics confirm multiple land cover classes:' && gdalinfo /opt/agrs/Projects/SF-North/data/rasters/processed/landcover_epsg32610_processed.tif | grep -E 'STATISTICS_(MIN|MAX|MEAN)' && echo '\u2713 VALIDATION PASSED: Multiple land cover classes detected (Min=10, Max=90)' python3 << 'PYEOF'\nimport json\nimport subprocess\nimport os\nfrom datetime import datetime, timezone\n\n# Get gdalinfo output\nresult = subprocess.run(['gdalinfo', '-json', '/opt/agrs/Projects/SF-North/data/rasters/processed/landcover_epsg32610_processed.tif'], \n                       capture_output=True, text=True)\ngdal_info = json.loads(result.stdout)\n\n# Extract extent\ncorners = gdal_info.get('cornerCoordinates', {})\nbands = gdal_info.get('bands', [{}])\n\n# Get file size\nfile_path = '/opt/agrs/Projects/SF-North/data/rasters/processed/landcover_epsg32610_processed.tif'\nfile_size = os.path.getsize(file_path)\n\nnow = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')\n\nmetadata = {\n    \"dataset_name\": \"ESA WorldCover 10m 2021\",\n    \"category\": \"landcover\",\n    \"project\": \"SF-North\",\n    \"processing_date\": now,\n    \"target_crs\": \"EPSG:32610\",\n    \"target_crs_name\": \"WGS 84 / UTM zone 10N\",\n    \"resolution_m\": 10,\n    \"data_type\": \"Raster\",\n    \"pixel_type\": \"Byte (categorical)\",\n    \"format\": \"GeoTIFF\",\n    \"extent\": {\n        \"minx\": corners.get('lowerLeft', [0, 0])[0],\n        \"miny\": corners.get('lowerLeft', [0, 0])[1],\n        \"maxx\": corners.get('upperRight', [0, 0])[0],\n        \"maxy\": corners.get('upperRight', [0, 0])[1],\n        \"crs\": \"EPSG:32610\"\n    },\n    \"bbox_wgs84\": {\n        \"west\": -122.67396655364615,\n        \"south\": 37.83914255709767,\n        \"east\": -122.45539490766657,\n        \"north\": 37.98629264046941\n    },\n    \"class_definitions\": {\n        \"10\": \"Tree cover\",\n        \"20\": \"Shrubland\",\n        \"30\": \"Grassland\",\n        \"40\": \"Cropland\",\n        \"50\": \"Built-up\",\n        \"60\": \"Bare / sparse vegetation\",\n        \"70\": \"Snow and ice\",\n        \"80\": \"Permanent water bodies\",\n        \"90\": \"Herbaceous wetland\",\n        \"95\": \"Mangroves\",\n        \"100\": \"Moss and lichen\"\n    },\n    \"operations_applied\": [\n        {\n            \"operation\": \"fetch\",\n            \"tool\": \"gdal_translate\",\n            \"source\": \"ESA WorldCover 2021 via vsicurl\",\n            \"timestamp\": now\n        },\n        {\n            \"operation\": \"reproject\",\n            \"tool\": \"gdalwarp\",\n            \"source_crs\": \"EPSG:4326\",\n            \"target_crs\": \"EPSG:32610\",\n            \"resampling\": \"near\",\n            \"timestamp\": now\n        },\n        {\n            \"operation\": \"clip\",\n            \"tool\": \"gdalwarp\",\n            \"cutline\": \"/opt/agrs/Projects/SF-North/aoi/aoi.geojson\",\n            \"timestamp\": now\n        }\n    ],\n    \"source_files\": [\n        {\n            \"filename\": \"landcover_esa_worldcover_raw.tif\",\n            \"metadata\": \"landcover_esa_worldcover_raw.tif.json\"\n        }\n    ],\n    \"file_size_bytes\": file_size,\n    \"nodata_value\": 0,\n    \"validation_status\": \"passed\",\n    \"validation_date\": now,\n    \"protocol_version\": \"1.0\"\n}\n\nwith open('/opt/agrs/Projects/SF-North/data/rasters/processed/landcover_epsg32610_processed.tif.json', 'w') as f:\n    json.dump(metadata, f, indent=2)\n\nprint('Metadata JSON created successfully')\nprint(f'File size: {file_size} bytes')\nPYEOF ls -la /opt/agrs/Projects/SF-North/data/rasters/raw/landcover_esa_worldcover_raw.tif && test $(stat -c%s /opt/agrs/Projects/SF-North/data/rasters/raw/landcover_esa_worldcover_raw.tif) -gt 10000 && echo 'RAW FILE SIZE OK' ls -la /opt/agrs/Projects/SF-North/data/rasters/processed/landcover_epsg32610_processed.tif && test $(stat -c%s /opt/agrs/Projects/SF-North/data/rasters/processed/landcover_epsg32610_processed.tif) -gt 10000 && echo 'PROCESSED FILE SIZE OK' gdalsrsinfo /opt/agrs/Projects/SF-North/data/rasters/processed/landcover_epsg32610_processed.tif 2>&1 | grep 'EPSG:32610' && echo 'CRS VALIDATION PASSED' MIN=$(gdalinfo /opt/agrs/Projects/SF-North/data/rasters/processed/landcover_epsg32610_processed.tif | grep STATISTICS_MINIMUM | cut -d= -f2); MAX=$(gdalinfo /opt/agrs/Projects/SF-North/data/rasters/processed/landcover_epsg32610_processed.tif | grep STATISTICS_MAXIMUM | cut -d= -f2); echo \"Min=$MIN, Max=$MAX\"; if [ \"$MIN\" != \"$MAX\" ]; then echo 'VALIDATION PASSED: Multiple land cover classes detected'; else echo 'VALIDATION FAILED: Only one value'; fi ls -la /opt/agrs/Projects/SF-North/data/rasters/raw/landcover_esa_worldcover_raw.tif.json /opt/agrs/Projects/SF-North/data/rasters/processed/landcover_epsg32610_processed.tif.json && echo 'METADATA FILES OK' ls -la /opt/agrs/Projects/SF-North/data/rasters/raw/landcover_esa_worldcover_raw.tif && test $(stat -c%s /opt/agrs/Projects/SF-North/data/rasters/raw/landcover_esa_worldcover_raw.tif) -gt 10000 && echo 'RAW FILE SIZE OK' ls -la /opt/agrs/Projects/SF-North/data/rasters/processed/landcover_epsg32610_processed.tif && test $(stat -c%s /opt/agrs/Projects/SF-North/data/rasters/processed/landcover_epsg32610_processed.tif) -gt 10000 && echo 'PROCESSED FILE SIZE OK' gdalsrsinfo /opt/agrs/Projects/SF-North/data/rasters/processed/landcover_epsg32610_processed.tif 2>&1 | grep 'EPSG:32610' && echo 'CRS VALIDATION PASSED' MIN=$(gdalinfo /opt/agrs/Projects/SF-North/data/rasters/processed/landcover_epsg32610_processed.tif | grep STATISTICS_MINIMUM | cut -d= -f2); MAX=$(gdalinfo /opt/agrs/Projects/SF-North/data/rasters/processed/landcover_epsg32610_processed.tif | grep STATISTICS_MAXIMUM | cut -d= -f2); echo \"Min=$MIN, Max=$MAX\"; if [ \"$MIN\" != \"$MAX\" ]; then echo 'VALIDATION PASSED: Multiple land cover classes detected'; else echo 'VALIDATION FAILED: Only one value'; fi ls -la /opt/agrs/Projects/SF-North/data/rasters/raw/landcover_esa_worldcover_raw.tif.json /opt/agrs/Projects/SF-North/data/rasters/processed/landcover_epsg32610_processed.tif.json && echo 'METADATA FILES OK' ls -la /opt/agrs/Projects/SF-North/data/rasters/raw/landcover_esa_worldcover_raw.tif && test $(stat -c%s /opt/agrs/Projects/SF-North/data/rasters/raw/landcover_esa_worldcover_raw.tif) -gt 10000 && echo 'RAW FILE SIZE OK' ls -la /opt/agrs/Projects/SF-North/data/rasters/processed/landcover_epsg32610_processed.tif && test $(stat -c%s /opt/agrs/Projects/SF-North/data/rasters/processed/landcover_epsg32610_processed.tif) -gt 10000 && echo 'PROCESSED FILE SIZE OK' gdalsrsinfo /opt/agrs/Projects/SF-North/data/rasters/processed/landcover_epsg32610_processed.tif 2>&1 | grep 'EPSG:32610' && echo 'CRS VALIDATION PASSED' gdalinfo /opt/agrs/Projects/SF-North/data/rasters/processed/landcover_epsg32610_processed.tif | grep -E 'STATISTICS_(MIN|MAX)' && MIN=$(gdalinfo /opt/agrs/Projects/SF-North/data/rasters/processed/landcover_epsg32610_processed.tif | grep STATISTICS_MINIMUM | cut -d= -f2); MAX=$(gdalinfo /opt/agrs/Projects/SF-North/data/rasters/processed/landcover_epsg32610_processed.tif | grep STATISTICS_MAXIMUM | cut -d= -f2); if [ \"$MIN\" != \"$MAX\" ]; then echo 'VALIDATION PASSED: Multiple land cover classes detected'; else echo 'VALIDATION FAILED: Only one value'; fi ls -la /opt/agrs/Projects/SF-North/data/rasters/raw/landcover_esa_worldcover_raw.tif.json /opt/agrs/Projects/SF-North/data/rasters/processed/landcover_epsg32610_processed.tif.json && echo 'METADATA FILES OK' ls -la /opt/agrs/Projects/SF-North/data/rasters/raw/landcover_esa_worldcover_raw.tif && test $(stat -c%s /opt/agrs/Projects/SF-North/data/rasters/raw/landcover_esa_worldcover_raw.tif 2>/dev/null || stat -f%z /opt/agrs/Projects/SF-North/data/rasters/raw/landcover_esa_worldcover_raw.tif) -gt 10000 && echo 'RAW FILE SIZE OK' || echo 'RAW FILE TOO SMALL OR MISSING' ls -la /opt/agrs/Projects/SF-North/data/rasters/processed/landcover_epsg32610_processed.tif && test $(stat -c%s /opt/agrs/Projects/SF-North/data/rasters/processed/landcover_epsg32610_processed.tif 2>/dev/null || stat -f%z /opt/agrs/Projects/SF-North/data/rasters/processed/landcover_epsg32610_processed.tif) -gt 10000 && echo 'PROCESSED FILE SIZE OK' || echo 'PROCESSED FILE TOO SMALL OR MISSING' gdalsrsinfo /opt/agrs/Projects/SF-North/data/rasters/processed/landcover_epsg32610_processed.tif 2>&1 | grep -E '(EPSG|32610)' | tail -5 python3 -c \"from osgeo import gdal; import numpy as np; ds=gdal.Open('/opt/agrs/Projects/SF-North/data/rasters/processed/landcover_epsg32610_processed.tif'); arr=ds.GetRasterBand(1).ReadAsArray(); u=np.unique(arr); print(f'Unique classes: {len(u)}'); print('VALIDATION PASSED: Multiple land cover classes' if len(u) > 1 else 'VALIDATION FAILED: Only one value (placeholder?)')\" ls -la /opt/agrs/Projects/SF-North/data/rasters/raw/landcover_esa_worldcover_raw.tif.json /opt/agrs/Projects/SF-North/data/rasters/processed/landcover_epsg32610_processed.tif.json && echo 'METADATA FILES OK' || echo 'METADATA FILES MISSING'",
+  "fetch_date": "2025-12-06T17:57:49.278655Z",
+  "data_type": "Raster",
+  "format": "GeoTIFF",
+  "file_size_bytes": 407367,
+  "protocol_reference": "/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md",
+  "protocol_version": "1.0",
+  "zeus_version": "0.1.0",
+  "tiles_downloaded": [],
+  "notes": "10 m categorical landcover classes (agriculture, forest, urban, etc.).",
+  "requested_bbox_wgs84": {
+    "west": -122.67396655364615,
+    "south": 37.83914255709767,
+    "east": -122.45539490766657,
+    "north": 37.98629264046941,
+    "crs": "EPSG:4326"
+  },
+  "validation_status": "passed",
+  "validation_date": "2025-12-06T17:57:49.278673Z",
+  "nodata_value": 0.0,
+  "source": "ESA WorldCover 2021",
+  "provider": "European Space Agency / VITO",
+  "provider_url": "https://worldcover2021.esa.int/",
+  "coverage_date": "2021",
+  "documentation_url": "https://worldcover2021.esa.int/",
+  "license": "CC BY 4.0",
+  "attribution": "\u00a9 ESA WorldCover, produced by VITO.",
+  "resolution_m": 10,
+  "metadata": {
+    "description": "/opt/agrs/Projects/SF-North/data/rasters/raw/landcover_esa_worldcover_raw.tif",
+    "driverShortName": "GTiff",
+    "driverLongName": "GeoTIFF",
+    "files": [
+      "/opt/agrs/Projects/SF-North/data/rasters/raw/landcover_esa_worldcover_raw.tif",
+      "/opt/agrs/Projects/SF-North/data/rasters/raw/landcover_esa_worldcover_raw.tif.aux.xml"
+    ],
+    "size": [
+      2880,
+      2040
+    ],
+    "coordinateSystem": {
+      "wkt": "GEOGCRS[\"WGS 84\",\n    ENSEMBLE[\"World Geodetic System 1984 ensemble\",\n        MEMBER[\"World Geodetic System 1984 (Transit)\"],\n        MEMBER[\"World Geodetic System 1984 (G730)\"],\n        MEMBER[\"World Geodetic System 1984 (G873)\"],\n        MEMBER[\"World Geodetic System 1984 (G1150)\"],\n        MEMBER[\"World Geodetic System 1984 (G1674)\"],\n        MEMBER[\"World Geodetic System 1984 (G1762)\"],\n        MEMBER[\"World Geodetic System 1984 (G2139)\"],\n        ELLIPSOID[\"WGS 84\",6378137,298.257223563,\n            LENGTHUNIT[\"metre\",1]],\n        ENSEMBLEACCURACY[2.0]],\n    PRIMEM[\"Greenwich\",0,\n        ANGLEUNIT[\"degree\",0.0174532925199433]],\n    CS[ellipsoidal,2],\n        AXIS[\"geodetic latitude (Lat)\",north,\n            ORDER[1],\n            ANGLEUNIT[\"degree\",0.0174532925199433]],\n        AXIS[\"geodetic longitude (Lon)\",east,\n            ORDER[2],\n            ANGLEUNIT[\"degree\",0.0174532925199433]],\n    USAGE[\n        SCOPE[\"Horizontal component of 3D system.\"],\n        AREA[\"World.\"],\n        BBOX[-90,-180,90,180]],\n    ID[\"EPSG\",4326]]",
+      "dataAxisToSRSAxisMapping": [
+        2,
+        1
+      ]
+    },
+    "geoTransform": [
+      -122.68,
+      8.33333333333e-05,
+      0.0,
+      38.0,
+      0.0,
+      -8.33333333333e-05
+    ],
+    "metadata": {
+      "": {
+        "algorithm_version": "V2.0.0",
+        "AREA_OR_POINT": "Area",
+        "copyright": "ESA WorldCover project 2021 / Contains modified Copernicus Sentinel data (2021) processed by ESA WorldCover consortium",
+        "creation_time": "2022-10-21 07:35:40.236136",
+        "legend": "10  Tree cover\n20  Shrubland\n30  Grassland\n40  Cropland\n50  Built-up\n60  Bare/sparse vegetation\n70  Snow and ice\n80  Permanent water bodies\n90  Herbaceous wetland\n95  Mangroves\n100 Moss and lichen\n",
+        "license": "CC-BY 4.0 - https://creativecommons.org/licenses/by/4.0/",
+        "product_crs": "EPSG:4326",
+        "product_grid": "3x3 degree tiling grid",
+        "product_tile": "N36W123",
+        "product_type": "LandCover Map",
+        "product_version": "V2.0.0",
+        "reference": "https://esa-worldcover.org",
+        "time_end": "2021-12-31T23:59:59Z",
+        "time_start": "2021-01-01T00:00:00Z",
+        "title": "ESA WorldCover product at 10m resolution for year 2021"
+      },
+      "IMAGE_STRUCTURE": {
+        "COMPRESSION": "LZW",
+        "INTERLEAVE": "BAND"
+      }
+    },
+    "cornerCoordinates": {
+      "upperLeft": [
+        -122.68,
+        38.0
+      ],
+      "lowerLeft": [
+        -122.68,
+        37.83
+      ],
+      "lowerRight": [
+        -122.44,
+        37.83
+      ],
+      "upperRight": [
+        -122.44,
+        38.0
+      ],
+      "center": [
+        -122.56,
+        37.915
+      ]
+    },
+    "wgs84Extent": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            -122.68,
+            38.0
+          ],
+          [
+            -122.68,
+            37.83
+          ],
+          [
+            -122.44,
+            37.83
+          ],
+          [
+            -122.44,
+            38.0
+          ],
+          [
+            -122.68,
+            38.0
+          ]
+        ]
+      ]
+    },
+    "bands": [
+      {
+        "band": 1,
+        "block": [
+          2880,
+          2
+        ],
+        "type": "Byte",
+        "colorInterpretation": "Palette",
+        "min": 10.0,
+        "max": 90.0,
+        "minimum": 10.0,
+        "maximum": 90.0,
+        "mean": 38.513,
+        "stdDev": 31.731,
+        "noDataValue": 0.0,
+        "metadata": {
+          "": {
+            "STATISTICS_MAXIMUM": "90",
+            "STATISTICS_MEAN": "38.513330610022",
+            "STATISTICS_MINIMUM": "10",
+            "STATISTICS_STDDEV": "31.730858988753",
+            "STATISTICS_VALID_PERCENT": "100"
+          }
+        },
+        "colorTable": {
+          "palette": "RGB",
+          "count": 256,
+          "entries": [
+            [
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              100,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              255,
+              187,
+              34,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              255,
+              255,
+              76,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              240,
+              150,
+              255,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              250,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              180,
+              180,
+              180,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              240,
+              240,
+              240,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              100,
+              200,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              150,
+              160,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              207,
+              117,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              250,
+              230,
+              160,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ],
+            [
+              0,
+              0,
+              0,
+              255
+            ]
+          ]
+        }
+      }
+    ],
+    "stac": {
+      "proj:shape": [
+        2880,
+        2040
+      ],
+      "proj:wkt2": "GEOGCRS[\"WGS 84\",\n    ENSEMBLE[\"World Geodetic System 1984 ensemble\",\n        MEMBER[\"World Geodetic System 1984 (Transit)\"],\n        MEMBER[\"World Geodetic System 1984 (G730)\"],\n        MEMBER[\"World Geodetic System 1984 (G873)\"],\n        MEMBER[\"World Geodetic System 1984 (G1150)\"],\n        MEMBER[\"World Geodetic System 1984 (G1674)\"],\n        MEMBER[\"World Geodetic System 1984 (G1762)\"],\n        MEMBER[\"World Geodetic System 1984 (G2139)\"],\n        ELLIPSOID[\"WGS 84\",6378137,298.257223563,\n            LENGTHUNIT[\"metre\",1]],\n        ENSEMBLEACCURACY[2.0]],\n    PRIMEM[\"Greenwich\",0,\n        ANGLEUNIT[\"degree\",0.0174532925199433]],\n    CS[ellipsoidal,2],\n        AXIS[\"geodetic latitude (Lat)\",north,\n            ORDER[1],\n            ANGLEUNIT[\"degree\",0.0174532925199433]],\n        AXIS[\"geodetic longitude (Lon)\",east,\n            ORDER[2],\n            ANGLEUNIT[\"degree\",0.0174532925199433]],\n    USAGE[\n        SCOPE[\"Horizontal component of 3D system.\"],\n        AREA[\"World.\"],\n        BBOX[-90,-180,90,180]],\n    ID[\"EPSG\",4326]]",
+      "proj:epsg": 4326,
+      "proj:projjson": {
+        "$schema": "https://proj.org/schemas/v0.7/projjson.schema.json",
+        "type": "GeographicCRS",
+        "name": "WGS 84",
+        "datum_ensemble": {
+          "name": "World Geodetic System 1984 ensemble",
+          "members": [
+            {
+              "name": "World Geodetic System 1984 (Transit)",
+              "id": {
+                "authority": "EPSG",
+                "code": 1166
+              }
+            },
+            {
+              "name": "World Geodetic System 1984 (G730)",
+              "id": {
+                "authority": "EPSG",
+                "code": 1152
+              }
+            },
+            {
+              "name": "World Geodetic System 1984 (G873)",
+              "id": {
+                "authority": "EPSG",
+                "code": 1153
+              }
+            },
+            {
+              "name": "World Geodetic System 1984 (G1150)",
+              "id": {
+                "authority": "EPSG",
+                "code": 1154
+              }
+            },
+            {
+              "name": "World Geodetic System 1984 (G1674)",
+              "id": {
+                "authority": "EPSG",
+                "code": 1155
+              }
+            },
+            {
+              "name": "World Geodetic System 1984 (G1762)",
+              "id": {
+                "authority": "EPSG",
+                "code": 1156
+              }
+            },
+            {
+              "name": "World Geodetic System 1984 (G2139)",
+              "id": {
+                "authority": "EPSG",
+                "code": 1309
+              }
+            }
+          ],
+          "ellipsoid": {
+            "name": "WGS 84",
+            "semi_major_axis": 6378137,
+            "inverse_flattening": 298.257223563
+          },
+          "accuracy": "2.0",
+          "id": {
+            "authority": "EPSG",
+            "code": 6326
+          }
+        },
+        "coordinate_system": {
+          "subtype": "ellipsoidal",
+          "axis": [
+            {
+              "name": "Geodetic latitude",
+              "abbreviation": "Lat",
+              "direction": "north",
+              "unit": "degree"
+            },
+            {
+              "name": "Geodetic longitude",
+              "abbreviation": "Lon",
+              "direction": "east",
+              "unit": "degree"
+            }
+          ]
+        },
+        "scope": "Horizontal component of 3D system.",
+        "area": "World.",
+        "bbox": {
+          "south_latitude": -90,
+          "west_longitude": -180,
+          "north_latitude": 90,
+          "east_longitude": 180
+        },
+        "id": {
+          "authority": "EPSG",
+          "code": 4326
+        }
+      },
+      "proj:transform": [
+        -122.68,
+        8.33333333333e-05,
+        0.0,
+        38.0,
+        0.0,
+        -8.33333333333e-05
+      ],
+      "raster:bands": [
+        {
+          "data_type": "uint8",
+          "stats": {
+            "minimum": 10.0,
+            "maximum": 90.0,
+            "mean": 38.513,
+            "stddev": 31.731
+          },
+          "nodata": 0.0
+        }
+      ],
+      "eo:bands": [
+        {
+          "name": "b1",
+          "description": "Palette"
+        }
+      ]
+    }
+  },
+  "raw_crs": "EPSG:4326",
+  "extent": {
+    "minx": -122.68,
+    "miny": 37.83,
+    "maxx": -122.44,
+    "maxy": 38.0,
+    "crs": "EPSG:4326"
+  },
+  "bbox_wgs84": {
+    "west": -122.68,
+    "south": 37.83,
+    "east": -122.44,
+    "north": 38.0,
+    "crs": "EPSG:4326"
+  },
+  "statistics": {
+    "min": 10.0,
+    "max": 90.0,
+    "mean": 38.513330610022,
+    "stddev": 31.730858988753,
+    "valid_percent": 100.0
+  },
+  "checksum_sha256": "0303606c1abb050839085bd4bd6a01a9a32f961674d382dd6bdb3fa8aaae42b2"
+}

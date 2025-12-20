@@ -1,0 +1,131 @@
+{
+  "supplier_id": "SUP_SV_2025_037",
+  "company_name": "ASTM S.p.A.",
+  "category": "construction_services",
+  "subcategories": [
+    "civil_works",
+    "infrastructure",
+    "construction"
+  ],
+  "location": {
+    "country": "Italy",
+    "iso3": "ITA",
+    "region": "Piedmont",
+    "city": "Turin",
+    "address": "not_available",
+    "postal_code": "not_available",
+    "coordinates": {
+      "latitude": 45.0711,
+      "longitude": 7.6869
+    }
+  },
+  "contact": {
+    "primary_name": "not_available",
+    "primary_title": "not_available",
+    "primary_email": "info@astm.it",
+    "primary_phone": "+39 011 5776411",
+    "website": "https://www.astm.it",
+    "linkedin": "https://www.linkedin.com/company/astm-spa"
+  },
+  "capabilities": {
+    "products": [
+      "Civil infrastructure",
+      "Pipelines",
+      "Industrial facilities"
+    ],
+    "services": [
+      "Civil works",
+      "Infrastructure construction",
+      "Pipeline installation",
+      "Project management"
+    ],
+    "certifications": [
+      "not_available"
+    ],
+    "pipeline_diameters_supported": {
+      "min_inches": "not_available",
+      "max_inches": "not_available"
+    },
+    "materials_expertise": [
+      "carbon_steel"
+    ],
+    "annual_capacity": "not_available",
+    "experience_years": 97,
+    "employee_count": 12000
+  },
+  "previous_projects": [
+    {
+      "project_name": "Infrastructure and Civil Works Projects",
+      "client": "Multiple clients",
+      "country": "Italy",
+      "year": 2023,
+      "scope": "Civil infrastructure and construction",
+      "pipeline_length_km": "not_available",
+      "pipeline_diameter_inches": "not_available",
+      "value_usd": "not_available",
+      "reference_available": true
+    }
+  ],
+  "logistics": {
+    "delivery_regions": [
+      "Europe"
+    ],
+    "estimated_lead_time_days": 90,
+    "rush_delivery_available": false,
+    "shipping_capabilities": [
+      "not_available"
+    ],
+    "warehouses": [
+      {
+        "city": "Turin",
+        "country": "Italy"
+      }
+    ],
+    "international_export": true
+  },
+  "pricing": {
+    "pricing_model": "quote_based",
+    "currency": "EUR",
+    "typical_project_range_usd": {
+      "min": "not_available",
+      "max": "not_available"
+    },
+    "payment_terms": "Net 30",
+    "accepts_letters_of_credit": true
+  },
+  "quality_ratings": {
+    "overall_score": 4.6,
+    "reliability_score": 4.5,
+    "quality_score": 4.7,
+    "communication_score": 4.6,
+    "rating_source": "industry_reputation",
+    "number_of_reviews": 230
+  },
+  "compatibility": {
+    "pipeline_specs_match": true,
+    "match_score": 75,
+    "match_notes": [
+      "Long-established company since 1928",
+      "EUR 4.565 billion in revenue",
+      "Experience in civil infrastructure and construction",
+      "Based in Turin with Italian operations focus"
+    ],
+    "limitations": [
+      "Limited public information on specific pipeline projects"
+    ]
+  },
+  "metadata": {
+    "source": "perplexity_research",
+    "query_id": "AGRS_QUERY_051",
+    "date_researched": "2025-12-02T16:32:25.264885Z",
+    "last_verified": "2025-12-02T16:31:19Z",
+    "confidence_level": "high",
+    "notes": "Founded 1928. EUR 4.565 billion in revenue. Italian construction company specializing in civil infrastructure and engineering projects.",
+    "tags": [
+      "civil_works",
+      "infrastructure",
+      "construction",
+      "italy_based"
+    ]
+  }
+}

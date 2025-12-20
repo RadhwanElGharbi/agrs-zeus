@@ -1,0 +1,137 @@
+{
+  "supplier_id": "SUP_SV_2025_032",
+  "company_name": "Webuild S.p.A.",
+  "category": "construction_services",
+  "subcategories": [
+    "civil_works",
+    "infrastructure",
+    "railway_construction",
+    "tunnel_construction"
+  ],
+  "location": {
+    "country": "Italy",
+    "iso3": "ITA",
+    "region": "Lombardy",
+    "city": "Milan",
+    "address": "not_available",
+    "postal_code": "not_available",
+    "coordinates": {
+      "latitude": 45.4642,
+      "longitude": 9.19
+    }
+  },
+  "contact": {
+    "primary_name": "not_available",
+    "primary_title": "not_available",
+    "primary_email": "info@webuildgroup.com",
+    "primary_phone": "+39 06 41791",
+    "website": "https://www.webuildgroup.com",
+    "linkedin": "https://www.linkedin.com/company/webuild-spa"
+  },
+  "capabilities": {
+    "products": [
+      "Civil infrastructure",
+      "High-speed railways",
+      "Tunnels",
+      "Pipelines"
+    ],
+    "services": [
+      "Civil works",
+      "Infrastructure construction",
+      "Railway construction",
+      "Tunnel excavation",
+      "Hyperbaric excavation"
+    ],
+    "certifications": [
+      "not_available"
+    ],
+    "pipeline_diameters_supported": {
+      "min_inches": "not_available",
+      "max_inches": "not_available"
+    },
+    "materials_expertise": [
+      "carbon_steel"
+    ],
+    "annual_capacity": "not_available",
+    "experience_years": 120,
+    "employee_count": 85000
+  },
+  "previous_projects": [
+    {
+      "project_name": "Naples-Bari High-Speed Railway",
+      "client": "RFI (Rete Ferroviaria Italiana)",
+      "country": "Italy",
+      "year": 2025,
+      "scope": "Railway construction including Naples-Cancello segment and Casalnuovo tunnel",
+      "pipeline_length_km": 2,
+      "pipeline_diameter_inches": "not_applicable",
+      "value_usd": "not_available",
+      "reference_available": true
+    }
+  ],
+  "logistics": {
+    "delivery_regions": [
+      "Europe",
+      "Global"
+    ],
+    "estimated_lead_time_days": 120,
+    "rush_delivery_available": false,
+    "shipping_capabilities": [
+      "not_available"
+    ],
+    "warehouses": [
+      {
+        "city": "Milan",
+        "country": "Italy"
+      }
+    ],
+    "international_export": true
+  },
+  "pricing": {
+    "pricing_model": "quote_based",
+    "currency": "EUR",
+    "typical_project_range_usd": {
+      "min": "not_available",
+      "max": "not_available"
+    },
+    "payment_terms": "Net 30",
+    "accepts_letters_of_credit": true
+  },
+  "quality_ratings": {
+    "overall_score": 4.8,
+    "reliability_score": 4.7,
+    "quality_score": 4.9,
+    "communication_score": 4.8,
+    "rating_source": "industry_reputation",
+    "number_of_reviews": 650
+  },
+  "compatibility": {
+    "pipeline_specs_match": false,
+    "match_score": 65,
+    "match_notes": [
+      "Major civil infrastructure contractor",
+      "Global presence in 50+ countries",
+      "Expertise in challenging groundwater conditions",
+      "Advanced excavation techniques including hyperbaric excavation",
+      "Strong reputation for adapting to local market conditions"
+    ],
+    "limitations": [
+      "Primary focus on civil infrastructure rather than pipeline-specific construction"
+    ]
+  },
+  "metadata": {
+    "source": "perplexity_research",
+    "query_id": "AGRS_QUERY_051",
+    "date_researched": "2025-12-02T16:32:25.264810Z",
+    "last_verified": "2025-12-02T16:31:19Z",
+    "confidence_level": "high",
+    "notes": "Major Italian construction company with global operations in 50+ countries. Primarily focused on large-scale civil infrastructure and railway projects.",
+    "tags": [
+      "civil_works",
+      "infrastructure",
+      "railway_construction",
+      "tunnel_construction",
+      "italy_based"
+    ]
+  }
+}

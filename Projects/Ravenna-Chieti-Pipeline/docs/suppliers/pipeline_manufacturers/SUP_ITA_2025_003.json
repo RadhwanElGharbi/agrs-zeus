@@ -1,0 +1,146 @@
+{
+  "supplier_id": "SUP_PM_2025_003",
+  "company_name": "Terranova Steel",
+  "category": "pipeline_manufacturer",
+  "subcategories": [
+    "seamless_pipes",
+    "welded_pipes",
+    "pipe_fittings",
+    "flanges"
+  ],
+  "location": {
+    "country": "Italy",
+    "iso3": "ITA",
+    "region": "not_available",
+    "city": "Brescia",
+    "address": "not_available",
+    "postal_code": "not_available",
+    "coordinates": {
+      "latitude": 45.5416,
+      "longitude": 10.2118
+    }
+  },
+  "contact": {
+    "primary_name": "not_available",
+    "primary_title": "not_available",
+    "primary_email": "info@terranovasteel.eu",
+    "primary_phone": "+39 030 2584200",
+    "website": "https://terranovasteel.eu",
+    "linkedin": "https://www.linkedin.com/company/terranova-steel"
+  },
+  "capabilities": {
+    "products": [
+      "Carbon steel pipes",
+      "Stainless steel pipes",
+      "Alloy steel pipes",
+      "Steel tubes",
+      "Pipe fittings",
+      "Flanges"
+    ],
+    "services": [
+      "Pipe manufacturing",
+      "Custom solutions",
+      "Technical support"
+    ],
+    "certifications": [
+      "not_available"
+    ],
+    "pipeline_diameters_supported": {
+      "min_inches": "not_available",
+      "max_inches": "not_available"
+    },
+    "materials_expertise": [
+      "carbon_steel",
+      "stainless_steel",
+      "alloy_steel"
+    ],
+    "annual_capacity": "not_available",
+    "experience_years": 20,
+    "employee_count": 85
+  },
+  "previous_projects": [
+    {
+      "project_name": "Oil & Gas applications",
+      "client": "not_available",
+      "country": "not_available",
+      "year": "not_available",
+      "scope": "Pipe supply",
+      "pipeline_length_km": "not_available",
+      "pipeline_diameter_inches": "not_available",
+      "value_usd": "not_available",
+      "reference_available": false
+    },
+    {
+      "project_name": "Petrochemical plants",
+      "client": "not_available",
+      "country": "not_available",
+      "year": "not_available",
+      "scope": "Industrial piping solutions",
+      "pipeline_length_km": "not_available",
+      "pipeline_diameter_inches": "not_available",
+      "value_usd": "not_available",
+      "reference_available": false
+    }
+  ],
+  "logistics": {
+    "delivery_regions": [
+      "Europe"
+    ],
+    "estimated_lead_time_days": 21,
+    "rush_delivery_available": true,
+    "shipping_capabilities": [
+      "not_available"
+    ],
+    "warehouses": [
+      {
+        "city": "not_available",
+        "country": "Italy"
+      }
+    ],
+    "international_export": true
+  },
+  "pricing": {
+    "pricing_model": "quote_based",
+    "currency": "EUR",
+    "typical_project_range_usd": {
+      "min": "not_available",
+      "max": "not_available"
+    },
+    "payment_terms": "Net 30",
+    "accepts_letters_of_credit": true
+  },
+  "quality_ratings": {
+    "overall_score": 4.3,
+    "reliability_score": 4.2,
+    "quality_score": 4.4,
+    "communication_score": 4.3,
+    "rating_source": "industry_reputation",
+    "number_of_reviews": 45
+  },
+  "compatibility": {
+    "pipeline_specs_match": true,
+    "match_score": 82,
+    "match_notes": [
+      "Over 20 years of experience in pipeline component manufacturing",
+      "Comprehensive product range including pipes, tubes, fittings, and flanges",
+      "Expertise in Oil & Gas, Petrochemicals, and industrial applications"
+    ],
+    "limitations": [
+      "not_available"
+    ]
+  },
+  "metadata": {
+    "source": "perplexity_research",
+    "query_id": "PIPELINE_ITA_003",
+    "date_researched": "2025-12-02T16:38:30.375982Z",
+    "last_verified": "2025-12-02T16:37:44Z",
+    "confidence_level": "high",
+    "notes": "Trusted manufacturer with over two decades of experience in high-quality carbon steel and stainless steel products. Supplies pipes, tubes, fittings and flanges for diverse industrial sectors.",
+    "tags": [
+      "multi_material",
+      "complete_solutions",
+      "experienced_manufacturer",
+      "italy_based"
+    ]
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "project_id": null,
+  "last_updated": "2025-12-02T13:44:49Z",
+  "total_suppliers": 0,
+  "suppliers_by_category": {
+    "construction_supplies": 0,
+    "construction_services": 0,
+    "pipeline_manufacturer": 0,
+    "equipment_manufacturer": 0,
+    "consultancy": 0
+  },
+  "suppliers": []
+}

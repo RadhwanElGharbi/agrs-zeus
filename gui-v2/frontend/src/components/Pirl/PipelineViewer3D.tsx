@@ -14,6 +14,29 @@ interface PipelineViewer3DProps {
   viewMode?: ViewMode
   fluidDensity?: number
   fluidViscosity?: number
+  // Hydraulics parameters
+  inletPressure?: number // Bar
+  outletPressure?: number // Bar
+  flowRate?: number // m³/s
+  temperature?: number // Kelvin
+}
+
+// Calculate Reynolds number
+function calculateReynolds(velocity: number, diameter: number, density: number, viscosity: number): number {
+  return (density * velocity * diameter) / viscosity
+}
+
+// Determine flow regime
+function getFlowRegime(reynolds: number): 'laminar' | 'transitional' | 'turbulent' {
+  if (reynolds < 2300) return 'laminar'
+  if (reynolds < 4000) return 'transitional'
+  return 'turbulent'
+}
+
+// Calculate velocity from flow rate and diameter
+function calculateVelocity(flowRate: number, innerDiameter: number): number {
+  const area = Math.PI * Math.pow(innerDiameter / 2, 2)
+  return flowRate / area
 }
 
 export function PipelineViewer3D({
@@ -21,11 +44,23 @@ export function PipelineViewer3D({
   wallThickness,
   length = 20,
   showCutaway = true,
-  flowVelocity = 2.5,
+  flowVelocity: propFlowVelocity,
   viewMode = 'pipe',
-  fluidDensity = 800, // kg/m³ for crude oil
-  fluidViscosity = 0.005 // Pa·s for crude oil
+  fluidDensity = 0.7, // kg/m³ for natural gas at standard conditions
+  fluidViscosity = 0.000011, // Pa·s for natural gas
+  inletPressure = 75,
+  outletPressure = 45,
+  flowRate = 1.0,
+  temperature = 288
 }: PipelineViewer3DProps) {
+  const innerDiameter = diameter - 2 * wallThickness
+
+  // Calculate actual flow velocity from flow rate if not directly provided
+  const flowVelocity = propFlowVelocity ?? calculateVelocity(flowRate, innerDiameter)
+
+  // Calculate Reynolds number and flow regime
+  const reynolds = calculateReynolds(flowVelocity, innerDiameter, fluidDensity, fluidViscosity)
+  const flowRegime = getFlowRegime(reynolds)
   const containerRef = useRef<HTMLDivElement>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -317,101 +352,262 @@ export function PipelineViewer3D({
 
         // === CFD MODE GEOMETRY ===
         if (viewMode === 'cfd') {
-          // Transparent pipe shell for context
+          // Semi-transparent pipe shell
           const pipeGeometry = new THREE.CylinderGeometry(
-            outerRadius,
-            outerRadius,
+            innerRadius,
+            innerRadius,
             length,
-            32,
+            48,
             1,
-            !showCutaway
+            true
           )
-          const pipeMaterial = new THREE.MeshStandardMaterial({
-            color: 0x4a5568,
-            metalness: 0.7,
-            roughness: 0.3,
+          const pipeMaterial = new THREE.MeshPhysicalMaterial({
+            color: 0x88aacc,
+            metalness: 0.1,
+            roughness: 0.1,
             transparent: true,
-            opacity: 0.2,
-            side: showCutaway ? THREE.DoubleSide : THREE.FrontSide
+            opacity: 0.12,
+            side: THREE.DoubleSide,
+            depthWrite: false
           })
           const pipe = new THREE.Mesh(pipeGeometry, pipeMaterial)
           pipelineGroup.add(pipe)
 
-          // Create fluid particle system for CFD visualization
-          const particleCount = 1000
-          const particleGeometry = new THREE.BufferGeometry()
+          // === FLUID VOLUME PARTICLES ===
+          // These represent discrete fluid elements, not glowing tracers
+          const particleCount = 3000
+          const fluidGeometry = new THREE.BufferGeometry()
           const positions = new Float32Array(particleCount * 3)
           const velocities = new Float32Array(particleCount)
-          const colors = new Float32Array(particleCount * 3)
+          const radialPositions = new Float32Array(particleCount)
+          const phases = new Float32Array(particleCount) // For turbulence
+          const sizes = new Float32Array(particleCount)
 
-          // Initialize particles in a cylindrical volume
           for (let i = 0; i < particleCount; i++) {
-            // Random position in cylinder
             const angle = Math.random() * Math.PI * 2
-            const radius = Math.sqrt(Math.random()) * innerRadius * 0.95
-            const x = (Math.random() - 0.5) * length
-            const y = Math.cos(angle) * radius
-            const z = Math.sin(angle) * radius
+            const r = Math.pow(Math.random(), 0.7) * innerRadius * 0.92 // More particles near center
 
-            positions[i * 3] = x
-            positions[i * 3 + 1] = y
-            positions[i * 3 + 2] = z
+            positions[i * 3] = Math.cos(angle) * r
+            positions[i * 3 + 1] = (Math.random() - 0.5) * length
+            positions[i * 3 + 2] = Math.sin(angle) * r
 
-            // Velocity based on distance from center (parabolic profile)
-            const radialPos = Math.sqrt(y * y + z * z) / innerRadius
-            velocities[i] = flowVelocity * (1 - radialPos * radialPos) * 2 // Parabolic velocity profile
+            // Store radial position for velocity calculation
+            radialPositions[i] = r / innerRadius
 
-            // Color based on velocity (blue = slow, red = fast)
-            const velocityNorm = velocities[i] / (flowVelocity * 2)
-            colors[i * 3] = velocityNorm * 0.8 + 0.2 // R
-            colors[i * 3 + 1] = (1 - velocityNorm) * 0.5 + 0.3 // G
-            colors[i * 3 + 2] = (1 - velocityNorm) * 0.8 + 0.5 // B
+            // Parabolic velocity profile (Hagen-Poiseuille)
+            const rNorm = r / innerRadius
+            velocities[i] = flowVelocity * 2 * (1 - rNorm * rNorm)
+
+            // Random phase for turbulent motion
+            phases[i] = Math.random() * Math.PI * 2
+
+            // Varying sizes - smaller near walls (boundary layer)
+            sizes[i] = 0.04 + (1 - rNorm) * 0.06
           }
 
-          particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
-          particleGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3))
+          fluidGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+          fluidGeometry.setAttribute('aVelocity', new THREE.BufferAttribute(velocities, 1))
+          fluidGeometry.setAttribute('aRadial', new THREE.BufferAttribute(radialPositions, 1))
+          fluidGeometry.setAttribute('aPhase', new THREE.BufferAttribute(phases, 1))
+          fluidGeometry.setAttribute('aSize', new THREE.BufferAttribute(sizes, 1))
 
-          const particleMaterial = new THREE.PointsMaterial({
-            size: 0.08,
-            vertexColors: true,
+          // Realistic fluid particle shader
+          const fluidMaterial = new THREE.ShaderMaterial({
+            uniforms: {
+              time: { value: 0 },
+              uMinVel: { value: 0.0 },
+              uMaxVel: { value: flowVelocity * 2 }
+            },
+            vertexShader: `
+              attribute float aVelocity;
+              attribute float aRadial;
+              attribute float aPhase;
+              attribute float aSize;
+
+              varying float vVelocity;
+              varying float vRadial;
+
+              void main() {
+                vVelocity = aVelocity;
+                vRadial = aRadial;
+
+                vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+                gl_PointSize = aSize * (250.0 / -mvPosition.z);
+                gl_Position = projectionMatrix * mvPosition;
+              }
+            `,
+            fragmentShader: `
+              uniform float uMinVel;
+              uniform float uMaxVel;
+
+              varying float vVelocity;
+              varying float vRadial;
+
+              void main() {
+                // Soft circular particle
+                vec2 center = gl_PointCoord - vec2(0.5);
+                float dist = length(center);
+                if (dist > 0.5) discard;
+
+                // Normalize velocity for color mapping
+                float velNorm = clamp((vVelocity - uMinVel) / (uMaxVel - uMinVel), 0.0, 1.0);
+
+                // Blue (slow/walls) to red (fast/center) - classic CFD colormap
+                vec3 slowColor = vec3(0.0, 0.2, 0.8);   // Blue
+                vec3 midColor1 = vec3(0.0, 0.8, 0.8);   // Cyan
+                vec3 midColor2 = vec3(0.0, 0.9, 0.2);   // Green
+                vec3 midColor3 = vec3(0.95, 0.9, 0.0);  // Yellow
+                vec3 fastColor = vec3(0.9, 0.1, 0.0);   // Red
+
+                vec3 color;
+                if (velNorm < 0.25) {
+                  color = mix(slowColor, midColor1, velNorm * 4.0);
+                } else if (velNorm < 0.5) {
+                  color = mix(midColor1, midColor2, (velNorm - 0.25) * 4.0);
+                } else if (velNorm < 0.75) {
+                  color = mix(midColor2, midColor3, (velNorm - 0.5) * 4.0);
+                } else {
+                  color = mix(midColor3, fastColor, (velNorm - 0.75) * 4.0);
+                }
+
+                // Soft edge falloff
+                float alpha = smoothstep(0.5, 0.2, dist) * 0.85;
+
+                // Slightly darker at edges for depth
+                color *= (1.0 - dist * 0.3);
+
+                gl_FragColor = vec4(color, alpha);
+              }
+            `,
             transparent: true,
-            opacity: 0.8,
-            blending: THREE.AdditiveBlending
+            depthWrite: false,
+            blending: THREE.NormalBlending
           })
 
-          const particleSystem = new THREE.Points(particleGeometry, particleMaterial)
-          pipelineGroup.add(particleSystem)
+          const fluidParticles = new THREE.Points(fluidGeometry, fluidMaterial)
+          pipelineGroup.add(fluidParticles)
 
-          // Store for animation
-          particles.push({ system: particleSystem, velocities, positions })
+          particles.push({
+            type: 'fluid',
+            system: fluidParticles,
+            velocities: velocities,
+            radialPositions: radialPositions,
+            phases: phases,
+            material: fluidMaterial,
+            innerRadius: innerRadius
+          })
 
-          // Add velocity vectors (arrows)
-          if (showCutaway) {
-            const arrowMaterial = new THREE.MeshStandardMaterial({
-              color: 0x60a5fa,
-              emissive: 0x3b82f6,
-              emissiveIntensity: 0.5,
+          // === VELOCITY PROFILE CROSS-SECTIONS ===
+          const crossSections = [-length * 0.4, 0, length * 0.4]
+          crossSections.forEach(yPos => {
+            const rings = 16
+            const segments = 48
+            const csGeometry = new THREE.BufferGeometry()
+            const csPositions: number[] = []
+            const csColors: number[] = []
+
+            for (let ring = 0; ring < rings; ring++) {
+              const r1 = (ring / rings) * innerRadius * 0.95
+              const r2 = ((ring + 1) / rings) * innerRadius * 0.95
+              const rAvg = (r1 + r2) / 2 / innerRadius
+              const vel = 1 - rAvg * rAvg
+
+              // Color based on velocity
+              const color = new THREE.Color()
+              if (vel < 0.25) {
+                color.lerpColors(new THREE.Color(0x0033cc), new THREE.Color(0x00cccc), vel * 4)
+              } else if (vel < 0.5) {
+                color.lerpColors(new THREE.Color(0x00cccc), new THREE.Color(0x00e633), (vel - 0.25) * 4)
+              } else if (vel < 0.75) {
+                color.lerpColors(new THREE.Color(0x00e633), new THREE.Color(0xf2e600), (vel - 0.5) * 4)
+              } else {
+                color.lerpColors(new THREE.Color(0xf2e600), new THREE.Color(0xe61a00), (vel - 0.75) * 4)
+              }
+
+              for (let seg = 0; seg < segments; seg++) {
+                const a1 = (seg / segments) * Math.PI * 2
+                const a2 = ((seg + 1) / segments) * Math.PI * 2
+
+                // Two triangles per segment
+                csPositions.push(
+                  Math.cos(a1) * r1, yPos, Math.sin(a1) * r1,
+                  Math.cos(a2) * r1, yPos, Math.sin(a2) * r1,
+                  Math.cos(a1) * r2, yPos, Math.sin(a1) * r2,
+
+                  Math.cos(a2) * r1, yPos, Math.sin(a2) * r1,
+                  Math.cos(a2) * r2, yPos, Math.sin(a2) * r2,
+                  Math.cos(a1) * r2, yPos, Math.sin(a1) * r2
+                )
+
+                for (let v = 0; v < 6; v++) {
+                  csColors.push(color.r, color.g, color.b)
+                }
+              }
+            }
+
+            csGeometry.setAttribute('position', new THREE.Float32BufferAttribute(csPositions, 3))
+            csGeometry.setAttribute('color', new THREE.Float32BufferAttribute(csColors, 3))
+
+            const csMaterial = new THREE.MeshBasicMaterial({
+              vertexColors: true,
               transparent: true,
-              opacity: 0.7
+              opacity: 0.5,
+              side: THREE.DoubleSide,
+              depthWrite: false
             })
 
-            const numArrows = 5
-            for (let i = 0; i < numArrows; i++) {
-              const pos = (i / (numArrows - 1)) * length - length / 2
-              const radius = innerRadius * 0.5
+            const crossSection = new THREE.Mesh(csGeometry, csMaterial)
+            pipelineGroup.add(crossSection)
+          })
 
-              const arrowGeometry = new THREE.ConeGeometry(
-                innerRadius * 0.2,
-                innerRadius * 0.6,
-                8
-              )
-              const arrow = new THREE.Mesh(arrowGeometry, arrowMaterial)
-              arrow.position.x = pos
-              arrow.position.y = radius
-              arrow.rotation.z = -Math.PI / 2
-              pipelineGroup.add(arrow)
+          // === COLOR SCALE LEGEND ===
+          const legendGroup = new THREE.Group()
+          const legendHeight = length * 0.5
+          const legendWidth = outerRadius * 0.12
+          const legendSegs = 40
+
+          for (let i = 0; i < legendSegs; i++) {
+            const t = i / (legendSegs - 1)
+            const segH = legendHeight / legendSegs
+
+            const color = new THREE.Color()
+            if (t < 0.25) {
+              color.lerpColors(new THREE.Color(0x0033cc), new THREE.Color(0x00cccc), t * 4)
+            } else if (t < 0.5) {
+              color.lerpColors(new THREE.Color(0x00cccc), new THREE.Color(0x00e633), (t - 0.25) * 4)
+            } else if (t < 0.75) {
+              color.lerpColors(new THREE.Color(0x00e633), new THREE.Color(0xf2e600), (t - 0.5) * 4)
+            } else {
+              color.lerpColors(new THREE.Color(0xf2e600), new THREE.Color(0xe61a00), (t - 0.75) * 4)
             }
+
+            const segGeo = new THREE.PlaneGeometry(legendWidth, segH * 1.1)
+            const segMat = new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide })
+            const seg = new THREE.Mesh(segGeo, segMat)
+            seg.position.set(outerRadius * 1.8, (t - 0.5) * legendHeight, 0)
+            legendGroup.add(seg)
           }
+
+          pipelineGroup.add(legendGroup)
+
+          // === WALL BOUNDARY INDICATOR ===
+          // Thin ring at pipe wall to show boundary
+          const wallRingGeo = new THREE.TorusGeometry(innerRadius, outerRadius * 0.015, 8, 64)
+          const wallRingMat = new THREE.MeshBasicMaterial({
+            color: 0x4488aa,
+            transparent: true,
+            opacity: 0.4
+          })
+
+          const wallRing1 = new THREE.Mesh(wallRingGeo, wallRingMat)
+          wallRing1.position.y = -length / 2
+          wallRing1.rotation.x = Math.PI / 2
+          pipelineGroup.add(wallRing1)
+
+          const wallRing2 = new THREE.Mesh(wallRingGeo.clone(), wallRingMat)
+          wallRing2.position.y = length / 2
+          wallRing2.rotation.x = Math.PI / 2
+          pipelineGroup.add(wallRing2)
         }
 
         scene.add(pipelineGroup)
@@ -441,22 +637,73 @@ export function PipelineViewer3D({
 
           time += 0.016 // ~60fps
 
-          // Animate CFD particles
+          // Animate CFD fluid particles
           if (viewMode === 'cfd' && particles.length > 0) {
-            particles.forEach(({ system, velocities, positions }) => {
-              const posArray = system.geometry.attributes.position.array as Float32Array
+            particles.forEach((particle: any) => {
+              if (particle.type === 'fluid') {
+                const posArray = particle.system.geometry.attributes.position.array as Float32Array
+                const velocities = particle.velocities as Float32Array
+                const radials = particle.radialPositions as Float32Array
+                const phases = particle.phases as Float32Array
+                const iRadius = particle.innerRadius as number
 
-              for (let i = 0; i < velocities.length; i++) {
-                // Move particle along x-axis based on velocity
-                posArray[i * 3] += velocities[i] * 0.016
+                // Turbulence intensity based on flow regime
+                // Laminar: minimal turbulence, Transitional: moderate, Turbulent: high
+                const baseTurbulence = flowRegime === 'laminar' ? 0.0005
+                  : flowRegime === 'transitional' ? 0.002
+                  : 0.005
 
-                // Wrap around when particle exits
-                if (posArray[i * 3] > length / 2) {
-                  posArray[i * 3] = -length / 2
+                // Turbulence frequency increases with Reynolds number
+                const turbulenceFreq = flowRegime === 'laminar' ? 1.0
+                  : flowRegime === 'transitional' ? 2.5
+                  : 4.0
+
+                // Flow speed multiplier based on actual velocity
+                const speedMultiplier = Math.min(flowVelocity / 10, 2.0) * 0.012
+
+                for (let i = 0; i < velocities.length; i++) {
+                  // Main flow along Y-axis - speed based on actual flow velocity
+                  posArray[i * 3 + 1] += velocities[i] * speedMultiplier
+
+                  // Turbulent motion - intensity varies by flow regime and radial position
+                  // More turbulence near walls for turbulent flow, less for laminar
+                  const wallProximity = radials[i] // 0 at center, 1 at wall
+                  const turbulenceScale = baseTurbulence * (flowRegime === 'laminar'
+                    ? (1 - wallProximity * 0.5) // Laminar: slightly less at walls
+                    : (0.3 + wallProximity * 0.7)) // Turbulent: more at walls
+
+                  const phase = phases[i]
+                  posArray[i * 3] += Math.sin(time * turbulenceFreq + phase) * turbulenceScale
+                  posArray[i * 3 + 2] += Math.cos(time * turbulenceFreq * 0.8 + phase * 1.3) * turbulenceScale
+
+                  // Keep particles inside pipe
+                  const x = posArray[i * 3]
+                  const z = posArray[i * 3 + 2]
+                  const currentR = Math.sqrt(x * x + z * z)
+                  if (currentR > iRadius * 0.92) {
+                    const scale = (iRadius * 0.9) / currentR
+                    posArray[i * 3] *= scale
+                    posArray[i * 3 + 2] *= scale
+                  }
+
+                  // Wrap around when particle exits
+                  if (posArray[i * 3 + 1] > length / 2) {
+                    posArray[i * 3 + 1] = -length / 2
+                    // Randomize position slightly on wrap
+                    const newAngle = Math.random() * Math.PI * 2
+                    const newR = Math.pow(Math.random(), 0.7) * iRadius * 0.92
+                    posArray[i * 3] = Math.cos(newAngle) * newR
+                    posArray[i * 3 + 2] = Math.sin(newAngle) * newR
+                  }
+                }
+
+                particle.system.geometry.attributes.position.needsUpdate = true
+
+                // Update time uniform
+                if (particle.material.uniforms && particle.material.uniforms.time) {
+                  particle.material.uniforms.time.value = time
                 }
               }
-
-              system.geometry.attributes.position.needsUpdate = true
             })
           }
 
@@ -501,7 +748,7 @@ export function PipelineViewer3D({
       }
       particles = []
     }
-  }, [diameter, length, wallThickness, showCutaway, flowVelocity, viewMode, fluidDensity, fluidViscosity])
+  }, [diameter, length, wallThickness, showCutaway, flowVelocity, viewMode, fluidDensity, fluidViscosity, flowRegime, reynolds])
 
   if (error) {
     return (

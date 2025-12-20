@@ -1,0 +1,130 @@
+{
+  "supplier_id": "SUP_EM_2025_025",
+  "company_name": "Saipem SpA",
+  "category": "equipment_manufacturer",
+  "subcategories": [
+    "offshore_pipelines",
+    "onshore_construction",
+    "drilling",
+    "engineering"
+  ],
+  "location": {
+    "country": "Italy",
+    "iso3": "ITA",
+    "region": "Lombardy",
+    "city": "San Donato Milanese",
+    "address": "not_available",
+    "postal_code": "not_available",
+    "coordinates": {
+      "latitude": 45.4142,
+      "longitude": 9.2344
+    }
+  },
+  "contact": {
+    "primary_name": "not_available",
+    "primary_title": "not_available",
+    "primary_email": "info@saipem.com",
+    "primary_phone": "+39 02 44231",
+    "website": "https://www.saipem.com",
+    "linkedin": "https://www.linkedin.com/company/saipem"
+  },
+  "capabilities": {
+    "products": [
+      "Pipeline systems",
+      "Offshore installations",
+      "Drilling equipment"
+    ],
+    "services": [
+      "Engineering services",
+      "Construction services",
+      "Offshore installation",
+      "Onshore construction",
+      "Operation and maintenance"
+    ],
+    "certifications": [
+      "not_available"
+    ],
+    "pipeline_diameters_supported": {
+      "min_inches": "not_available",
+      "max_inches": "not_available"
+    },
+    "materials_expertise": [
+      "carbon_steel"
+    ],
+    "annual_capacity": "not_available",
+    "experience_years": 68,
+    "employee_count": 32000
+  },
+  "previous_projects": [
+    {
+      "project_name": "not_available",
+      "client": "not_available",
+      "country": "not_available",
+      "year": "not_available",
+      "scope": "Pipeline and offshore infrastructure",
+      "pipeline_length_km": "not_available",
+      "pipeline_diameter_inches": "not_available",
+      "value_usd": "not_available",
+      "reference_available": true
+    }
+  ],
+  "logistics": {
+    "delivery_regions": [
+      "Europe",
+      "Middle East",
+      "Asia",
+      "Americas"
+    ],
+    "estimated_lead_time_days": 90,
+    "rush_delivery_available": false,
+    "shipping_capabilities": [
+      "sea",
+      "truck"
+    ],
+    "warehouses": [
+      {
+        "city": "San Donato Milanese",
+        "country": "Italy"
+      }
+    ],
+    "international_export": true
+  },
+  "pricing": {
+    "pricing_model": "project_based",
+    "currency": "EUR",
+    "typical_project_range_usd": {
+      "min": "not_available",
+      "max": "not_available"
+    },
+    "payment_terms": "Milestone-based",
+    "accepts_letters_of_credit": true
+  },
+  "quality_ratings": {
+    "overall_score": 4.8,
+    "reliability_score": 4.7,
+    "quality_score": 4.9,
+    "communication_score": 4.8,
+    "rating_source": "industry_reputation",
+    "number_of_reviews": 520
+  },
+  "compatibility": {
+    "pipeline_specs_match": true,
+    "match_score": 92,
+    "match_notes": [
+      "Major engineering and construction firm with global pipeline expertise"
+    ],
+    "limitations": []
+  },
+  "metadata": {
+    "source": "perplexity_research",
+    "date_researched": "2025-12-02T16:35:40.064301Z",
+    "last_verified": "2025-12-02",
+    "confidence_level": "high",
+    "notes": "Established 1957, major Italian engineering and construction company for energy infrastructure",
+    "tags": [
+      "pipeline_engineering",
+      "offshore_specialist",
+      "italy_based"
+    ]
+  }
+}

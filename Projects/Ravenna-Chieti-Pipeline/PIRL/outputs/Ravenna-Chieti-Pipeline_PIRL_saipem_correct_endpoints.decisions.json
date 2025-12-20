@@ -1,0 +1,7044 @@
+{
+  "document_info": {
+    "title": "Route Decision Analysis - Ravenna-Chieti Pipeline",
+    "subtitle": "Pirl Saipem Correct Endpoints",
+    "route_id": "Ravenna-Chieti-Pipeline_PIRL_saipem_correct_endpoints",
+    "version": "3.0",
+    "format": "Segment-by-Segment Analysis",
+    "generated_at": "2025-12-17T03:43:05.484989Z",
+    "generated_by": "AGRS ZEUS Platform",
+    "validation_status": "Cross-validated with GDAL/Rasterio/GeoPandas",
+    "optimization_method": "PIRL Engine"
+  },
+  "data_sources": {
+    "elevation": {
+      "source": "Copernicus DEM GLO-30",
+      "resolution": "30m"
+    },
+    "land_cover": {
+      "source": "ESA WorldCover 2021",
+      "resolution": "10m"
+    },
+    "soil": {
+      "source": "SoilGrids 2.0",
+      "resolution": "250m"
+    },
+    "seismic": {
+      "source": "GEM/INGV"
+    },
+    "infrastructure": {
+      "source": "OpenStreetMap"
+    }
+  },
+  "pipeline_specifications": {
+    "product": "Natural Gas",
+    "diameter_nominal": "DN650 (26 inch)",
+    "diameter_mm": 660.4,
+    "wall_thickness_mm": 11.1,
+    "material": "Carbon Steel",
+    "max_operating_pressure_bar": 70,
+    "design_pressure_bar": 75,
+    "depth_of_cover_m": 1.5,
+    "max_slope_percent": 20.0
+  },
+  "route_summary": {
+    "total_length_km": 31.93,
+    "total_segments": 84,
+    "start_point": {
+      "easting": 379622.91,
+      "northing": 4805069.06
+    },
+    "end_point": {
+      "easting": 397199.24,
+      "northing": 4782587.63
+    },
+    "elevation_statistics": {
+      "min_m": 31.1,
+      "max_m": 173.4,
+      "mean_m": 75.4
+    },
+    "slope_statistics": {
+      "max_percent": 25,
+      "mean_percent": 8.49,
+      "segments_over_20pct": 7
+    },
+    "compliance_status": {
+      "slope_compliant": false,
+      "status": "NON-COMPLIANT"
+    }
+  },
+  "terrain_analysis": {
+    "land_cover_distribution": {
+      "cropland": {
+        "km": 19.61,
+        "percent": 61.4
+      },
+      "grassland": {
+        "km": 7.61,
+        "percent": 23.8
+      },
+      "tree_cover": {
+        "km": 2.41,
+        "percent": 7.5
+      },
+      "built_up": {
+        "km": 1.52,
+        "percent": 4.8
+      },
+      "bare_sparse": {
+        "km": 0.39,
+        "percent": 1.2
+      },
+      "shrubland": {
+        "km": 0.38,
+        "percent": 1.2
+      }
+    },
+    "soil_distribution": {
+      "loam": {
+        "km": 25.83,
+        "percent": 80.9
+      },
+      "silt_loam": {
+        "km": 4.21,
+        "percent": 13.2
+      },
+      "unknown": {
+        "km": 1.88,
+        "percent": 5.9
+      }
+    }
+  },
+  "crossing_summary": {
+    "total_crossings": 67,
+    "by_type": {
+      "road": {
+        "count": 46,
+        "total_cost_eur": 2760000
+      },
+      "waterway": {
+        "count": 15,
+        "total_cost_eur": 1200000
+      },
+      "powerline": {
+        "count": 5,
+        "total_cost_eur": 750000
+      },
+      "railway": {
+        "count": 1,
+        "total_cost_eur": 1200000
+      }
+    },
+    "by_method": {
+      "open_cut": 61,
+      "HDD": 6
+    },
+    "total_crossing_cost_eur": 5910000
+  },
+  "cost_estimate": {
+    "class": "Class 4 (\u00b130%)",
+    "terrain_cost_eur": 13978221.0,
+    "crossing_cost_eur": 5910000,
+    "total_cost_eur": 19888221.0,
+    "cost_per_km_eur": 622873.0
+  },
+  "segment_decisions": [
+    {
+      "segment_id": 1,
+      "km_start": 0.0,
+      "km_end": 0.393,
+      "length_m": 392.75,
+      "geometry": {
+        "start_point": {
+          "easting": 379622.91,
+          "northing": 4805069.06
+        },
+        "end_point": {
+          "easting": 379862.96,
+          "northing": 4804775.76
+        },
+        "bearing_deg": 140.7,
+        "vertex_count": 12,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 161.69,
+        "end_m": 127.51,
+        "min_m": 127.51,
+        "max_m": 163.47,
+        "mean_m": 150.85
+      },
+      "slope": {
+        "average_percent": 8.7,
+        "max_percent": 18.31,
+        "terrain_class": "hilly",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 60,
+        "class_name": "bare_sparse",
+        "cost_factor": 0.8,
+        "note": "Bare land"
+      },
+      "soil": {
+        "type": "silt_loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 2,
+        "details": [
+          {
+            "crossing_id": "CX-001",
+            "km": 0.216,
+            "coordinates": {
+              "easting": 379738.15,
+              "northing": 4804900.53
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "residential",
+              "name": "Via Arduino Marconi",
+              "osm_id": 1448156520
+            },
+            "ground_conditions": {
+              "soil_type": "silt_loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for residential",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-002",
+            "km": 0.004,
+            "coordinates": {
+              "easting": 379626.03,
+              "northing": 4805065.94
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "service",
+              "name": "Unnamed road",
+              "osm_id": 1448156524
+            },
+            "ground_conditions": {
+              "soil_type": "silt_loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for service",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 198550.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 78550.0,
+          "crossing_cost_eur": 120000
+        }
+      }
+    },
+    {
+      "segment_id": 2,
+      "km_start": 0.393,
+      "km_end": 0.77,
+      "length_m": 377.14,
+      "geometry": {
+        "start_point": {
+          "easting": 379862.96,
+          "northing": 4804775.76
+        },
+        "end_point": {
+          "easting": 380129.68,
+          "northing": 4804509.12
+        },
+        "bearing_deg": 135.0,
+        "vertex_count": 11,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 127.51,
+        "end_m": 130.72,
+        "min_m": 121.8,
+        "max_m": 131.08,
+        "mean_m": 127.63
+      },
+      "slope": {
+        "average_percent": 0.85,
+        "max_percent": 4.92,
+        "terrain_class": "gently_rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 30,
+        "class_name": "grassland",
+        "cost_factor": 1.0,
+        "note": "Grassland"
+      },
+      "soil": {
+        "type": "silt_loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 0,
+        "details": []
+      },
+      "construction": {
+        "estimated_cost_eur": 94286.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 94286.0,
+          "crossing_cost_eur": 0
+        }
+      }
+    },
+    {
+      "segment_id": 3,
+      "km_start": 0.77,
+      "km_end": 1.163,
+      "length_m": 392.76,
+      "geometry": {
+        "start_point": {
+          "easting": 380129.68,
+          "northing": 4804509.12
+        },
+        "end_point": {
+          "easting": 380369.74,
+          "northing": 4804215.82
+        },
+        "bearing_deg": 140.7,
+        "vertex_count": 12,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 130.72,
+        "end_m": 110.88,
+        "min_m": 110.88,
+        "max_m": 130.72,
+        "mean_m": 123.81
+      },
+      "slope": {
+        "average_percent": 5.05,
+        "max_percent": 10.1,
+        "terrain_class": "rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 2,
+        "details": [
+          {
+            "crossing_id": "CX-003",
+            "km": 0.906,
+            "coordinates": {
+              "easting": 380188.36,
+              "northing": 4804397.14
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "service",
+              "name": "Unnamed road",
+              "osm_id": 564087127
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for service",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-004",
+            "km": 0.973,
+            "coordinates": {
+              "easting": 380235.32,
+              "northing": 4804350.19
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "unclassified",
+              "name": "Unnamed road",
+              "osm_id": 562342845
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for unclassified",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 296742.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 176742.0,
+          "crossing_cost_eur": 120000
+        }
+      }
+    },
+    {
+      "segment_id": 4,
+      "km_start": 1.163,
+      "km_end": 1.529,
+      "length_m": 366.1,
+      "geometry": {
+        "start_point": {
+          "easting": 380369.74,
+          "northing": 4804215.82
+        },
+        "end_point": {
+          "easting": 380609.79,
+          "northing": 4803949.18
+        },
+        "bearing_deg": 138.0,
+        "vertex_count": 11,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 110.88,
+        "end_m": 94.14,
+        "min_m": 86.61,
+        "max_m": 110.88,
+        "mean_m": 94.45
+      },
+      "slope": {
+        "average_percent": 4.57,
+        "max_percent": 13.26,
+        "terrain_class": "rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 1,
+        "details": [
+          {
+            "crossing_id": "CX-005",
+            "km": 1.396,
+            "coordinates": {
+              "easting": 380515.71,
+              "northing": 4804043.23
+            },
+            "infrastructure": {
+              "type": "waterway",
+              "class": "stream",
+              "name": "Stream",
+              "osm_id": "130079741"
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for stream",
+              "cost_eur": 80000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 244743.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 164743.0,
+          "crossing_cost_eur": 80000
+        }
+      }
+    },
+    {
+      "segment_id": 5,
+      "km_start": 1.529,
+      "km_end": 1.906,
+      "length_m": 377.14,
+      "geometry": {
+        "start_point": {
+          "easting": 380609.79,
+          "northing": 4803949.18
+        },
+        "end_point": {
+          "easting": 380876.51,
+          "northing": 4803682.54
+        },
+        "bearing_deg": 135.0,
+        "vertex_count": 11,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 94.14,
+        "end_m": 78.53,
+        "min_m": 78.53,
+        "max_m": 99.09,
+        "mean_m": 90.3
+      },
+      "slope": {
+        "average_percent": 4.14,
+        "max_percent": 10.9,
+        "terrain_class": "rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 30,
+        "class_name": "grassland",
+        "cost_factor": 1.0,
+        "note": "Grassland"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 1,
+        "details": [
+          {
+            "crossing_id": "CX-006",
+            "km": 1.862,
+            "coordinates": {
+              "easting": 380845.15,
+              "northing": 4803713.9
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "secondary",
+              "name": "Strada Regionale 77 della Val di Chienti",
+              "osm_id": 130068885
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for secondary",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Provincial permit"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 154286.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 94286.0,
+          "crossing_cost_eur": 60000
+        }
+      }
+    },
+    {
+      "segment_id": 6,
+      "km_start": 1.906,
+      "km_end": 2.281,
+      "length_m": 375.27,
+      "geometry": {
+        "start_point": {
+          "easting": 380876.51,
+          "northing": 4803682.54
+        },
+        "end_point": {
+          "easting": 381196.57,
+          "northing": 4803549.22
+        },
+        "bearing_deg": 112.6,
+        "vertex_count": 13,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 78.53,
+        "end_m": 70.59,
+        "min_m": 70.05,
+        "max_m": 78.53,
+        "mean_m": 71.68
+      },
+      "slope": {
+        "average_percent": 2.12,
+        "max_percent": 4.52,
+        "terrain_class": "gently_rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 1,
+        "details": [
+          {
+            "crossing_id": "CX-007",
+            "km": 2.204,
+            "coordinates": {
+              "easting": 381119.53,
+              "northing": 4803549.22
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "service",
+              "name": "Unnamed road",
+              "osm_id": 211885675
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for service",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 228872.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 168872.0,
+          "crossing_cost_eur": 60000
+        }
+      }
+    },
+    {
+      "segment_id": 7,
+      "km_start": 2.281,
+      "km_end": 2.663,
+      "length_m": 381.74,
+      "geometry": {
+        "start_point": {
+          "easting": 381196.57,
+          "northing": 4803549.22
+        },
+        "end_point": {
+          "easting": 381489.97,
+          "northing": 4803335.91
+        },
+        "bearing_deg": 126.0,
+        "vertex_count": 12,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 70.59,
+        "end_m": 60.64,
+        "min_m": 60.64,
+        "max_m": 70.59,
+        "mean_m": 66.42
+      },
+      "slope": {
+        "average_percent": 2.61,
+        "max_percent": 5.21,
+        "terrain_class": "gently_rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 0,
+        "details": []
+      },
+      "construction": {
+        "estimated_cost_eur": 171781.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 171781.0,
+          "crossing_cost_eur": 0
+        }
+      }
+    },
+    {
+      "segment_id": 8,
+      "km_start": 2.663,
+      "km_end": 3.049,
+      "length_m": 386.32,
+      "geometry": {
+        "start_point": {
+          "easting": 381489.97,
+          "northing": 4803335.91
+        },
+        "end_point": {
+          "easting": 381810.04,
+          "northing": 4803175.93
+        },
+        "bearing_deg": 116.6,
+        "vertex_count": 13,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 60.64,
+        "end_m": 56.45,
+        "min_m": 54.88,
+        "max_m": 61.44,
+        "mean_m": 57.39
+      },
+      "slope": {
+        "average_percent": 1.08,
+        "max_percent": 3.4,
+        "terrain_class": "gently_rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 0,
+        "details": []
+      },
+      "construction": {
+        "estimated_cost_eur": 173845.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 173845.0,
+          "crossing_cost_eur": 0
+        }
+      }
+    },
+    {
+      "segment_id": 9,
+      "km_start": 3.049,
+      "km_end": 3.424,
+      "length_m": 375.27,
+      "geometry": {
+        "start_point": {
+          "easting": 381810.04,
+          "northing": 4803175.93
+        },
+        "end_point": {
+          "easting": 382130.1,
+          "northing": 4803042.61
+        },
+        "bearing_deg": 112.6,
+        "vertex_count": 13,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 56.45,
+        "end_m": 57.79,
+        "min_m": 51.74,
+        "max_m": 57.79,
+        "mean_m": 55.31
+      },
+      "slope": {
+        "average_percent": 0.36,
+        "max_percent": 3.22,
+        "terrain_class": "gently_rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "silt_loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 1,
+        "details": [
+          {
+            "crossing_id": "CX-008",
+            "km": 3.118,
+            "coordinates": {
+              "easting": 381874.61,
+              "northing": 4803164.71
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "track",
+              "name": "Unnamed road",
+              "osm_id": 306028549
+            },
+            "ground_conditions": {
+              "soil_type": "silt_loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for track",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 228872.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 168872.0,
+          "crossing_cost_eur": 60000
+        }
+      }
+    },
+    {
+      "segment_id": 10,
+      "km_start": 3.424,
+      "km_end": 3.822,
+      "length_m": 397.36,
+      "geometry": {
+        "start_point": {
+          "easting": 382130.1,
+          "northing": 4803042.61
+        },
+        "end_point": {
+          "easting": 382450.17,
+          "northing": 4802855.97
+        },
+        "bearing_deg": 120.2,
+        "vertex_count": 13,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 57.79,
+        "end_m": 45.89,
+        "min_m": 45.89,
+        "max_m": 58.36,
+        "mean_m": 51.84
+      },
+      "slope": {
+        "average_percent": 2.99,
+        "max_percent": 6.28,
+        "terrain_class": "gently_rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "silt_loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 2,
+        "details": [
+          {
+            "crossing_id": "CX-009",
+            "km": 3.692,
+            "coordinates": {
+              "easting": 382358.23,
+              "northing": 4802947.88
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "primary",
+              "name": "Strada Statale 571 Helvia Recina",
+              "osm_id": 130079663
+            },
+            "ground_conditions": {
+              "soil_type": "silt_loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for primary",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Provincial permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-010",
+            "km": 3.534,
+            "coordinates": {
+              "easting": 382239.12,
+              "northing": 4803040.28
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "track",
+              "name": "Unnamed road",
+              "osm_id": 215626444
+            },
+            "ground_conditions": {
+              "soil_type": "silt_loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for track",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 298811.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 178811.0,
+          "crossing_cost_eur": 120000
+        }
+      }
+    },
+    {
+      "segment_id": 11,
+      "km_start": 3.822,
+      "km_end": 4.202,
+      "length_m": 379.87,
+      "geometry": {
+        "start_point": {
+          "easting": 382450.17,
+          "northing": 4802855.97
+        },
+        "end_point": {
+          "easting": 382796.91,
+          "northing": 4802775.97
+        },
+        "bearing_deg": 103.0,
+        "vertex_count": 14,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 45.89,
+        "end_m": 46.87,
+        "min_m": 45.47,
+        "max_m": 46.95,
+        "mean_m": 46.27
+      },
+      "slope": {
+        "average_percent": 0.26,
+        "max_percent": 0.78,
+        "terrain_class": "flat",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 1,
+        "details": [
+          {
+            "crossing_id": "CX-011",
+            "km": 3.871,
+            "coordinates": {
+              "easting": 382485.11,
+              "northing": 4802821.04
+            },
+            "infrastructure": {
+              "type": "waterway",
+              "class": "stream",
+              "name": "Stream",
+              "osm_id": "210213365"
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for stream",
+              "cost_eur": 80000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 250942.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 170942.0,
+          "crossing_cost_eur": 80000
+        }
+      }
+    },
+    {
+      "segment_id": 12,
+      "km_start": 4.202,
+      "km_end": 4.579,
+      "length_m": 377.14,
+      "geometry": {
+        "start_point": {
+          "easting": 382796.91,
+          "northing": 4802775.97
+        },
+        "end_point": {
+          "easting": 383063.63,
+          "northing": 4802509.34
+        },
+        "bearing_deg": 135.0,
+        "vertex_count": 11,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 46.87,
+        "end_m": 40.02,
+        "min_m": 39.75,
+        "max_m": 46.87,
+        "mean_m": 43.54
+      },
+      "slope": {
+        "average_percent": 1.82,
+        "max_percent": 3.78,
+        "terrain_class": "gently_rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 1,
+        "details": [
+          {
+            "crossing_id": "CX-012",
+            "km": 4.225,
+            "coordinates": {
+              "easting": 382813.33,
+              "northing": 4802759.56
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "tertiary",
+              "name": "Via Giovanni Guareschi",
+              "osm_id": 210536920
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for tertiary",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 229711.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 169711.0,
+          "crossing_cost_eur": 60000
+        }
+      }
+    },
+    {
+      "segment_id": 13,
+      "km_start": 4.579,
+      "km_end": 4.972,
+      "length_m": 392.78,
+      "geometry": {
+        "start_point": {
+          "easting": 383063.63,
+          "northing": 4802509.34
+        },
+        "end_point": {
+          "easting": 383357.03,
+          "northing": 4802269.36
+        },
+        "bearing_deg": 129.3,
+        "vertex_count": 12,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 40.02,
+        "end_m": 39.65,
+        "min_m": 36.04,
+        "max_m": 43.26,
+        "mean_m": 39.01
+      },
+      "slope": {
+        "average_percent": 0.09,
+        "max_percent": 3.68,
+        "terrain_class": "gently_rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 30,
+        "class_name": "grassland",
+        "cost_factor": 1.0,
+        "note": "Grassland"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 1,
+        "details": [
+          {
+            "crossing_id": "CX-013",
+            "km": 4.77,
+            "coordinates": {
+              "easting": 383198.87,
+              "northing": 4802374.14
+            },
+            "infrastructure": {
+              "type": "waterway",
+              "class": "river",
+              "name": "Fiume Potenza",
+              "osm_id": "44300958"
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "HDD",
+              "rationale": "HDD for river per environmental regs",
+              "cost_eur": 80000
+            },
+            "permits_required": [
+              "AIPO permit"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 178196.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 98196.0,
+          "crossing_cost_eur": 80000
+        }
+      }
+    },
+    {
+      "segment_id": 14,
+      "km_start": 4.972,
+      "km_end": 5.364,
+      "length_m": 392.77,
+      "geometry": {
+        "start_point": {
+          "easting": 383357.03,
+          "northing": 4802269.36
+        },
+        "end_point": {
+          "easting": 383650.42,
+          "northing": 4802029.39
+        },
+        "bearing_deg": 129.3,
+        "vertex_count": 12,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 39.65,
+        "end_m": 36.63,
+        "min_m": 36.63,
+        "max_m": 41.49,
+        "mean_m": 38.48
+      },
+      "slope": {
+        "average_percent": 0.77,
+        "max_percent": 2.47,
+        "terrain_class": "flat",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 1,
+        "details": [
+          {
+            "crossing_id": "CX-014",
+            "km": 5.218,
+            "coordinates": {
+              "easting": 383536.64,
+              "northing": 4802109.38
+            },
+            "infrastructure": {
+              "type": "waterway",
+              "class": "drain",
+              "name": "Fosso Codardo",
+              "osm_id": "307179686"
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for drain",
+              "cost_eur": 80000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 256746.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 176746.0,
+          "crossing_cost_eur": 80000
+        }
+      }
+    },
+    {
+      "segment_id": 15,
+      "km_start": 5.364,
+      "km_end": 5.746,
+      "length_m": 381.73,
+      "geometry": {
+        "start_point": {
+          "easting": 383650.42,
+          "northing": 4802029.39
+        },
+        "end_point": {
+          "easting": 383943.82,
+          "northing": 4801816.08
+        },
+        "bearing_deg": 126.0,
+        "vertex_count": 12,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 36.63,
+        "end_m": 36.26,
+        "min_m": 35.86,
+        "max_m": 36.63,
+        "mean_m": 36.22
+      },
+      "slope": {
+        "average_percent": 0.1,
+        "max_percent": 0.4,
+        "terrain_class": "flat",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 2,
+        "details": [
+          {
+            "crossing_id": "CX-015",
+            "km": 5.641,
+            "coordinates": {
+              "easting": 383860.87,
+              "northing": 4801869.41
+            },
+            "infrastructure": {
+              "type": "waterway",
+              "class": "canal",
+              "name": "Canal",
+              "osm_id": "95534364"
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for canal",
+              "cost_eur": 80000
+            },
+            "permits_required": [
+              "Consorzio permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-016",
+            "km": 5.62,
+            "coordinates": {
+              "easting": 383839.29,
+              "northing": 4801869.41
+            },
+            "infrastructure": {
+              "type": "powerline",
+              "class": "distribution",
+              "name": "Power line",
+              "osm_id": "159474569"
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut under power line",
+              "cost_eur": 150000
+            },
+            "permits_required": [
+              "Terna/E-Distribuzione notification"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 401780.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 171780.0,
+          "crossing_cost_eur": 230000
+        }
+      }
+    },
+    {
+      "segment_id": 16,
+      "km_start": 5.746,
+      "km_end": 6.143,
+      "length_m": 397.36,
+      "geometry": {
+        "start_point": {
+          "easting": 383943.82,
+          "northing": 4801816.08
+        },
+        "end_point": {
+          "easting": 384263.88,
+          "northing": 4801629.43
+        },
+        "bearing_deg": 120.2,
+        "vertex_count": 13,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 36.26,
+        "end_m": 45.36,
+        "min_m": 36.26,
+        "max_m": 45.36,
+        "mean_m": 40.86
+      },
+      "slope": {
+        "average_percent": 2.29,
+        "max_percent": 4.58,
+        "terrain_class": "gently_rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 1,
+        "details": [
+          {
+            "crossing_id": "CX-017",
+            "km": 5.845,
+            "coordinates": {
+              "easting": 384013.4,
+              "northing": 4801746.52
+            },
+            "infrastructure": {
+              "type": "powerline",
+              "class": "distribution",
+              "name": "Power line",
+              "osm_id": "214382828"
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut under power line",
+              "cost_eur": 150000
+            },
+            "permits_required": [
+              "Terna/E-Distribuzione notification"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 328811.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 178811.0,
+          "crossing_cost_eur": 150000
+        }
+      }
+    },
+    {
+      "segment_id": 17,
+      "km_start": 6.143,
+      "km_end": 6.512,
+      "length_m": 368.83,
+      "geometry": {
+        "start_point": {
+          "easting": 384263.88,
+          "northing": 4801629.43
+        },
+        "end_point": {
+          "easting": 384610.62,
+          "northing": 4801576.1
+        },
+        "bearing_deg": 98.7,
+        "vertex_count": 14,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 45.36,
+        "end_m": 48.0,
+        "min_m": 45.36,
+        "max_m": 48.0,
+        "mean_m": 46.74
+      },
+      "slope": {
+        "average_percent": 0.72,
+        "max_percent": 1.43,
+        "terrain_class": "flat",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "unknown",
+        "excavation": "standard",
+        "stability": "moderate",
+        "hdd_suitability": "moderate"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 1,
+        "details": [
+          {
+            "crossing_id": "CX-018",
+            "km": 6.174,
+            "coordinates": {
+              "easting": 384294.0,
+              "northing": 4801629.43
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "unclassified",
+              "name": "Contrada Molino",
+              "osm_id": 137657589
+            },
+            "ground_conditions": {
+              "soil_type": "unknown",
+              "excavation": "standard",
+              "hdd_suitability": "moderate"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for unclassified",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 225972.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 165972.0,
+          "crossing_cost_eur": 60000
+        }
+      }
+    },
+    {
+      "segment_id": 18,
+      "km_start": 6.512,
+      "km_end": 6.905,
+      "length_m": 392.77,
+      "geometry": {
+        "start_point": {
+          "easting": 384610.62,
+          "northing": 4801576.1
+        },
+        "end_point": {
+          "easting": 384904.02,
+          "northing": 4801336.13
+        },
+        "bearing_deg": 129.3,
+        "vertex_count": 12,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 48.0,
+        "end_m": 63.2,
+        "min_m": 48.0,
+        "max_m": 63.2,
+        "mean_m": 53.27
+      },
+      "slope": {
+        "average_percent": 3.87,
+        "max_percent": 7.74,
+        "terrain_class": "gently_rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 50,
+        "class_name": "built_up",
+        "cost_factor": 4.0,
+        "note": "Urban - utility relocation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 5,
+        "details": [
+          {
+            "crossing_id": "CX-019",
+            "km": 6.652,
+            "coordinates": {
+              "easting": 384724.99,
+              "northing": 4801515.1
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "unclassified",
+              "name": "Contrada Fosso Bacile",
+              "osm_id": 1339817272
+            },
+            "ground_conditions": {
+              "soil_type": "unknown",
+              "excavation": "standard",
+              "hdd_suitability": "moderate"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for unclassified",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-020",
+            "km": 6.705,
+            "coordinates": {
+              "easting": 384762.8,
+              "northing": 4801477.3
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "secondary",
+              "name": "Via Enrico Fermi",
+              "osm_id": 316596722
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for secondary",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Provincial permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-021",
+            "km": 6.642,
+            "coordinates": {
+              "easting": 384718.17,
+              "northing": 4801521.92
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "service",
+              "name": "Contrada Fosso Bacile",
+              "osm_id": 564157632
+            },
+            "ground_conditions": {
+              "soil_type": "unknown",
+              "excavation": "standard",
+              "hdd_suitability": "moderate"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for service",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-022",
+            "km": 6.651,
+            "coordinates": {
+              "easting": 384724.01,
+              "northing": 4801516.08
+            },
+            "infrastructure": {
+              "type": "waterway",
+              "class": "ditch",
+              "name": "Ditch",
+              "osm_id": "1339817265"
+            },
+            "ground_conditions": {
+              "soil_type": "unknown",
+              "excavation": "standard",
+              "hdd_suitability": "moderate"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for ditch",
+              "cost_eur": 80000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-023",
+            "km": 6.648,
+            "coordinates": {
+              "easting": 384722.13,
+              "northing": 4801517.96
+            },
+            "infrastructure": {
+              "type": "powerline",
+              "class": "distribution",
+              "name": "Power line",
+              "osm_id": "215038209"
+            },
+            "ground_conditions": {
+              "soil_type": "unknown",
+              "excavation": "standard",
+              "hdd_suitability": "moderate"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut under power line",
+              "cost_eur": 150000
+            },
+            "permits_required": [
+              "Terna/E-Distribuzione notification"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 802772.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 392772.0,
+          "crossing_cost_eur": 410000
+        }
+      }
+    },
+    {
+      "segment_id": 19,
+      "km_start": 6.905,
+      "km_end": 7.302,
+      "length_m": 397.37,
+      "geometry": {
+        "start_point": {
+          "easting": 384904.02,
+          "northing": 4801336.13
+        },
+        "end_point": {
+          "easting": 385224.09,
+          "northing": 4801149.48
+        },
+        "bearing_deg": 120.2,
+        "vertex_count": 13,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 63.2,
+        "end_m": 64.68,
+        "min_m": 58.98,
+        "max_m": 64.68,
+        "mean_m": 62.25
+      },
+      "slope": {
+        "average_percent": 0.37,
+        "max_percent": 2.87,
+        "terrain_class": "flat",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 0,
+        "details": []
+      },
+      "construction": {
+        "estimated_cost_eur": 178814.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 178814.0,
+          "crossing_cost_eur": 0
+        }
+      }
+    },
+    {
+      "segment_id": 20,
+      "km_start": 7.302,
+      "km_end": 7.689,
+      "length_m": 386.31,
+      "geometry": {
+        "start_point": {
+          "easting": 385224.09,
+          "northing": 4801149.48
+        },
+        "end_point": {
+          "easting": 385544.15,
+          "northing": 4800989.5
+        },
+        "bearing_deg": 116.6,
+        "vertex_count": 13,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 64.68,
+        "end_m": 73.92,
+        "min_m": 64.68,
+        "max_m": 74.64,
+        "mean_m": 69.95
+      },
+      "slope": {
+        "average_percent": 2.39,
+        "max_percent": 5.16,
+        "terrain_class": "gently_rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 30,
+        "class_name": "grassland",
+        "cost_factor": 1.0,
+        "note": "Grassland"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 1,
+        "details": [
+          {
+            "crossing_id": "CX-024",
+            "km": 7.476,
+            "coordinates": {
+              "easting": 385386.17,
+              "northing": 4801122.82
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "unclassified",
+              "name": "Contrada Grugnoleto",
+              "osm_id": 611117078
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for unclassified",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 156578.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 96578.0,
+          "crossing_cost_eur": 60000
+        }
+      }
+    },
+    {
+      "segment_id": 21,
+      "km_start": 7.689,
+      "km_end": 8.071,
+      "length_m": 381.74,
+      "geometry": {
+        "start_point": {
+          "easting": 385544.15,
+          "northing": 4800989.5
+        },
+        "end_point": {
+          "easting": 385837.55,
+          "northing": 4800776.19
+        },
+        "bearing_deg": 126.0,
+        "vertex_count": 12,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 73.92,
+        "end_m": 100.14,
+        "min_m": 73.92,
+        "max_m": 100.14,
+        "mean_m": 87.4
+      },
+      "slope": {
+        "average_percent": 6.87,
+        "max_percent": 13.74,
+        "terrain_class": "rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 0,
+        "details": []
+      },
+      "construction": {
+        "estimated_cost_eur": 171781.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 171781.0,
+          "crossing_cost_eur": 0
+        }
+      }
+    },
+    {
+      "segment_id": 22,
+      "km_start": 8.071,
+      "km_end": 8.448,
+      "length_m": 377.14,
+      "geometry": {
+        "start_point": {
+          "easting": 385837.55,
+          "northing": 4800776.19
+        },
+        "end_point": {
+          "easting": 386104.27,
+          "northing": 4800509.55
+        },
+        "bearing_deg": 135.0,
+        "vertex_count": 11,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 100.14,
+        "end_m": 131.01,
+        "min_m": 100.14,
+        "max_m": 131.01,
+        "mean_m": 114.8
+      },
+      "slope": {
+        "average_percent": 8.19,
+        "max_percent": 16.37,
+        "terrain_class": "hilly",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 30,
+        "class_name": "grassland",
+        "cost_factor": 1.0,
+        "note": "Grassland"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 0,
+        "details": []
+      },
+      "construction": {
+        "estimated_cost_eur": 94286.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 94286.0,
+          "crossing_cost_eur": 0
+        }
+      }
+    },
+    {
+      "segment_id": 23,
+      "km_start": 8.448,
+      "km_end": 8.845,
+      "length_m": 397.37,
+      "geometry": {
+        "start_point": {
+          "easting": 386104.27,
+          "northing": 4800509.55
+        },
+        "end_point": {
+          "easting": 386424.34,
+          "northing": 4800322.9
+        },
+        "bearing_deg": 120.2,
+        "vertex_count": 13,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 131.01,
+        "end_m": 146.33,
+        "min_m": 131.01,
+        "max_m": 164.69,
+        "mean_m": 148.58
+      },
+      "slope": {
+        "average_percent": 3.85,
+        "max_percent": 16.95,
+        "terrain_class": "hilly",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 1,
+        "details": [
+          {
+            "crossing_id": "CX-025",
+            "km": 8.754,
+            "coordinates": {
+              "easting": 386359.76,
+              "northing": 4800387.46
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "secondary",
+              "name": "Strada Provinciale 101 Potentina",
+              "osm_id": 641347400
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for secondary",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Provincial permit"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 238814.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 178814.0,
+          "crossing_cost_eur": 60000
+        }
+      }
+    },
+    {
+      "segment_id": 24,
+      "km_start": 8.845,
+      "km_end": 9.242,
+      "length_m": 397.31,
+      "geometry": {
+        "start_point": {
+          "easting": 386424.34,
+          "northing": 4800322.9
+        },
+        "end_point": {
+          "easting": 386611.04,
+          "northing": 4800002.94
+        },
+        "bearing_deg": 149.7,
+        "vertex_count": 13,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 146.33,
+        "end_m": 100.07,
+        "min_m": 100.07,
+        "max_m": 146.33,
+        "mean_m": 123.71
+      },
+      "slope": {
+        "average_percent": 11.64,
+        "max_percent": 23.29,
+        "terrain_class": "hilly",
+        "compliant": false
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 1,
+        "details": [
+          {
+            "crossing_id": "CX-026",
+            "km": 8.873,
+            "coordinates": {
+              "easting": 386424.34,
+              "northing": 4800295.41
+            },
+            "infrastructure": {
+              "type": "powerline",
+              "class": "distribution",
+              "name": "Power line",
+              "osm_id": "159482811"
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut under power line",
+              "cost_eur": 150000
+            },
+            "permits_required": [
+              "Terna/E-Distribuzione notification"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 328789.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 178789.0,
+          "crossing_cost_eur": 150000
+        }
+      }
+    },
+    {
+      "segment_id": 25,
+      "km_start": 9.242,
+      "km_end": 9.627,
+      "length_m": 384.34,
+      "geometry": {
+        "start_point": {
+          "easting": 386611.04,
+          "northing": 4800002.94
+        },
+        "end_point": {
+          "easting": 386637.71,
+          "northing": 4799629.65
+        },
+        "bearing_deg": 175.9,
+        "vertex_count": 15,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 100.07,
+        "end_m": 81.26,
+        "min_m": 81.26,
+        "max_m": 100.07,
+        "mean_m": 88.72
+      },
+      "slope": {
+        "average_percent": 4.89,
+        "max_percent": 9.79,
+        "terrain_class": "rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 0,
+        "details": []
+      },
+      "construction": {
+        "estimated_cost_eur": 172953.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 172953.0,
+          "crossing_cost_eur": 0
+        }
+      }
+    },
+    {
+      "segment_id": 26,
+      "km_start": 9.627,
+      "km_end": 10.027,
+      "length_m": 399.96,
+      "geometry": {
+        "start_point": {
+          "easting": 386637.71,
+          "northing": 4799629.65
+        },
+        "end_point": {
+          "easting": 386637.71,
+          "northing": 4799229.69
+        },
+        "bearing_deg": 180.0,
+        "vertex_count": 16,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 81.26,
+        "end_m": 66.79,
+        "min_m": 66.79,
+        "max_m": 81.26,
+        "mean_m": 73.35
+      },
+      "slope": {
+        "average_percent": 3.62,
+        "max_percent": 7.24,
+        "terrain_class": "gently_rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 0,
+        "details": []
+      },
+      "construction": {
+        "estimated_cost_eur": 179982.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 179982.0,
+          "crossing_cost_eur": 0
+        }
+      }
+    },
+    {
+      "segment_id": 27,
+      "km_start": 10.027,
+      "km_end": 10.402,
+      "length_m": 375.23,
+      "geometry": {
+        "start_point": {
+          "easting": 386637.71,
+          "northing": 4799229.69
+        },
+        "end_point": {
+          "easting": 386771.08,
+          "northing": 4798909.72
+        },
+        "bearing_deg": 157.4,
+        "vertex_count": 13,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 66.79,
+        "end_m": 52.97,
+        "min_m": 52.97,
+        "max_m": 67.15,
+        "mean_m": 60.75
+      },
+      "slope": {
+        "average_percent": 3.68,
+        "max_percent": 7.56,
+        "terrain_class": "gently_rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 30,
+        "class_name": "grassland",
+        "cost_factor": 1.0,
+        "note": "Grassland"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 0,
+        "details": []
+      },
+      "construction": {
+        "estimated_cost_eur": 93807.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 93807.0,
+          "crossing_cost_eur": 0
+        }
+      }
+    },
+    {
+      "segment_id": 28,
+      "km_start": 10.402,
+      "km_end": 10.782,
+      "length_m": 379.78,
+      "geometry": {
+        "start_point": {
+          "easting": 386771.08,
+          "northing": 4798909.72
+        },
+        "end_point": {
+          "easting": 386851.09,
+          "northing": 4798563.09
+        },
+        "bearing_deg": 167.0,
+        "vertex_count": 14,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 52.97,
+        "end_m": 80.18,
+        "min_m": 52.48,
+        "max_m": 80.18,
+        "mean_m": 64.94
+      },
+      "slope": {
+        "average_percent": 7.16,
+        "max_percent": 14.59,
+        "terrain_class": "rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 20,
+        "class_name": "shrubland",
+        "cost_factor": 1.5,
+        "note": "Shrub - light clearing"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 1,
+        "details": [
+          {
+            "crossing_id": "CX-027",
+            "km": 10.438,
+            "coordinates": {
+              "easting": 386771.08,
+              "northing": 4798873.84
+            },
+            "infrastructure": {
+              "type": "waterway",
+              "class": "stream",
+              "name": "Asola",
+              "osm_id": "1351839074"
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for stream",
+              "cost_eur": 80000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 222416.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 142416.0,
+          "crossing_cost_eur": 80000
+        }
+      }
+    },
+    {
+      "segment_id": 29,
+      "km_start": 10.782,
+      "km_end": 11.168,
+      "length_m": 386.27,
+      "geometry": {
+        "start_point": {
+          "easting": 386851.09,
+          "northing": 4798563.09
+        },
+        "end_point": {
+          "easting": 387011.13,
+          "northing": 4798243.13
+        },
+        "bearing_deg": 153.4,
+        "vertex_count": 13,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 80.18,
+        "end_m": 110.66,
+        "min_m": 80.18,
+        "max_m": 110.66,
+        "mean_m": 94.54
+      },
+      "slope": {
+        "average_percent": 7.89,
+        "max_percent": 15.78,
+        "terrain_class": "hilly",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 30,
+        "class_name": "grassland",
+        "cost_factor": 1.0,
+        "note": "Grassland"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 0,
+        "details": []
+      },
+      "construction": {
+        "estimated_cost_eur": 96566.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 96566.0,
+          "crossing_cost_eur": 0
+        }
+      }
+    },
+    {
+      "segment_id": 30,
+      "km_start": 11.168,
+      "km_end": 11.559,
+      "length_m": 390.83,
+      "geometry": {
+        "start_point": {
+          "easting": 387011.13,
+          "northing": 4798243.13
+        },
+        "end_point": {
+          "easting": 387117.82,
+          "northing": 4797896.5
+        },
+        "bearing_deg": 162.9,
+        "vertex_count": 14,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 110.66,
+        "end_m": 161.86,
+        "min_m": 110.66,
+        "max_m": 161.86,
+        "mean_m": 134.18
+      },
+      "slope": {
+        "average_percent": 13.1,
+        "max_percent": 25,
+        "terrain_class": "steep",
+        "compliant": false
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 0,
+        "details": []
+      },
+      "construction": {
+        "estimated_cost_eur": 175874.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 175874.0,
+          "crossing_cost_eur": 0
+        }
+      }
+    },
+    {
+      "segment_id": 31,
+      "km_start": 11.559,
+      "km_end": 11.934,
+      "length_m": 375.22,
+      "geometry": {
+        "start_point": {
+          "easting": 387117.82,
+          "northing": 4797896.5
+        },
+        "end_point": {
+          "easting": 387251.18,
+          "northing": 4797576.53
+        },
+        "bearing_deg": 157.4,
+        "vertex_count": 13,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 161.86,
+        "end_m": 162.53,
+        "min_m": 161.86,
+        "max_m": 186.61,
+        "mean_m": 173.36
+      },
+      "slope": {
+        "average_percent": 0.18,
+        "max_percent": 13.19,
+        "terrain_class": "rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 30,
+        "class_name": "grassland",
+        "cost_factor": 1.0,
+        "note": "Grassland"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 1,
+        "details": [
+          {
+            "crossing_id": "CX-028",
+            "km": 11.743,
+            "coordinates": {
+              "easting": 387210.49,
+              "northing": 4797750.53
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "secondary",
+              "name": "Via Giuseppe Verdi",
+              "osm_id": 31142624
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for secondary",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Provincial permit"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 153805.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 93805.0,
+          "crossing_cost_eur": 60000
+        }
+      }
+    },
+    {
+      "segment_id": 32,
+      "km_start": 11.934,
+      "km_end": 12.307,
+      "length_m": 373.29,
+      "geometry": {
+        "start_point": {
+          "easting": 387251.18,
+          "northing": 4797576.53
+        },
+        "end_point": {
+          "easting": 387251.18,
+          "northing": 4797203.24
+        },
+        "bearing_deg": 180.0,
+        "vertex_count": 15,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 162.53,
+        "end_m": 144.43,
+        "min_m": 144.43,
+        "max_m": 162.53,
+        "mean_m": 153.07
+      },
+      "slope": {
+        "average_percent": 4.85,
+        "max_percent": 9.7,
+        "terrain_class": "rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 0,
+        "details": []
+      },
+      "construction": {
+        "estimated_cost_eur": 167981.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 167981.0,
+          "crossing_cost_eur": 0
+        }
+      }
+    },
+    {
+      "segment_id": 33,
+      "km_start": 12.307,
+      "km_end": 12.684,
+      "length_m": 377.14,
+      "geometry": {
+        "start_point": {
+          "easting": 387251.18,
+          "northing": 4797203.24
+        },
+        "end_point": {
+          "easting": 387517.9,
+          "northing": 4796936.6
+        },
+        "bearing_deg": 135.0,
+        "vertex_count": 11,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 144.43,
+        "end_m": 126.55,
+        "min_m": 126.55,
+        "max_m": 144.43,
+        "mean_m": 133.57
+      },
+      "slope": {
+        "average_percent": 4.74,
+        "max_percent": 9.48,
+        "terrain_class": "rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 10,
+        "class_name": "tree_cover",
+        "cost_factor": 2.5,
+        "note": "Forested - clearing required"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 0,
+        "details": []
+      },
+      "construction": {
+        "estimated_cost_eur": 235714.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 235714.0,
+          "crossing_cost_eur": 0
+        }
+      }
+    },
+    {
+      "segment_id": 34,
+      "km_start": 12.684,
+      "km_end": 13.062,
+      "length_m": 377.14,
+      "geometry": {
+        "start_point": {
+          "easting": 387517.9,
+          "northing": 4796936.6
+        },
+        "end_point": {
+          "easting": 387784.62,
+          "northing": 4796669.97
+        },
+        "bearing_deg": 135.0,
+        "vertex_count": 11,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 126.55,
+        "end_m": 115.2,
+        "min_m": 115.2,
+        "max_m": 127.9,
+        "mean_m": 123.59
+      },
+      "slope": {
+        "average_percent": 3.01,
+        "max_percent": 6.73,
+        "terrain_class": "gently_rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 0,
+        "details": []
+      },
+      "construction": {
+        "estimated_cost_eur": 169711.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 169711.0,
+          "crossing_cost_eur": 0
+        }
+      }
+    },
+    {
+      "segment_id": 35,
+      "km_start": 13.062,
+      "km_end": 13.448,
+      "length_m": 386.27,
+      "geometry": {
+        "start_point": {
+          "easting": 387784.62,
+          "northing": 4796669.97
+        },
+        "end_point": {
+          "easting": 387944.65,
+          "northing": 4796350.0
+        },
+        "bearing_deg": 153.4,
+        "vertex_count": 13,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 115.2,
+        "end_m": 118.74,
+        "min_m": 104.29,
+        "max_m": 118.74,
+        "mean_m": 111.47
+      },
+      "slope": {
+        "average_percent": 0.92,
+        "max_percent": 7.48,
+        "terrain_class": "gently_rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 0,
+        "details": []
+      },
+      "construction": {
+        "estimated_cost_eur": 173821.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 173821.0,
+          "crossing_cost_eur": 0
+        }
+      }
+    },
+    {
+      "segment_id": 36,
+      "km_start": 13.448,
+      "km_end": 13.823,
+      "length_m": 375.23,
+      "geometry": {
+        "start_point": {
+          "easting": 387944.65,
+          "northing": 4796350.0
+        },
+        "end_point": {
+          "easting": 388078.02,
+          "northing": 4796030.03
+        },
+        "bearing_deg": 157.4,
+        "vertex_count": 13,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 118.74,
+        "end_m": 119.45,
+        "min_m": 110.87,
+        "max_m": 119.45,
+        "mean_m": 115.34
+      },
+      "slope": {
+        "average_percent": 0.19,
+        "max_percent": 4.57,
+        "terrain_class": "gently_rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 0,
+        "details": []
+      },
+      "construction": {
+        "estimated_cost_eur": 168853.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 168853.0,
+          "crossing_cost_eur": 0
+        }
+      }
+    },
+    {
+      "segment_id": 37,
+      "km_start": 13.823,
+      "km_end": 14.223,
+      "length_m": 399.95,
+      "geometry": {
+        "start_point": {
+          "easting": 388078.02,
+          "northing": 4796030.03
+        },
+        "end_point": {
+          "easting": 388078.02,
+          "northing": 4795630.08
+        },
+        "bearing_deg": 180.0,
+        "vertex_count": 16,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 119.45,
+        "end_m": 98.13,
+        "min_m": 98.13,
+        "max_m": 121.76,
+        "mean_m": 110.27
+      },
+      "slope": {
+        "average_percent": 5.33,
+        "max_percent": 11.82,
+        "terrain_class": "rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 0,
+        "details": []
+      },
+      "construction": {
+        "estimated_cost_eur": 179978.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 179978.0,
+          "crossing_cost_eur": 0
+        }
+      }
+    },
+    {
+      "segment_id": 38,
+      "km_start": 14.223,
+      "km_end": 14.62,
+      "length_m": 397.32,
+      "geometry": {
+        "start_point": {
+          "easting": 388078.02,
+          "northing": 4795630.08
+        },
+        "end_point": {
+          "easting": 388264.72,
+          "northing": 4795310.11
+        },
+        "bearing_deg": 149.7,
+        "vertex_count": 13,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 98.13,
+        "end_m": 88.37,
+        "min_m": 88.37,
+        "max_m": 98.13,
+        "mean_m": 93.33
+      },
+      "slope": {
+        "average_percent": 2.46,
+        "max_percent": 4.91,
+        "terrain_class": "gently_rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 1,
+        "details": [
+          {
+            "crossing_id": "CX-029",
+            "km": 14.437,
+            "coordinates": {
+              "easting": 388135.16,
+              "northing": 4795439.63
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "tertiary",
+              "name": "Localit\u00e0 Selve",
+              "osm_id": 30981910
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for tertiary",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 238793.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 178793.0,
+          "crossing_cost_eur": 60000
+        }
+      }
+    },
+    {
+      "segment_id": 39,
+      "km_start": 14.62,
+      "km_end": 15.02,
+      "length_m": 399.96,
+      "geometry": {
+        "start_point": {
+          "easting": 388264.72,
+          "northing": 4795310.11
+        },
+        "end_point": {
+          "easting": 388264.72,
+          "northing": 4794910.15
+        },
+        "bearing_deg": 180.0,
+        "vertex_count": 16,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 88.37,
+        "end_m": 82.56,
+        "min_m": 82.56,
+        "max_m": 88.37,
+        "mean_m": 85.62
+      },
+      "slope": {
+        "average_percent": 1.45,
+        "max_percent": 2.91,
+        "terrain_class": "flat",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 0,
+        "details": []
+      },
+      "construction": {
+        "estimated_cost_eur": 179982.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 179982.0,
+          "crossing_cost_eur": 0
+        }
+      }
+    },
+    {
+      "segment_id": 40,
+      "km_start": 15.02,
+      "km_end": 15.405,
+      "length_m": 384.34,
+      "geometry": {
+        "start_point": {
+          "easting": 388264.72,
+          "northing": 4794910.15
+        },
+        "end_point": {
+          "easting": 388291.39,
+          "northing": 4794536.86
+        },
+        "bearing_deg": 175.9,
+        "vertex_count": 15,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 82.56,
+        "end_m": 71.73,
+        "min_m": 71.73,
+        "max_m": 82.56,
+        "mean_m": 78.15
+      },
+      "slope": {
+        "average_percent": 2.82,
+        "max_percent": 5.64,
+        "terrain_class": "gently_rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 0,
+        "details": []
+      },
+      "construction": {
+        "estimated_cost_eur": 172953.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 172953.0,
+          "crossing_cost_eur": 0
+        }
+      }
+    },
+    {
+      "segment_id": 41,
+      "km_start": 15.405,
+      "km_end": 15.8,
+      "length_m": 395.39,
+      "geometry": {
+        "start_point": {
+          "easting": 388291.39,
+          "northing": 4794536.86
+        },
+        "end_point": {
+          "easting": 388344.74,
+          "northing": 4794163.57
+        },
+        "bearing_deg": 171.9,
+        "vertex_count": 15,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 71.73,
+        "end_m": 70.76,
+        "min_m": 63.01,
+        "max_m": 73.6,
+        "mean_m": 69.52
+      },
+      "slope": {
+        "average_percent": 0.25,
+        "max_percent": 5.36,
+        "terrain_class": "gently_rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 2,
+        "details": [
+          {
+            "crossing_id": "CX-030",
+            "km": 15.618,
+            "coordinates": {
+              "easting": 388291.39,
+              "northing": 4794323.89
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "track",
+              "name": "Unnamed road",
+              "osm_id": 157199322
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for track",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-031",
+            "km": 15.517,
+            "coordinates": {
+              "easting": 388291.39,
+              "northing": 4794424.16
+            },
+            "infrastructure": {
+              "type": "waterway",
+              "class": "ditch",
+              "name": "Fosso Cantagallo",
+              "osm_id": "1392543982"
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for ditch",
+              "cost_eur": 80000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 317927.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 177927.0,
+          "crossing_cost_eur": 140000
+        }
+      }
+    },
+    {
+      "segment_id": 42,
+      "km_start": 15.8,
+      "km_end": 16.195,
+      "length_m": 395.39,
+      "geometry": {
+        "start_point": {
+          "easting": 388344.74,
+          "northing": 4794163.57
+        },
+        "end_point": {
+          "easting": 388398.08,
+          "northing": 4793790.28
+        },
+        "bearing_deg": 171.9,
+        "vertex_count": 15,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 70.76,
+        "end_m": 58.52,
+        "min_m": 57.63,
+        "max_m": 70.76,
+        "mean_m": 62.42
+      },
+      "slope": {
+        "average_percent": 3.1,
+        "max_percent": 6.64,
+        "terrain_class": "gently_rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 30,
+        "class_name": "grassland",
+        "cost_factor": 1.0,
+        "note": "Grassland"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 1,
+        "details": [
+          {
+            "crossing_id": "CX-032",
+            "km": 16.144,
+            "coordinates": {
+              "easting": 388398.08,
+              "northing": 4793841.31
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "unclassified",
+              "name": "Localit\u00e0 Selve",
+              "osm_id": 157199297
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for unclassified",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 158847.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 98847.0,
+          "crossing_cost_eur": 60000
+        }
+      }
+    },
+    {
+      "segment_id": 43,
+      "km_start": 16.195,
+      "km_end": 16.561,
+      "length_m": 366.1,
+      "geometry": {
+        "start_point": {
+          "easting": 388398.08,
+          "northing": 4793790.28
+        },
+        "end_point": {
+          "easting": 388638.13,
+          "northing": 4793523.64
+        },
+        "bearing_deg": 138.0,
+        "vertex_count": 11,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 58.52,
+        "end_m": 46.11,
+        "min_m": 46.11,
+        "max_m": 58.69,
+        "mean_m": 53.24
+      },
+      "slope": {
+        "average_percent": 3.39,
+        "max_percent": 6.87,
+        "terrain_class": "gently_rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 30,
+        "class_name": "grassland",
+        "cost_factor": 1.0,
+        "note": "Grassland"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 1,
+        "details": [
+          {
+            "crossing_id": "CX-033",
+            "km": 16.529,
+            "coordinates": {
+              "easting": 388615.06,
+              "northing": 4793546.7
+            },
+            "infrastructure": {
+              "type": "railway",
+              "class": "rail",
+              "name": "Ferrovia Civitanova Marche \u2013 Fabriano",
+              "osm_id": "338993797"
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "HDD",
+              "rationale": "HDD required per RFI regulations",
+              "cost_eur": 1200000
+            },
+            "permits_required": [
+              "RFI Autorizzazione"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 1291524.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 91524.0,
+          "crossing_cost_eur": 1200000
+        }
+      }
+    },
+    {
+      "segment_id": 44,
+      "km_start": 16.561,
+      "km_end": 16.954,
+      "length_m": 392.78,
+      "geometry": {
+        "start_point": {
+          "easting": 388638.13,
+          "northing": 4793523.64
+        },
+        "end_point": {
+          "easting": 388931.53,
+          "northing": 4793283.66
+        },
+        "bearing_deg": 129.3,
+        "vertex_count": 12,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 46.11,
+        "end_m": 40.5,
+        "min_m": 40.5,
+        "max_m": 46.11,
+        "mean_m": 42.74
+      },
+      "slope": {
+        "average_percent": 1.43,
+        "max_percent": 2.86,
+        "terrain_class": "flat",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "unknown",
+        "excavation": "standard",
+        "stability": "moderate",
+        "hdd_suitability": "moderate"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 0,
+        "details": []
+      },
+      "construction": {
+        "estimated_cost_eur": 176751.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 176751.0,
+          "crossing_cost_eur": 0
+        }
+      }
+    },
+    {
+      "segment_id": 45,
+      "km_start": 16.954,
+      "km_end": 17.334,
+      "length_m": 379.78,
+      "geometry": {
+        "start_point": {
+          "easting": 388931.53,
+          "northing": 4793283.66
+        },
+        "end_point": {
+          "easting": 389011.55,
+          "northing": 4792937.03
+        },
+        "bearing_deg": 167.0,
+        "vertex_count": 14,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 40.5,
+        "end_m": 39.39,
+        "min_m": 39.39,
+        "max_m": 42.96,
+        "mean_m": 40.51
+      },
+      "slope": {
+        "average_percent": 0.29,
+        "max_percent": 1.88,
+        "terrain_class": "flat",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "unknown",
+        "excavation": "standard",
+        "stability": "moderate",
+        "hdd_suitability": "moderate"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 2,
+        "details": [
+          {
+            "crossing_id": "CX-034",
+            "km": 17.23,
+            "coordinates": {
+              "easting": 388958.2,
+              "northing": 4793018.62
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "secondary",
+              "name": "Via Roma",
+              "osm_id": 1320730474
+            },
+            "ground_conditions": {
+              "soil_type": "unknown",
+              "excavation": "standard",
+              "hdd_suitability": "moderate"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for secondary",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Provincial permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-035",
+            "km": 17.239,
+            "coordinates": {
+              "easting": 388958.2,
+              "northing": 4793009.84
+            },
+            "infrastructure": {
+              "type": "waterway",
+              "class": "ditch",
+              "name": "Fosso Cunicchio",
+              "osm_id": "1342389269"
+            },
+            "ground_conditions": {
+              "soil_type": "unknown",
+              "excavation": "standard",
+              "hdd_suitability": "moderate"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for ditch",
+              "cost_eur": 80000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 310903.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 170903.0,
+          "crossing_cost_eur": 140000
+        }
+      }
+    },
+    {
+      "segment_id": 46,
+      "km_start": 17.334,
+      "km_end": 17.727,
+      "length_m": 392.76,
+      "geometry": {
+        "start_point": {
+          "easting": 389011.55,
+          "northing": 4792937.03
+        },
+        "end_point": {
+          "easting": 389278.27,
+          "northing": 4792670.4
+        },
+        "bearing_deg": 135.0,
+        "vertex_count": 12,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 39.39,
+        "end_m": 37.52,
+        "min_m": 37.49,
+        "max_m": 39.65,
+        "mean_m": 38.25
+      },
+      "slope": {
+        "average_percent": 0.48,
+        "max_percent": 1.1,
+        "terrain_class": "flat",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 30,
+        "class_name": "grassland",
+        "cost_factor": 1.0,
+        "note": "Grassland"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 2,
+        "details": [
+          {
+            "crossing_id": "CX-036",
+            "km": 17.697,
+            "coordinates": {
+              "easting": 389257.52,
+              "northing": 4792691.14
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "track",
+              "name": "Via Abbadia",
+              "osm_id": 1120772695
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for track",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-037",
+            "km": 17.394,
+            "coordinates": {
+              "easting": 389060.64,
+              "northing": 4792910.37
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "unclassified",
+              "name": "Localit\u00e0 Piane di Chienti",
+              "osm_id": 30925116
+            },
+            "ground_conditions": {
+              "soil_type": "unknown",
+              "excavation": "standard",
+              "hdd_suitability": "moderate"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for unclassified",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 218189.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 98189.0,
+          "crossing_cost_eur": 120000
+        }
+      }
+    },
+    {
+      "segment_id": 47,
+      "km_start": 17.727,
+      "km_end": 18.12,
+      "length_m": 392.76,
+      "geometry": {
+        "start_point": {
+          "easting": 389278.27,
+          "northing": 4792670.4
+        },
+        "end_point": {
+          "easting": 389518.32,
+          "northing": 4792377.09
+        },
+        "bearing_deg": 140.7,
+        "vertex_count": 12,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 37.52,
+        "end_m": 36.35,
+        "min_m": 36.35,
+        "max_m": 38.57,
+        "mean_m": 37.17
+      },
+      "slope": {
+        "average_percent": 0.3,
+        "max_percent": 1.13,
+        "terrain_class": "flat",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 30,
+        "class_name": "grassland",
+        "cost_factor": 1.0,
+        "note": "Grassland"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 2,
+        "details": [
+          {
+            "crossing_id": "CX-038",
+            "km": 18.001,
+            "coordinates": {
+              "easting": 389434.32,
+              "northing": 4792461.07
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "unclassified",
+              "name": "Unnamed road",
+              "osm_id": 553225360
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for unclassified",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-039",
+            "km": 17.841,
+            "coordinates": {
+              "easting": 389321.13,
+              "northing": 4792574.21
+            },
+            "infrastructure": {
+              "type": "waterway",
+              "class": "ditch",
+              "name": "Ditch",
+              "osm_id": "1342448627"
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for ditch",
+              "cost_eur": 80000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 238191.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 98191.0,
+          "crossing_cost_eur": 140000
+        }
+      }
+    },
+    {
+      "segment_id": 48,
+      "km_start": 18.12,
+      "km_end": 18.497,
+      "length_m": 377.14,
+      "geometry": {
+        "start_point": {
+          "easting": 389518.32,
+          "northing": 4792377.09
+        },
+        "end_point": {
+          "easting": 389785.04,
+          "northing": 4792110.46
+        },
+        "bearing_deg": 135.0,
+        "vertex_count": 11,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 36.35,
+        "end_m": 32.36,
+        "min_m": 32.36,
+        "max_m": 38.38,
+        "mean_m": 35.41
+      },
+      "slope": {
+        "average_percent": 1.06,
+        "max_percent": 3.19,
+        "terrain_class": "gently_rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 30,
+        "class_name": "grassland",
+        "cost_factor": 1.0,
+        "note": "Grassland"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 3,
+        "details": [
+          {
+            "crossing_id": "CX-040",
+            "km": 18.218,
+            "coordinates": {
+              "easting": 389588.23,
+              "northing": 4792307.2
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "trunk",
+              "name": "Strada Statale 77 della Val di Chienti",
+              "osm_id": 105080580
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "HDD",
+              "rationale": "HDD for trunk - closure prohibited",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Autostrade permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-041",
+            "km": 18.207,
+            "coordinates": {
+              "easting": 389580.43,
+              "northing": 4792315.0
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "trunk",
+              "name": "Strada Statale 77 della Val di Chienti",
+              "osm_id": 111858404
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "HDD",
+              "rationale": "HDD for trunk - closure prohibited",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Autostrade permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-042",
+            "km": 18.32,
+            "coordinates": {
+              "easting": 389659.8,
+              "northing": 4792235.66
+            },
+            "infrastructure": {
+              "type": "powerline",
+              "class": "distribution",
+              "name": "Monte San Giusto-Civitanova Marche",
+              "osm_id": "123243586"
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut under power line",
+              "cost_eur": 150000
+            },
+            "permits_required": [
+              "Terna/E-Distribuzione notification"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 364284.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 94284.0,
+          "crossing_cost_eur": 270000
+        }
+      }
+    },
+    {
+      "segment_id": 49,
+      "km_start": 18.497,
+      "km_end": 18.863,
+      "length_m": 366.1,
+      "geometry": {
+        "start_point": {
+          "easting": 389785.04,
+          "northing": 4792110.46
+        },
+        "end_point": {
+          "easting": 390025.09,
+          "northing": 4791843.82
+        },
+        "bearing_deg": 138.0,
+        "vertex_count": 11,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 32.36,
+        "end_m": 32.3,
+        "min_m": 30.71,
+        "max_m": 35.93,
+        "mean_m": 32.43
+      },
+      "slope": {
+        "average_percent": 0.02,
+        "max_percent": 2.85,
+        "terrain_class": "flat",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 1,
+        "details": [
+          {
+            "crossing_id": "CX-043",
+            "km": 18.686,
+            "coordinates": {
+              "easting": 389919.26,
+              "northing": 4791976.28
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "track",
+              "name": "Unnamed road",
+              "osm_id": 111773390
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for track",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 224743.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 164743.0,
+          "crossing_cost_eur": 60000
+        }
+      }
+    },
+    {
+      "segment_id": 50,
+      "km_start": 18.863,
+      "km_end": 19.24,
+      "length_m": 377.14,
+      "geometry": {
+        "start_point": {
+          "easting": 390025.09,
+          "northing": 4791843.82
+        },
+        "end_point": {
+          "easting": 390291.81,
+          "northing": 4791577.18
+        },
+        "bearing_deg": 135.0,
+        "vertex_count": 11,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 32.3,
+        "end_m": 30.17,
+        "min_m": 29.87,
+        "max_m": 34.1,
+        "mean_m": 31.09
+      },
+      "slope": {
+        "average_percent": 0.56,
+        "max_percent": 2.24,
+        "terrain_class": "flat",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 10,
+        "class_name": "tree_cover",
+        "cost_factor": 2.5,
+        "note": "Forested - clearing required"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 3,
+        "details": [
+          {
+            "crossing_id": "CX-044",
+            "km": 19.091,
+            "coordinates": {
+              "easting": 390186.45,
+              "northing": 4791682.51
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "tertiary",
+              "name": "Contrada San Tommaso",
+              "osm_id": 283791020
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for tertiary",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-045",
+            "km": 18.883,
+            "coordinates": {
+              "easting": 390039.25,
+              "northing": 4791829.66
+            },
+            "infrastructure": {
+              "type": "waterway",
+              "class": "river",
+              "name": "Fiume Chienti",
+              "osm_id": "1340043725"
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "HDD",
+              "rationale": "HDD for river per environmental regs",
+              "cost_eur": 80000
+            },
+            "permits_required": [
+              "AIPO permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-046",
+            "km": 18.881,
+            "coordinates": {
+              "easting": 390037.78,
+              "northing": 4791831.13
+            },
+            "infrastructure": {
+              "type": "waterway",
+              "class": "river",
+              "name": "Fiume Chienti",
+              "osm_id": "23021050"
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "HDD",
+              "rationale": "HDD for river per environmental regs",
+              "cost_eur": 80000
+            },
+            "permits_required": [
+              "AIPO permit"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 455714.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 235714.0,
+          "crossing_cost_eur": 220000
+        }
+      }
+    },
+    {
+      "segment_id": 51,
+      "km_start": 19.24,
+      "km_end": 19.606,
+      "length_m": 366.09,
+      "geometry": {
+        "start_point": {
+          "easting": 390291.81,
+          "northing": 4791577.18
+        },
+        "end_point": {
+          "easting": 390531.86,
+          "northing": 4791310.54
+        },
+        "bearing_deg": 138.0,
+        "vertex_count": 11,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 30.17,
+        "end_m": 33.92,
+        "min_m": 30.05,
+        "max_m": 35.85,
+        "mean_m": 32.47
+      },
+      "slope": {
+        "average_percent": 1.02,
+        "max_percent": 3.17,
+        "terrain_class": "gently_rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 50,
+        "class_name": "built_up",
+        "cost_factor": 4.0,
+        "note": "Urban - utility relocation"
+      },
+      "soil": {
+        "type": "unknown",
+        "excavation": "standard",
+        "stability": "moderate",
+        "hdd_suitability": "moderate"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 1,
+        "details": [
+          {
+            "crossing_id": "CX-047",
+            "km": 19.378,
+            "coordinates": {
+              "easting": 390371.83,
+              "northing": 4791472.55
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "unclassified",
+              "name": "Unnamed road",
+              "osm_id": 119789387
+            },
+            "ground_conditions": {
+              "soil_type": "unknown",
+              "excavation": "standard",
+              "hdd_suitability": "moderate"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for unclassified",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 426092.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 366092.0,
+          "crossing_cost_eur": 60000
+        }
+      }
+    },
+    {
+      "segment_id": 52,
+      "km_start": 19.606,
+      "km_end": 19.983,
+      "length_m": 377.15,
+      "geometry": {
+        "start_point": {
+          "easting": 390531.86,
+          "northing": 4791310.54
+        },
+        "end_point": {
+          "easting": 390798.59,
+          "northing": 4791043.9
+        },
+        "bearing_deg": 135.0,
+        "vertex_count": 11,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 33.92,
+        "end_m": 61.83,
+        "min_m": 33.92,
+        "max_m": 61.83,
+        "mean_m": 46.81
+      },
+      "slope": {
+        "average_percent": 7.4,
+        "max_percent": 14.8,
+        "terrain_class": "rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "unknown",
+        "excavation": "standard",
+        "stability": "moderate",
+        "hdd_suitability": "moderate"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 1,
+        "details": [
+          {
+            "crossing_id": "CX-048",
+            "km": 19.671,
+            "coordinates": {
+              "easting": 390577.55,
+              "northing": 4791264.87
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "secondary",
+              "name": "Strada Provinciale 94 Veregrense",
+              "osm_id": 119789418
+            },
+            "ground_conditions": {
+              "soil_type": "unknown",
+              "excavation": "standard",
+              "hdd_suitability": "moderate"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for secondary",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Provincial permit"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 229717.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 169717.0,
+          "crossing_cost_eur": 60000
+        }
+      }
+    },
+    {
+      "segment_id": 53,
+      "km_start": 19.983,
+      "km_end": 20.349,
+      "length_m": 366.09,
+      "geometry": {
+        "start_point": {
+          "easting": 390798.59,
+          "northing": 4791043.9
+        },
+        "end_point": {
+          "easting": 391038.64,
+          "northing": 4790777.27
+        },
+        "bearing_deg": 138.0,
+        "vertex_count": 11,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 61.83,
+        "end_m": 86.61,
+        "min_m": 61.83,
+        "max_m": 86.61,
+        "mean_m": 75.39
+      },
+      "slope": {
+        "average_percent": 6.77,
+        "max_percent": 13.54,
+        "terrain_class": "rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 1,
+        "details": [
+          {
+            "crossing_id": "CX-049",
+            "km": 20.017,
+            "coordinates": {
+              "easting": 390803.98,
+              "northing": 4791011.85
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "track",
+              "name": "Unnamed road",
+              "osm_id": 119789410
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for track",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 224738.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 164738.0,
+          "crossing_cost_eur": 60000
+        }
+      }
+    },
+    {
+      "segment_id": 54,
+      "km_start": 20.349,
+      "km_end": 20.72,
+      "length_m": 370.66,
+      "geometry": {
+        "start_point": {
+          "easting": 391038.64,
+          "northing": 4790777.27
+        },
+        "end_point": {
+          "easting": 391225.34,
+          "northing": 4790483.96
+        },
+        "bearing_deg": 147.5,
+        "vertex_count": 12,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 86.61,
+        "end_m": 76.56,
+        "min_m": 76.56,
+        "max_m": 104.55,
+        "mean_m": 91.97
+      },
+      "slope": {
+        "average_percent": 2.71,
+        "max_percent": 15.1,
+        "terrain_class": "hilly",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 50,
+        "class_name": "built_up",
+        "cost_factor": 4.0,
+        "note": "Urban - utility relocation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 1,
+        "details": [
+          {
+            "crossing_id": "CX-050",
+            "km": 20.529,
+            "coordinates": {
+              "easting": 391091.98,
+              "northing": 4790619.14
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "unclassified",
+              "name": "Unnamed road",
+              "osm_id": 119789373
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for unclassified",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 430658.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 370658.0,
+          "crossing_cost_eur": 60000
+        }
+      }
+    },
+    {
+      "segment_id": 55,
+      "km_start": 20.72,
+      "km_end": 21.095,
+      "length_m": 375.21,
+      "geometry": {
+        "start_point": {
+          "easting": 391225.34,
+          "northing": 4790483.96
+        },
+        "end_point": {
+          "easting": 391358.7,
+          "northing": 4790164.0
+        },
+        "bearing_deg": 157.4,
+        "vertex_count": 13,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 76.56,
+        "end_m": 77.7,
+        "min_m": 61.83,
+        "max_m": 77.7,
+        "mean_m": 68.76
+      },
+      "slope": {
+        "average_percent": 0.3,
+        "max_percent": 8.46,
+        "terrain_class": "rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 0,
+        "details": []
+      },
+      "construction": {
+        "estimated_cost_eur": 168846.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 168846.0,
+          "crossing_cost_eur": 0
+        }
+      }
+    },
+    {
+      "segment_id": 56,
+      "km_start": 21.095,
+      "km_end": 21.481,
+      "length_m": 386.28,
+      "geometry": {
+        "start_point": {
+          "easting": 391358.7,
+          "northing": 4790164.0
+        },
+        "end_point": {
+          "easting": 391545.41,
+          "northing": 4789870.7
+        },
+        "bearing_deg": 147.5,
+        "vertex_count": 13,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 77.7,
+        "end_m": 44.24,
+        "min_m": 44.24,
+        "max_m": 79.2,
+        "mean_m": 61.68
+      },
+      "slope": {
+        "average_percent": 8.66,
+        "max_percent": 18.1,
+        "terrain_class": "hilly",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 0,
+        "details": []
+      },
+      "construction": {
+        "estimated_cost_eur": 173825.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 173825.0,
+          "crossing_cost_eur": 0
+        }
+      }
+    },
+    {
+      "segment_id": 57,
+      "km_start": 21.481,
+      "km_end": 21.857,
+      "length_m": 375.22,
+      "geometry": {
+        "start_point": {
+          "easting": 391545.41,
+          "northing": 4789870.7
+        },
+        "end_point": {
+          "easting": 391678.77,
+          "northing": 4789550.73
+        },
+        "bearing_deg": 157.4,
+        "vertex_count": 13,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 44.24,
+        "end_m": 40.76,
+        "min_m": 36.53,
+        "max_m": 44.24,
+        "mean_m": 39.89
+      },
+      "slope": {
+        "average_percent": 0.93,
+        "max_percent": 4.11,
+        "terrain_class": "gently_rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 1,
+        "details": [
+          {
+            "crossing_id": "CX-051",
+            "km": 21.587,
+            "coordinates": {
+              "easting": 391545.41,
+              "northing": 4789765.0
+            },
+            "infrastructure": {
+              "type": "waterway",
+              "class": "stream",
+              "name": "Rio Maggio",
+              "osm_id": "1345167359"
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for stream",
+              "cost_eur": 80000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 248850.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 168850.0,
+          "crossing_cost_eur": 80000
+        }
+      }
+    },
+    {
+      "segment_id": 58,
+      "km_start": 21.857,
+      "km_end": 22.234,
+      "length_m": 377.14,
+      "geometry": {
+        "start_point": {
+          "easting": 391678.77,
+          "northing": 4789550.73
+        },
+        "end_point": {
+          "easting": 391945.49,
+          "northing": 4789284.09
+        },
+        "bearing_deg": 135.0,
+        "vertex_count": 11,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 40.76,
+        "end_m": 44.31,
+        "min_m": 40.58,
+        "max_m": 44.47,
+        "mean_m": 42.1
+      },
+      "slope": {
+        "average_percent": 0.94,
+        "max_percent": 2.06,
+        "terrain_class": "flat",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 30,
+        "class_name": "grassland",
+        "cost_factor": 1.0,
+        "note": "Grassland"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 0,
+        "details": []
+      },
+      "construction": {
+        "estimated_cost_eur": 94286.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 94286.0,
+          "crossing_cost_eur": 0
+        }
+      }
+    },
+    {
+      "segment_id": 59,
+      "km_start": 22.234,
+      "km_end": 22.634,
+      "length_m": 399.95,
+      "geometry": {
+        "start_point": {
+          "easting": 391945.49,
+          "northing": 4789284.09
+        },
+        "end_point": {
+          "easting": 391945.49,
+          "northing": 4788884.14
+        },
+        "bearing_deg": 180.0,
+        "vertex_count": 16,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 44.31,
+        "end_m": 56.29,
+        "min_m": 44.31,
+        "max_m": 63.68,
+        "mean_m": 58.12
+      },
+      "slope": {
+        "average_percent": 3.0,
+        "max_percent": 9.69,
+        "terrain_class": "rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 1,
+        "details": [
+          {
+            "crossing_id": "CX-052",
+            "km": 22.288,
+            "coordinates": {
+              "easting": 391945.49,
+              "northing": 4789230.3
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "unclassified",
+              "name": "Strada Rio Maggio",
+              "osm_id": 23525386
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for unclassified",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 239978.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 179978.0,
+          "crossing_cost_eur": 60000
+        }
+      }
+    },
+    {
+      "segment_id": 60,
+      "km_start": 22.634,
+      "km_end": 23.013,
+      "length_m": 379.78,
+      "geometry": {
+        "start_point": {
+          "easting": 391945.49,
+          "northing": 4788884.14
+        },
+        "end_point": {
+          "easting": 392025.51,
+          "northing": 4788537.51
+        },
+        "bearing_deg": 167.0,
+        "vertex_count": 14,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 56.29,
+        "end_m": 43.86,
+        "min_m": 40.53,
+        "max_m": 56.29,
+        "mean_m": 46.16
+      },
+      "slope": {
+        "average_percent": 3.27,
+        "max_percent": 8.3,
+        "terrain_class": "rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 30,
+        "class_name": "grassland",
+        "cost_factor": 1.0,
+        "note": "Grassland"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 1,
+        "details": [
+          {
+            "crossing_id": "CX-053",
+            "km": 22.687,
+            "coordinates": {
+              "easting": 391983.18,
+              "northing": 4788846.46
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "primary",
+              "name": "Strada Provinciale 219 Ete Morto",
+              "osm_id": 157199304
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for primary",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Provincial permit"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 154946.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 94946.0,
+          "crossing_cost_eur": 60000
+        }
+      }
+    },
+    {
+      "segment_id": 61,
+      "km_start": 23.013,
+      "km_end": 23.413,
+      "length_m": 399.96,
+      "geometry": {
+        "start_point": {
+          "easting": 392025.51,
+          "northing": 4788537.51
+        },
+        "end_point": {
+          "easting": 392025.51,
+          "northing": 4788137.55
+        },
+        "bearing_deg": 180.0,
+        "vertex_count": 16,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 43.86,
+        "end_m": 39.27,
+        "min_m": 39.27,
+        "max_m": 48.2,
+        "mean_m": 42.44
+      },
+      "slope": {
+        "average_percent": 1.15,
+        "max_percent": 4.47,
+        "terrain_class": "gently_rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 0,
+        "details": []
+      },
+      "construction": {
+        "estimated_cost_eur": 179982.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 179982.0,
+          "crossing_cost_eur": 0
+        }
+      }
+    },
+    {
+      "segment_id": 62,
+      "km_start": 23.413,
+      "km_end": 23.793,
+      "length_m": 379.78,
+      "geometry": {
+        "start_point": {
+          "easting": 392025.51,
+          "northing": 4788137.55
+        },
+        "end_point": {
+          "easting": 391998.84,
+          "northing": 4787790.92
+        },
+        "bearing_deg": 184.4,
+        "vertex_count": 14,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 39.27,
+        "end_m": 32.16,
+        "min_m": 29.23,
+        "max_m": 39.27,
+        "mean_m": 34.93
+      },
+      "slope": {
+        "average_percent": 1.87,
+        "max_percent": 5.29,
+        "terrain_class": "gently_rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 2,
+        "details": [
+          {
+            "crossing_id": "CX-054",
+            "km": 23.612,
+            "coordinates": {
+              "easting": 391972.17,
+              "northing": 4787960.78
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "secondary",
+              "name": "Strada Provinciale 27 Elpidiense",
+              "osm_id": 23730958
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for secondary",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Provincial permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-055",
+            "km": 23.755,
+            "coordinates": {
+              "easting": 391998.84,
+              "northing": 4787829.22
+            },
+            "infrastructure": {
+              "type": "waterway",
+              "class": "stream",
+              "name": "Ete morto",
+              "osm_id": "23245965"
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for stream",
+              "cost_eur": 80000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 310900.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 170900.0,
+          "crossing_cost_eur": 140000
+        }
+      }
+    },
+    {
+      "segment_id": 63,
+      "km_start": 23.793,
+      "km_end": 24.193,
+      "length_m": 399.96,
+      "geometry": {
+        "start_point": {
+          "easting": 391998.84,
+          "northing": 4787790.92
+        },
+        "end_point": {
+          "easting": 391998.84,
+          "northing": 4787390.96
+        },
+        "bearing_deg": 180.0,
+        "vertex_count": 16,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 32.16,
+        "end_m": 41.73,
+        "min_m": 32.16,
+        "max_m": 41.73,
+        "mean_m": 38.81
+      },
+      "slope": {
+        "average_percent": 2.39,
+        "max_percent": 4.79,
+        "terrain_class": "gently_rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 0,
+        "details": []
+      },
+      "construction": {
+        "estimated_cost_eur": 179982.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 179982.0,
+          "crossing_cost_eur": 0
+        }
+      }
+    },
+    {
+      "segment_id": 64,
+      "km_start": 24.193,
+      "km_end": 24.586,
+      "length_m": 392.75,
+      "geometry": {
+        "start_point": {
+          "easting": 391998.84,
+          "northing": 4787390.96
+        },
+        "end_point": {
+          "easting": 392238.89,
+          "northing": 4787097.66
+        },
+        "bearing_deg": 140.7,
+        "vertex_count": 12,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 41.73,
+        "end_m": 62.49,
+        "min_m": 41.73,
+        "max_m": 62.49,
+        "mean_m": 53.23
+      },
+      "slope": {
+        "average_percent": 5.28,
+        "max_percent": 10.57,
+        "terrain_class": "rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 1,
+        "details": [
+          {
+            "crossing_id": "CX-056",
+            "km": 24.263,
+            "coordinates": {
+              "easting": 392010.42,
+              "northing": 4787326.06
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "unclassified",
+              "name": "Via Cerretino",
+              "osm_id": 23267276
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for unclassified",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 236739.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 176739.0,
+          "crossing_cost_eur": 60000
+        }
+      }
+    },
+    {
+      "segment_id": 65,
+      "km_start": 24.586,
+      "km_end": 24.966,
+      "length_m": 379.87,
+      "geometry": {
+        "start_point": {
+          "easting": 392238.89,
+          "northing": 4787097.66
+        },
+        "end_point": {
+          "easting": 392585.63,
+          "northing": 4787017.67
+        },
+        "bearing_deg": 103.0,
+        "vertex_count": 14,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 62.49,
+        "end_m": 82.66,
+        "min_m": 62.49,
+        "max_m": 82.66,
+        "mean_m": 72.41
+      },
+      "slope": {
+        "average_percent": 5.31,
+        "max_percent": 10.62,
+        "terrain_class": "rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 0,
+        "details": []
+      },
+      "construction": {
+        "estimated_cost_eur": 170940.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 170940.0,
+          "crossing_cost_eur": 0
+        }
+      }
+    },
+    {
+      "segment_id": 66,
+      "km_start": 24.966,
+      "km_end": 25.346,
+      "length_m": 379.87,
+      "geometry": {
+        "start_point": {
+          "easting": 392585.63,
+          "northing": 4787017.67
+        },
+        "end_point": {
+          "easting": 392932.37,
+          "northing": 4786991.01
+        },
+        "bearing_deg": 94.4,
+        "vertex_count": 14,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 82.66,
+        "end_m": 135.41,
+        "min_m": 82.66,
+        "max_m": 135.41,
+        "mean_m": 106.38
+      },
+      "slope": {
+        "average_percent": 13.89,
+        "max_percent": 25,
+        "terrain_class": "steep",
+        "compliant": false
+      },
+      "land_cover": {
+        "class_code": 10,
+        "class_name": "tree_cover",
+        "cost_factor": 2.5,
+        "note": "Forested - clearing required"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 0,
+        "details": []
+      },
+      "construction": {
+        "estimated_cost_eur": 237421.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 237421.0,
+          "crossing_cost_eur": 0
+        }
+      }
+    },
+    {
+      "segment_id": 67,
+      "km_start": 25.346,
+      "km_end": 25.743,
+      "length_m": 397.34,
+      "geometry": {
+        "start_point": {
+          "easting": 392932.37,
+          "northing": 4786991.01
+        },
+        "end_point": {
+          "easting": 393199.09,
+          "northing": 4786751.03
+        },
+        "bearing_deg": 132.0,
+        "vertex_count": 13,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 135.41,
+        "end_m": 172.36,
+        "min_m": 135.41,
+        "max_m": 188.51,
+        "mean_m": 165.04
+      },
+      "slope": {
+        "average_percent": 9.3,
+        "max_percent": 25,
+        "terrain_class": "steep",
+        "compliant": false
+      },
+      "land_cover": {
+        "class_code": 10,
+        "class_name": "tree_cover",
+        "cost_factor": 2.5,
+        "note": "Forested - clearing required"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 2,
+        "details": [
+          {
+            "crossing_id": "CX-057",
+            "km": 25.654,
+            "coordinates": {
+              "easting": 393172.42,
+              "northing": 4786828.76
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "secondary",
+              "name": "Via Celeste",
+              "osm_id": 23525834
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for secondary",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Provincial permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-058",
+            "km": 25.59,
+            "coordinates": {
+              "easting": 393128.74,
+              "northing": 4786874.69
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "unclassified",
+              "name": "Via Rubicone",
+              "osm_id": 23525670
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for unclassified",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 368339.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 248339.0,
+          "crossing_cost_eur": 120000
+        }
+      }
+    },
+    {
+      "segment_id": 68,
+      "km_start": 25.743,
+      "km_end": 26.12,
+      "length_m": 377.14,
+      "geometry": {
+        "start_point": {
+          "easting": 393199.09,
+          "northing": 4786751.03
+        },
+        "end_point": {
+          "easting": 393465.81,
+          "northing": 4786484.4
+        },
+        "bearing_deg": 135.0,
+        "vertex_count": 11,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 172.36,
+        "end_m": 128.6,
+        "min_m": 128.6,
+        "max_m": 172.36,
+        "mean_m": 143.98
+      },
+      "slope": {
+        "average_percent": 11.6,
+        "max_percent": 23.21,
+        "terrain_class": "hilly",
+        "compliant": false
+      },
+      "land_cover": {
+        "class_code": 30,
+        "class_name": "grassland",
+        "cost_factor": 1.0,
+        "note": "Grassland"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 1,
+        "details": [
+          {
+            "crossing_id": "CX-059",
+            "km": 25.917,
+            "coordinates": {
+              "easting": 393322.21,
+              "northing": 4786627.95
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "unclassified",
+              "name": "Unnamed road",
+              "osm_id": 23395943
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for unclassified",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 154284.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 94284.0,
+          "crossing_cost_eur": 60000
+        }
+      }
+    },
+    {
+      "segment_id": 69,
+      "km_start": 26.12,
+      "km_end": 26.497,
+      "length_m": 377.14,
+      "geometry": {
+        "start_point": {
+          "easting": 393465.81,
+          "northing": 4786484.4
+        },
+        "end_point": {
+          "easting": 393732.53,
+          "northing": 4786217.76
+        },
+        "bearing_deg": 135.0,
+        "vertex_count": 11,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 128.6,
+        "end_m": 114.07,
+        "min_m": 114.07,
+        "max_m": 128.6,
+        "mean_m": 121.46
+      },
+      "slope": {
+        "average_percent": 3.85,
+        "max_percent": 7.71,
+        "terrain_class": "gently_rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "silt_loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 0,
+        "details": []
+      },
+      "construction": {
+        "estimated_cost_eur": 169714.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 169714.0,
+          "crossing_cost_eur": 0
+        }
+      }
+    },
+    {
+      "segment_id": 70,
+      "km_start": 26.497,
+      "km_end": 26.89,
+      "length_m": 392.75,
+      "geometry": {
+        "start_point": {
+          "easting": 393732.53,
+          "northing": 4786217.76
+        },
+        "end_point": {
+          "easting": 393972.58,
+          "northing": 4785924.46
+        },
+        "bearing_deg": 140.7,
+        "vertex_count": 12,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 114.07,
+        "end_m": 95.95,
+        "min_m": 95.95,
+        "max_m": 114.07,
+        "mean_m": 103.01
+      },
+      "slope": {
+        "average_percent": 4.61,
+        "max_percent": 9.23,
+        "terrain_class": "rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 10,
+        "class_name": "tree_cover",
+        "cost_factor": 2.5,
+        "note": "Forested - clearing required"
+      },
+      "soil": {
+        "type": "silt_loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 0,
+        "details": []
+      },
+      "construction": {
+        "estimated_cost_eur": 245470.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 245470.0,
+          "crossing_cost_eur": 0
+        }
+      }
+    },
+    {
+      "segment_id": 71,
+      "km_start": 26.89,
+      "km_end": 27.256,
+      "length_m": 366.1,
+      "geometry": {
+        "start_point": {
+          "easting": 393972.58,
+          "northing": 4785924.46
+        },
+        "end_point": {
+          "easting": 394212.63,
+          "northing": 4785657.82
+        },
+        "bearing_deg": 138.0,
+        "vertex_count": 11,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 95.95,
+        "end_m": 82.81,
+        "min_m": 82.81,
+        "max_m": 95.95,
+        "mean_m": 89.56
+      },
+      "slope": {
+        "average_percent": 3.59,
+        "max_percent": 7.18,
+        "terrain_class": "gently_rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 30,
+        "class_name": "grassland",
+        "cost_factor": 1.0,
+        "note": "Grassland"
+      },
+      "soil": {
+        "type": "silt_loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 0,
+        "details": []
+      },
+      "construction": {
+        "estimated_cost_eur": 91524.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 91524.0,
+          "crossing_cost_eur": 0
+        }
+      }
+    },
+    {
+      "segment_id": 72,
+      "km_start": 27.256,
+      "km_end": 27.633,
+      "length_m": 377.15,
+      "geometry": {
+        "start_point": {
+          "easting": 394212.63,
+          "northing": 4785657.82
+        },
+        "end_point": {
+          "easting": 394479.36,
+          "northing": 4785391.18
+        },
+        "bearing_deg": 135.0,
+        "vertex_count": 11,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 82.81,
+        "end_m": 73.87,
+        "min_m": 73.8,
+        "max_m": 82.81,
+        "mean_m": 77.74
+      },
+      "slope": {
+        "average_percent": 2.37,
+        "max_percent": 4.78,
+        "terrain_class": "gently_rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 0,
+        "details": []
+      },
+      "construction": {
+        "estimated_cost_eur": 169717.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 169717.0,
+          "crossing_cost_eur": 0
+        }
+      }
+    },
+    {
+      "segment_id": 73,
+      "km_start": 27.633,
+      "km_end": 27.999,
+      "length_m": 366.09,
+      "geometry": {
+        "start_point": {
+          "easting": 394479.36,
+          "northing": 4785391.18
+        },
+        "end_point": {
+          "easting": 394719.41,
+          "northing": 4785124.54
+        },
+        "bearing_deg": 138.0,
+        "vertex_count": 11,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 73.87,
+        "end_m": 65.61,
+        "min_m": 65.61,
+        "max_m": 73.87,
+        "mean_m": 70.14
+      },
+      "slope": {
+        "average_percent": 2.26,
+        "max_percent": 4.51,
+        "terrain_class": "gently_rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 0,
+        "details": []
+      },
+      "construction": {
+        "estimated_cost_eur": 164742.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 164742.0,
+          "crossing_cost_eur": 0
+        }
+      }
+    },
+    {
+      "segment_id": 74,
+      "km_start": 27.999,
+      "km_end": 28.392,
+      "length_m": 392.77,
+      "geometry": {
+        "start_point": {
+          "easting": 394719.41,
+          "northing": 4785124.54
+        },
+        "end_point": {
+          "easting": 395012.8,
+          "northing": 4784884.57
+        },
+        "bearing_deg": 129.3,
+        "vertex_count": 12,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 65.61,
+        "end_m": 57.38,
+        "min_m": 57.38,
+        "max_m": 65.61,
+        "mean_m": 61.1
+      },
+      "slope": {
+        "average_percent": 2.09,
+        "max_percent": 4.19,
+        "terrain_class": "gently_rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "silt_loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 1,
+        "details": [
+          {
+            "crossing_id": "CX-060",
+            "km": 28.356,
+            "coordinates": {
+              "easting": 394976.74,
+              "northing": 4784884.57
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "secondary",
+              "name": "Strada Provinciale 77 Santa Caterina",
+              "osm_id": 1102723896
+            },
+            "ground_conditions": {
+              "soil_type": "silt_loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for secondary",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Provincial permit"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 236744.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 176744.0,
+          "crossing_cost_eur": 60000
+        }
+      }
+    },
+    {
+      "segment_id": 75,
+      "km_start": 28.392,
+      "km_end": 28.756,
+      "length_m": 364.24,
+      "geometry": {
+        "start_point": {
+          "easting": 395012.8,
+          "northing": 4784884.57
+        },
+        "end_point": {
+          "easting": 395332.87,
+          "northing": 4784777.91
+        },
+        "bearing_deg": 108.4,
+        "vertex_count": 13,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 57.38,
+        "end_m": 42.04,
+        "min_m": 42.04,
+        "max_m": 63.95,
+        "mean_m": 55.75
+      },
+      "slope": {
+        "average_percent": 4.21,
+        "max_percent": 12.03,
+        "terrain_class": "rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 10,
+        "class_name": "tree_cover",
+        "cost_factor": 2.5,
+        "note": "Forested - clearing required"
+      },
+      "soil": {
+        "type": "silt_loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 1,
+        "details": [
+          {
+            "crossing_id": "CX-061",
+            "km": 28.669,
+            "coordinates": {
+              "easting": 395271.36,
+              "northing": 4784839.4
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "unclassified",
+              "name": "Unnamed road",
+              "osm_id": 504418983
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for unclassified",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 287651.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 227651.0,
+          "crossing_cost_eur": 60000
+        }
+      }
+    },
+    {
+      "segment_id": 76,
+      "km_start": 28.756,
+      "km_end": 29.134,
+      "length_m": 377.14,
+      "geometry": {
+        "start_point": {
+          "easting": 395332.87,
+          "northing": 4784777.91
+        },
+        "end_point": {
+          "easting": 395599.59,
+          "northing": 4784511.27
+        },
+        "bearing_deg": 135.0,
+        "vertex_count": 11,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 42.04,
+        "end_m": 39.13,
+        "min_m": 39.13,
+        "max_m": 42.65,
+        "mean_m": 40.6
+      },
+      "slope": {
+        "average_percent": 0.77,
+        "max_percent": 1.87,
+        "terrain_class": "flat",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 1,
+        "details": [
+          {
+            "crossing_id": "CX-062",
+            "km": 29.025,
+            "coordinates": {
+              "easting": 395522.91,
+              "northing": 4784587.93
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "secondary",
+              "name": "Strada Provinciale 28 Faleriense",
+              "osm_id": 136788653
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for secondary",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Provincial permit"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 229714.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 169714.0,
+          "crossing_cost_eur": 60000
+        }
+      }
+    },
+    {
+      "segment_id": 77,
+      "km_start": 29.134,
+      "km_end": 29.511,
+      "length_m": 377.14,
+      "geometry": {
+        "start_point": {
+          "easting": 395599.59,
+          "northing": 4784511.27
+        },
+        "end_point": {
+          "easting": 395866.31,
+          "northing": 4784244.64
+        },
+        "bearing_deg": 135.0,
+        "vertex_count": 11,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 39.13,
+        "end_m": 39.19,
+        "min_m": 39.13,
+        "max_m": 41.72,
+        "mean_m": 39.96
+      },
+      "slope": {
+        "average_percent": 0.02,
+        "max_percent": 1.37,
+        "terrain_class": "flat",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 1,
+        "details": [
+          {
+            "crossing_id": "CX-063",
+            "km": 29.324,
+            "coordinates": {
+              "easting": 395734.43,
+              "northing": 4784376.48
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "unclassified",
+              "name": "Unnamed road",
+              "osm_id": 23254551
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for unclassified",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 229711.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 169711.0,
+          "crossing_cost_eur": 60000
+        }
+      }
+    },
+    {
+      "segment_id": 78,
+      "km_start": 29.511,
+      "km_end": 29.903,
+      "length_m": 392.78,
+      "geometry": {
+        "start_point": {
+          "easting": 395866.31,
+          "northing": 4784244.64
+        },
+        "end_point": {
+          "easting": 396133.04,
+          "northing": 4783978.0
+        },
+        "bearing_deg": 135.0,
+        "vertex_count": 12,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 39.19,
+        "end_m": 33.1,
+        "min_m": 33.1,
+        "max_m": 41.25,
+        "mean_m": 38.75
+      },
+      "slope": {
+        "average_percent": 1.55,
+        "max_percent": 4.15,
+        "terrain_class": "gently_rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 50,
+        "class_name": "built_up",
+        "cost_factor": 4.0,
+        "note": "Urban - utility relocation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 0,
+        "details": []
+      },
+      "construction": {
+        "estimated_cost_eur": 392775.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 392775.0,
+          "crossing_cost_eur": 0
+        }
+      }
+    },
+    {
+      "segment_id": 79,
+      "km_start": 29.903,
+      "km_end": 30.274,
+      "length_m": 370.69,
+      "geometry": {
+        "start_point": {
+          "easting": 396133.04,
+          "northing": 4783978.0
+        },
+        "end_point": {
+          "easting": 396426.43,
+          "northing": 4783791.35
+        },
+        "bearing_deg": 122.5,
+        "vertex_count": 12,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 33.1,
+        "end_m": 40.97,
+        "min_m": 32.21,
+        "max_m": 40.97,
+        "mean_m": 36.0
+      },
+      "slope": {
+        "average_percent": 2.12,
+        "max_percent": 4.73,
+        "terrain_class": "gently_rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 2,
+        "details": [
+          {
+            "crossing_id": "CX-064",
+            "km": 30.03,
+            "coordinates": {
+              "easting": 396248.78,
+              "northing": 4783951.34
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "secondary",
+              "name": "Strada Provinciale 204 Lungotenna",
+              "osm_id": 23512312
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for secondary",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Provincial permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-065",
+            "km": 29.967,
+            "coordinates": {
+              "easting": 396196.19,
+              "northing": 4783978.0
+            },
+            "infrastructure": {
+              "type": "waterway",
+              "class": "stream",
+              "name": "Tenna",
+              "osm_id": "23015996"
+            },
+            "ground_conditions": {
+              "soil_type": "silt_loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for stream",
+              "cost_eur": 80000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 306808.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 166808.0,
+          "crossing_cost_eur": 140000
+        }
+      }
+    },
+    {
+      "segment_id": 80,
+      "km_start": 30.274,
+      "km_end": 30.671,
+      "length_m": 397.36,
+      "geometry": {
+        "start_point": {
+          "easting": 396426.43,
+          "northing": 4783791.35
+        },
+        "end_point": {
+          "easting": 396746.5,
+          "northing": 4783604.71
+        },
+        "bearing_deg": 120.2,
+        "vertex_count": 13,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 40.97,
+        "end_m": 93.49,
+        "min_m": 40.97,
+        "max_m": 93.49,
+        "mean_m": 70.9
+      },
+      "slope": {
+        "average_percent": 13.22,
+        "max_percent": 25,
+        "terrain_class": "steep",
+        "compliant": false
+      },
+      "land_cover": {
+        "class_code": 30,
+        "class_name": "grassland",
+        "cost_factor": 1.0,
+        "note": "Grassland"
+      },
+      "soil": {
+        "type": "silt_loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 0,
+        "details": []
+      },
+      "construction": {
+        "estimated_cost_eur": 99340.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 99340.0,
+          "crossing_cost_eur": 0
+        }
+      }
+    },
+    {
+      "segment_id": 81,
+      "km_start": 30.671,
+      "km_end": 31.064,
+      "length_m": 392.77,
+      "geometry": {
+        "start_point": {
+          "easting": 396746.5,
+          "northing": 4783604.71
+        },
+        "end_point": {
+          "easting": 397039.89,
+          "northing": 4783364.73
+        },
+        "bearing_deg": 129.3,
+        "vertex_count": 12,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 93.49,
+        "end_m": 105.11,
+        "min_m": 93.49,
+        "max_m": 125.41,
+        "mean_m": 110.46
+      },
+      "slope": {
+        "average_percent": 2.96,
+        "max_percent": 16.25,
+        "terrain_class": "hilly",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 1,
+        "details": [
+          {
+            "crossing_id": "CX-066",
+            "km": 30.907,
+            "coordinates": {
+              "easting": 396928.32,
+              "northing": 4783476.26
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "unclassified",
+              "name": "Via Colle Vissiano",
+              "osm_id": 23289682
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for unclassified",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 236748.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 176748.0,
+          "crossing_cost_eur": 60000
+        }
+      }
+    },
+    {
+      "segment_id": 82,
+      "km_start": 31.064,
+      "km_end": 31.428,
+      "length_m": 364.16,
+      "geometry": {
+        "start_point": {
+          "easting": 397039.89,
+          "northing": 4783364.73
+        },
+        "end_point": {
+          "easting": 397146.58,
+          "northing": 4783044.77
+        },
+        "bearing_deg": 161.6,
+        "vertex_count": 13,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 105.11,
+        "end_m": 69.25,
+        "min_m": 69.25,
+        "max_m": 110.51,
+        "mean_m": 90.31
+      },
+      "slope": {
+        "average_percent": 9.85,
+        "max_percent": 22.66,
+        "terrain_class": "hilly",
+        "compliant": false
+      },
+      "land_cover": {
+        "class_code": 30,
+        "class_name": "grassland",
+        "cost_factor": 1.0,
+        "note": "Grassland"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 1,
+        "details": [
+          {
+            "crossing_id": "CX-067",
+            "km": 31.219,
+            "coordinates": {
+              "easting": 397093.24,
+              "northing": 4783232.16
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "service",
+              "name": "Unnamed road",
+              "osm_id": 991007183
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for service",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 151041.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 91041.0,
+          "crossing_cost_eur": 60000
+        }
+      }
+    },
+    {
+      "segment_id": 83,
+      "km_start": 31.428,
+      "km_end": 31.808,
+      "length_m": 379.78,
+      "geometry": {
+        "start_point": {
+          "easting": 397146.58,
+          "northing": 4783044.77
+        },
+        "end_point": {
+          "easting": 397226.6,
+          "northing": 4782698.14
+        },
+        "bearing_deg": 167.0,
+        "vertex_count": 14,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 69.25,
+        "end_m": 65.35,
+        "min_m": 64.42,
+        "max_m": 69.25,
+        "mean_m": 65.6
+      },
+      "slope": {
+        "average_percent": 1.03,
+        "max_percent": 2.54,
+        "terrain_class": "flat",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 30,
+        "class_name": "grassland",
+        "cost_factor": 1.0,
+        "note": "Grassland"
+      },
+      "soil": {
+        "type": "silt_loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 0,
+        "details": []
+      },
+      "construction": {
+        "estimated_cost_eur": 94945.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 94945.0,
+          "crossing_cost_eur": 0
+        }
+      }
+    },
+    {
+      "segment_id": 84,
+      "km_start": 31.808,
+      "km_end": 31.93,
+      "length_m": 121.62,
+      "geometry": {
+        "start_point": {
+          "easting": 397226.6,
+          "northing": 4782698.14
+        },
+        "end_point": {
+          "easting": 397199.24,
+          "northing": 4782587.63
+        },
+        "bearing_deg": 193.9,
+        "vertex_count": 6,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 65.35,
+        "end_m": 68.13,
+        "min_m": 65.05,
+        "max_m": 68.13,
+        "mean_m": 66.28
+      },
+      "slope": {
+        "average_percent": 2.29,
+        "max_percent": 5.07,
+        "terrain_class": "gently_rolling",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 10,
+        "class_name": "tree_cover",
+        "cost_factor": 2.5,
+        "note": "Forested - clearing required"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 0,
+        "details": []
+      },
+      "construction": {
+        "estimated_cost_eur": 76012.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 76012.0,
+          "crossing_cost_eur": 0
+        }
+      }
+    }
+  ]
+}

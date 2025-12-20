@@ -1,0 +1,5560 @@
+{
+  "type": "FeatureCollection",
+  "name": "Ravenna-Chieti-Pipeline_PIRL_min_crossings_project_endpoints",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "EPSG:32633"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            379649.58,
+            4805042.4
+          ],
+          [
+            379729.6,
+            4804909.08
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 1
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            379729.6,
+            4804909.08
+          ],
+          [
+            380156.36,
+            4804482.46
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 2
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            380156.36,
+            4804482.46
+          ],
+          [
+            380236.37,
+            4804482.46
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 3
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            380236.37,
+            4804482.46
+          ],
+          [
+            380289.72,
+            4804429.13
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 4
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            380289.72,
+            4804429.13
+          ],
+          [
+            380289.72,
+            4804269.15
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 5
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            380289.72,
+            4804269.15
+          ],
+          [
+            381009.87,
+            4803549.22
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 6
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            381009.87,
+            4803549.22
+          ],
+          [
+            381276.59,
+            4803549.22
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 7
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            381276.59,
+            4803549.22
+          ],
+          [
+            381650.0,
+            4803175.93
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 8
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            381650.0,
+            4803175.93
+          ],
+          [
+            381863.38,
+            4803175.93
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 9
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            381863.38,
+            4803175.93
+          ],
+          [
+            381996.74,
+            4803042.61
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 10
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            381996.74,
+            4803042.61
+          ],
+          [
+            382236.79,
+            4803042.61
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 11
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            382236.79,
+            4803042.61
+          ],
+          [
+            382343.48,
+            4802989.28
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 12
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            382343.48,
+            4802989.28
+          ],
+          [
+            382396.83,
+            4802909.29
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 13
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            382396.83,
+            4802909.29
+          ],
+          [
+            382503.52,
+            4802909.29
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 14
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            382503.52,
+            4802909.29
+          ],
+          [
+            382636.88,
+            4802775.97
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 15
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            382636.88,
+            4802775.97
+          ],
+          [
+            382796.91,
+            4802775.97
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 16
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            382796.91,
+            4802775.97
+          ],
+          [
+            383303.68,
+            4802269.36
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 17
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            383303.68,
+            4802269.36
+          ],
+          [
+            383357.03,
+            4802269.36
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 18
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            383357.03,
+            4802269.36
+          ],
+          [
+            383490.39,
+            4802082.72
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 19
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            383490.39,
+            4802082.72
+          ],
+          [
+            383597.08,
+            4802082.72
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 20
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            383597.08,
+            4802082.72
+          ],
+          [
+            383810.46,
+            4801869.41
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 21
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            383810.46,
+            4801869.41
+          ],
+          [
+            383890.47,
+            4801869.41
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 22
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            383890.47,
+            4801869.41
+          ],
+          [
+            384103.85,
+            4801629.43
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 23
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            384103.85,
+            4801629.43
+          ],
+          [
+            384557.28,
+            4801629.43
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 24
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            384557.28,
+            4801629.43
+          ],
+          [
+            384663.97,
+            4801522.78
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 25
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            384663.97,
+            4801522.78
+          ],
+          [
+            384797.33,
+            4801496.11
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 26
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            384797.33,
+            4801496.11
+          ],
+          [
+            385010.71,
+            4801229.47
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 27
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            385010.71,
+            4801229.47
+          ],
+          [
+            385090.72,
+            4801229.47
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 28
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            385090.72,
+            4801229.47
+          ],
+          [
+            385170.74,
+            4801149.48
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 29
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            385170.74,
+            4801149.48
+          ],
+          [
+            385410.79,
+            4801122.82
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 30
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            385410.79,
+            4801122.82
+          ],
+          [
+            385544.15,
+            4800989.5
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 31
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            385544.15,
+            4800989.5
+          ],
+          [
+            385624.17,
+            4800989.5
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 32
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            385624.17,
+            4800989.5
+          ],
+          [
+            386184.29,
+            4800429.56
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 33
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            386184.29,
+            4800429.56
+          ],
+          [
+            386317.65,
+            4800429.56
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 34
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            386317.65,
+            4800429.56
+          ],
+          [
+            386611.04,
+            4800082.93
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 35
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            386611.04,
+            4800082.93
+          ],
+          [
+            386637.71,
+            4799176.36
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 36
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            386637.71,
+            4799176.36
+          ],
+          [
+            386771.08,
+            4799043.04
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 37
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            386771.08,
+            4799043.04
+          ],
+          [
+            386771.08,
+            4798803.07
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 38
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            386771.08,
+            4798803.07
+          ],
+          [
+            386851.09,
+            4798643.09
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 39
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            386851.09,
+            4798643.09
+          ],
+          [
+            386851.09,
+            4798429.78
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 40
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            386851.09,
+            4798429.78
+          ],
+          [
+            387011.13,
+            4798269.79
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 41
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            387011.13,
+            4798269.79
+          ],
+          [
+            387011.13,
+            4798163.14
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 42
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            387011.13,
+            4798163.14
+          ],
+          [
+            387091.14,
+            4798083.15
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 43
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            387091.14,
+            4798083.15
+          ],
+          [
+            387117.82,
+            4797843.17
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 44
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            387117.82,
+            4797843.17
+          ],
+          [
+            387677.93,
+            4797256.57
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 45
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            387677.93,
+            4797256.57
+          ],
+          [
+            387677.93,
+            4797043.26
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 46
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            387677.93,
+            4797043.26
+          ],
+          [
+            387998.0,
+            4796749.96
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 47
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            387998.0,
+            4796749.96
+          ],
+          [
+            387998.0,
+            4796669.97
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 48
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            387998.0,
+            4796669.97
+          ],
+          [
+            388664.81,
+            4796030.03
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 49
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            388664.81,
+            4796030.03
+          ],
+          [
+            388744.82,
+            4796030.03
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 50
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            388744.82,
+            4796030.03
+          ],
+          [
+            388931.53,
+            4795843.39
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 51
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            388931.53,
+            4795843.39
+          ],
+          [
+            389304.94,
+            4795870.05
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 52
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            389304.94,
+            4795870.05
+          ],
+          [
+            389625.01,
+            4795550.09
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 53
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            389625.01,
+            4795550.09
+          ],
+          [
+            389625.01,
+            4795443.43
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 54
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            389625.01,
+            4795443.43
+          ],
+          [
+            389678.35,
+            4795443.43
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 55
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            389678.35,
+            4795443.43
+          ],
+          [
+            390291.81,
+            4794856.83
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 56
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            390291.81,
+            4794856.83
+          ],
+          [
+            390371.83,
+            4794856.83
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 57
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            390371.83,
+            4794856.83
+          ],
+          [
+            390505.19,
+            4794723.51
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 58
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            390505.19,
+            4794723.51
+          ],
+          [
+            390638.55,
+            4794723.51
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 59
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            390638.55,
+            4794723.51
+          ],
+          [
+            390771.91,
+            4794590.19
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 60
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            390771.91,
+            4794590.19
+          ],
+          [
+            391011.96,
+            4794590.19
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 61
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            391011.96,
+            4794590.19
+          ],
+          [
+            391118.65,
+            4794430.21
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 62
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            391118.65,
+            4794430.21
+          ],
+          [
+            391465.39,
+            4794430.21
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 63
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            391465.39,
+            4794430.21
+          ],
+          [
+            391705.44,
+            4794216.9
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 64
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            391705.44,
+            4794216.9
+          ],
+          [
+            392718.99,
+            4794216.9
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 65
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            392718.99,
+            4794216.9
+          ],
+          [
+            392879.02,
+            4794056.91
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 66
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            392879.02,
+            4794056.91
+          ],
+          [
+            393119.07,
+            4794056.91
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 67
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            393119.07,
+            4794056.91
+          ],
+          [
+            393172.42,
+            4794110.24
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 68
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            393172.42,
+            4794110.24
+          ],
+          [
+            393599.17,
+            4794110.24
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 69
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            393599.17,
+            4794110.24
+          ],
+          [
+            393812.55,
+            4793870.27
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 70
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            393812.55,
+            4793870.27
+          ],
+          [
+            393919.24,
+            4793870.27
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 71
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            393919.24,
+            4793870.27
+          ],
+          [
+            394265.98,
+            4793496.97
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 72
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            394265.98,
+            4793496.97
+          ],
+          [
+            394372.67,
+            4793496.97
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 73
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            394372.67,
+            4793496.97
+          ],
+          [
+            394559.37,
+            4793283.66
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 74
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            394559.37,
+            4793283.66
+          ],
+          [
+            394639.39,
+            4793283.66
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 75
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            394639.39,
+            4793283.66
+          ],
+          [
+            394772.75,
+            4793150.34
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 76
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            394772.75,
+            4793150.34
+          ],
+          [
+            395279.52,
+            4793203.67
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 77
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            395279.52,
+            4793203.67
+          ],
+          [
+            395332.87,
+            4793257.0
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 78
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            395332.87,
+            4793257.0
+          ],
+          [
+            396266.4,
+            4793257.0
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 79
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            396266.4,
+            4793257.0
+          ],
+          [
+            396399.76,
+            4793123.68
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 80
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            396399.76,
+            4793123.68
+          ],
+          [
+            396639.81,
+            4793150.34
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 81
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            396639.81,
+            4793150.34
+          ],
+          [
+            396933.2,
+            4792857.04
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 82
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            396933.2,
+            4792857.04
+          ],
+          [
+            397226.6,
+            4792723.72
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 83
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            397226.6,
+            4792723.72
+          ],
+          [
+            397546.67,
+            4792723.72
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 84
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            397546.67,
+            4792723.72
+          ],
+          [
+            397600.01,
+            4792670.4
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 85
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            397600.01,
+            4792670.4
+          ],
+          [
+            397706.7,
+            4792670.4
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 86
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            397706.7,
+            4792670.4
+          ],
+          [
+            397946.75,
+            4792483.75
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 87
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            397946.75,
+            4792483.75
+          ],
+          [
+            398186.8,
+            4792483.75
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 88
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            398186.8,
+            4792483.75
+          ],
+          [
+            398266.82,
+            4792537.08
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 89
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            398266.82,
+            4792537.08
+          ],
+          [
+            398320.16,
+            4792457.09
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 90
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            398320.16,
+            4792457.09
+          ],
+          [
+            398373.51,
+            4792510.41
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 91
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            398373.51,
+            4792510.41
+          ],
+          [
+            398506.87,
+            4792510.41
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 92
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            398506.87,
+            4792510.41
+          ],
+          [
+            398826.93,
+            4792243.78
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 93
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            398826.93,
+            4792243.78
+          ],
+          [
+            398853.61,
+            4791897.15
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 94
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            398853.61,
+            4791897.15
+          ],
+          [
+            398960.3,
+            4791790.49
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 95
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            398960.3,
+            4791790.49
+          ],
+          [
+            398960.3,
+            4791630.51
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 96
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            398960.3,
+            4791630.51
+          ],
+          [
+            399093.66,
+            4791443.86
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 97
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            399093.66,
+            4791443.86
+          ],
+          [
+            399093.66,
+            4791203.89
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 98
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            399093.66,
+            4791203.89
+          ],
+          [
+            399227.02,
+            4791070.57
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 99
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            399227.02,
+            4791070.57
+          ],
+          [
+            399227.02,
+            4790830.59
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 100
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            399227.02,
+            4790830.59
+          ],
+          [
+            399333.71,
+            4790723.94
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 101
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            399333.71,
+            4790723.94
+          ],
+          [
+            399333.71,
+            4790590.62
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 102
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            399333.71,
+            4790590.62
+          ],
+          [
+            399467.07,
+            4790430.64
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 103
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            399467.07,
+            4790430.64
+          ],
+          [
+            399493.74,
+            4790137.34
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 104
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            399493.74,
+            4790137.34
+          ],
+          [
+            399653.77,
+            4789924.03
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 105
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            399653.77,
+            4789924.03
+          ],
+          [
+            399627.1,
+            4789737.38
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 106
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            399627.1,
+            4789737.38
+          ],
+          [
+            399760.46,
+            4789577.4
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 107
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            399760.46,
+            4789577.4
+          ],
+          [
+            399733.79,
+            4789337.42
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 108
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            399733.79,
+            4789337.42
+          ],
+          [
+            399813.81,
+            4789257.43
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 109
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            399813.81,
+            4789257.43
+          ],
+          [
+            399813.81,
+            4789177.44
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 110
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            399813.81,
+            4789177.44
+          ],
+          [
+            399947.17,
+            4789044.12
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 111
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            399947.17,
+            4789044.12
+          ],
+          [
+            399947.17,
+            4788777.48
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 112
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            399947.17,
+            4788777.48
+          ],
+          [
+            400053.86,
+            4788697.49
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 113
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            400053.86,
+            4788697.49
+          ],
+          [
+            400160.55,
+            4788510.84
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 114
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            400160.55,
+            4788510.84
+          ],
+          [
+            400267.24,
+            4788457.52
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 115
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            400267.24,
+            4788457.52
+          ],
+          [
+            400293.91,
+            4788350.86
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 116
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            400293.91,
+            4788350.86
+          ],
+          [
+            400373.93,
+            4788324.2
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 117
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            400373.93,
+            4788324.2
+          ],
+          [
+            400453.94,
+            4788217.54
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 118
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            400453.94,
+            4788217.54
+          ],
+          [
+            400560.63,
+            4787950.9
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 119
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            400560.63,
+            4787950.9
+          ],
+          [
+            400693.99,
+            4787790.92
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 120
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            400693.99,
+            4787790.92
+          ],
+          [
+            400720.66,
+            4787497.62
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 121
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            400720.66,
+            4787497.62
+          ],
+          [
+            400854.03,
+            4787364.3
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 122
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            400854.03,
+            4787364.3
+          ],
+          [
+            400907.37,
+            4786751.03
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 123
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            400907.37,
+            4786751.03
+          ],
+          [
+            400960.71,
+            4786697.71
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 124
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            400960.71,
+            4786697.71
+          ],
+          [
+            400960.71,
+            4786564.39
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 125
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            400960.71,
+            4786564.39
+          ],
+          [
+            401014.06,
+            4786511.06
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 126
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            401014.06,
+            4786511.06
+          ],
+          [
+            401014.06,
+            4786217.76
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 127
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            401014.06,
+            4786217.76
+          ],
+          [
+            401147.42,
+            4786084.44
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 128
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            401147.42,
+            4786084.44
+          ],
+          [
+            401147.42,
+            4785524.5
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 129
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            401147.42,
+            4785524.5
+          ],
+          [
+            401254.11,
+            4785417.84
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 130
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            401254.11,
+            4785417.84
+          ],
+          [
+            401254.11,
+            4785284.52
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 131
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            401254.11,
+            4785284.52
+          ],
+          [
+            401387.47,
+            4785151.21
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 132
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            401387.47,
+            4785151.21
+          ],
+          [
+            401387.47,
+            4784964.56
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 133
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            401387.47,
+            4784964.56
+          ],
+          [
+            401467.49,
+            4784884.57
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 134
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            401467.49,
+            4784884.57
+          ],
+          [
+            401467.49,
+            4784724.59
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 135
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            401467.49,
+            4784724.59
+          ],
+          [
+            401520.83,
+            4784671.26
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 136
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            401520.83,
+            4784671.26
+          ],
+          [
+            401520.83,
+            4784457.95
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 137
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            401520.83,
+            4784457.95
+          ],
+          [
+            401627.52,
+            4784351.29
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 138
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            401627.52,
+            4784351.29
+          ],
+          [
+            401627.52,
+            4784137.98
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 139
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            401627.52,
+            4784137.98
+          ],
+          [
+            401680.87,
+            4784084.65
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 140
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            401680.87,
+            4784084.65
+          ],
+          [
+            401680.87,
+            4783898.01
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 141
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            401680.87,
+            4783898.01
+          ],
+          [
+            401734.21,
+            4783844.68
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 142
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            401734.21,
+            4783844.68
+          ],
+          [
+            401734.21,
+            4783684.7
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 143
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            401734.21,
+            4783684.7
+          ],
+          [
+            401680.87,
+            4783658.03
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 144
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            401680.87,
+            4783658.03
+          ],
+          [
+            401680.87,
+            4783578.04
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 145
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            401680.87,
+            4783578.04
+          ],
+          [
+            401867.57,
+            4783444.72
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 146
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            401867.57,
+            4783444.72
+          ],
+          [
+            401867.57,
+            4783231.41
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 147
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            401867.57,
+            4783231.41
+          ],
+          [
+            401947.59,
+            4783151.42
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 148
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            401947.59,
+            4783151.42
+          ],
+          [
+            401947.59,
+            4782991.44
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 149
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            401947.59,
+            4782991.44
+          ],
+          [
+            402054.28,
+            4782884.78
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 150
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            402054.28,
+            4782884.78
+          ],
+          [
+            402054.28,
+            4782671.47
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 151
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            402054.28,
+            4782671.47
+          ],
+          [
+            402187.64,
+            4782538.15
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 152
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            402187.64,
+            4782538.15
+          ],
+          [
+            402187.64,
+            4782271.52
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 153
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            402187.64,
+            4782271.52
+          ],
+          [
+            402267.66,
+            4782191.52
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 154
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            402267.66,
+            4782191.52
+          ],
+          [
+            402267.66,
+            4782004.88
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 155
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            402267.66,
+            4782004.88
+          ],
+          [
+            402347.67,
+            4781924.89
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 156
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            402347.67,
+            4781924.89
+          ],
+          [
+            402374.34,
+            4781711.58
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 157
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            402374.34,
+            4781711.58
+          ],
+          [
+            402454.36,
+            4781578.26
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 158
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            402454.36,
+            4781578.26
+          ],
+          [
+            402454.36,
+            4781444.94
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 159
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            402454.36,
+            4781444.94
+          ],
+          [
+            402507.71,
+            4781391.61
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 160
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            402507.71,
+            4781391.61
+          ],
+          [
+            402641.07,
+            4780938.33
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 161
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            402641.07,
+            4780938.33
+          ],
+          [
+            402694.41,
+            4780885.0
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 162
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            402694.41,
+            4780885.0
+          ],
+          [
+            402694.41,
+            4780778.34
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 163
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            402694.41,
+            4780778.34
+          ],
+          [
+            402801.1,
+            4780618.36
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 164
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            402801.1,
+            4780618.36
+          ],
+          [
+            402801.1,
+            4780485.04
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 165
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            402801.1,
+            4780485.04
+          ],
+          [
+            402881.12,
+            4780405.05
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 166
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            402881.12,
+            4780405.05
+          ],
+          [
+            402881.12,
+            4780245.07
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 167
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            402881.12,
+            4780245.07
+          ],
+          [
+            403041.15,
+            4780085.08
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 168
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            403041.15,
+            4780085.08
+          ],
+          [
+            403041.15,
+            4779951.77
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 169
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            403041.15,
+            4779951.77
+          ],
+          [
+            403227.86,
+            4779765.12
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 170
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            403227.86,
+            4779765.12
+          ],
+          [
+            403227.86,
+            4779711.79
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 171
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            403227.86,
+            4779711.79
+          ],
+          [
+            403361.22,
+            4779631.8
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 172
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            403361.22,
+            4779631.8
+          ],
+          [
+            403387.89,
+            4779551.81
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 173
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            403387.89,
+            4779551.81
+          ],
+          [
+            403361.22,
+            4778618.58
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 174
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            403361.22,
+            4778618.58
+          ],
+          [
+            403494.58,
+            4778485.26
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 175
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            403494.58,
+            4778485.26
+          ],
+          [
+            403574.6,
+            4778325.27
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 176
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            403574.6,
+            4778325.27
+          ],
+          [
+            403601.27,
+            4778085.3
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 177
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            403601.27,
+            4778085.3
+          ],
+          [
+            403654.61,
+            4778031.97
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 178
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            403654.61,
+            4778031.97
+          ],
+          [
+            403654.61,
+            4777845.33
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 179
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            403654.61,
+            4777845.33
+          ],
+          [
+            403921.33,
+            4777525.36
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 180
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            403921.33,
+            4777525.36
+          ],
+          [
+            403948.01,
+            4777205.4
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 181
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            403948.01,
+            4777205.4
+          ],
+          [
+            404081.37,
+            4777045.41
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 182
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            404081.37,
+            4777045.41
+          ],
+          [
+            404108.04,
+            4776752.11
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 183
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            404108.04,
+            4776752.11
+          ],
+          [
+            404241.4,
+            4776618.79
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 184
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            404241.4,
+            4776618.79
+          ],
+          [
+            404268.07,
+            4776432.15
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 185
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            404268.07,
+            4776432.15
+          ],
+          [
+            404481.45,
+            4776218.83
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 186
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            404481.45,
+            4776218.83
+          ],
+          [
+            404481.45,
+            4776085.52
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 187
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            404481.45,
+            4776085.52
+          ],
+          [
+            404614.81,
+            4775952.2
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 188
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            404614.81,
+            4775952.2
+          ],
+          [
+            404614.81,
+            4775872.21
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 189
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            404614.81,
+            4775872.21
+          ],
+          [
+            404828.19,
+            4775658.89
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 190
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            404828.19,
+            4775658.89
+          ],
+          [
+            404801.52,
+            4775418.92
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 191
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            404801.52,
+            4775418.92
+          ],
+          [
+            404934.88,
+            4775152.28
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 192
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            404934.88,
+            4775152.28
+          ],
+          [
+            405014.9,
+            4774858.98
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 193
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            405014.9,
+            4774858.98
+          ],
+          [
+            405068.24,
+            4774805.65
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 194
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            405068.24,
+            4774805.65
+          ],
+          [
+            405094.91,
+            4774645.67
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 195
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            405094.91,
+            4774645.67
+          ],
+          [
+            405334.96,
+            4774405.7
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 196
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            405334.96,
+            4774405.7
+          ],
+          [
+            405334.96,
+            4774032.4
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 197
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            405334.96,
+            4774032.4
+          ],
+          [
+            405468.33,
+            4773899.08
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 198
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            405468.33,
+            4773899.08
+          ],
+          [
+            405468.33,
+            4773659.11
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 199
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            405468.33,
+            4773659.11
+          ],
+          [
+            405708.38,
+            4773152.5
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 200
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            405708.38,
+            4773152.5
+          ],
+          [
+            405761.72,
+            4772912.52
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 201
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            405761.72,
+            4772912.52
+          ],
+          [
+            405895.08,
+            4772805.87
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 202
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            405895.08,
+            4772805.87
+          ],
+          [
+            405895.08,
+            4772565.89
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 203
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            405895.08,
+            4772565.89
+          ],
+          [
+            405975.1,
+            4772485.9
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 204
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            405975.1,
+            4772485.9
+          ],
+          [
+            406001.77,
+            4772112.61
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 205
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            406001.77,
+            4772112.61
+          ],
+          [
+            406161.8,
+            4771952.63
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 206
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            406161.8,
+            4771952.63
+          ],
+          [
+            406161.8,
+            4771259.37
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 207
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            406161.8,
+            4771259.37
+          ],
+          [
+            406135.13,
+            4770966.07
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 208
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            406135.13,
+            4770966.07
+          ],
+          [
+            406081.79,
+            4770912.74
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 209
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            406081.79,
+            4770912.74
+          ],
+          [
+            406081.79,
+            4770699.43
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 210
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            406081.79,
+            4770699.43
+          ],
+          [
+            406135.13,
+            4770646.1
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 211
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            406135.13,
+            4770646.1
+          ],
+          [
+            406135.13,
+            4770219.48
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 212
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            406135.13,
+            4770219.48
+          ],
+          [
+            406215.15,
+            4769526.22
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 213
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            406215.15,
+            4769526.22
+          ],
+          [
+            406268.49,
+            4769419.57
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 214
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            406268.49,
+            4769419.57
+          ],
+          [
+            406348.51,
+            4768326.35
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 215
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            406348.51,
+            4768326.35
+          ],
+          [
+            406401.85,
+            4768273.02
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 216
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            406401.85,
+            4768273.02
+          ],
+          [
+            406401.85,
+            4768059.71
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 217
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            406401.85,
+            4768059.71
+          ],
+          [
+            406668.58,
+            4766806.52
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 218
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            406668.58,
+            4766806.52
+          ],
+          [
+            406748.59,
+            4766459.89
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 219
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            406748.59,
+            4766459.89
+          ],
+          [
+            406801.94,
+            4766406.56
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 220
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            406801.94,
+            4766406.56
+          ],
+          [
+            406801.94,
+            4766273.24
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 221
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            406801.94,
+            4766273.24
+          ],
+          [
+            406881.95,
+            4766139.92
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 222
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            406881.95,
+            4766139.92
+          ],
+          [
+            406881.95,
+            4765873.28
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 223
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            406881.95,
+            4765873.28
+          ],
+          [
+            406961.97,
+            4765793.29
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 224
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            406961.97,
+            4765793.29
+          ],
+          [
+            407041.99,
+            4765393.33
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 225
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            407041.99,
+            4765393.33
+          ],
+          [
+            407041.99,
+            4765180.02
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 226
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            407041.99,
+            4765180.02
+          ],
+          [
+            407095.33,
+            4765073.37
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 227
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            407095.33,
+            4765073.37
+          ],
+          [
+            407202.02,
+            4764433.44
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 228
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            407202.02,
+            4764433.44
+          ],
+          [
+            407255.37,
+            4764380.11
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 229
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            407255.37,
+            4764380.11
+          ],
+          [
+            407308.71,
+            4763553.53
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 230
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            407308.71,
+            4763553.53
+          ],
+          [
+            407362.06,
+            4763500.2
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 231
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            407362.06,
+            4763500.2
+          ],
+          [
+            407362.06,
+            4763313.56
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 232
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            407362.06,
+            4763313.56
+          ],
+          [
+            407575.43,
+            4762380.33
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 233
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            407575.43,
+            4762380.33
+          ],
+          [
+            407682.12,
+            4762167.01
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 234
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            407682.12,
+            4762167.01
+          ],
+          [
+            407735.47,
+            4761900.38
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 235
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            407735.47,
+            4761900.38
+          ],
+          [
+            407922.17,
+            4761713.73
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 236
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            407922.17,
+            4761713.73
+          ],
+          [
+            407922.17,
+            4761180.45
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 237
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            407922.17,
+            4761180.45
+          ],
+          [
+            408002.19,
+            4760780.5
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 238
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            408002.19,
+            4760780.5
+          ],
+          [
+            408028.86,
+            4760220.56
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 239
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            408028.86,
+            4760220.56
+          ],
+          [
+            408082.21,
+            4760167.23
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 240
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            408082.21,
+            4760167.23
+          ],
+          [
+            408082.21,
+            4760033.91
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 241
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            408082.21,
+            4760033.91
+          ],
+          [
+            408135.55,
+            4759980.58
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 242
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            408135.55,
+            4759980.58
+          ],
+          [
+            408188.9,
+            4759687.28
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 243
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            408188.9,
+            4759687.28
+          ],
+          [
+            408295.58,
+            4759473.97
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 244
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            408295.58,
+            4759473.97
+          ],
+          [
+            408295.58,
+            4759313.99
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 245
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            408295.58,
+            4759313.99
+          ],
+          [
+            408455.62,
+            4758700.72
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 246
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            408455.62,
+            4758700.72
+          ],
+          [
+            408455.62,
+            4758514.08
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 247
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            408455.62,
+            4758514.08
+          ],
+          [
+            408508.96,
+            4758300.76
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 248
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            408508.96,
+            4758300.76
+          ],
+          [
+            408562.31,
+            4758247.44
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 249
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            408562.31,
+            4758247.44
+          ],
+          [
+            408588.98,
+            4757900.81
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 250
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            408588.98,
+            4757900.81
+          ],
+          [
+            408642.32,
+            4757847.48
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 251
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            408642.32,
+            4757847.48
+          ],
+          [
+            408669.0,
+            4757500.85
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 252
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            408669.0,
+            4757500.85
+          ],
+          [
+            408749.01,
+            4757420.86
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 253
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            408749.01,
+            4757420.86
+          ],
+          [
+            408749.01,
+            4757234.21
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 254
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            408749.01,
+            4757234.21
+          ],
+          [
+            408802.36,
+            4757154.22
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 255
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            408802.36,
+            4757154.22
+          ],
+          [
+            408775.68,
+            4756940.91
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 256
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            408775.68,
+            4756940.91
+          ],
+          [
+            408855.7,
+            4756860.92
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 257
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            408855.7,
+            4756860.92
+          ],
+          [
+            408962.39,
+            4756300.98
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 258
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            408962.39,
+            4756300.98
+          ],
+          [
+            409042.41,
+            4756194.32
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 259
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            409042.41,
+            4756194.32
+          ],
+          [
+            409095.75,
+            4755954.35
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 260
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            409095.75,
+            4755954.35
+          ],
+          [
+            409335.8,
+            4755661.05
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 261
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            409335.8,
+            4755661.05
+          ],
+          [
+            409335.8,
+            4755341.08
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 262
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            409335.8,
+            4755341.08
+          ],
+          [
+            409415.82,
+            4755261.09
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 263
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            409415.82,
+            4755261.09
+          ],
+          [
+            409415.82,
+            4755154.44
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 264
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            409415.82,
+            4755154.44
+          ],
+          [
+            409495.84,
+            4755021.12
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 265
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            409495.84,
+            4755021.12
+          ],
+          [
+            409495.84,
+            4754807.81
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 266
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            409495.84,
+            4754807.81
+          ],
+          [
+            409575.85,
+            4754727.82
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 267
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            409575.85,
+            4754727.82
+          ],
+          [
+            409575.85,
+            4754567.83
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 268
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            409575.85,
+            4754567.83
+          ],
+          [
+            409655.87,
+            4754487.84
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 269
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            409655.87,
+            4754487.84
+          ],
+          [
+            409682.54,
+            4754247.87
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 270
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            409682.54,
+            4754247.87
+          ],
+          [
+            409815.9,
+            4754087.89
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 271
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            409815.9,
+            4754087.89
+          ],
+          [
+            409815.9,
+            4753927.9
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 272
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            409815.9,
+            4753927.9
+          ],
+          [
+            409922.59,
+            4753821.25
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 273
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            409922.59,
+            4753821.25
+          ],
+          [
+            409922.59,
+            4753661.26
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 274
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            409922.59,
+            4753661.26
+          ],
+          [
+            410002.61,
+            4753581.27
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 275
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            410002.61,
+            4753581.27
+          ],
+          [
+            410002.61,
+            4753474.62
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 276
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            410002.61,
+            4753474.62
+          ],
+          [
+            409815.9,
+            4753261.31
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 277
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            409815.9,
+            4753261.31
+          ],
+          [
+            409815.9,
+            4753127.99
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 278
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            409815.9,
+            4753127.99
+          ],
+          [
+            409229.11,
+            4752541.39
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 279
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            409229.11,
+            4752541.39
+          ],
+          [
+            409095.75,
+            4752541.39
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 280
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            409095.75,
+            4752541.39
+          ],
+          [
+            409015.74,
+            4752461.39
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 281
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            409015.74,
+            4752461.39
+          ],
+          [
+            408909.05,
+            4752514.72
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 282
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            408909.05,
+            4752514.72
+          ],
+          [
+            408882.37,
+            4752488.06
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 283
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            408882.37,
+            4752488.06
+          ],
+          [
+            408882.37,
+            4752354.74
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 284
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            408882.37,
+            4752354.74
+          ],
+          [
+            408935.72,
+            4752301.41
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 285
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            408935.72,
+            4752301.41
+          ],
+          [
+            408935.72,
+            4751874.79
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 286
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            408935.72,
+            4751874.79
+          ],
+          [
+            408695.67,
+            4751634.82
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 287
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            408695.67,
+            4751634.82
+          ],
+          [
+            408695.67,
+            4751181.53
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 288
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            408695.67,
+            4751181.53
+          ],
+          [
+            408375.6,
+            4750861.57
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 289
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            408375.6,
+            4750861.57
+          ],
+          [
+            408348.93,
+            4750541.6
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 290
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            408348.93,
+            4750541.6
+          ],
+          [
+            408402.27,
+            4750488.27
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 291
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            408402.27,
+            4750488.27
+          ],
+          [
+            408348.93,
+            4750434.95
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 292
+      }
+    }
+  ]
+}

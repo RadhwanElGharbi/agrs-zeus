@@ -1,0 +1,114 @@
+{
+  "supplier_id": "SUP_PM_2025_009",
+  "company_name": "Ronconi SpA",
+  "category": "pipeline_manufacturer",
+  "subcategories": [
+    "seamless_pipes",
+    "precision_tubes",
+    "specialty_alloys"
+  ],
+  "location": {
+    "country": "Italy",
+    "iso3": "ITA",
+    "region": "Lombardy",
+    "city": "Lecco",
+    "address": "Via Nazionale 30",
+    "postal_code": "23900",
+    "coordinates": {
+      "latitude": 45.8566,
+      "longitude": 9.3976
+    }
+  },
+  "contact": {
+    "primary_name": "not_available",
+    "primary_title": "not_available",
+    "primary_email": "info@ronconispa.it",
+    "primary_phone": "+39 0341 494111",
+    "website": "https://www.ronconispa.it",
+    "linkedin": "https://www.linkedin.com/company/ronconi-spa"
+  },
+  "capabilities": {
+    "products": [
+      "Cold drawn precision seamless steel pipes",
+      "Carbon steel pipes",
+      "Stainless steel pipes",
+      "Alloy steel pipes"
+    ],
+    "services": [
+      "Precision pipe manufacturing",
+      "Cold drawing",
+      "Heat treatment"
+    ],
+    "certifications": [
+      "ISO 9001",
+      "ISO 14001"
+    ],
+    "pipeline_diameters_supported": {
+      "min_inches": 0.5,
+      "max_inches": 12
+    },
+    "materials_expertise": [
+      "carbon_steel",
+      "stainless_steel",
+      "alloy_steel"
+    ],
+    "annual_capacity": "not_available",
+    "experience_years": 70,
+    "employee_count": 200
+  },
+  "previous_projects": [],
+  "logistics": {
+    "delivery_regions": [
+      "Europe"
+    ],
+    "estimated_lead_time_days": 25,
+    "shipping_capabilities": [
+      "truck",
+      "rail"
+    ],
+    "warehouses": [
+      {
+        "city": "Lecco",
+        "country": "Italy"
+      }
+    ],
+    "international_export": true,
+    "rush_delivery_available": true
+  },
+  "pricing": {
+    "pricing_model": "quote_based",
+    "currency": "EUR",
+    "payment_terms": "Net 30",
+    "accepts_letters_of_credit": true
+  },
+  "quality_ratings": {
+    "overall_score": 4.6,
+    "rating_source": "industry_reputation",
+    "reliability_score": 4.5,
+    "quality_score": 4.7,
+    "communication_score": 4.6,
+    "number_of_reviews": 85
+  },
+  "compatibility": {
+    "pipeline_specs_match": true,
+    "match_score": 85,
+    "match_notes": [
+      "Over 70 years of production experience",
+      "Precision seamless pipe manufacturing",
+      "Multiple material options available"
+    ]
+  },
+  "metadata": {
+    "source": "perplexity_research",
+    "date_researched": "2025-12-02T16:30:21Z",
+    "confidence_level": "high",
+    "notes": "Cold drawn precision seamless steel pipes manufacturer with over 70 years of production experience. Specialized in heat exchangers, boilers, oil and gas applications.",
+    "tags": [
+      "seamless_pipes",
+      "precision_manufacturing",
+      "multi_material",
+      "italy_based",
+      "established_manufacturer"
+    ]
+  }
+}

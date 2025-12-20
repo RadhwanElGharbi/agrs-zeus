@@ -1,8 +1,8 @@
 # AGRS Project Structure Standard
 
-**Version:** 2.0  
+**Version:** 2.1  
 **Established:** October 11, 2025  
-**Last Updated:** November 26, 2025  
+**Last Updated:** December 2, 2025  
 **Status:** MANDATORY for all new projects
 
 ---
@@ -110,7 +110,7 @@ All new projects MUST be created under this directory.
 │   ├── dataset_fetch.log          # GUI dataset fetch operations
 │   ├── processing.log             # Geoprocessing operations log
 │   └── perplexity_queries.log     # All Perplexity searches (query ID, timestamp, params)
-└── docs/                          # Project documentation
+    └── docs/                          # Project documentation
     ├── README.md
     ├── data_sources.md
     ├── project_confirmation_report.md
@@ -127,6 +127,18 @@ All new projects MUST be created under this directory.
     │   │   └── ...
     │   ├── regulatory_index.md    # Index of all regulatory documents
     │   └── regulatory_document_sources.md
+    ├── suppliers/                 # Supplier profiles and research (MANDATORY)
+    │   ├── supplier_index.json    # Index of all supplier profiles
+    │   ├── construction_supplies/ # Construction material suppliers
+    │   │   └── SUP_XXX_YYYY_NNN.json
+    │   ├── construction_services/ # Construction service providers
+    │   │   └── SUP_XXX_YYYY_NNN.json
+    │   ├── pipeline_manufacturers/ # Pipe manufacturers
+    │   │   └── SUP_XXX_YYYY_NNN.json
+    │   ├── equipment_manufacturers/ # Pipeline equipment manufacturers
+    │   │   └── SUP_XXX_YYYY_NNN.json
+    │   └── consultancies/         # Environmental/project consultancies
+    │       └── SUP_XXX_YYYY_NNN.json
     └── perplexity_research/       # All Perplexity AI research
         ├── aoi_intelligence.md
         ├── regulatory_authorities.md
@@ -1333,6 +1345,171 @@ Regulatory documentation must be:
 - **Regulatory Agency Websites:** Direct downloads from authorities
 - **Legal Databases:** LexisNexis, Westlaw (for detailed legal analysis)
 
+---
+
+#### **Step 4: Supplier Research and Profiling (RECOMMENDED)**
+
+**After completing regulatory research**, identify and profile potential suppliers for the project. This enables informed procurement decisions and supply chain planning.
+
+**Purpose:**
+- Identify qualified suppliers within the project country/region
+- Compare capabilities, pricing, and delivery timelines
+- Assess supplier fit with project specifications
+- Support procurement planning and budgeting
+- Enable visualization of supplier locations on project maps
+
+**Supplier Categories:**
+
+1. **Construction Supplies**
+   - Steel, concrete, aggregates
+   - Welding materials and consumables
+   - Coating materials (FBE, 3LPE, 3LPP)
+   - Cathodic protection materials
+   - Markers and signage
+
+2. **Construction Services**
+   - Civil works contractors
+   - Welding and fabrication services
+   - Coating and insulation contractors
+   - Horizontal Directional Drilling (HDD) specialists
+   - Hydrostatic testing services
+
+3. **Pipeline Manufacturers**
+   - Line pipe manufacturers (seamless, welded)
+   - Fittings and flanges
+   - Valves (gate, ball, check, control)
+   - Pressure vessels and separators
+
+4. **Equipment Manufacturers**
+   - Compressor stations
+   - Metering and instrumentation
+   - SCADA and control systems
+   - Pig launchers and receivers
+   - Safety equipment
+
+5. **Consultancies**
+   - Environmental Impact Assessment (EIA)
+   - Geotechnical investigation
+   - Permitting and regulatory support
+   - Project management
+   - Engineering design services
+
+**Using the ZEUS AI Agent for Supplier Research:**
+
+The GUI provides a Supplier Search feature in the Project Management view that:
+1. Takes the project's `pipeline_specs.json` and `project_aoi.json` as input
+2. Uses Perplexity Deep Research to find qualified suppliers
+3. Generates standardized supplier profiles in JSON format
+4. Displays supplier locations on the project map
+
+**Supplier Profile Schema:**
+
+All supplier profiles MUST follow the standardized JSON schema located at:
+`/opt/agrs/templates/supplier_profile_schema.json`
+
+**Supplier ID Format:**
+
+```
+SUP_{ISO3}_{YEAR}_{SEQ}
+```
+
+| Component | Description | Example |
+|-----------|-------------|---------|
+| `SUP` | Prefix indicating supplier | `SUP` |
+| `ISO3` | ISO 3166-1 alpha-3 country code | `ITA`, `USA`, `CAN` |
+| `YEAR` | 4-digit year | `2025` |
+| `SEQ` | 3-digit sequence number | `001`, `042` |
+
+**Examples:**
+- `SUP_ITA_2025_001` - First Italian supplier added in 2025
+- `SUP_USA_2025_015` - 15th US supplier added in 2025
+
+**Required Supplier Profile Fields:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `supplier_id` | string | ✅ | Unique identifier (SUP_XXX_YYYY_NNN) |
+| `company_name` | string | ✅ | Official registered company name |
+| `category` | enum | ✅ | Primary supplier category |
+| `location` | object | ✅ | Headquarters location with coordinates |
+| `contact` | object | ✅ | Contact information |
+| `capabilities` | object | ✅ | Products, services, certifications |
+| `metadata` | object | ✅ | Source, date, confidence level |
+
+**Optional but Recommended Fields:**
+
+| Field | Description |
+|-------|-------------|
+| `subcategories` | Specific areas of expertise |
+| `previous_projects` | Notable past projects |
+| `logistics` | Delivery regions, lead times |
+| `pricing` | Pricing model, typical ranges |
+| `quality_ratings` | Reliability and quality scores |
+| `compatibility` | Match score with project requirements |
+
+**Directory Structure:**
+
+```
+docs/suppliers/
+├── supplier_index.json          # Master index of all suppliers
+├── construction_supplies/       # Category: Construction materials
+│   ├── SUP_ITA_2025_001.json
+│   └── SUP_ITA_2025_002.json
+├── construction_services/       # Category: Service providers
+│   └── SUP_ITA_2025_003.json
+├── pipeline_manufacturers/      # Category: Pipe manufacturers
+│   └── SUP_ITA_2025_004.json
+├── equipment_manufacturers/     # Category: Equipment
+│   └── SUP_ITA_2025_005.json
+└── consultancies/              # Category: Consultancies
+    └── SUP_ITA_2025_006.json
+```
+
+**Supplier Index File (`supplier_index.json`):**
+
+```json
+{
+  "project_id": "AGRS_Central_Italy_ITA_2025_001",
+  "last_updated": "2025-12-02T10:00:00Z",
+  "total_suppliers": 15,
+  "suppliers_by_category": {
+    "construction_supplies": 3,
+    "construction_services": 4,
+    "pipeline_manufacturers": 3,
+    "equipment_manufacturers": 2,
+    "consultancies": 3
+  },
+  "suppliers": [
+    {
+      "supplier_id": "SUP_ITA_2025_001",
+      "company_name": "Tenaris S.p.A.",
+      "category": "pipeline_manufacturer",
+      "file": "pipeline_manufacturers/SUP_ITA_2025_001.json",
+      "coordinates": { "latitude": 45.6486, "longitude": 9.6042 }
+    }
+  ]
+}
+```
+
+**Integration with GUI:**
+
+The Project Management view displays suppliers on the map:
+- Each supplier appears as a marker at their headquarters location
+- Clicking a marker opens the supplier profile details
+- Suppliers can be filtered by category
+- Compatibility scores are highlighted for quick assessment
+
+**Validation Checklist:**
+
+- [ ] `docs/suppliers/` directory created
+- [ ] `supplier_index.json` exists and is up-to-date
+- [ ] All supplier profiles follow the schema
+- [ ] Each supplier has valid coordinates for map display
+- [ ] Contact information verified where possible
+- [ ] Compatibility scores calculated against `pipeline_specs.json`
+
+---
+
 #### Standard Data Acquisition
 
 After completing Perplexity research:
@@ -1418,7 +1595,17 @@ Before a project is considered "ready for analysis", verify:
 - [ ] Compliance action items identified
 - [ ] Legal review scheduled or completed
 
-#### Step 4: Dataset Fetching
+#### Step 4: Supplier Research (RECOMMENDED for oil & gas projects)
+- [ ] `docs/suppliers/` directory structure created
+- [ ] Supplier search conducted via ZEUS AI Agent or Perplexity
+- [ ] Supplier profiles created following schema (`/opt/agrs/templates/supplier_profile_schema.json`)
+- [ ] All profiles have valid geographic coordinates
+- [ ] `supplier_index.json` created and populated
+- [ ] Compatibility scores calculated against `pipeline_specs.json`
+- [ ] Contact information verified where possible
+- [ ] Supplier locations visible on Project Management map
+
+#### Step 5: Dataset Fetching
 - [ ] All required datasets have been fetched
 - [ ] All datasets are reprojected to project CRS
 - [ ] All datasets are clipped to AOI
@@ -1680,6 +1867,7 @@ Non-compliance may result in:
 | 1.4 | 2025-10-28 | Radwan El-Gharbi | Added mandatory data organization structure: raw/ and processed/ subdirectories for rasters and vectors; Updated file naming conventions to include CRS in processed files; Added symlink requirements for convenient access; Documented .aux.xml auxiliary files |
 | 1.5 | 2025-10-28 | Radwan El-Gharbi | **Added mandatory regulatory documentation acquisition (Step 3 in Phase 2):** Added docs/regulatory_docs/ directory structure with national/regional/local subdirectories; Comprehensive regulatory documentation requirements for oil & gas pipeline projects; Integration with Perplexity search for document discovery; Regulatory index template and compliance checklist; Updated QA checklist with regulatory documentation validation steps |
 | 2.0 | 2025-11-26 | Radwan El-Gharbi | **Major restructuring:** Added `inputs/` directory for client materials; Added `scripts/` directory for project scripts; Deprecated symlinks (GUI reads from processed/ directly); Replaced `aoi_metadata.json` with `project_aoi.json` (auto-populated with area_km2 and countries); Added `docs/cost_matrix/` for PIRL training; Updated `project_metadata.json` schema with country/iso3 and nested crs object; Added root-level script policy; Added migration guide for existing projects |
+| 2.1 | 2025-12-02 | Radwan El-Gharbi | **Added supplier documentation system:** Added `docs/suppliers/` directory structure with category subdirectories; Created standardized supplier profile JSON schema (`/opt/agrs/templates/supplier_profile_schema.json`); Added supplier ID format (SUP_ISO3_YEAR_SEQ); Added supplier research as Step 4 in Phase 2; Updated QA checklist with supplier validation; Documented ZEUS AI Agent integration for supplier search; Added supplier_index.json for map integration |
 
 ---
 

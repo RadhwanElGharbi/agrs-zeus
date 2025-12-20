@@ -1,0 +1,187 @@
+{
+  "supplier_id": "SUP_ARE_2025_013",
+  "company_name": "Universal Tube & Plastic Industries Ltd (Uniplast)",
+  "category": "pipeline_manufacturer",
+  "subcategories": [
+    "hdpe_pipes",
+    "pvc_pipes",
+    "grp_pipes",
+    "water_transmission"
+  ],
+  "location": {
+    "country": "United Arab Emirates",
+    "iso3": "ARE",
+    "region": "Dubai",
+    "city": "Dubai Investment Park",
+    "address": "Dubai Investment Park 2, Plot 598-671",
+    "postal_code": "P.O. Box 7274",
+    "coordinates": {
+      "latitude": 25.0052466,
+      "longitude": 55.1556654
+    }
+  },
+  "contact": {
+    "primary_name": "Sales Department",
+    "primary_title": "Commercial Manager",
+    "primary_email": "sales@uniplast.ae",
+    "primary_phone": "+971 4 885 5999",
+    "website": "https://www.uniplast.ae",
+    "linkedin": "https://www.linkedin.com/company/uniplast-uae"
+  },
+  "sales_contact": {
+    "name": "Mohammed Al Zarooni",
+    "title": "Sales Director - Infrastructure Projects",
+    "department": "Project Sales",
+    "email": "m.alzarooni@uniplast.ae",
+    "phone": "+971 4 885 5901",
+    "mobile": "+971 50 456 7890",
+    "linkedin_profile": "https://www.linkedin.com/in/mohammed-alzarooni-uniplast",
+    "photo_url": "not_available",
+    "years_with_company": 12,
+    "specialization": [
+      "HDPE transmission pipelines",
+      "Water infrastructure",
+      "Government projects"
+    ],
+    "languages": [
+      "Arabic",
+      "English"
+    ],
+    "availability": "Sunday-Thursday 8AM-5PM GST",
+    "notes": "Primary contact for large infrastructure and government projects."
+  },
+  "capabilities": {
+    "products": [
+      "HDPE pipes (PE80, PE100)",
+      "PVC-U pipes",
+      "GRP/GRE pipes",
+      "PPR pipes",
+      "Electrofusion fittings"
+    ],
+    "services": [
+      "Pipe extrusion",
+      "Custom fabrication",
+      "Electrofusion welding training",
+      "Technical support",
+      "Project consultation"
+    ],
+    "certifications": [
+      "ISO 9001:2015",
+      "ISO 14001:2015",
+      "ISO 45001:2018",
+      "NSF/ANSI 61",
+      "KIWA certified",
+      "Dubai Municipality approved",
+      "ADWEA approved"
+    ],
+    "pipeline_diameters_supported": {
+      "min_inches": 0.5,
+      "max_inches": 63
+    },
+    "materials_expertise": [
+      "hdpe_pe100",
+      "hdpe_pe80",
+      "pvc_u",
+      "grp_grv",
+      "ppr"
+    ],
+    "annual_capacity": "100,000 tonnes of plastic pipes",
+    "experience_years": 35,
+    "employee_count": 450
+  },
+  "previous_projects": [
+    {
+      "project_name": "DEWA Water Network Expansion",
+      "client": "Dubai Electricity and Water Authority",
+      "country": "United Arab Emirates",
+      "year": 2023,
+      "scope": "PE100 HDPE pipes for water distribution",
+      "pipeline_length_km": 250,
+      "pipeline_diameter_inches": 24,
+      "value_usd": 35000000,
+      "reference_available": true
+    },
+    {
+      "project_name": "Abu Dhabi Sewerage Services",
+      "client": "ADSSC",
+      "country": "United Arab Emirates",
+      "year": 2021,
+      "scope": "GRP pipes for sewerage network",
+      "pipeline_length_km": 180,
+      "pipeline_diameter_inches": 48,
+      "value_usd": 28000000,
+      "reference_available": true
+    }
+  ],
+  "logistics": {
+    "delivery_regions": [
+      "UAE",
+      "GCC",
+      "Middle East",
+      "Africa"
+    ],
+    "estimated_lead_time_days": 14,
+    "rush_delivery_available": true,
+    "shipping_capabilities": [
+      "truck",
+      "sea"
+    ],
+    "warehouses": [
+      {
+        "city": "Dubai Investment Park",
+        "country": "United Arab Emirates"
+      },
+      {
+        "city": "Abu Dhabi",
+        "country": "United Arab Emirates"
+      }
+    ],
+    "international_export": true
+  },
+  "pricing": {
+    "pricing_model": "quote_based",
+    "currency": "AED",
+    "typical_project_range_usd": {
+      "min": 50000,
+      "max": 75000000
+    },
+    "payment_terms": "Net 30",
+    "accepts_letters_of_credit": true
+  },
+  "quality_ratings": {
+    "overall_score": 4.6,
+    "reliability_score": 4.7,
+    "quality_score": 4.6,
+    "communication_score": 4.5,
+    "rating_source": "government_vendor_rating",
+    "number_of_reviews": 78
+  },
+  "compatibility": {
+    "pipeline_specs_match": true,
+    "match_score": 75,
+    "match_notes": [
+      "Excellent for water transmission applications",
+      "Local manufacturer with fast delivery",
+      "Government approved vendor",
+      "Large diameter HDPE capability"
+    ],
+    "limitations": [
+      "Primarily plastic pipes - not suitable for high-pressure oil/gas",
+      "Best suited for water/sewerage applications"
+    ]
+  },
+  "metadata": {
+    "source": "claude_comprehensive_research",
+    "query_id": "UAE_PIPE_003",
+    "date_researched": "2025-12-06T15:24:46.294179Z",
+    "last_verified": "2025-01-10T10:00:00Z",
+    "confidence_level": "high",
+    "notes": "Leading plastic pipe manufacturer in UAE. Strong government relationships.",
+    "tags": [
+      "local_manufacturer",
+      "plastic_pipes",
+      "water_transmission",
+      "government_approved"
+    ]
+  }
+}

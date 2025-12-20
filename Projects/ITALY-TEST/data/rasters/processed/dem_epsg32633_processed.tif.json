@@ -1,0 +1,74 @@
+{
+  "dataset_name": "TINITALY DEM 10m (Processed)",
+  "category": "dem",
+  "project": "ITALY-TEST",
+  "processing_date": "2025-12-17T13:36:00.322944Z",
+  "target_crs": "EPSG:32633",
+  "target_crs_name": "WGS 84 / UTM zone 33N",
+  "data_type": "Raster",
+  "format": "GeoTIFF",
+  "processed_path": "/opt/agrs/Projects/ITALY-TEST/data/rasters/processed/dem_epsg32633_processed.tif",
+  "raw_path": "/opt/agrs/Projects/ITALY-TEST/data/rasters/raw/dem_global_30m_raw.tif",
+  "raw_metadata_file": "/opt/agrs/Projects/ITALY-TEST/data/rasters/raw/dem_global_30m_raw.tif.json",
+  "source_files": [
+    {
+      "filename": "dem_global_30m_raw.tif",
+      "metadata": "dem_global_30m_raw.tif.json"
+    }
+  ],
+  "operations_applied": [
+    {
+      "operation": "reproject",
+      "tool": "gdalwarp",
+      "target_epsg": 32633
+    },
+    {
+      "operation": "clip",
+      "tool": "AOI cutline",
+      "source": "/opt/agrs/Projects/ITALY-TEST/aoi/aoi.geojson"
+    }
+  ],
+  "file_size_bytes": 792773,
+  "validation_status": "passed",
+  "validation_date": "2025-12-17T13:36:00.322978Z",
+  "protocol_reference": "/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md",
+  "protocol_version": "1.0",
+  "zeus_version": "0.1.0",
+  "notes": "Core elevation surface used for slope, hydraulics and terrain costs.",
+  "source": "TINITALY/01 square km Digital Elevation Model",
+  "provider": "INGV - Istituto Nazionale di Geofisica e Vulcanologia",
+  "provider_url": "https://tinitaly.pi.ingv.it/",
+  "coverage_date": "2011",
+  "documentation_url": "https://tinitaly.pi.ingv.it/Download_Area1.html",
+  "license": "CC BY 4.0",
+  "attribution": "TINITALY DEM \u00a9 INGV.",
+  "resolution_m": {
+    "x": 26.742176195514805,
+    "y": 26.735550848932082
+  },
+  "dimensions": {
+    "width": 423,
+    "height": 480
+  },
+  "extent": {
+    "minx": 268840.543,
+    "miny": 4766334.189,
+    "maxx": 280152.483,
+    "maxy": 4779167.253,
+    "crs": "EPSG:4326"
+  },
+  "bbox_wgs84": {
+    "west": 12.1580592,
+    "south": 43.0145358,
+    "east": 12.3020484,
+    "north": 43.1333237,
+    "crs": "EPSG:4326"
+  },
+  "statistics": {
+    "min": 207.16505432129,
+    "max": 590.65673828125,
+    "mean": 276.27903247161,
+    "stddev": 64.112515595245,
+    "valid_percent": 95.28
+  }
+}

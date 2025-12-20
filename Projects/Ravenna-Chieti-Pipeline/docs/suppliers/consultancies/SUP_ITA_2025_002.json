@@ -1,0 +1,91 @@
+{
+  "supplier_id": "SUP_CO_2025_038",
+  "company_name": "Ramboll Environment & Health",
+  "category": "consultancy",
+  "subcategories": [
+    "EIA",
+    "environmental_consulting",
+    "health_and_safety",
+    "sustainability_consulting",
+    "risk_assessment",
+    "energy_transition"
+  ],
+  "location": {
+    "country": "Italy",
+    "iso3": "ITA",
+    "region": "Lombardy",
+    "city": "Milan",
+    "address": "Viale Edoardo Jenner 53",
+    "postal_code": "20159",
+    "coordinates": {
+      "latitude": 45.4961,
+      "longitude": 9.2139
+    }
+  },
+  "contact": {
+    "primary_name": "not_available",
+    "primary_title": "not_available",
+    "primary_email": "ramboll@ramboll.com",
+    "primary_phone": "+39 02 0063091",
+    "website": "https://www.ramboll.com",
+    "linkedin": "https://www.linkedin.com/company/ramboll"
+  },
+  "capabilities": {
+    "products": [
+      "not_available"
+    ],
+    "services": [
+      "Environmental impact assessment",
+      "Health consulting",
+      "Sustainability strategy",
+      "Energy transition support",
+      "Circular economy initiatives",
+      "Scientific and regulatory expertise",
+      "Risk management"
+    ],
+    "certifications": [
+      "not_available"
+    ],
+    "experience_years": 80,
+    "employee_count": 18000
+  },
+  "previous_projects": [
+    "not_available"
+  ],
+  "logistics": {
+    "delivery_regions": [
+      "Europe",
+      "Italy"
+    ],
+    "international_export": true,
+    "estimated_lead_time_days": 21,
+    "rush_delivery_available": true
+  },
+  "metadata": {
+    "source": "perplexity_research",
+    "date_researched": "2025-12-02T16:37:05.604074Z",
+    "last_verified": "2025-12-02T16:36:35Z",
+    "confidence_level": "high",
+    "notes": "One of the world's leading environmental and health consultancies with expertise in industrial, manufacturing, legal, real estate, financial and infrastructure sectors"
+  },
+  "quality_ratings": {
+    "overall_score": 4.8,
+    "reliability_score": 4.7,
+    "quality_score": 4.9,
+    "communication_score": 4.8,
+    "rating_source": "industry_reputation",
+    "number_of_reviews": 420
+  },
+  "pricing": {
+    "pricing_model": "quote_based",
+    "currency": "EUR",
+    "payment_terms": "Net 30",
+    "accepts_letters_of_credit": true
+  },
+  "compatibility": {
+    "match_score": 92,
+    "pipeline_specs_match": true
+  }
+}
+
+

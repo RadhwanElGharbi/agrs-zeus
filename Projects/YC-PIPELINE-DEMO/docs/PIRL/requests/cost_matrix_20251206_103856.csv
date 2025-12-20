@@ -1,0 +1,11 @@
+PIRL Cost Matrix Configuration
+Generated,2025-12-06T10:38:56.211998
+
+=== MATERIAL COSTS (PIPE) ===
+Diameter,Wall Thickness,Grade,Cost per Meter,Weight (kg/m)
+"24"" (610mm)",11.1mm,X65,$280 - $400,168
+
+=== TERRAIN MULTIPLIERS ===
+Terrain Type,Cost Multiplier,Cost per km,Rationale
+Flat Terrain (0-2°),1.0,$0.5M - $1.0M,Standard trenching
+

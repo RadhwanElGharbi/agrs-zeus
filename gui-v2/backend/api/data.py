@@ -1457,30 +1457,51 @@ async def get_earthworks_analysis(
             })
 
     # Calculate grading plane elevations
-    # Strategy: minimize mass haul balance by adjusting grade elevation
-    # Start with simple approach: use smoothed centerline profile with max slope constraint
+    # The grading plane represents the pipeline trench bottom/top level
+    # For pipelines, we typically follow the terrain closely with minor smoothing
+    # The grading_slope parameter limits how steeply the pipeline can climb/descend
 
     centerline_elevations = [cs["ground_elevation"] for cs in cross_sections]
     section_chainages = [cs["chainage"] for cs in cross_sections]
 
-    # Apply slope constraint to create grading plane
+    # For pipeline earthworks, the grading plane should follow the ground profile
+    # but smoothed to respect the maximum slope constraint
+    # We use a simple approach: the grading plane equals the ground elevation
+    # but cannot change slope faster than grading_slope%
+
     grading_elevations = centerline_elevations.copy()
 
-    # Forward pass - constrain uphill (using actual distance between vertices)
-    for i in range(1, len(grading_elevations)):
-        segment_distance = section_chainages[i] - section_chainages[i-1]
-        max_rise = segment_distance * grading_slope / 100
-        max_elev = grading_elevations[i-1] + max_rise
-        min_elev = grading_elevations[i-1] - max_rise
-        grading_elevations[i] = max(min_elev, min(max_elev, grading_elevations[i]))
+    # Multiple passes to converge on a smooth grading plane that follows terrain
+    for _ in range(3):
+        # Forward pass - constrain slope changes
+        for i in range(1, len(grading_elevations)):
+            segment_distance = section_chainages[i] - section_chainages[i-1]
+            if segment_distance <= 0:
+                continue
+            max_rise = segment_distance * grading_slope / 100
 
-    # Backward pass - constrain downhill (using actual distance between vertices)
-    for i in range(len(grading_elevations) - 2, -1, -1):
-        segment_distance = section_chainages[i+1] - section_chainages[i]
-        max_rise = segment_distance * grading_slope / 100
-        max_elev = grading_elevations[i+1] + max_rise
-        min_elev = grading_elevations[i+1] - max_rise
-        grading_elevations[i] = max(min_elev, min(max_elev, grading_elevations[i]))
+            # Constrain grading elevation to be within max slope from previous
+            max_elev = grading_elevations[i-1] + max_rise
+            min_elev = grading_elevations[i-1] - max_rise
+            grading_elevations[i] = max(min_elev, min(max_elev, grading_elevations[i]))
+
+        # Backward pass - constrain slope changes
+        for i in range(len(grading_elevations) - 2, -1, -1):
+            segment_distance = section_chainages[i+1] - section_chainages[i]
+            if segment_distance <= 0:
+                continue
+            max_rise = segment_distance * grading_slope / 100
+
+            max_elev = grading_elevations[i+1] + max_rise
+            min_elev = grading_elevations[i+1] - max_rise
+            grading_elevations[i] = max(min_elev, min(max_elev, grading_elevations[i]))
+
+        # Pull grading back toward ground to minimize cut/fill
+        for i in range(len(grading_elevations)):
+            ground = centerline_elevations[i]
+            grade = grading_elevations[i]
+            # Move grading 50% toward ground each iteration
+            grading_elevations[i] = grade + (ground - grade) * 0.5
 
     # Calculate cut and fill volumes using Torricelli formula
     # V = d/2 * (F1 + F2) where F1 and F2 are cut/fill areas at adjacent sections

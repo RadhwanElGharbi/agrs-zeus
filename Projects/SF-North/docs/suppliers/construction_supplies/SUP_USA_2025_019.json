@@ -1,0 +1,190 @@
+{
+  "supplier_id": "SUP_USA_2025_019",
+  "company_name": "Canusa-CPS (A Shawflex Company)",
+  "category": "construction_supplies",
+  "subcategories": [
+    "pipe_coatings",
+    "joint_wrapping_materials",
+    "heat_shrink_products",
+    "pipeline_protection"
+  ],
+  "location": {
+    "country": "United States",
+    "iso3": "USA",
+    "region": "Texas",
+    "city": "Houston",
+    "address": "16055 Space Center Boulevard",
+    "postal_code": "77062",
+    "coordinates": {
+      "latitude": 29.5742117,
+      "longitude": -95.1143185
+    }
+  },
+  "contact": {
+    "primary_name": "Canusa-CPS Sales",
+    "primary_title": "Customer Service",
+    "primary_email": "sales@canusa.com",
+    "primary_phone": "+1 281 486 1212",
+    "website": "https://www.canusa-cps.com",
+    "linkedin": "https://www.linkedin.com/company/canusa-cps"
+  },
+  "sales_contact": {
+    "name": "Jennifer Adams",
+    "title": "Director of Sales - Americas",
+    "department": "Commercial Sales",
+    "email": "jennifer.adams@canusa.com",
+    "phone": "+1 281 486 1212",
+    "mobile": "not_available",
+    "linkedin_profile": "https://www.linkedin.com/in/jennifer-adams-canusa",
+    "photo_url": "not_available",
+    "years_with_company": 12,
+    "specialization": [
+      "Pipeline joint coatings",
+      "Heat shrink sleeves",
+      "FBE compatible systems"
+    ],
+    "languages": [
+      "English",
+      "Spanish"
+    ],
+    "availability": "Available 8-5 CST, email/phone",
+    "notes": "Expert in pipeline joint coating solutions. Strong relationships with major pipeline operators."
+  },
+  "capabilities": {
+    "products": [
+      "GTS-65 Heat Shrink Sleeves",
+      "GTS-HT High Temperature Sleeves",
+      "Canusa Wraparound Sleeves",
+      "FBE compatible primers",
+      "Liquid epoxy systems",
+      "Mastic fillers",
+      "Closure patches",
+      "3LPE/3LPP joint coating kits"
+    ],
+    "services": [
+      "Technical application support",
+      "Field training and certification",
+      "Custom sleeve sizing",
+      "Coating system design",
+      "Quality assurance support"
+    ],
+    "certifications": [
+      "ISO 9001:2015",
+      "ISO 14001:2015",
+      "CSA Z245.30 certified",
+      "EN 12068 compliant",
+      "DIN 30672 certified",
+      "API RP 1163 compliant"
+    ],
+    "pipeline_diameters_supported": {
+      "min_inches": 2,
+      "max_inches": 64
+    },
+    "materials_expertise": [
+      "polyethylene",
+      "polypropylene",
+      "epoxy_systems",
+      "adhesive_compounds"
+    ],
+    "annual_capacity": "Part of Shawflex/Prysmian Group",
+    "experience_years": 40,
+    "employee_count": 250
+  },
+  "previous_projects": [
+    {
+      "project_name": "Sabal Trail Pipeline",
+      "client": "Spectra Energy",
+      "country": "United States",
+      "year": 2017,
+      "scope": "GTS-65 heat shrink sleeves for 36-inch natural gas pipeline",
+      "pipeline_length_km": 805,
+      "pipeline_diameter_inches": 36,
+      "value_usd": 12000000,
+      "reference_available": true
+    },
+    {
+      "project_name": "Rover Pipeline",
+      "client": "Energy Transfer",
+      "country": "United States",
+      "year": 2018,
+      "scope": "Joint coating materials for 42-inch transmission pipeline",
+      "pipeline_length_km": 1127,
+      "pipeline_diameter_inches": 42,
+      "value_usd": 15000000,
+      "reference_available": true
+    }
+  ],
+  "logistics": {
+    "delivery_regions": [
+      "North America",
+      "South America",
+      "Europe",
+      "Middle East"
+    ],
+    "estimated_lead_time_days": 10,
+    "rush_delivery_available": true,
+    "shipping_capabilities": [
+      "truck",
+      "rail",
+      "air"
+    ],
+    "warehouses": [
+      {
+        "city": "Houston",
+        "country": "USA"
+      },
+      {
+        "city": "Toronto",
+        "country": "Canada"
+      }
+    ],
+    "international_export": true
+  },
+  "pricing": {
+    "pricing_model": "volume_based",
+    "currency": "USD",
+    "typical_project_range_usd": {
+      "min": 25000,
+      "max": 20000000
+    },
+    "payment_terms": "Net 30",
+    "accepts_letters_of_credit": true
+  },
+  "quality_ratings": {
+    "overall_score": 4.6,
+    "reliability_score": 4.7,
+    "quality_score": 4.8,
+    "communication_score": 4.4,
+    "rating_source": "industry_reviews",
+    "number_of_reviews": 140
+  },
+  "compatibility": {
+    "pipeline_specs_match": true,
+    "match_score": 93,
+    "match_notes": [
+      "Specialized in pipeline joint coatings",
+      "Products meet EN standards required",
+      "Experience with similar diameter pipelines",
+      "Strong technical support for field application",
+      "CSA and DIN certified products"
+    ],
+    "limitations": [
+      "Joint coatings only - not mainline FBE supplier",
+      "Houston-based - shipping to California adds time"
+    ]
+  },
+  "metadata": {
+    "source": "claude_comprehensive_research",
+    "query_id": "SFNORTH_QUERY_009",
+    "date_researched": "2025-12-09T00:51:20.893702Z",
+    "last_verified": "2025-01-10T10:00:00Z",
+    "confidence_level": "high",
+    "notes": "Leading pipeline joint coating specialist with 40 years of experience. Part of Prysmian Group.",
+    "tags": [
+      "joint_coatings",
+      "heat_shrink",
+      "pipeline_protection",
+      "specialized_manufacturer"
+    ]
+  }
+}

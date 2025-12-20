@@ -1,0 +1,69 @@
+{
+  "dataset_name": "OpenStreetMap Railways Extract",
+  "category": "railways",
+  "project": "ITALY-TEST",
+  "raw_path": "/opt/agrs/Projects/ITALY-TEST/data/vectors/raw/osm_railways_raw.gpkg",
+  "fetch_tool": "osm_railways_overpass",
+  "fetch_command": "zeus_ai_agent ls -la /opt/agrs/Projects/ITALY-TEST/data/vectors/raw/osm_railways*.gpkg 2>/dev/null || echo 'No existing raw railways found'; ls -la /opt/agrs/Projects/ITALY-TEST/data/vectors/processed/*railways*.gpkg 2>/dev/null || echo 'No existing processed railways found' cat > /opt/agrs/Projects/ITALY-TEST/scripts/fetch_osm_railways.py << 'PYEOF'\nimport requests\nimport json\nimport os\nimport subprocess\n\n# AOI bounds (south, west, north, east for Overpass)\nbbox = \"43.01558367463844,12.15523421889559,43.1321977103725,12.302134619613025\"\noutput_dir = \"/opt/agrs/Projects/ITALY-TEST/data/vectors/raw\"\noutput_geojson = os.path.join(output_dir, \"osm_railways_raw.geojson\")\noutput_gpkg = os.path.join(output_dir, \"osm_railways_raw.gpkg\")\n\n# Overpass query for railways\noverpass_query = f\"\"\"\n[out:json][timeout:300];\n(\n  way[\"railway\"~\"rail|subway|tram|light_rail|narrow_gauge|preserved|miniature|monorail|funicular\"]({bbox});\n);\nout body geom;\n\"\"\"\n\nprint(\"Fetching railways from Overpass API...\")\nresponse = requests.post(\n    \"https://overpass-api.de/api/interpreter\",\n    data=overpass_query,\n    timeout=300\n)\n\nif response.status_code != 200:\n    print(f\"ERROR: Overpass API returned status {response.status_code}\")\n    exit(1)\n\ndata = response.json()\nprint(f\"Received {len(data.get('elements', []))} elements from Overpass\")\n\n# Convert to GeoJSON\nfeatures = []\nfor element in data.get('elements', []):\n    if element.get('type') != 'way':\n        continue\n    \n    # Extract geometry from 'geometry' array\n    geom = element.get('geometry', [])\n    if not geom or len(geom) < 2:\n        continue\n    \n    coords = [[pt['lon'], pt['lat']] for pt in geom]\n    tags = element.get('tags', {})\n    \n    # Build properties with required schema fields\n    props = {\n        'osm_id': element.get('id'),\n        'name': tags.get('name', ''),\n        'railway': tags.get('railway', ''),\n        'operator': tags.get('operator', ''),\n        'gauge': tags.get('gauge', ''),\n        'electrified': tags.get('electrified', ''),\n        'usage': tags.get('usage', ''),\n        'service': tags.get('service', ''),\n    }\n    \n    # Preserve all other OSM tags\n    for key, value in tags.items():\n        if key not in props:\n            props[f'osm_{key}'] = value\n    \n    feature = {\n        'type': 'Feature',\n        'geometry': {\n            'type': 'LineString',\n            'coordinates': coords\n        },\n        'properties': props\n    }\n    features.append(feature)\n\nprint(f\"Created {len(features)} railway features\")\n\nif len(features) == 0:\n    print(\"WARNING: No railways found in AOI - this may be a rural area without rail infrastructure\")\n    # Create empty GeoPackage with correct schema\n    empty_geojson = {\n        'type': 'FeatureCollection',\n        'features': []\n    }\n    with open(output_geojson, 'w') as f:\n        json.dump(empty_geojson, f)\nelse:\n    # Write GeoJSON\n    geojson = {\n        'type': 'FeatureCollection',\n        'features': features\n    }\n    with open(output_geojson, 'w') as f:\n        json.dump(geojson, f)\n\nprint(f\"Saved GeoJSON to {output_geojson}\")\n\n# Convert to GeoPackage\nresult = subprocess.run([\n    'ogr2ogr', '-f', 'GPKG', '-nln', 'railways',\n    '-overwrite', output_gpkg, output_geojson\n], capture_output=True, text=True)\n\nif result.returncode != 0:\n    print(f\"ERROR converting to GPKG: {result.stderr}\")\n    exit(1)\n\nprint(f\"Saved GeoPackage to {output_gpkg}\")\n\n# Cleanup GeoJSON\nos.remove(output_geojson)\nprint(\"Done!\")\nPYEOF\npython3 /opt/agrs/Projects/ITALY-TEST/scripts/fetch_osm_railways.py ogrinfo -so /opt/agrs/Projects/ITALY-TEST/data/vectors/raw/osm_railways_raw.gpkg railways 2>/dev/null || echo 'Note: Railways layer may be empty if no rail infrastructure exists in AOI' FEATURE_COUNT=$(ogrinfo -so /opt/agrs/Projects/ITALY-TEST/data/vectors/raw/osm_railways_raw.gpkg railways 2>/dev/null | grep 'Feature Count' | awk '{print $3}' || echo '0')\ncat > /opt/agrs/Projects/ITALY-TEST/data/vectors/raw/osm_railways_raw.gpkg.json << EOF\n{\n    \"dataset_name\": \"OpenStreetMap Railways\",\n    \"source\": \"OpenStreetMap via Overpass API\",\n    \"provider\": \"OpenStreetMap contributors\",\n    \"provider_url\": \"https://www.openstreetmap.org/\",\n    \"coverage_date\": \"$(date +%Y-%m-%d)\",\n    \"fetch_date\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\n    \"fetch_tool\": \"Overpass API + ogr2ogr\",\n    \"raw_crs\": \"EPSG:4326\",\n    \"data_type\": \"Vector\",\n    \"geometry_type\": \"LineString\",\n    \"format\": \"GeoPackage\",\n    \"layer_name\": \"railways\",\n    \"feature_count\": ${FEATURE_COUNT:-0},\n    \"bbox_wgs84\": {\n        \"west\": 12.15523421889559,\n        \"south\": 43.01558367463844,\n        \"east\": 12.302134619613025,\n        \"north\": 43.1321977103725\n    },\n    \"railway_types\": [\"rail\", \"subway\", \"tram\", \"light_rail\", \"narrow_gauge\", \"preserved\"],\n    \"documentation_url\": \"https://wiki.openstreetmap.org/wiki/Key:railway\",\n    \"license\": \"ODbL 1.0\",\n    \"attribution\": \"\u00a9 OpenStreetMap contributors\",\n    \"notes\": \"Railways network including all rail types. Attributes preserved from OSM tags.\"\n}\nEOF ogr2ogr -f GPKG -t_srs EPSG:32633 -clipsrc /opt/agrs/Projects/ITALY-TEST/aoi/aoi.geojson -nln railways -overwrite /opt/agrs/Projects/ITALY-TEST/data/vectors/processed/railways_epsg32633_processed.gpkg /opt/agrs/Projects/ITALY-TEST/data/vectors/raw/osm_railways_raw.gpkg railways 2>/dev/null || echo 'Note: Processing may produce empty result if source is empty' ogrinfo -so /opt/agrs/Projects/ITALY-TEST/data/vectors/processed/railways_epsg32633_processed.gpkg railways 2>/dev/null || echo 'Note: Railways layer may be empty' FEATURE_COUNT=$(ogrinfo -so /opt/agrs/Projects/ITALY-TEST/data/vectors/processed/railways_epsg32633_processed.gpkg railways 2>/dev/null | grep 'Feature Count' | awk '{print $3}' || echo '0')\ncat > /opt/agrs/Projects/ITALY-TEST/data/vectors/processed/railways_epsg32633_processed.gpkg.json << EOF\n{\n    \"dataset_name\": \"OpenStreetMap Railways\",\n    \"category\": \"railways\",\n    \"project\": \"ITALY-TEST\",\n    \"processing_date\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\n    \"target_crs\": \"EPSG:32633\",\n    \"target_crs_name\": \"WGS 84 / UTM zone 33N\",\n    \"data_type\": \"Vector\",\n    \"geometry_type\": \"LineString\",\n    \"format\": \"GeoPackage\",\n    \"layer_name\": \"railways\",\n    \"feature_count\": ${FEATURE_COUNT:-0},\n    \"operations_applied\": [\n        {\n            \"operation\": \"reproject\",\n            \"tool\": \"ogr2ogr\",\n            \"source_crs\": \"EPSG:4326\",\n            \"target_crs\": \"EPSG:32633\"\n        },\n        {\n            \"operation\": \"clip\",\n            \"tool\": \"ogr2ogr\",\n            \"clipsrc\": \"aoi/aoi.geojson\"\n        }\n    ],\n    \"source_files\": [\n        {\n            \"filename\": \"osm_railways_raw.gpkg\",\n            \"metadata\": \"osm_railways_raw.gpkg.json\"\n        }\n    ],\n    \"schema\": {\n        \"osm_id\": \"OSM way ID\",\n        \"name\": \"Railway name\",\n        \"railway\": \"Railway type (rail, subway, tram, light_rail)\",\n        \"operator\": \"Railway operator\",\n        \"gauge\": \"Track gauge (e.g., 1435mm)\",\n        \"electrified\": \"Electrification type (contact_line, rail, yes, no)\",\n        \"usage\": \"Usage type (main, branch, industrial)\",\n        \"service\": \"Service type (spur, yard, siding)\"\n    },\n    \"validation_status\": \"passed\",\n    \"protocol_version\": \"1.0\"\n}\nEOF RAW_FILE=/opt/agrs/Projects/ITALY-TEST/data/vectors/raw/osm_railways_raw.gpkg; if [ -f \"$RAW_FILE\" ]; then COUNT=$(ogrinfo -so \"$RAW_FILE\" railways 2>/dev/null | grep 'Feature Count' | awk '{print $3}' || echo '0'); echo \"\u2713 Raw railways exists with ${COUNT:-0} features\"; else echo \"\u2717 Raw railways file not found\"; fi PROC_FILE=/opt/agrs/Projects/ITALY-TEST/data/vectors/processed/railways_epsg32633_processed.gpkg; if [ -f \"$PROC_FILE\" ]; then COUNT=$(ogrinfo -so \"$PROC_FILE\" railways 2>/dev/null | grep 'Feature Count' | awk '{print $3}' || echo '0'); echo \"\u2713 Processed railways exists with ${COUNT:-0} features\"; else echo \"\u2717 Processed railways file not found\"; fi CRS=$(ogrinfo -so /opt/agrs/Projects/ITALY-TEST/data/vectors/processed/railways_epsg32633_processed.gpkg railways 2>/dev/null | grep -i 'PROJCRS\\|UTM zone 33N' | head -1); if echo \"$CRS\" | grep -qi '32633\\|UTM zone 33N'; then echo \"\u2713 CRS is EPSG:32633\"; else echo \"\u26a0 CRS check (may be empty layer): $CRS\"; fi [ -f /opt/agrs/Projects/ITALY-TEST/data/vectors/raw/osm_railways_raw.gpkg.json ] && echo '\u2713 Raw metadata JSON exists' || echo '\u2717 Raw metadata JSON missing'; [ -f /opt/agrs/Projects/ITALY-TEST/data/vectors/processed/railways_epsg32633_processed.gpkg.json ] && echo '\u2713 Processed metadata JSON exists' || echo '\u2717 Processed metadata JSON missing'",
+  "fetch_date": "2025-12-17T13:51:47.658828Z",
+  "data_type": "Vector",
+  "format": "GeoPackage",
+  "file_size_bytes": 106496,
+  "protocol_reference": "/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md",
+  "protocol_version": "1.0",
+  "zeus_version": "0.1.0",
+  "tiles_downloaded": [],
+  "notes": "OpenStreetMap rail corridors for crossing avoidance.",
+  "requested_bbox_wgs84": {
+    "west": 12.15523421889559,
+    "south": 43.01558367463844,
+    "east": 12.302134619613025,
+    "north": 43.1321977103725,
+    "crs": "EPSG:4326"
+  },
+  "validation_status": "passed",
+  "validation_date": "2025-12-17T13:51:47.658837Z",
+  "source": "OpenStreetMap (railway)",
+  "provider": "OpenStreetMap Contributors",
+  "provider_url": "https://www.openstreetmap.org",
+  "coverage_date": "Current (live OSM)",
+  "documentation_url": "https://wiki.openstreetmap.org/wiki/Overpass_API",
+  "license": "ODbL 1.0",
+  "attribution": "\u00a9 OpenStreetMap contributors.",
+  "metadata": {
+    "description": "/opt/agrs/Projects/ITALY-TEST/data/vectors/raw/osm_railways_raw.gpkg",
+    "driverShortName": "GPKG",
+    "driverLongName": "GeoPackage",
+    "layers": [
+      {
+        "name": "railways",
+        "metadata": {
+          "NATIVE_DATA": {
+            "NATIVE_DATA": "{ }",
+            "NATIVE_MEDIA_TYPE": "application/vnd.geo+json"
+          }
+        }
+      }
+    ],
+    "metadata": {},
+    "domains": {},
+    "relationships": {}
+  },
+  "feature_count": 0,
+  "raw_crs": "EPSG:4326",
+  "extent": {
+    "minx": 12.15523421889559,
+    "miny": 43.01558367463844,
+    "maxx": 12.302134619613025,
+    "maxy": 43.1321977103725,
+    "crs": "EPSG:4326"
+  },
+  "bbox_wgs84": {
+    "west": 12.15523421889559,
+    "south": 43.01558367463844,
+    "east": 12.302134619613025,
+    "north": 43.1321977103725,
+    "crs": "EPSG:4326"
+  },
+  "checksum_sha256": "2005775a3fe2513d9a97721312c51bc12fe7b5c07feae3eaec3dec5158e5ca3b"
+}

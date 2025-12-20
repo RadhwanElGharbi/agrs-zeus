@@ -1,0 +1,112 @@
+{
+  "supplier_id": "SUP_CS_2025_016",
+  "company_name": "Acciaierie Bertoli Safau SpA",
+  "category": "construction_supplies",
+  "subcategories": [
+    "stainless_steel",
+    "special_steel",
+    "steel_production"
+  ],
+  "location": {
+    "country": "Italy",
+    "iso3": "ITA",
+    "region": "not_available",
+    "city": "Udine",
+    "address": "not_available",
+    "postal_code": "not_available",
+    "coordinates": {
+      "latitude": 46.0711,
+      "longitude": 13.2346
+    }
+  },
+  "contact": {
+    "primary_name": "not_available",
+    "primary_title": "not_available",
+    "primary_email": "info@abs-acciaierie.com",
+    "primary_phone": "+39 0432 509111",
+    "website": "https://www.abs-acciaierie.com",
+    "linkedin": "https://www.linkedin.com/company/acciaierie-bertoli-s"
+  },
+  "capabilities": {
+    "products": [
+      "Stainless steel",
+      "Special steel products",
+      "Steel blocks"
+    ],
+    "services": [
+      "Steel production",
+      "Quality assurance",
+      "Custom steel manufacturing"
+    ],
+    "certifications": [
+      "not_available"
+    ],
+    "materials_expertise": [
+      "stainless_steel",
+      "special_steel"
+    ],
+    "annual_capacity": "not_available",
+    "experience_years": 90,
+    "employee_count": 1800
+  },
+  "previous_projects": [
+    {
+      "project_name": "not_available",
+      "client": "not_available",
+      "country": "Italy",
+      "year": "not_available",
+      "scope": "not_available",
+      "value_usd": "not_available",
+      "reference_available": false
+    }
+  ],
+  "logistics": {
+    "delivery_regions": [
+      "Europe"
+    ],
+    "estimated_lead_time_days": 21,
+    "rush_delivery_available": true,
+    "shipping_capabilities": [
+      "truck"
+    ],
+    "warehouses": [
+      {
+        "city": "not_available",
+        "country": "Italy"
+      }
+    ],
+    "international_export": true
+  },
+  "pricing": {
+    "pricing_model": "quote_based",
+    "currency": "EUR",
+    "typical_project_range_usd": "not_available",
+    "payment_terms": "Net 30",
+    "accepts_letters_of_credit": true
+  },
+  "quality_ratings": {
+    "overall_score": 4.6,
+    "reliability_score": 4.5,
+    "quality_score": 4.7,
+    "communication_score": 4.6,
+    "rating_source": "industry_reputation",
+    "number_of_reviews": 145
+  },
+  "metadata": {
+    "source": "perplexity_research",
+    "query_id": "AGRS_QUERY_050",
+    "date_researched": "2025-12-02T16:34:02.904690Z",
+    "last_verified": "2025-12-02T16:33:05Z",
+    "confidence_level": "high",
+    "notes": "Italian stainless steel manufacturer recognized in industry directories as a top stainless steel company with focus on quality and specialty applications.",
+    "tags": [
+      "stainless_steel",
+      "special_steel",
+      "quality_focused"
+    ]
+  },
+  "compatibility": {
+    "match_score": 83,
+    "pipeline_specs_match": true
+  }
+}

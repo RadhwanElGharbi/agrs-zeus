@@ -1,0 +1,74 @@
+{
+  "dataset_name": "ESA WorldCover 2021 (Processed)",
+  "category": "landcover",
+  "project": "ITALY-TEST",
+  "processing_date": "2025-12-17T13:36:59.930258Z",
+  "target_crs": "EPSG:32633",
+  "target_crs_name": "WGS 84 / UTM zone 33N",
+  "data_type": "Raster",
+  "format": "GeoTIFF",
+  "processed_path": "/opt/agrs/Projects/ITALY-TEST/data/rasters/processed/landcover_epsg32633_processed.tif",
+  "raw_path": "/opt/agrs/Projects/ITALY-TEST/data/rasters/raw/landcover_esa_worldcover_raw.tif",
+  "raw_metadata_file": "/opt/agrs/Projects/ITALY-TEST/data/rasters/raw/landcover_esa_worldcover_raw.tif.json",
+  "source_files": [
+    {
+      "filename": "landcover_esa_worldcover_raw.tif",
+      "metadata": "landcover_esa_worldcover_raw.tif.json"
+    }
+  ],
+  "operations_applied": [
+    {
+      "operation": "reproject",
+      "tool": "gdalwarp",
+      "target_epsg": 32633
+    },
+    {
+      "operation": "clip",
+      "tool": "AOI cutline",
+      "source": "/opt/agrs/Projects/ITALY-TEST/aoi/aoi.geojson"
+    }
+  ],
+  "file_size_bytes": 171849,
+  "validation_status": "passed",
+  "validation_date": "2025-12-17T13:36:59.930283Z",
+  "protocol_reference": "/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md",
+  "protocol_version": "1.0",
+  "zeus_version": "0.1.0",
+  "notes": "10 m categorical landcover classes (agriculture, forest, urban, etc.).",
+  "source": "ESA WorldCover 2021",
+  "provider": "European Space Agency / VITO",
+  "provider_url": "https://worldcover2021.esa.int/",
+  "coverage_date": "2021",
+  "documentation_url": "https://worldcover2021.esa.int/",
+  "license": "CC BY 4.0",
+  "attribution": "\u00a9 ESA WorldCover, produced by VITO.",
+  "resolution_m": {
+    "x": 8.016967066408762,
+    "y": 8.020665254679624
+  },
+  "dimensions": {
+    "width": 1411,
+    "height": 1600
+  },
+  "extent": {
+    "minx": 268840.543,
+    "miny": 4766334.189,
+    "maxx": 280152.483,
+    "maxy": 4779167.253,
+    "crs": "EPSG:4326"
+  },
+  "bbox_wgs84": {
+    "west": 12.1580592,
+    "south": 43.0145358,
+    "east": 12.3020484,
+    "north": 43.1333237,
+    "crs": "EPSG:4326"
+  },
+  "statistics": {
+    "min": 10.0,
+    "max": 90.0,
+    "mean": 28.380605012402,
+    "stddev": 18.023123452192,
+    "valid_percent": 95.27
+  }
+}

@@ -1,0 +1,139 @@
+{
+  "supplier_id": "SUP_SV_2025_035",
+  "company_name": "MAX STREICHER S.p.A.",
+  "category": "construction_services",
+  "subcategories": [
+    "pipeline_construction",
+    "microtunneling",
+    "direct_pipe",
+    "welding",
+    "valve_stations"
+  ],
+  "location": {
+    "country": "Italy",
+    "iso3": "ITA",
+    "region": "Emilia-Romagna",
+    "city": "Parma",
+    "address": "Via Giovanni Keplero 5A",
+    "postal_code": "43122",
+    "coordinates": {
+      "latitude": 44.8067,
+      "longitude": 10.328
+    }
+  },
+  "contact": {
+    "primary_name": "not_available",
+    "primary_title": "not_available",
+    "primary_email": "info@streicher.it",
+    "primary_phone": "+39 0521 16807-1",
+    "website": "https://www.streicher.de",
+    "linkedin": "https://www.linkedin.com/company/max-streicher-spa"
+  },
+  "capabilities": {
+    "products": [
+      "Large diameter pipelines",
+      "DN1400 pipes",
+      "56-inch pipes",
+      "Valve stations"
+    ],
+    "services": [
+      "Pipeline construction",
+      "Microtunneling",
+      "Direct pipe technology",
+      "Automatic welding",
+      "Civil works"
+    ],
+    "certifications": [
+      "not_available"
+    ],
+    "pipeline_diameters_supported": {
+      "min_inches": 40,
+      "max_inches": 56
+    },
+    "materials_expertise": [
+      "carbon_steel"
+    ],
+    "annual_capacity": "not_available",
+    "experience_years": 20,
+    "employee_count": 450
+  },
+  "previous_projects": [
+    {
+      "project_name": "SNAM Gas Pipeline Lake Garda",
+      "client": "SNAM Rete Gas",
+      "country": "Italy",
+      "year": 2013,
+      "scope": "Construction of 53-km and 42-km pipeline lots",
+      "pipeline_length_km": 95,
+      "pipeline_diameter_inches": 56,
+      "value_usd": "not_available",
+      "reference_available": true
+    }
+  ],
+  "logistics": {
+    "delivery_regions": [
+      "Europe",
+      "Middle East",
+      "Africa",
+      "Asia"
+    ],
+    "estimated_lead_time_days": 45,
+    "rush_delivery_available": true,
+    "shipping_capabilities": [
+      "not_available"
+    ],
+    "warehouses": [
+      {
+        "city": "Parma",
+        "country": "Italy"
+      }
+    ],
+    "international_export": true
+  },
+  "pricing": {
+    "pricing_model": "quote_based",
+    "currency": "EUR",
+    "typical_project_range_usd": {
+      "min": "not_available",
+      "max": "not_available"
+    },
+    "payment_terms": "Net 30",
+    "accepts_letters_of_credit": true
+  },
+  "quality_ratings": {
+    "overall_score": 4.6,
+    "reliability_score": 4.5,
+    "quality_score": 4.7,
+    "communication_score": 4.6,
+    "rating_source": "industry_feedback",
+    "number_of_reviews": 95
+  },
+  "compatibility": {
+    "pipeline_specs_match": true,
+    "match_score": 90,
+    "match_notes": [
+      "Extensive experience with large diameter pipelines",
+      "Proven expertise in microtunneling and direct pipe technology",
+      "10+ years working with SNAM Rete Gas",
+      "Experience with DN1400-mm pipelines"
+    ],
+    "limitations": [
+      "not_available"
+    ]
+  },
+  "metadata": {
+    "source": "perplexity_research",
+    "query_id": "AGRS_QUERY_051",
+    "date_researched": "2025-12-02T16:32:25.264588Z",
+    "last_verified": "2025-12-02T16:31:19Z",
+    "confidence_level": "high",
+    "notes": "Established 2004. Leading pipeline contractor in Italy specializing in large diameter pipelines with advanced microtunneling capabilities.",
+    "tags": [
+      "pipeline_construction",
+      "microtunneling",
+      "direct_pipe",
+      "large_diameter",
+      "italy_based"
+    ]
+  }
+}

@@ -1,0 +1,19 @@
+{
+    "aoi_file": "aoi/aoi.geojson",
+    "aoi_area_km2": 243.85,
+    "aoi_countries": [
+        "United States"
+    ],
+    "crs_epsg": 32610,
+    "crs_name": "WGS 84 / UTM zone 10N",
+    "start_point": {
+        "file": "aoi/start_point.geojson",
+        "latitude": 37.9728920443839,
+        "longitude": -122.65775382166346
+    },
+    "end_point": {
+        "file": "aoi/end_point.geojson",
+        "latitude": 37.856355,
+        "longitude": -122.51244
+    }
+}

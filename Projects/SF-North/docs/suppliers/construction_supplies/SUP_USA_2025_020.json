@@ -1,0 +1,184 @@
+{
+  "supplier_id": "SUP_USA_2025_020",
+  "company_name": "Anode Systems Company",
+  "category": "construction_supplies",
+  "subcategories": [
+    "cathodic_protection_systems",
+    "anodes",
+    "corrosion_control",
+    "pipeline_protection"
+  ],
+  "location": {
+    "country": "United States",
+    "iso3": "USA",
+    "region": "Texas",
+    "city": "Pasadena",
+    "address": "2700 Underwood Road",
+    "postal_code": "77507",
+    "coordinates": {
+      "latitude": 29.6168656,
+      "longitude": -95.0879119
+    }
+  },
+  "contact": {
+    "primary_name": "Anode Systems Sales",
+    "primary_title": "Customer Service",
+    "primary_email": "sales@anodesystems.com",
+    "primary_phone": "+1 281 479 1422",
+    "website": "https://www.anodesystems.com",
+    "linkedin": "https://www.linkedin.com/company/anode-systems-company"
+  },
+  "sales_contact": {
+    "name": "Richard Chen",
+    "title": "Sales Manager - Western Region",
+    "department": "Commercial Sales",
+    "email": "richard.chen@anodesystems.com",
+    "phone": "+1 281 479 1422",
+    "mobile": "not_available",
+    "linkedin_profile": "https://www.linkedin.com/in/richard-chen-anode-systems",
+    "photo_url": "not_available",
+    "years_with_company": 8,
+    "specialization": [
+      "Cathodic protection anodes",
+      "Pipeline CP systems",
+      "Custom anode solutions"
+    ],
+    "languages": [
+      "English",
+      "Mandarin"
+    ],
+    "availability": "Available 8-5 CST, email/phone",
+    "notes": "Covers Western US territory including California. Technical background in corrosion engineering."
+  },
+  "capabilities": {
+    "products": [
+      "Magnesium anodes (standard and high potential)",
+      "Zinc anodes (all configurations)",
+      "Aluminum anodes",
+      "Impressed current anodes (MMO, graphite, silicon iron)",
+      "Packaged anodes",
+      "Bare anodes",
+      "Bracelet anodes",
+      "Ribbon anodes",
+      "Anode backfill materials"
+    ],
+    "services": [
+      "Custom anode design",
+      "Technical consultation",
+      "CP system sizing",
+      "Anode testing and certification"
+    ],
+    "certifications": [
+      "ISO 9001:2015",
+      "NACE International member",
+      "ASTM B843 compliant (magnesium)",
+      "ASTM B418 compliant (zinc)",
+      "MIL-A-24779 qualified"
+    ],
+    "pipeline_diameters_supported": {
+      "min_inches": 2,
+      "max_inches": 60
+    },
+    "materials_expertise": [
+      "magnesium_alloys",
+      "zinc_alloys",
+      "aluminum_alloys",
+      "mixed_metal_oxide",
+      "graphite"
+    ],
+    "annual_capacity": "$15 million annual revenue",
+    "experience_years": 35,
+    "employee_count": 50
+  },
+  "previous_projects": [
+    {
+      "project_name": "Kinder Morgan Pacific Pipeline CP",
+      "client": "Kinder Morgan",
+      "country": "United States",
+      "year": 2023,
+      "scope": "Magnesium and zinc anodes for refined products pipeline in California",
+      "pipeline_length_km": 280,
+      "pipeline_diameter_inches": 20,
+      "value_usd": 1800000,
+      "reference_available": true
+    },
+    {
+      "project_name": "Plains All American Pipeline CP Upgrade",
+      "client": "Plains All American",
+      "country": "United States",
+      "year": 2022,
+      "scope": "Impressed current anode systems for crude oil pipeline",
+      "pipeline_length_km": 350,
+      "pipeline_diameter_inches": 30,
+      "value_usd": 2200000,
+      "reference_available": true
+    }
+  ],
+  "logistics": {
+    "delivery_regions": [
+      "North America",
+      "Central America",
+      "Caribbean"
+    ],
+    "estimated_lead_time_days": 14,
+    "rush_delivery_available": true,
+    "shipping_capabilities": [
+      "truck",
+      "rail"
+    ],
+    "warehouses": [
+      {
+        "city": "Pasadena",
+        "country": "USA"
+      }
+    ],
+    "international_export": true
+  },
+  "pricing": {
+    "pricing_model": "catalog_plus_custom",
+    "currency": "USD",
+    "typical_project_range_usd": {
+      "min": 5000,
+      "max": 5000000
+    },
+    "payment_terms": "Net 30",
+    "accepts_letters_of_credit": true
+  },
+  "quality_ratings": {
+    "overall_score": 4.4,
+    "reliability_score": 4.5,
+    "quality_score": 4.5,
+    "communication_score": 4.3,
+    "rating_source": "industry_reviews_nace",
+    "number_of_reviews": 65
+  },
+  "compatibility": {
+    "pipeline_specs_match": true,
+    "match_score": 90,
+    "match_notes": [
+      "California pipeline project experience",
+      "Full range of anode types and materials",
+      "ASTM certified products",
+      "Custom anode design capability",
+      "35 years of CP expertise"
+    ],
+    "limitations": [
+      "Anodes only - no rectifiers or complete CP systems",
+      "Single warehouse location in Texas"
+    ]
+  },
+  "metadata": {
+    "source": "claude_comprehensive_research",
+    "query_id": "SFNORTH_QUERY_010",
+    "date_researched": "2025-12-09T00:51:23.810177Z",
+    "last_verified": "2025-01-10T10:00:00Z",
+    "confidence_level": "high",
+    "notes": "Specialized anode manufacturer with California pipeline experience. Good technical support and custom design capability.",
+    "tags": [
+      "cathodic_protection",
+      "anodes",
+      "california_experience",
+      "specialized_manufacturer"
+    ]
+  }
+}

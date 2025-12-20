@@ -1,0 +1,60 @@
+{
+  "dataset_name": "OpenStreetMap Railways Extract (Processed)",
+  "category": "railways",
+  "project": "UAE-PIPELINE",
+  "processing_date": "2025-12-06T15:06:23.805976Z",
+  "target_crs": "EPSG:32640",
+  "target_crs_name": "WGS 84 / UTM zone 40N",
+  "data_type": "Vector",
+  "format": "GeoPackage",
+  "processed_path": "/opt/agrs/Projects/UAE-PIPELINE/data/vectors/processed/osm_railways_epsg32640_processed.gpkg",
+  "raw_path": "/opt/agrs/Projects/UAE-PIPELINE/data/vectors/raw/osm_railways_raw.gpkg",
+  "raw_metadata_file": "/opt/agrs/Projects/UAE-PIPELINE/data/vectors/raw/osm_railways_raw.gpkg.json",
+  "source_files": [
+    {
+      "filename": "osm_railways_raw.gpkg",
+      "metadata": "osm_railways_raw.gpkg.json"
+    }
+  ],
+  "operations_applied": [
+    {
+      "operation": "reproject",
+      "tool": "ogr2ogr",
+      "target_epsg": 32640
+    },
+    {
+      "operation": "clip",
+      "tool": "AOI cutline",
+      "source": "/opt/agrs/Projects/UAE-PIPELINE/aoi/aoi.geojson"
+    }
+  ],
+  "file_size_bytes": 114688,
+  "validation_status": "passed",
+  "validation_date": "2025-12-06T15:06:23.806005Z",
+  "protocol_reference": "/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md",
+  "protocol_version": "1.0",
+  "zeus_version": "0.1.0",
+  "notes": "OpenStreetMap rail corridors for crossing avoidance.",
+  "source": "OpenStreetMap (railway)",
+  "provider": "OpenStreetMap Contributors",
+  "provider_url": "https://www.openstreetmap.org",
+  "coverage_date": "Current (live OSM)",
+  "documentation_url": "https://wiki.openstreetmap.org/wiki/Overpass_API",
+  "license": "ODbL 1.0",
+  "attribution": "\u00a9 OpenStreetMap contributors.",
+  "feature_count": 0,
+  "extent": {
+    "minx": 55.52425511945053,
+    "miny": 25.09238723282944,
+    "maxx": 55.664145381704756,
+    "maxy": 25.202129732657706,
+    "crs": "EPSG:4326"
+  },
+  "bbox_wgs84": {
+    "west": 55.52425511945053,
+    "south": 25.09238723282944,
+    "east": 55.664145381704756,
+    "north": 25.202129732657706,
+    "crs": "EPSG:4326"
+  }
+}

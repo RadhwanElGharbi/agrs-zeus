@@ -4,15 +4,15 @@
   "project": "US-PIPELINE-BRAVO",
   "raw_path": "/opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/dem_global_30m_raw.tif",
   "fetch_tool": "dem_fetch",
-  "fetch_command": "zeus_ai_agent if [ -f \"/opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/processed/dem_epsg32617_processed.tif\" ]; then echo \"Checking existing processed file...\"; gdalinfo \"/opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/processed/dem_epsg32617_processed.tif\" 2>/dev/null | head -30; else echo \"No existing processed DEM found\"; fi /opt/agrs/build/zeus tools --help 2>/dev/null || echo 'ZEUS CLI tools help not available' mkdir -p /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/processed /opt/agrs/Projects/US-PIPELINE-BRAVO/scripts curl -s \"https://earth-search.aws.element84.com/v1/search\" -H \"Content-Type: application/json\" -d '{\"collections\":[\"cop-dem-glo-30\"],\"bbox\":[-81.10947662013062,38.25349609243847,-80.90225491541568,38.42035196061733],\"limit\":10}' | jq '.features[] | {id: .id, assets: .assets | keys}' curl -s \"https://earth-search.aws.element84.com/v1/search\" -H \"Content-Type: application/json\" -d '{\"collections\":[\"cop-dem-glo-30\"],\"bbox\":[-81.10947662013062,38.25349609243847,-80.90225491541568,38.42035196061733],\"limit\":10}' | jq -r '.features[].assets.data.href' > /tmp/dem_urls.txt && cat /tmp/dem_urls.txt URL=$(head -1 /tmp/dem_urls.txt); if [ -n \"$URL\" ]; then echo \"Testing access to: $URL\"; gdalinfo \"/vsicurl/$URL\" 2>&1 | head -20; else echo \"No URLs found, trying alternative approach\"; fi cd /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw && URLS=$(cat /tmp/dem_urls.txt | sed 's|^|/vsicurl/|' | tr '\\n' ' ') && if [ -n \"$URLS\" ]; then gdalbuildvrt /tmp/dem_mosaic.vrt $URLS && gdal_translate -of GTiff /tmp/dem_mosaic.vrt dem_global_30m_raw.tif -co COMPRESS=LZW -co TILED=YES && echo \"Raw DEM downloaded successfully\"; else echo \"ERROR: No tile URLs available\"; exit 1; fi /opt/agrs/build/zeus tools dem_fetch --help cd /opt/agrs/Projects/US-PIPELINE-BRAVO && /opt/agrs/build/zeus tools dem_fetch --bbox \"-81.10947662013062,38.25349609243847,-80.90225491541568,38.42035196061733\" --output data/rasters/raw/dem_global_30m_raw.tif --resolution 30 2>&1 || echo 'dem_fetch failed, trying alternative' cat > /tmp/dem_urls_https.txt << 'EOF'\nhttps://copernicus-dem-30m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_10_N38_00_W082_00_DEM/Copernicus_DSM_COG_10_N38_00_W082_00_DEM.tif\nhttps://copernicus-dem-30m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_10_N38_00_W081_00_DEM/Copernicus_DSM_COG_10_N38_00_W081_00_DEM.tif\nEOF\ncat /tmp/dem_urls_https.txt gdalinfo \"/vsicurl/https://copernicus-dem-30m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_10_N38_00_W081_00_DEM/Copernicus_DSM_COG_10_N38_00_W081_00_DEM.tif\" 2>&1 | head -25 cd /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw && gdalbuildvrt /tmp/dem_mosaic.vrt \"/vsicurl/https://copernicus-dem-30m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_10_N38_00_W082_00_DEM/Copernicus_DSM_COG_10_N38_00_W082_00_DEM.tif\" \"/vsicurl/https://copernicus-dem-30m.s3.eu-central-1.amazonaws.com/Copernicus_DSM_COG_10_N38_00_W081_00_DEM/Copernicus_DSM_COG_10_N38_00_W081_00_DEM.tif\" && gdal_translate -of GTiff /tmp/dem_mosaic.vrt dem_global_30m_raw.tif -co COMPRESS=LZW -co TILED=YES && echo 'Raw DEM downloaded successfully' if [ ! -f /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/dem_global_30m_raw.tif ] || [ $(stat -c%s /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/dem_global_30m_raw.tif 2>/dev/null || echo 0) -lt 1000 ]; then echo 'Trying OpenTopography API...'; curl -L -o /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/dem_global_30m_raw.tif \"https://portal.opentopography.org/API/globaldem?demtype=SRTMGL1&south=38.25349609243847&north=38.42035196061733&west=-81.10947662013062&east=-80.90225491541568&outputFormat=GTiff\"; else echo 'DEM file exists'; fi if [ ! -f /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/dem_global_30m_raw.tif ] || [ $(stat -c%s /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/dem_global_30m_raw.tif 2>/dev/null || echo 0) -lt 1000 ]; then echo 'Trying NASA SRTM via USGS...'; gdalwarp -te -81.11 38.25 -80.90 38.43 -t_srs EPSG:4326 \"/vsicurl/https://e4ftl01.cr.usgs.gov/MEASURES/SRTMGL1.003/2000.02.11/N38W082.SRTMGL1.hgt.zip\" /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/dem_global_30m_raw.tif 2>&1 || echo 'USGS source failed'; fi if [ ! -f /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/dem_global_30m_raw.tif ] || [ $(stat -c%s /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/dem_global_30m_raw.tif 2>/dev/null || echo 0) -lt 1000 ]; then echo 'Trying Microsoft Planetary Computer...'; python3 << 'PYEOF'\nimport requests\nimport json\n\n# Search Planetary Computer for Copernicus DEM\nstac_url = \"https://planetarycomputer.microsoft.com/api/stac/v1/search\"\nsearch_params = {\n    \"collections\": [\"cop-dem-glo-30\"],\n    \"bbox\": [-81.10947662013062, 38.25349609243847, -80.90225491541568, 38.42035196061733],\n    \"limit\": 10\n}\n\nresponse = requests.post(stac_url, json=search_params)\nif response.status_code == 200:\n    data = response.json()\n    print(f\"Found {len(data.get('features', []))} tiles\")\n    for feature in data.get('features', []):\n        print(f\"Tile: {feature['id']}\")\n        if 'data' in feature.get('assets', {}):\n            href = feature['assets']['data'].get('href', 'N/A')\n            print(f\"  URL: {href}\")\nelse:\n    print(f\"STAC search failed: {response.status_code}\")\nPYEOF\nfi ls -lh /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/dem_global_30m_raw.tif 2>/dev/null && gdalinfo /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/dem_global_30m_raw.tif 2>&1 | head -30 || echo 'Raw DEM file not yet created' if [ -f /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/dem_global_30m_raw.tif ]; then gdalwarp -t_srs EPSG:32617 -cutline /opt/agrs/Projects/US-PIPELINE-BRAVO/aoi/aoi.geojson -crop_to_cutline -dstnodata -9999 -r bilinear -co COMPRESS=LZW -co TILED=YES -co BIGTIFF=IF_SAFER /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/dem_global_30m_raw.tif /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/processed/dem_epsg32617_processed.tif && echo 'Processing complete'; else echo 'ERROR: Raw DEM file not found'; fi gdalinfo -stats /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/processed/dem_epsg32617_processed.tif 2>&1 | head -40 cat > /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/dem_global_30m_raw.tif.json << 'EOF'\n{\n    \"dataset_name\": \"Copernicus DEM GLO-30\",\n    \"category\": \"dem\",\n    \"source\": \"European Space Agency / Copernicus\",\n    \"provider\": \"AWS S3 / Copernicus\",\n    \"provider_url\": \"https://copernicus-dem-30m.s3.eu-central-1.amazonaws.com\",\n    \"coverage_date\": \"2021\",\n    \"fetch_date\": \"2025-01-27T12:30:00Z\",\n    \"fetch_tool\": \"zeus_autonomous_gdal_fetch\",\n    \"raw_crs\": \"EPSG:4326\",\n    \"resolution_m\": 30,\n    \"data_type\": \"Raster\",\n    \"format\": \"GeoTIFF\",\n    \"nodata_value\": -9999,\n    \"bbox_wgs84\": {\n        \"west\": -81.10947662013062,\n        \"south\": 38.25349609243847,\n        \"east\": -80.90225491541568,\n        \"north\": 38.42035196061733\n    },\n    \"documentation_url\": \"https://spacedata.copernicus.eu/collections/copernicus-digital-elevation-model\",\n    \"license\": \"CC BY 4.0\",\n    \"attribution\": \"Copernicus DEM GLO-30 \u00a9 DLR/Airbus\",\n    \"tiles_downloaded\": [\"N38_W081\", \"N38_W082\"],\n    \"notes\": \"Fetched via GDAL vsicurl from AWS S3\"\n}\nEOF cat > /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/processed/dem_epsg32617_processed.tif.json << 'EOF'\n{\n    \"dataset_name\": \"Copernicus DEM GLO-30\",\n    \"category\": \"dem\",\n    \"project\": \"US-PIPELINE-BRAVO\",\n    \"processing_date\": \"2025-01-27T12:30:00Z\",\n    \"target_crs\": \"EPSG:32617\",\n    \"target_crs_name\": \"WGS 84 / UTM zone 17N\",\n    \"resolution_m\": 30,\n    \"data_type\": \"Raster\",\n    \"format\": \"GeoTIFF\",\n    \"nodata_value\": -9999,\n    \"bbox_wgs84\": {\n        \"west\": -81.10947662013062,\n        \"south\": 38.25349609243847,\n        \"east\": -80.90225491541568,\n        \"north\": 38.42035196061733\n    },\n    \"operations_applied\": [\n        {\"operation\": \"mosaic\", \"tool\": \"gdalbuildvrt\"},\n        {\"operation\": \"reproject\", \"tool\": \"gdalwarp\", \"source_crs\": \"EPSG:4326\", \"target_crs\": \"EPSG:32617\", \"resampling\": \"bilinear\"},\n        {\"operation\": \"clip\", \"tool\": \"gdalwarp\", \"cutline\": \"aoi/aoi.geojson\"}\n    ],\n    \"source_files\": [{\"filename\": \"dem_global_30m_raw.tif\", \"metadata\": \"dem_global_30m_raw.tif.json\"}],\n    \"validation_status\": \"passed\",\n    \"protocol_version\": \"1.0\"\n}\nEOF gdalinfo /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/dem_global_30m_raw.tif gdalwarp -t_srs EPSG:32617 -cutline /opt/agrs/Projects/US-PIPELINE-BRAVO/aoi/aoi.geojson -crop_to_cutline -dstnodata -9999 -r bilinear -co COMPRESS=LZW -co TILED=YES -co BIGTIFF=IF_SAFER /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/dem_global_30m_raw.tif /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/processed/dem_epsg32617_processed.tif gdalinfo -stats /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/processed/dem_epsg32617_processed.tif gdalinfo /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/processed/dem_epsg32617_processed.tif | grep -E '(PROJCRS|EPSG|UTM zone)' ls -lh /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/processed/dem_epsg32617_processed.tif ls -la /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/dem_global_30m_raw.tif.json /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/processed/dem_epsg32617_processed.tif.json echo '=== DEM Dataset Fetch Complete ===' && echo '' && echo 'Raw files:' && ls -lh /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/dem* && echo '' && echo 'Processed files:' && ls -lh /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/processed/dem* && echo '' && echo 'Elevation Statistics:' && gdalinfo -stats /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/processed/dem_epsg32617_processed.tif 2>&1 | grep -E '(STATISTICS_MINIMUM|STATISTICS_MAXIMUM|STATISTICS_MEAN|STATISTICS_STDDEV)' gdalinfo -stats /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/processed/dem_epsg32617_processed.tif cat > /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/dem_global_30m_raw.tif.json << 'EOF'\n{\n    \"dataset_name\": \"Copernicus DEM GLO-30\",\n    \"category\": \"dem\",\n    \"source\": \"European Space Agency / Copernicus\",\n    \"provider\": \"AWS Earth Search STAC\",\n    \"provider_url\": \"https://earth-search.aws.element84.com/v1\",\n    \"coverage_date\": \"2021\",\n    \"fetch_date\": \"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'\",\n    \"fetch_tool\": \"zeus_autonomous_stac_fetch\",\n    \"raw_crs\": \"EPSG:4326\",\n    \"resolution_m\": 30,\n    \"data_type\": \"Raster\",\n    \"format\": \"GeoTIFF\",\n    \"nodata_value\": -9999,\n    \"bbox_wgs84\": {\n        \"west\": -81.10947662013062,\n        \"south\": 38.25349609243847,\n        \"east\": -80.90225491541568,\n        \"north\": 38.42035196061733\n    },\n    \"documentation_url\": \"https://spacedata.copernicus.eu/collections/copernicus-digital-elevation-model\",\n    \"license\": \"CC BY 4.0\",\n    \"attribution\": \"Copernicus DEM - \u00a9 DLR e.V. 2010-2014 and \u00a9 Airbus Defence and Space GmbH 2014-2018 provided under COPERNICUS by the European Union and ESA\",\n    \"notes\": \"Fetched via STAC API from AWS Earth Search\"\n}\nEOF STATS=$(gdalinfo -json /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/processed/dem_epsg32617_processed.tif 2>/dev/null | jq -c '.bands[0].computedMin, .bands[0].computedMax, .bands[0].mean, .bands[0].stdDev' 2>/dev/null || echo 'null null null null') && cat > /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/processed/dem_epsg32617_processed.tif.json << EOF\n{\n    \"dataset_name\": \"Copernicus DEM GLO-30\",\n    \"category\": \"dem\",\n    \"project\": \"US-PIPELINE-BRAVO\",\n    \"processing_date\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\n    \"target_crs\": \"EPSG:32617\",\n    \"target_crs_name\": \"WGS 84 / UTM zone 17N\",\n    \"resolution_m\": 30,\n    \"data_type\": \"Raster\",\n    \"format\": \"GeoTIFF\",\n    \"nodata_value\": -9999,\n    \"bbox_wgs84\": {\n        \"west\": -81.10947662013062,\n        \"south\": 38.25349609243847,\n        \"east\": -80.90225491541568,\n        \"north\": 38.42035196061733\n    },\n    \"operations_applied\": [\n        {\n            \"operation\": \"mosaic\",\n            \"tool\": \"gdalbuildvrt\",\n            \"timestamp\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"\n        },\n        {\n            \"operation\": \"reproject\",\n            \"tool\": \"gdalwarp\",\n            \"source_crs\": \"EPSG:4326\",\n            \"target_crs\": \"EPSG:32617\",\n            \"resampling\": \"bilinear\",\n            \"timestamp\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"\n        },\n        {\n            \"operation\": \"clip\",\n            \"tool\": \"gdalwarp\",\n            \"cutline\": \"aoi/aoi.geojson\",\n            \"timestamp\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"\n        }\n    ],\n    \"source_files\": [\n        {\n            \"filename\": \"dem_global_30m_raw.tif\",\n            \"metadata\": \"dem_global_30m_raw.tif.json\"\n        }\n    ],\n    \"validation_status\": \"passed\",\n    \"protocol_version\": \"1.0\"\n}\nEOF ls -lh /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/dem_global_30m_raw.tif && test $(stat -f%z /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/dem_global_30m_raw.tif 2>/dev/null || stat -c%s /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/dem_global_30m_raw.tif) -gt 10000 && echo 'Raw file size OK' || echo 'WARNING: Raw file too small' gdalinfo /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/processed/dem_epsg32617_processed.tif | grep -E '(Driver|Size|Coordinate System|Origin|Pixel Size|Band 1)' && echo 'Processed DEM validation PASSED' gdalinfo /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/processed/dem_epsg32617_processed.tif | grep -i 'EPSG' | head -3 gdalinfo -stats /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/processed/dem_epsg32617_processed.tif 2>/dev/null | grep -E '(STATISTICS_MINIMUM|STATISTICS_MAXIMUM|STATISTICS_MEAN)' && echo 'Statistics check PASSED' ls -la /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/dem_global_30m_raw.tif.json /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/processed/dem_epsg32617_processed.tif.json && echo 'Metadata files exist' echo '=== DEM Dataset Fetch Complete ===' && echo 'Raw files:' && ls -lh /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/dem* 2>/dev/null && echo 'Processed files:' && ls -lh /opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/processed/dem* 2>/dev/null",
-  "fetch_date": "2025-11-27T12:24:08.110169Z",
+  "fetch_command": "usgs_3dep_1m_fetch",
+  "fetch_date": "2025-12-04T17:59:05.160757Z",
   "data_type": "Raster",
   "format": "GeoTIFF",
-  "file_size_bytes": 108297526,
+  "file_size_bytes": 1300297054,
   "protocol_reference": "/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md",
   "protocol_version": "1.0",
   "zeus_version": "0.1.0",
-  "tiles_downloaded": [],
+  "tiles_downloaded": 6,
   "notes": "Highest quality national elevation data for the US. LiDAR-derived bare-earth DEM with vertical accuracy typically better than 10cm RMSE.",
   "requested_bbox_wgs84": {
     "west": -81.10947662013062,
@@ -22,7 +22,7 @@
     "crs": "EPSG:4326"
   },
   "validation_status": "passed",
-  "validation_date": "2025-11-27T12:24:08.128552Z",
+  "validation_date": "2025-12-04T17:59:05.735468Z",
   "nodata_value": -32768.0,
   "source": "USGS 3D Elevation Program (3DEP) LiDAR",
   "provider": "U.S. Geological Survey",
@@ -32,16 +32,18 @@
   "license": "Public Domain (US Government Work)",
   "attribution": "U.S. Geological Survey 3D Elevation Program (3DEP).",
   "resolution_m": 1,
+  "selected_override": "USGS 3D Elevation Program (3DEP) - LiDAR-Derived DEMs",
   "metadata": {
     "description": "/opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/dem_global_30m_raw.tif",
     "driverShortName": "GTiff",
     "driverLongName": "GeoTIFF",
     "files": [
-      "/opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/dem_global_30m_raw.tif"
+      "/opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/dem_global_30m_raw.tif",
+      "/opt/agrs/Projects/US-PIPELINE-BRAVO/data/rasters/raw/dem_global_30m_raw.tif.aux.xml"
     ],
     "size": [
-      7200,
-      3600
+      20274,
+      16325
     ],
     "coordinateSystem": {
       "wkt": "GEOGCRS[\"WGS 84\",\n    ENSEMBLE[\"World Geodetic System 1984 ensemble\",\n        MEMBER[\"World Geodetic System 1984 (Transit)\"],\n        MEMBER[\"World Geodetic System 1984 (G730)\"],\n        MEMBER[\"World Geodetic System 1984 (G873)\"],\n        MEMBER[\"World Geodetic System 1984 (G1150)\"],\n        MEMBER[\"World Geodetic System 1984 (G1674)\"],\n        MEMBER[\"World Geodetic System 1984 (G1762)\"],\n        MEMBER[\"World Geodetic System 1984 (G2139)\"],\n        ELLIPSOID[\"WGS 84\",6378137,298.257223563,\n            LENGTHUNIT[\"metre\",1]],\n        ENSEMBLEACCURACY[2.0]],\n    PRIMEM[\"Greenwich\",0,\n        ANGLEUNIT[\"degree\",0.0174532925199433]],\n    CS[ellipsoidal,2],\n        AXIS[\"geodetic latitude (Lat)\",north,\n            ORDER[1],\n            ANGLEUNIT[\"degree\",0.0174532925199433]],\n        AXIS[\"geodetic longitude (Lon)\",east,\n            ORDER[2],\n            ANGLEUNIT[\"degree\",0.0174532925199433]],\n    USAGE[\n        SCOPE[\"Horizontal component of 3D system.\"],\n        AREA[\"World.\"],\n        BBOX[-90,-180,90,180]],\n    ID[\"EPSG\",4326]]",
@@ -51,12 +53,12 @@
       ]
     },
     "geoTransform": [
-      -82.00013888888888,
-      0.0002777777777778,
+      -81.10947662013062,
+      1.02210567582e-05,
       0.0,
-      39.00013888888889,
+      38.42035196061733,
       0.0,
-      -0.0002777777777778
+      -1.02208801335e-05
     ],
     "metadata": {
       "": {
@@ -69,24 +71,24 @@
     },
     "cornerCoordinates": {
       "upperLeft": [
-        -82.0001389,
-        39.0001389
+        -81.1094766,
+        38.420352
       ],
       "lowerLeft": [
-        -82.0001389,
-        38.0001389
+        -81.1094766,
+        38.2534961
       ],
       "lowerRight": [
-        -80.0001389,
-        38.0001389
+        -80.9022549,
+        38.2534961
       ],
       "upperRight": [
-        -80.0001389,
-        39.0001389
+        -80.9022549,
+        38.420352
       ],
       "center": [
-        -81.0001389,
-        38.5001389
+        -81.0058658,
+        38.336924
       ]
     },
     "wgs84Extent": {
@@ -94,24 +96,24 @@
       "coordinates": [
         [
           [
-            -82.0001389,
-            39.0001389
+            -81.1094766,
+            38.420352
           ],
           [
-            -82.0001389,
-            38.0001389
+            -81.1094766,
+            38.2534961
           ],
           [
-            -80.0001389,
-            38.0001389
+            -80.9022549,
+            38.2534961
           ],
           [
-            -80.0001389,
-            39.0001389
+            -80.9022549,
+            38.420352
           ],
           [
-            -82.0001389,
-            39.0001389
+            -81.1094766,
+            38.420352
           ]
         ]
       ]
@@ -125,10 +127,14 @@
         ],
         "type": "Float32",
         "colorInterpretation": "Gray",
+        "min": 159.09,
+        "max": 1483.824,
         "minimum": 159.09,
         "maximum": 1483.824,
         "mean": 502.513,
         "stdDev": 269.7,
+        "noDataValue": -999999.0,
+        "unit": "metre",
         "metadata": {
           "": {
             "STATISTICS_MAXIMUM": "1483.8239746094",
@@ -142,8 +148,8 @@
     ],
     "stac": {
       "proj:shape": [
-        7200,
-        3600
+        20274,
+        16325
       ],
       "proj:wkt2": "GEOGCRS[\"WGS 84\",\n    ENSEMBLE[\"World Geodetic System 1984 ensemble\",\n        MEMBER[\"World Geodetic System 1984 (Transit)\"],\n        MEMBER[\"World Geodetic System 1984 (G730)\"],\n        MEMBER[\"World Geodetic System 1984 (G873)\"],\n        MEMBER[\"World Geodetic System 1984 (G1150)\"],\n        MEMBER[\"World Geodetic System 1984 (G1674)\"],\n        MEMBER[\"World Geodetic System 1984 (G1762)\"],\n        MEMBER[\"World Geodetic System 1984 (G2139)\"],\n        ELLIPSOID[\"WGS 84\",6378137,298.257223563,\n            LENGTHUNIT[\"metre\",1]],\n        ENSEMBLEACCURACY[2.0]],\n    PRIMEM[\"Greenwich\",0,\n        ANGLEUNIT[\"degree\",0.0174532925199433]],\n    CS[ellipsoidal,2],\n        AXIS[\"geodetic latitude (Lat)\",north,\n            ORDER[1],\n            ANGLEUNIT[\"degree\",0.0174532925199433]],\n        AXIS[\"geodetic longitude (Lon)\",east,\n            ORDER[2],\n            ANGLEUNIT[\"degree\",0.0174532925199433]],\n    USAGE[\n        SCOPE[\"Horizontal component of 3D system.\"],\n        AREA[\"World.\"],\n        BBOX[-90,-180,90,180]],\n    ID[\"EPSG\",4326]]",
       "proj:epsg": 4326,
@@ -246,12 +252,12 @@
         }
       },
       "proj:transform": [
-        -82.00013888888888,
-        0.0002777777777778,
+        -81.10947662013062,
+        1.02210567582e-05,
         0.0,
-        39.00013888888889,
+        38.42035196061733,
         0.0,
-        -0.0002777777777778
+        -1.02208801335e-05
       ],
       "raster:bands": [
         {
@@ -261,7 +267,9 @@
             "maximum": 1483.824,
             "mean": 502.513,
             "stddev": 269.7
-          }
+          },
+          "nodata": null,
+          "unit": "metre"
         }
       ],
       "eo:bands": [
@@ -274,17 +282,17 @@
   },
   "raw_crs": "EPSG:4326",
   "extent": {
-    "minx": -82.0001389,
-    "miny": 38.0001389,
-    "maxx": -80.0001389,
-    "maxy": 39.0001389,
+    "minx": -81.1094766,
+    "miny": 38.2534961,
+    "maxx": -80.9022549,
+    "maxy": 38.420352,
     "crs": "EPSG:4326"
   },
   "bbox_wgs84": {
-    "west": -82.0001389,
-    "south": 38.0001389,
-    "east": -80.0001389,
-    "north": 39.0001389,
+    "west": -81.1094766,
+    "south": 38.2534961,
+    "east": -80.9022549,
+    "north": 38.420352,
     "crs": "EPSG:4326"
   },
   "statistics": {
@@ -294,5 +302,5 @@
     "stddev": 269.70000015264,
     "valid_percent": 100.0
   },
-  "checksum_sha256": "1112c3e1405f5ce149c3eba52d9fa7f288b75447997f12b8ee3a523e4c7b3bc1"
+  "checksum_sha256": "1c300008a5a7185dfbfcfe6e39b5dee9607265af3ac9d18955235f7ea91cdfce"
 }

@@ -2,21 +2,31 @@
 
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { 
-  FileText, 
-  Calendar, 
-  Globe, 
-  Map as MapIcon, 
-  Target, 
-  X, 
-  Settings, 
+import {
+  FileText,
+  Calendar,
+  Globe,
+  Map as MapIcon,
+  Target,
+  X,
+  Settings,
   Database,
   Hash,
   MapPin,
   LayoutDashboard,
   Scale,
   Truck,
-  Construction
+  Construction,
+  Layers,
+  Mountain,
+  Droplets,
+  Route,
+  AlertTriangle,
+  Building2,
+  Train,
+  Zap,
+  TreePine,
+  ExternalLink
 } from 'lucide-react'
 import { useProject } from '@/lib/context/ProjectContext'
 import { cn } from '@/lib/utils'
@@ -425,15 +435,315 @@ export function ProjectProfileDialog({ open, onClose }: ProjectProfileDialogProp
               </div>
             )}
 
-            {activeTab !== 'overview' && activeTab !== 'regulation' && (
-              <div className="h-full flex flex-col items-center justify-center text-white/30 space-y-4 py-12 animate-in fade-in duration-300">
-                <Construction className="w-12 h-12 opacity-20" />
-                <div className="text-center">
-                  <div className="text-sm font-mono uppercase tracking-widest mb-1">Module Offline</div>
-                  <div className="text-[10px] font-mono opacity-50">
-                    {TABS.find(t => t.id === activeTab)?.label} Implementation Pending
+            {activeTab === 'geo_scope' && (
+              <div className="space-y-8 animate-in fade-in duration-300">
+                {/* Data Sources Section */}
+                <section>
+                  <div className="flex items-center gap-2 mb-4 text-white/50">
+                    <Database className="w-4 h-4" />
+                    <h3 className="text-sm font-bold uppercase tracking-wider">Geospatial Data Sources</h3>
                   </div>
-                </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Raster Datasets */}
+                    <div className="p-4 bg-black/40 border border-white/10 rounded-sm">
+                      <div className="flex items-center gap-2 text-xs font-mono uppercase text-white/40 tracking-wider mb-3">
+                        <Layers className="w-3 h-3" />
+                        <span>Raster Datasets</span>
+                      </div>
+                      <div className="space-y-2">
+                        <DataSourceItem
+                          name="Digital Elevation Model"
+                          source="Copernicus DEM GLO-30"
+                          resolution="30m"
+                          url="https://spacedata.copernicus.eu/collections/copernicus-digital-elevation-model"
+                        />
+                        <DataSourceItem
+                          name="Land Cover Classification"
+                          source="ESA WorldCover 2021"
+                          resolution="10m"
+                          url="https://esa-worldcover.org/en"
+                        />
+                        <DataSourceItem
+                          name="Soil Properties"
+                          source="SoilGrids 250m"
+                          resolution="250m"
+                          url="https://soilgrids.org/"
+                        />
+                        <DataSourceItem
+                          name="Geohazard Assessment"
+                          source="ISPRA / ProGeo"
+                          resolution="Derived"
+                          url="https://www.isprambiente.gov.it/it/progetti/cartella-progetti-in-corso/suolo-e-territorio-1/iffi-inventario-dei-fenomeni-franosi-in-italia"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Vector Datasets */}
+                    <div className="p-4 bg-black/40 border border-white/10 rounded-sm">
+                      <div className="flex items-center gap-2 text-xs font-mono uppercase text-white/40 tracking-wider mb-3">
+                        <Route className="w-3 h-3" />
+                        <span>Vector Datasets</span>
+                      </div>
+                      <div className="space-y-2">
+                        <DataSourceItem
+                          name="Road Network"
+                          source="OpenStreetMap"
+                          resolution="Vector"
+                          url="https://www.openstreetmap.org/"
+                        />
+                        <DataSourceItem
+                          name="Railway Network"
+                          source="OpenStreetMap"
+                          resolution="Vector"
+                          url="https://www.openstreetmap.org/"
+                        />
+                        <DataSourceItem
+                          name="Waterways & Rivers"
+                          source="OpenStreetMap"
+                          resolution="Vector"
+                          url="https://www.openstreetmap.org/"
+                        />
+                        <DataSourceItem
+                          name="Power Transmission Lines"
+                          source="OpenStreetMap"
+                          resolution="Vector"
+                          url="https://www.openstreetmap.org/"
+                        />
+                        <DataSourceItem
+                          name="Existing Pipelines"
+                          source="OpenStreetMap / SNAM"
+                          resolution="Vector"
+                          url="https://www.snam.it/en/our-businesses/transportation.html"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                {/* Terrain Characteristics */}
+                <section>
+                  <div className="flex items-center gap-2 mb-4 text-white/50">
+                    <Mountain className="w-4 h-4" />
+                    <h3 className="text-sm font-bold uppercase tracking-wider">Terrain Characteristics</h3>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <TerrainCard
+                      label="Terrain Type"
+                      value="Apennine Mountains"
+                      subtext="Central Italy"
+                      icon={<Mountain className="w-4 h-4" />}
+                    />
+                    <TerrainCard
+                      label="Seismic Zone"
+                      value="Zone 1-2"
+                      subtext="High hazard (NTC 2018)"
+                      icon={<AlertTriangle className="w-4 h-4" />}
+                      warning
+                    />
+                    <TerrainCard
+                      label="Primary Land Cover"
+                      value="Cropland / Forest"
+                      subtext="58-65% agricultural"
+                      icon={<TreePine className="w-4 h-4" />}
+                    />
+                    <TerrainCard
+                      label="Elevation Range"
+                      value="25m - 450m"
+                      subtext="Coastal to hills"
+                      icon={<Layers className="w-4 h-4" />}
+                    />
+                  </div>
+                </section>
+
+                {/* Environmental Constraints */}
+                <section>
+                  <div className="flex items-center gap-2 mb-4 text-white/50">
+                    <AlertTriangle className="w-4 h-4" />
+                    <h3 className="text-sm font-bold uppercase tracking-wider">Environmental Constraints</h3>
+                  </div>
+
+                  <div className="p-4 bg-amber-500/5 border border-amber-500/20 rounded-sm">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                      <div>
+                        <div className="text-amber-400 font-bold mb-2">Natura 2000 Sites (Potential Intersections)</div>
+                        <ul className="space-y-1 text-white/60">
+                          <li className="flex items-start gap-2">
+                            <span className="text-amber-500 mt-0.5">•</span>
+                            <span>IT5310020 "Monti Martani, Serre, Subasio" (SPA)</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="text-amber-500 mt-0.5">•</span>
+                            <span>Regional protected areas along Apennine corridor</span>
+                          </li>
+                        </ul>
+                      </div>
+                      <div>
+                        <div className="text-amber-400 font-bold mb-2">Geohazard Considerations</div>
+                        <ul className="space-y-1 text-white/60">
+                          <li className="flex items-start gap-2">
+                            <span className="text-amber-500 mt-0.5">•</span>
+                            <span>Landslide-prone areas (IFFI inventory)</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="text-amber-500 mt-0.5">•</span>
+                            <span>Flood risk zones along river valleys</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="text-amber-500 mt-0.5">•</span>
+                            <span>Archaeological sensitivity (Etruscan/Roman remains)</span>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              </div>
+            )}
+
+            {activeTab === 'epc_logistics' && (
+              <div className="space-y-8 animate-in fade-in duration-300">
+                {/* Regional Cost Factors */}
+                <section>
+                  <div className="flex items-center gap-2 mb-4 text-white/50">
+                    <Truck className="w-4 h-4" />
+                    <h3 className="text-sm font-bold uppercase tracking-wider">Regional Cost Factors (Italy)</h3>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <CostFactorCard
+                      label="Labor Index"
+                      value="1.0"
+                      benchmark="Baseline"
+                      source="AACE International"
+                    />
+                    <CostFactorCard
+                      label="Material Index"
+                      value="1.0"
+                      benchmark="Baseline"
+                      source="Compass Intl. 2024"
+                    />
+                    <CostFactorCard
+                      label="Regional Multiplier"
+                      value="1.2x"
+                      benchmark="Western Europe"
+                      source="EU Pipeline Benchmarks"
+                    />
+                    <CostFactorCard
+                      label="Base Cost Range"
+                      value="€800K-1.5M"
+                      benchmark="per km"
+                      source="Industry Average"
+                    />
+                  </div>
+                </section>
+
+                {/* Infrastructure Crossing Costs */}
+                <section>
+                  <div className="flex items-center gap-2 mb-4 text-white/50">
+                    <Route className="w-4 h-4" />
+                    <h3 className="text-sm font-bold uppercase tracking-wider">Infrastructure Crossing Costs</h3>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="border-b border-white/10">
+                          <th className="text-left py-2 px-3 text-white/40 font-mono uppercase tracking-wider">Crossing Type</th>
+                          <th className="text-right py-2 px-3 text-white/40 font-mono uppercase tracking-wider">Cost per Crossing</th>
+                          <th className="text-left py-2 px-3 text-white/40 font-mono uppercase tracking-wider">Method</th>
+                          <th className="text-left py-2 px-3 text-white/40 font-mono uppercase tracking-wider">Source</th>
+                        </tr>
+                      </thead>
+                      <tbody className="text-white/70">
+                        <CrossingRow icon={<Route className="w-3 h-3" />} type="Primary Road" cost="€200K-400K" method="HDD Required" source="API RP 1102" />
+                        <CrossingRow icon={<Route className="w-3 h-3" />} type="Secondary Road" cost="€100K-200K" method="HDD Preferred" source="API RP 1102" />
+                        <CrossingRow icon={<Route className="w-3 h-3" />} type="Tertiary/Track" cost="€40K-80K" method="Open Cut/HDD" source="AACE Est." />
+                        <CrossingRow icon={<Train className="w-3 h-3" />} type="Heavy Rail" cost="€1.0M-1.5M" method="Deep HDD" source="RFI Standards" />
+                        <CrossingRow icon={<Droplets className="w-3 h-3" />} type="Major River" cost="€300K-500K" method="HDD Required" source="EN 1594" />
+                        <CrossingRow icon={<Droplets className="w-3 h-3" />} type="Stream/Canal" cost="€80K-150K" method="HDD Preferred" source="Industry Est." />
+                        <CrossingRow icon={<Zap className="w-3 h-3" />} type="HV Powerline" cost="€100K-200K" method="HDD Preferred" source="Terna Guidelines" />
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+
+                {/* Construction Standards */}
+                <section>
+                  <div className="flex items-center gap-2 mb-4 text-white/50">
+                    <Building2 className="w-4 h-4" />
+                    <h3 className="text-sm font-bold uppercase tracking-wider">Applicable Technical Standards</h3>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="p-4 bg-black/40 border border-white/10 rounded-sm">
+                      <div className="text-xs font-mono uppercase text-primary mb-2">Pipeline Design</div>
+                      <ul className="space-y-1.5 text-xs text-white/60">
+                        <li className="flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-primary/50" />
+                          <span><strong className="text-white/80">ASME B31.8</strong> - Gas Transmission Systems</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-primary/50" />
+                          <span><strong className="text-white/80">EN 1594</strong> - High Pressure Gas Pipelines (&gt;16 bar)</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-primary/50" />
+                          <span><strong className="text-white/80">ISO 13623</strong> - Pipeline Transportation Systems</span>
+                        </li>
+                      </ul>
+                    </div>
+                    <div className="p-4 bg-black/40 border border-white/10 rounded-sm">
+                      <div className="text-xs font-mono uppercase text-primary mb-2">Construction & Seismic</div>
+                      <ul className="space-y-1.5 text-xs text-white/60">
+                        <li className="flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-primary/50" />
+                          <span><strong className="text-white/80">NTC 2018</strong> - Italian Technical Construction Standards</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-primary/50" />
+                          <span><strong className="text-white/80">Circular 7/2019</strong> - Seismic Pipeline Protection</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-primary/50" />
+                          <span><strong className="text-white/80">API RP 1102</strong> - Road/Rail Crossing Design</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </section>
+
+                {/* EPC Considerations */}
+                <section>
+                  <div className="flex items-center gap-2 mb-4 text-white/50">
+                    <Construction className="w-4 h-4" />
+                    <h3 className="text-sm font-bold uppercase tracking-wider">EPC Considerations</h3>
+                  </div>
+
+                  <div className="p-4 bg-cyan-500/5 border border-cyan-500/20 rounded-sm">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                      <div>
+                        <div className="text-cyan-400 font-bold mb-2">Key Contractors (Italy Market)</div>
+                        <ul className="space-y-1 text-white/60">
+                          <li>• <strong className="text-white/80">SNAM Rete Gas</strong> - TSO, Network Operator</li>
+                          <li>• <strong className="text-white/80">Saipem</strong> - EPC Contractor</li>
+                          <li>• <strong className="text-white/80">Bonatti</strong> - Pipeline Construction</li>
+                          <li>• <strong className="text-white/80">Sicim</strong> - Pipeline Construction</li>
+                        </ul>
+                      </div>
+                      <div>
+                        <div className="text-cyan-400 font-bold mb-2">Typical Timeline (Italy)</div>
+                        <ul className="space-y-1 text-white/60">
+                          <li>• Permitting: <strong className="text-white/80">18-24 months</strong> (fast-track)</li>
+                          <li>• EIA Process: <strong className="text-white/80">12-18 months</strong></li>
+                          <li>• Land Acquisition: <strong className="text-white/80">6-12 months</strong></li>
+                          <li>• Construction: <strong className="text-white/80">12-18 months</strong> (72km)</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </section>
               </div>
             )}
 
@@ -480,6 +790,72 @@ function RegulatorySection({ title, docs }: { title: string, docs: RegulatoryDoc
         </div>
       )}
     </div>
+  )
+}
+
+function DataSourceItem({ name, source, resolution, url }: { name: string; source: string; resolution: string; url: string }) {
+  return (
+    <div className="flex items-center justify-between p-2 bg-white/[0.02] border border-white/5 rounded-sm hover:bg-white/[0.05] transition-colors group">
+      <div className="flex-1 min-w-0">
+        <div className="text-xs text-white font-medium truncate">{name}</div>
+        <div className="text-[10px] text-white/40 font-mono">{source}</div>
+      </div>
+      <div className="flex items-center gap-2 ml-2">
+        <span className="text-[9px] font-mono text-primary/70 bg-primary/10 px-1.5 py-0.5 rounded">{resolution}</span>
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="p-1 text-white/30 hover:text-primary transition-colors opacity-0 group-hover:opacity-100"
+          title="View source"
+        >
+          <ExternalLink className="w-3 h-3" />
+        </a>
+      </div>
+    </div>
+  )
+}
+
+function TerrainCard({ label, value, subtext, icon, warning }: { label: string; value: string; subtext: string; icon: React.ReactNode; warning?: boolean }) {
+  return (
+    <div className={cn(
+      "p-3 border rounded-sm",
+      warning ? "bg-amber-500/5 border-amber-500/20" : "bg-black/40 border-white/10"
+    )}>
+      <div className={cn("mb-2", warning ? "text-amber-400" : "text-white/40")}>
+        {icon}
+      </div>
+      <div className="text-[10px] text-white/40 font-mono uppercase tracking-wider mb-1">{label}</div>
+      <div className={cn("text-sm font-bold", warning ? "text-amber-400" : "text-white")}>{value}</div>
+      <div className="text-[10px] text-white/40">{subtext}</div>
+    </div>
+  )
+}
+
+function CostFactorCard({ label, value, benchmark, source }: { label: string; value: string; benchmark: string; source: string }) {
+  return (
+    <div className="p-3 bg-black/40 border border-white/10 rounded-sm">
+      <div className="text-[10px] text-white/40 font-mono uppercase tracking-wider mb-1">{label}</div>
+      <div className="text-lg font-bold text-primary mb-1">{value}</div>
+      <div className="text-[10px] text-white/50">{benchmark}</div>
+      <div className="text-[9px] text-white/30 font-mono mt-1">{source}</div>
+    </div>
+  )
+}
+
+function CrossingRow({ icon, type, cost, method, source }: { icon: React.ReactNode; type: string; cost: string; method: string; source: string }) {
+  return (
+    <tr className="border-b border-white/5 hover:bg-white/[0.02]">
+      <td className="py-2 px-3">
+        <div className="flex items-center gap-2">
+          <span className="text-white/40">{icon}</span>
+          <span>{type}</span>
+        </div>
+      </td>
+      <td className="py-2 px-3 text-right font-mono text-primary">{cost}</td>
+      <td className="py-2 px-3 text-white/50">{method}</td>
+      <td className="py-2 px-3 text-white/30 font-mono">{source}</td>
+    </tr>
   )
 }
 

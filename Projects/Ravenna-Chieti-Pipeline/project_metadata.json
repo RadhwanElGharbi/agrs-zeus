@@ -1,0 +1,16 @@
+{
+    "project_name": "Ravenna-Chieti-Pipeline",
+    "project_id": "AGRS_Ravenna-Chieti-Pipeline_ITA_2025_001",
+    "date_created": "2025-10-27T15:37:05Z",
+    "status": "active",
+    "project_creator": "Radwan El-Gharbi",
+    "collaborators": [],
+    "organization": "AGRS",
+    "country": "Italy",
+    "iso3": "ITA",
+    "measurement_system": "SI",
+    "crs": {
+        "epsg": 32633,
+        "name": "WGS 84 / UTM zone 33N"
+    }
+}

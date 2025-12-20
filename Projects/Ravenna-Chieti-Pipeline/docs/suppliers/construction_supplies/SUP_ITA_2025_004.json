@@ -1,0 +1,113 @@
+{
+  "supplier_id": "SUP_CS_2025_017",
+  "company_name": "EURAL Gnutti",
+  "category": "construction_supplies",
+  "subcategories": [
+    "steel_manufacturing",
+    "aluminum_manufacturing",
+    "contract_manufacturing"
+  ],
+  "location": {
+    "country": "Italy",
+    "iso3": "ITA",
+    "region": "Lombardy",
+    "city": "Rovato",
+    "address": "Via Sant'Andrea, 3",
+    "postal_code": "25038",
+    "coordinates": {
+      "latitude": 45.5967,
+      "longitude": 9.7681
+    }
+  },
+  "contact": {
+    "primary_name": "not_available",
+    "primary_title": "not_available",
+    "primary_email": "info@euralgnutti.it",
+    "primary_phone": "+39 030 7725011",
+    "website": "https://www.euralgnutti.it",
+    "linkedin": "https://www.linkedin.com/company/eural-gnutti"
+  },
+  "capabilities": {
+    "products": [
+      "Steel components",
+      "Aluminum components",
+      "Contract manufactured parts"
+    ],
+    "services": [
+      "Contract manufacturing",
+      "Steel manufacturing",
+      "Aluminum manufacturing",
+      "Custom fabrication"
+    ],
+    "certifications": [
+      "not_available"
+    ],
+    "materials_expertise": [
+      "carbon_steel",
+      "aluminum"
+    ],
+    "annual_capacity": "not_available",
+    "experience_years": 57,
+    "employee_count": 100
+  },
+  "previous_projects": [
+    {
+      "project_name": "not_available",
+      "client": "not_available",
+      "country": "Italy",
+      "year": "not_available",
+      "scope": "not_available",
+      "value_usd": "not_available",
+      "reference_available": false
+    }
+  ],
+  "logistics": {
+    "delivery_regions": [
+      "Europe"
+    ],
+    "estimated_lead_time_days": 14,
+    "rush_delivery_available": true,
+    "shipping_capabilities": [
+      "truck"
+    ],
+    "warehouses": [
+      {
+        "city": "Rovato",
+        "country": "Italy"
+      }
+    ],
+    "international_export": true
+  },
+  "pricing": {
+    "pricing_model": "quote_based",
+    "currency": "EUR",
+    "typical_project_range_usd": "not_available",
+    "payment_terms": "Net 30",
+    "accepts_letters_of_credit": true
+  },
+  "quality_ratings": {
+    "overall_score": 4.3,
+    "reliability_score": 4.2,
+    "quality_score": 4.4,
+    "communication_score": 4.3,
+    "rating_source": "industry_reputation",
+    "number_of_reviews": 45
+  },
+  "metadata": {
+    "source": "perplexity_research",
+    "query_id": "AGRS_QUERY_050",
+    "date_researched": "2025-12-02T16:34:02.904370Z",
+    "last_verified": "2025-12-02T16:33:05Z",
+    "confidence_level": "high",
+    "notes": "Founded in 1968. Contract manufacturing company specializing in 50% steel and 50% aluminum manufacturing with 50-249 employees.",
+    "tags": [
+      "contract_manufacturer",
+      "steel_and_aluminum",
+      "established_1968"
+    ]
+  },
+  "compatibility": {
+    "match_score": 75,
+    "pipeline_specs_match": true
+  }
+}

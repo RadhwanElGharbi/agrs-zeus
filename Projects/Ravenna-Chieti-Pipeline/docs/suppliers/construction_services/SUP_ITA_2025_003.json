@@ -1,0 +1,146 @@
+{
+  "supplier_id": "SUP_SV_2025_030",
+  "company_name": "Bonatti S.p.A.",
+  "category": "construction_services",
+  "subcategories": [
+    "EPC_services",
+    "pipeline_construction",
+    "welding",
+    "civil_works"
+  ],
+  "location": {
+    "country": "Italy",
+    "iso3": "ITA",
+    "region": "Emilia-Romagna",
+    "city": "Parma",
+    "address": "not_available",
+    "postal_code": "not_available",
+    "coordinates": {
+      "latitude": 44.8067,
+      "longitude": 10.328
+    }
+  },
+  "contact": {
+    "primary_name": "not_available",
+    "primary_title": "not_available",
+    "primary_email": "info@bonatti.it",
+    "primary_phone": "+39 0521 3041",
+    "website": "https://www.bonattinternational.com",
+    "linkedin": "https://www.linkedin.com/company/bonatti"
+  },
+  "capabilities": {
+    "products": [
+      "Gas pipelines",
+      "Bioenergy plants"
+    ],
+    "services": [
+      "EPC services",
+      "Pipeline construction",
+      "Welding",
+      "Construction-focused engineering",
+      "Project lifecycle management"
+    ],
+    "certifications": [
+      "not_available"
+    ],
+    "pipeline_diameters_supported": {
+      "min_inches": 40,
+      "max_inches": 56
+    },
+    "materials_expertise": [
+      "carbon_steel"
+    ],
+    "annual_capacity": "not_available",
+    "experience_years": 79,
+    "employee_count": 8500
+  },
+  "previous_projects": [
+    {
+      "project_name": "Gas Pipeline Construction",
+      "client": "Multiple clients",
+      "country": "Italy",
+      "year": 2024,
+      "scope": "56 inches diameter gas pipeline construction",
+      "pipeline_length_km": 292,
+      "pipeline_diameter_inches": 56,
+      "value_usd": "not_available",
+      "reference_available": true
+    },
+    {
+      "project_name": "Bioenergy Plant Construction",
+      "client": "Corsica Energy Projects",
+      "country": "France",
+      "year": 2024,
+      "scope": "130 MW bioenergy plant construction",
+      "pipeline_length_km": "not_available",
+      "pipeline_diameter_inches": "not_available",
+      "value_usd": "not_available",
+      "reference_available": true
+    }
+  ],
+  "logistics": {
+    "delivery_regions": [
+      "Europe",
+      "not_available"
+    ],
+    "estimated_lead_time_days": 60,
+    "rush_delivery_available": false,
+    "shipping_capabilities": [
+      "not_available"
+    ],
+    "warehouses": [
+      {
+        "city": "Parma",
+        "country": "Italy"
+      }
+    ],
+    "international_export": true
+  },
+  "pricing": {
+    "pricing_model": "quote_based",
+    "currency": "EUR",
+    "typical_project_range_usd": {
+      "min": "not_available",
+      "max": "not_available"
+    },
+    "payment_terms": "Net 30",
+    "accepts_letters_of_credit": true
+  },
+  "quality_ratings": {
+    "overall_score": 4.7,
+    "reliability_score": 4.6,
+    "quality_score": 4.8,
+    "communication_score": 4.7,
+    "rating_source": "industry_awards",
+    "number_of_reviews": 280
+  },
+  "compatibility": {
+    "pipeline_specs_match": true,
+    "match_score": 88,
+    "match_notes": [
+      "Global EPC player in oil and gas industry",
+      "Experience with 56-inch diameter pipelines",
+      "IPLOCA Excellence in Project Execution Award Runner Up 2024",
+      "Construction-focused engineering approach",
+      "Direct execution capability across all project phases"
+    ],
+    "limitations": [
+      "not_available"
+    ]
+  },
+  "metadata": {
+    "source": "perplexity_research",
+    "query_id": "AGRS_QUERY_051",
+    "date_researched": "2025-12-02T16:32:25.264721Z",
+    "last_verified": "2025-12-02T16:31:19Z",
+    "confidence_level": "high",
+    "notes": "Founded 1946. EUR 1.276 billion in revenue. Italian EPC company with global presence and strong expertise in oil and gas and energy infrastructure.",
+    "tags": [
+      "EPC_contractor",
+      "pipeline_construction",
+      "energy_industry",
+      "welding",
+      "italy_based"
+    ]
+  }
+}

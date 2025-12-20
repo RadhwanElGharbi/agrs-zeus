@@ -27,8 +27,8 @@ import { AttributeTable } from './AttributeTable'
 import { PIRLAttributeTable } from './PIRLAttributeTable'
 import { StyleEditor } from './StyleEditor'
 import { Compass } from './Compass'
-import { ExplanationPanel, AgenticRoutesDialog } from '@/components/Analysis'
-import { analyzeSegments, getAssessmentMapColor, type ExplainResponse, type AssessmentLevel } from '@/lib/api/agenticClient'
+import { ExplanationPanel, DecisionsPanel, AgenticRoutesDialog } from '@/components/Analysis'
+import { analyzeSegments, getSegmentDecisions, getAssessmentMapColor, type ExplainResponse, type AssessmentLevel, type SegmentDecisions } from '@/lib/api/agenticClient'
 
 const BASEMAP_FALLBACK_DEFAULT_OPACITY = 0.75
 
@@ -96,6 +96,12 @@ export function MapViewer() {
   const [showAnalysisPanel, setShowAnalysisPanel] = useState(false)
   const [showRoutesDialog, setShowRoutesDialog] = useState(false)
   const [loadedPirlRoutes, setLoadedPirlRoutes] = useState<{ routeId: string; visible: boolean; segmentCount: number }[]>([])
+
+  // Validated decisions data state
+  const [decisionsData, setDecisionsData] = useState<SegmentDecisions | null>(null)
+  const [decisionsLoading, setDecisionsLoading] = useState(false)
+  const [decisionsError, setDecisionsError] = useState<string | null>(null)
+  const [showDecisionsPanel, setShowDecisionsPanel] = useState(false)
 
   // PIRL Attribute Table state
   const [pirlTableRouteId, setPirlTableRouteId] = useState<string | null>(null)
@@ -568,6 +574,22 @@ export function MapViewer() {
       if (map.getLayer(layerId)) {
         const beforeId = orderedIds[i + 1]
         map.moveLayer(layerId, beforeId)
+      }
+    }
+
+    // Always move PIRL AI route layers to the top (rendered last)
+    // Find all agentic-route layers and move them to the very top
+    const style = map.getStyle()
+    if (style?.layers) {
+      const pirlLayerIds = style.layers
+        .filter(l => l.id.startsWith('agentic-route-'))
+        .map(l => l.id)
+
+      // Move each PIRL layer to the top (no beforeId = add to top)
+      for (const pirlLayerId of pirlLayerIds) {
+        if (map.getLayer(pirlLayerId)) {
+          map.moveLayer(pirlLayerId)
+        }
       }
     }
   }, [])
@@ -1660,8 +1682,10 @@ export function MapViewer() {
 
     if (segmentFeature) {
       const props = segmentFeature.properties || {}
-      const segmentId = props.segment_id || props.segmentId || props.SEGMENT_ID || props.id || String(segmentFeature.id)
-      const routeId = props.route_id || props.routeId || props.ROUTE_ID || currentProject || 'default'
+      // Ensure segment_id is a string (GeoJSON may store it as a number)
+      const rawSegmentId = props.segment_id ?? props.segmentId ?? props.SEGMENT_ID ?? props.id ?? segmentFeature.id
+      const segmentId = String(rawSegmentId)
+      const routeId = String(props.route_id || props.routeId || props.ROUTE_ID || currentProject || 'default')
 
       // Toggle selection
       if (selectedSegmentId === segmentId) {
@@ -1679,9 +1703,11 @@ export function MapViewer() {
         showFeatureHighlight(segmentFeature)
       }
 
-      // Clear previous analysis when selection changes
+      // Clear previous analysis and decisions when selection changes
       setAnalysisResult(null)
       setAnalysisError(null)
+      setDecisionsData(null)
+      setDecisionsError(null)
     }
   }, [currentProject, selectedSegmentId, showFeatureHighlight])
 
@@ -1692,8 +1718,18 @@ export function MapViewer() {
     setAnalysisError(null)
     setShowAnalysisPanel(true)
 
+    // Also fetch and show decisions data
+    setDecisionsLoading(true)
+    setDecisionsError(null)
+    setShowDecisionsPanel(true)
+
+    // Fetch AI analysis and decisions data in parallel
+    const analysisPromise = analyzeSegments(selectedRouteId, [selectedSegmentId])
+    const decisionsPromise = getSegmentDecisions(selectedRouteId, selectedSegmentId, currentProject || undefined)
+
+    // Handle AI analysis
     try {
-      const results = await analyzeSegments(selectedRouteId, [selectedSegmentId])
+      const results = await analysisPromise
       if (results.length > 0) {
         setAnalysisResult(results[0])
         // Update highlight color based on assessment
@@ -1707,7 +1743,22 @@ export function MapViewer() {
     } finally {
       setAnalysisLoading(false)
     }
-  }, [selectedSegmentId, selectedRouteId, updateHighlightColor])
+
+    // Handle decisions data
+    try {
+      const decisions = await decisionsPromise
+      if (decisions) {
+        setDecisionsData(decisions)
+      } else {
+        setDecisionsData(null)
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to load decisions data'
+      setDecisionsError(message)
+    } finally {
+      setDecisionsLoading(false)
+    }
+  }, [selectedSegmentId, selectedRouteId, currentProject, updateHighlightColor])
 
   const resetHighlightColor = useCallback(() => {
     const map = mapRef.current
@@ -1730,8 +1781,18 @@ export function MapViewer() {
     setShowAnalysisPanel(false)
     setAnalysisResult(null)
     setAnalysisError(null)
+    // Also close decisions panel when closing analysis
+    setShowDecisionsPanel(false)
+    setDecisionsData(null)
+    setDecisionsError(null)
     resetHighlightColor()
   }, [resetHighlightColor])
+
+  const handleCloseDecisionsPanel = useCallback(() => {
+    setShowDecisionsPanel(false)
+    setDecisionsData(null)
+    setDecisionsError(null)
+  }, [])
 
   // Load agentic route onto map
   const handleLoadAgenticRoute = useCallback((routeId: string, geojson: GeoJSON.FeatureCollection) => {
@@ -2217,6 +2278,18 @@ export function MapViewer() {
             error={analysisError}
             onClose={handleCloseAnalysisPanel}
             onRetry={handleAnalyze}
+          />
+        </div>
+      )}
+
+      {/* Validated Decisions Panel */}
+      {showDecisionsPanel && (
+        <div className="absolute top-4 right-[740px] z-40 w-[380px] max-h-[calc(100vh-120px)] overflow-hidden">
+          <DecisionsPanel
+            decisions={decisionsData}
+            loading={decisionsLoading}
+            error={decisionsError}
+            onClose={handleCloseDecisionsPanel}
           />
         </div>
       )}

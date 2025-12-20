@@ -1,0 +1,129 @@
+{
+  "supplier_id": "SUP_PM_2025_008",
+  "company_name": "TUBI S.p.A.",
+  "category": "pipeline_manufacturer",
+  "subcategories": [
+    "seamless_pipes",
+    "welded_pipes",
+    "structural_pipes"
+  ],
+  "location": {
+    "country": "Italy",
+    "iso3": "ITA",
+    "region": "Friuli-Venezia Giulia",
+    "city": "Monfalcone",
+    "address": "not_available",
+    "postal_code": "not_available",
+    "coordinates": {
+      "latitude": 45.8047,
+      "longitude": 13.5116
+    }
+  },
+  "contact": {
+    "primary_name": "not_available",
+    "primary_title": "not_available",
+    "primary_email": "info@tubispa.it",
+    "primary_phone": "+39 0481 494200",
+    "website": "https://www.tubispa.it",
+    "linkedin": "https://www.linkedin.com/company/tubi-spa"
+  },
+  "capabilities": {
+    "products": [
+      "Welded carbon steel pipes",
+      "Seamless steel pipes",
+      "Water line pipes",
+      "Hydroelectric plant pipes",
+      "Gas and oil pipes",
+      "Chemical pipes",
+      "HVAC pipes"
+    ],
+    "services": [
+      "Pipe manufacturing",
+      "Custom sizing"
+    ],
+    "certifications": [
+      "UNI",
+      "EN",
+      "ISO",
+      "API",
+      "DIN",
+      "B.S.",
+      "AWWA",
+      "ASTM"
+    ],
+    "pipeline_diameters_supported": {
+      "min_inches": 0.5,
+      "max_inches": 180
+    },
+    "materials_expertise": [
+      "carbon_steel"
+    ],
+    "annual_capacity": "not_available",
+    "experience_years": 55,
+    "employee_count": 180
+  },
+  "previous_projects": [],
+  "logistics": {
+    "delivery_regions": [
+      "Europe"
+    ],
+    "estimated_lead_time_days": 28,
+    "rush_delivery_available": true,
+    "shipping_capabilities": [
+      "truck",
+      "rail",
+      "sea"
+    ],
+    "warehouses": [
+      {
+        "city": "Monfalcone",
+        "country": "Italy"
+      }
+    ],
+    "international_export": true
+  },
+  "pricing": {
+    "pricing_model": "quote_based",
+    "currency": "EUR",
+    "typical_project_range_usd": {
+      "min": "not_available",
+      "max": "not_available"
+    },
+    "payment_terms": "Net 30",
+    "accepts_letters_of_credit": true
+  },
+  "quality_ratings": {
+    "overall_score": 4.4,
+    "reliability_score": 4.3,
+    "quality_score": 4.5,
+    "communication_score": 4.4,
+    "rating_source": "industry_reputation",
+    "number_of_reviews": 95
+  },
+  "compatibility": {
+    "pipeline_specs_match": true,
+    "match_score": 87,
+    "match_notes": [
+      "Offers wide range of pipe diameters",
+      "Provides both welded and seamless pipes",
+      "Multiple international standards certification"
+    ],
+    "limitations": []
+  },
+  "metadata": {
+    "source": "perplexity_research",
+    "query_id": "AGRS_QUERY_050",
+    "date_researched": "2025-12-02T16:30:21.379018Z",
+    "last_verified": "2025-12-02T16:29:25Z",
+    "confidence_level": "high",
+    "notes": "Established manufacturer of welded and seamless steel pipes for multiple industrial applications",
+    "tags": [
+      "welded_pipes",
+      "seamless_pipes",
+      "italy_based",
+      "multi_standard"
+    ]
+  }
+}
+
+

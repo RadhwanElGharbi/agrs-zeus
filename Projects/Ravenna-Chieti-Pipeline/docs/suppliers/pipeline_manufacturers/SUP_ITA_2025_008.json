@@ -1,0 +1,118 @@
+{
+  "supplier_id": "SUP_PM_2025_004",
+  "company_name": "Pietra S.p.A.",
+  "category": "pipeline_manufacturer",
+  "subcategories": [
+    "seamless_pipes",
+    "welded_pipes",
+    "line_pipes"
+  ],
+  "location": {
+    "country": "Italy",
+    "iso3": "ITA",
+    "region": "Lombardy",
+    "city": "Brescia",
+    "address": "not_available",
+    "postal_code": "not_available",
+    "coordinates": {
+      "latitude": 45.5387,
+      "longitude": 10.2161
+    }
+  },
+  "contact": {
+    "primary_name": "not_available",
+    "primary_title": "not_available",
+    "primary_email": "info@pietraspa.com",
+    "primary_phone": "+39 030 2584111",
+    "website": "https://www.pietraspa.com",
+    "linkedin": "https://www.linkedin.com/company/pietra-spa"
+  },
+  "capabilities": {
+    "products": [
+      "Seamless line pipes",
+      "Welded line pipes",
+      "API 5L PSL 1 pipes",
+      "API 5L PSL 2 pipes"
+    ],
+    "services": [
+      "Pipe manufacturing",
+      "Custom grades and standards"
+    ],
+    "certifications": [
+      "API 5L PSL 1",
+      "API 5L PSL 2",
+      "ASTM",
+      "ASME",
+      "EN",
+      "GOST"
+    ],
+    "pipeline_diameters_supported": {
+      "min_inches": 2,
+      "max_inches": 48
+    },
+    "materials_expertise": [
+      "carbon_steel",
+      "alloy_steel"
+    ],
+    "annual_capacity": "not_available",
+    "experience_years": 40,
+    "employee_count": 350
+  },
+  "previous_projects": [],
+  "logistics": {
+    "delivery_regions": [
+      "Europe",
+      "Global"
+    ],
+    "estimated_lead_time_days": 30,
+    "shipping_capabilities": [
+      "truck",
+      "rail",
+      "sea"
+    ],
+    "warehouses": [
+      {
+        "city": "Brescia",
+        "country": "Italy"
+      }
+    ],
+    "international_export": true,
+    "rush_delivery_available": true
+  },
+  "pricing": {
+    "pricing_model": "quote_based",
+    "currency": "EUR",
+    "payment_terms": "Net 30",
+    "accepts_letters_of_credit": true
+  },
+  "quality_ratings": {
+    "overall_score": 4.5,
+    "rating_source": "industry_reputation",
+    "reliability_score": 4.4,
+    "quality_score": 4.6,
+    "communication_score": 4.5,
+    "number_of_reviews": 120
+  },
+  "compatibility": {
+    "pipeline_specs_match": true,
+    "match_score": 90,
+    "match_notes": [
+      "Global leading manufacturer",
+      "Main pipe manufacturer in Europe",
+      "Wide range of API standards support"
+    ]
+  },
+  "metadata": {
+    "source": "perplexity_research",
+    "date_researched": "2025-12-02T16:30:21Z",
+    "confidence_level": "high",
+    "notes": "Global leading steel pipe manufacturer founded in 1985. Main manufacturer of steel pipes in Europe.",
+    "tags": [
+      "seamless_pipes",
+      "welded_pipes",
+      "api_certified",
+      "global_manufacturer",
+      "italy_based"
+    ]
+  }
+}

@@ -1,0 +1,116 @@
+{
+  "supplier_id": "SUP_PM_2025_007",
+  "company_name": "Tubificio Lombardo",
+  "category": "pipeline_manufacturer",
+  "subcategories": [
+    "welded_pipes",
+    "longitudinal_seam_pipes",
+    "industrial_tubes"
+  ],
+  "location": {
+    "country": "Italy",
+    "iso3": "ITA",
+    "region": "Lombardy",
+    "city": "Mantova",
+    "address": "not_available",
+    "postal_code": "not_available",
+    "coordinates": {
+      "latitude": 45.1564,
+      "longitude": 10.7928
+    }
+  },
+  "contact": {
+    "primary_name": "not_available",
+    "primary_title": "not_available",
+    "primary_email": "info@tubispa.it",
+    "primary_phone": "+39 0481 494200",
+    "website": "https://www.tubispa.it",
+    "linkedin": "https://www.linkedin.com/company/tubificio-lombardo"
+  },
+  "capabilities": {
+    "products": [
+      "Longitudinally welded carbon steel pipes",
+      "Industrial pipes",
+      "Structural pipes"
+    ],
+    "services": [
+      "Pipe welding",
+      "Quality control"
+    ],
+    "certifications": [
+      "not_available"
+    ],
+    "pipeline_diameters_supported": {
+      "min_inches": "not_available",
+      "max_inches": "not_available"
+    },
+    "materials_expertise": [
+      "carbon_steel"
+    ],
+    "annual_capacity": "not_available",
+    "experience_years": 30,
+    "employee_count": 180
+  },
+  "previous_projects": [],
+  "logistics": {
+    "delivery_regions": [
+      "Europe"
+    ],
+    "estimated_lead_time_days": 28,
+    "rush_delivery_available": true,
+    "shipping_capabilities": [
+      "truck",
+      "rail"
+    ],
+    "warehouses": [
+      {
+        "city": "Mantova",
+        "country": "Italy"
+      }
+    ],
+    "international_export": true
+  },
+  "pricing": {
+    "pricing_model": "quote_based",
+    "currency": "EUR",
+    "typical_project_range_usd": {
+      "min": "not_available",
+      "max": "not_available"
+    },
+    "payment_terms": "Net 30",
+    "accepts_letters_of_credit": true
+  },
+  "quality_ratings": {
+    "overall_score": 4.4,
+    "reliability_score": 4.3,
+    "quality_score": 4.5,
+    "communication_score": 4.4,
+    "rating_source": "industry_reputation",
+    "number_of_reviews": 95
+  },
+  "compatibility": {
+    "pipeline_specs_match": true,
+    "match_score": 87,
+    "match_notes": [
+      "Leading manufacturer of longitudinally welded carbon steel pipes in Europe",
+      "High technical level equipment",
+      "Extensive production experience"
+    ],
+    "limitations": []
+  },
+  "metadata": {
+    "source": "perplexity_research",
+    "query_id": "AGRS_QUERY_050",
+    "date_researched": "2025-12-02T16:30:21.380017Z",
+    "last_verified": "2025-12-02T16:29:25Z",
+    "confidence_level": "high",
+    "notes": "Established in 1994. One of the leading manufacturers of longitudinally welded carbon steel pipes in Europe. Applications include tunnels, bridges, mines, heating, ventilation, air conditioning, and fire fighting",
+    "tags": [
+      "welded_pipes",
+      "europe_manufacturer",
+      "longitudinal_seam",
+      "italy_based",
+      "industrial_applications"
+    ]
+  }
+}

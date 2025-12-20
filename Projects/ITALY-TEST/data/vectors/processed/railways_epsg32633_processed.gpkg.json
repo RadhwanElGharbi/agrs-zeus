@@ -1,0 +1,44 @@
+{
+    "dataset_name": "OpenStreetMap Railways",
+    "category": "railways",
+    "project": "ITALY-TEST",
+    "processing_date": "2025-12-17T13:51:47Z",
+    "target_crs": "EPSG:32633",
+    "target_crs_name": "WGS 84 / UTM zone 33N",
+    "data_type": "Vector",
+    "geometry_type": "LineString",
+    "format": "GeoPackage",
+    "layer_name": "railways",
+    "feature_count": 5,
+    "operations_applied": [
+        {
+            "operation": "reproject",
+            "tool": "ogr2ogr",
+            "source_crs": "EPSG:4326",
+            "target_crs": "EPSG:32633"
+        },
+        {
+            "operation": "clip",
+            "tool": "ogr2ogr",
+            "clipsrc": "aoi/aoi.geojson"
+        }
+    ],
+    "source_files": [
+        {
+            "filename": "osm_railways_raw.gpkg",
+            "metadata": "osm_railways_raw.gpkg.json"
+        }
+    ],
+    "schema": {
+        "osm_id": "OSM way ID",
+        "name": "Railway name",
+        "railway": "Railway type (rail, subway, tram, light_rail)",
+        "operator": "Railway operator",
+        "gauge": "Track gauge (e.g., 1435mm)",
+        "electrified": "Electrification type (contact_line, rail, yes, no)",
+        "usage": "Usage type (main, branch, industrial)",
+        "service": "Service type (spur, yard, siding)"
+    },
+    "validation_status": "passed",
+    "protocol_version": "1.0"
+}

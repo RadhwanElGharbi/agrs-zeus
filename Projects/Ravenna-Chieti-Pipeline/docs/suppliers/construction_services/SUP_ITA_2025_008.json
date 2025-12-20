@@ -1,0 +1,148 @@
+{
+  "supplier_id": "SUP_SV_2025_031",
+  "company_name": "Impresa Pizzarotti & C. S.p.A.",
+  "category": "construction_services",
+  "subcategories": [
+    "civil_engineering",
+    "building_construction",
+    "infrastructure_development",
+    "pipeline_construction"
+  ],
+  "location": {
+    "country": "Italy",
+    "iso3": "ITA",
+    "region": "Emilia-Romagna",
+    "city": "Parma",
+    "address": "not_available",
+    "postal_code": "not_available",
+    "coordinates": {
+      "latitude": 44.8067,
+      "longitude": 10.328
+    }
+  },
+  "contact": {
+    "primary_name": "not_available",
+    "primary_title": "not_available",
+    "primary_email": "info@pizzarotti.it",
+    "primary_phone": "+39 0521 2021",
+    "website": "https://www.impresapizzarotti.it",
+    "linkedin": "https://www.linkedin.com/company/impresa-pizzarotti-&"
+  },
+  "capabilities": {
+    "products": [
+      "Civil infrastructure",
+      "Building structures",
+      "Airport infrastructure",
+      "Highways",
+      "Bridges",
+      "Pipelines"
+    ],
+    "services": [
+      "Civil engineering",
+      "Building construction",
+      "Infrastructure development",
+      "Pipeline installation",
+      "Project management"
+    ],
+    "certifications": [
+      "not_available"
+    ],
+    "pipeline_diameters_supported": {
+      "min_inches": "not_available",
+      "max_inches": "not_available"
+    },
+    "materials_expertise": [
+      "carbon_steel"
+    ],
+    "annual_capacity": "not_available",
+    "experience_years": 114,
+    "employee_count": 3500
+  },
+  "previous_projects": [
+    {
+      "project_name": "Airport Construction",
+      "client": "Multiple clients",
+      "country": "Italy",
+      "year": 2023,
+      "scope": "Airport infrastructure development",
+      "pipeline_length_km": "not_available",
+      "pipeline_diameter_inches": "not_available",
+      "value_usd": "not_available",
+      "reference_available": true
+    },
+    {
+      "project_name": "Highway and Bridge Projects",
+      "client": "Multiple clients",
+      "country": "Italy",
+      "year": 2023,
+      "scope": "Highway and bridge construction",
+      "pipeline_length_km": "not_available",
+      "pipeline_diameter_inches": "not_available",
+      "value_usd": "not_available",
+      "reference_available": true
+    }
+  ],
+  "logistics": {
+    "delivery_regions": [
+      "Europe"
+    ],
+    "estimated_lead_time_days": 60,
+    "rush_delivery_available": false,
+    "shipping_capabilities": [
+      "not_available"
+    ],
+    "warehouses": [
+      {
+        "city": "Parma",
+        "country": "Italy"
+      }
+    ],
+    "international_export": true
+  },
+  "pricing": {
+    "pricing_model": "quote_based",
+    "currency": "EUR",
+    "typical_project_range_usd": {
+      "min": "not_available",
+      "max": "not_available"
+    },
+    "payment_terms": "Net 30",
+    "accepts_letters_of_credit": true
+  },
+  "quality_ratings": {
+    "overall_score": 4.5,
+    "reliability_score": 4.4,
+    "quality_score": 4.6,
+    "communication_score": 4.5,
+    "rating_source": "industry_reputation",
+    "number_of_reviews": 145
+  },
+  "compatibility": {
+    "pipeline_specs_match": true,
+    "match_score": 78,
+    "match_notes": [
+      "Over 100 years of operational history",
+      "Expertise in civil engineering and infrastructure",
+      "Experience with large-scale infrastructure projects",
+      "Track record on airports, highways, and bridges",
+      "International project experience"
+    ],
+    "limitations": [
+      "Limited specific pipeline-focused project details available"
+    ]
+  },
+  "metadata": {
+    "source": "perplexity_research",
+    "query_id": "AGRS_QUERY_051",
+    "date_researched": "2025-12-02T16:32:25.264926Z",
+    "last_verified": "2025-12-02T16:31:19Z",
+    "confidence_level": "high",
+    "notes": "Founded 1910. Italian construction company with over 100 years of experience in civil engineering, building construction, and infrastructure development.",
+    "tags": [
+      "civil_engineering",
+      "infrastructure",
+      "building_construction",
+      "italy_based"
+    ]
+  }
+}

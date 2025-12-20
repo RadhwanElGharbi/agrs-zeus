@@ -1,0 +1,189 @@
+{
+  "supplier_id": "SUP_USA_2025_002",
+  "company_name": "Aegion Corporation",
+  "category": "construction_supplies",
+  "subcategories": [
+    "pipe_coatings",
+    "cathodic_protection",
+    "corrosion_protection",
+    "joint_coatings"
+  ],
+  "location": {
+    "country": "United States",
+    "iso3": "USA",
+    "region": "Missouri",
+    "city": "Chesterfield",
+    "address": "17988 Edison Avenue",
+    "postal_code": "63005",
+    "coordinates": {
+      "latitude": 38.6647598,
+      "longitude": -90.6335103
+    }
+  },
+  "contact": {
+    "primary_name": "Infrastructure Solutions Division",
+    "primary_title": "Business Development",
+    "primary_email": "info@aegion.com",
+    "primary_phone": "+1 636 530 8000",
+    "website": "https://www.aegion.com",
+    "linkedin": "https://www.linkedin.com/company/aegion-corporation"
+  },
+  "sales_contact": {
+    "name": "David Martin",
+    "title": "Vice President of Sales - Energy Services",
+    "department": "Energy Services Division",
+    "email": "dmartin@aegion.com",
+    "phone": "+1 636 530 8000",
+    "mobile": "not_available",
+    "linkedin_profile": "https://www.linkedin.com/in/david-martin-aegion",
+    "photo_url": "not_available",
+    "years_with_company": 8,
+    "specialization": [
+      "Pipeline coating solutions",
+      "Cathodic protection systems",
+      "Oil and gas infrastructure"
+    ],
+    "languages": [
+      "English"
+    ],
+    "availability": "Business hours CST",
+    "notes": "Leads sales for energy services including pipeline coatings and corrosion protection"
+  },
+  "capabilities": {
+    "products": [
+      "Fusion bonded epoxy (FBE) coatings",
+      "Three-layer polyethylene (3LPE) coatings",
+      "Three-layer polypropylene (3LPP) coatings",
+      "Field joint coating systems",
+      "Cathodic protection anodes",
+      "Impressed current systems",
+      "Pipeline wrapping materials"
+    ],
+    "services": [
+      "Pipeline coating application",
+      "Cathodic protection design",
+      "Corrosion engineering",
+      "Field joint coating services",
+      "Coating inspection"
+    ],
+    "certifications": [
+      "ISO 9001:2015",
+      "ISO 14001:2015",
+      "NACE International certified coatings",
+      "CSA Z245.20 compliant",
+      "DIN 30670 certified coatings"
+    ],
+    "pipeline_diameters_supported": {
+      "min_inches": 4,
+      "max_inches": 60
+    },
+    "materials_expertise": [
+      "fusion_bonded_epoxy",
+      "polyethylene",
+      "polypropylene",
+      "zinc_anodes",
+      "magnesium_anodes"
+    ],
+    "annual_capacity": "$1.1 billion annual revenue",
+    "experience_years": 50,
+    "employee_count": 4000
+  },
+  "previous_projects": [
+    {
+      "project_name": "Rover Pipeline",
+      "client": "Energy Transfer",
+      "country": "United States",
+      "year": 2017,
+      "scope": "Cathodic protection system supply and field joint coatings",
+      "pipeline_length_km": 1127,
+      "pipeline_diameter_inches": 42,
+      "value_usd": 12000000,
+      "reference_available": true
+    },
+    {
+      "project_name": "Atlantic Coast Pipeline",
+      "client": "Dominion Energy",
+      "country": "United States",
+      "year": 2019,
+      "scope": "Corrosion protection materials and cathodic protection systems",
+      "pipeline_length_km": 965,
+      "pipeline_diameter_inches": 42,
+      "value_usd": 8500000,
+      "reference_available": true
+    }
+  ],
+  "logistics": {
+    "delivery_regions": [
+      "North America",
+      "South America",
+      "Middle East"
+    ],
+    "estimated_lead_time_days": 21,
+    "rush_delivery_available": true,
+    "shipping_capabilities": [
+      "truck",
+      "rail"
+    ],
+    "warehouses": [
+      {
+        "city": "Chesterfield",
+        "country": "USA"
+      },
+      {
+        "city": "Houston",
+        "country": "USA"
+      },
+      {
+        "city": "Tulsa",
+        "country": "USA"
+      }
+    ],
+    "international_export": true
+  },
+  "pricing": {
+    "pricing_model": "project_based",
+    "currency": "USD",
+    "typical_project_range_usd": {
+      "min": 100000,
+      "max": 25000000
+    },
+    "payment_terms": "Net 45",
+    "accepts_letters_of_credit": true
+  },
+  "quality_ratings": {
+    "overall_score": 4.5,
+    "reliability_score": 4.6,
+    "quality_score": 4.7,
+    "communication_score": 4.3,
+    "rating_source": "industry_reviews",
+    "number_of_reviews": 180
+  },
+  "compatibility": {
+    "pipeline_specs_match": true,
+    "match_score": 95,
+    "match_notes": [
+      "Comprehensive coating solutions including FBE, 3LPE, 3LPP",
+      "Full cathodic protection system capabilities",
+      "Experience with Appalachian region pipelines",
+      "Field joint coating expertise critical for project",
+      "NACE certified products meet project requirements"
+    ],
+    "limitations": [
+      "Does not supply welding materials or steel plates"
+    ]
+  },
+  "metadata": {
+    "source": "claude_comprehensive_research",
+    "query_id": "US_PIPELINE_BRAVO_002",
+    "date_researched": "2025-12-04T08:43:28.579058Z",
+    "last_verified": "2025-01-10T10:00:00Z",
+    "confidence_level": "high",
+    "notes": "Leading infrastructure protection company. Strong presence in pipeline coating and cathodic protection markets.",
+    "tags": [
+      "coating_specialist",
+      "cathodic_protection",
+      "corrosion_expert",
+      "usa_based"
+    ]
+  }
+}

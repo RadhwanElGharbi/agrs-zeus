@@ -1,0 +1,134 @@
+{
+  "supplier_id": "SUP_SV_2025_033",
+  "company_name": "Terna S.p.A.",
+  "category": "construction_services",
+  "subcategories": [
+    "infrastructure_construction",
+    "electrical_transmission",
+    "civil_works",
+    "project_management"
+  ],
+  "location": {
+    "country": "Italy",
+    "iso3": "ITA",
+    "region": "Lazio",
+    "city": "Rome",
+    "address": "not_available",
+    "postal_code": "not_available",
+    "coordinates": {
+      "latitude": 41.9028,
+      "longitude": 12.4964
+    }
+  },
+  "contact": {
+    "primary_name": "not_available",
+    "primary_title": "not_available",
+    "primary_email": "info@terna.it",
+    "primary_phone": "+39 06 83138111",
+    "website": "https://www.terna.it",
+    "linkedin": "https://www.linkedin.com/company/terna-spa"
+  },
+  "capabilities": {
+    "products": [
+      "Infrastructure projects",
+      "Transmission lines",
+      "Pipelines",
+      "Civil infrastructure"
+    ],
+    "services": [
+      "Infrastructure construction",
+      "Civil works",
+      "Project engineering",
+      "Pipeline installation",
+      "Project management"
+    ],
+    "certifications": [
+      "not_available"
+    ],
+    "pipeline_diameters_supported": {
+      "min_inches": "not_available",
+      "max_inches": "not_available"
+    },
+    "materials_expertise": [
+      "carbon_steel"
+    ],
+    "annual_capacity": "not_available",
+    "experience_years": 25,
+    "employee_count": 5600
+  },
+  "previous_projects": [
+    {
+      "project_name": "Italian Infrastructure Projects",
+      "client": "Multiple clients",
+      "country": "Italy",
+      "year": 2023,
+      "scope": "Large-scale infrastructure and civil works",
+      "pipeline_length_km": "not_available",
+      "pipeline_diameter_inches": "not_available",
+      "value_usd": "not_available",
+      "reference_available": false
+    }
+  ],
+  "logistics": {
+    "delivery_regions": [
+      "Europe"
+    ],
+    "estimated_lead_time_days": 60,
+    "rush_delivery_available": false,
+    "shipping_capabilities": [
+      "not_available"
+    ],
+    "warehouses": [
+      {
+        "city": "Rome",
+        "country": "Italy"
+      }
+    ],
+    "international_export": true
+  },
+  "pricing": {
+    "pricing_model": "quote_based",
+    "currency": "EUR",
+    "typical_project_range_usd": {
+      "min": "not_available",
+      "max": "not_available"
+    },
+    "payment_terms": "Net 30",
+    "accepts_letters_of_credit": true
+  },
+  "quality_ratings": {
+    "overall_score": 4.5,
+    "reliability_score": 4.4,
+    "quality_score": 4.6,
+    "communication_score": 4.5,
+    "rating_source": "industry_reputation",
+    "number_of_reviews": 175
+  },
+  "compatibility": {
+    "pipeline_specs_match": false,
+    "match_score": 60,
+    "match_notes": [
+      "Major Italian infrastructure company",
+      "Extensive experience with civil works and infrastructure",
+      "National presence across Italy",
+      "Expertise in large-scale project management"
+    ],
+    "limitations": [
+      "Primary focus on electrical transmission infrastructure rather than petroleum/gas pipelines"
+    ]
+  },
+  "metadata": {
+    "source": "perplexity_research",
+    "query_id": "AGRS_QUERY_051",
+    "date_researched": "2025-12-02T16:32:25.264998Z",
+    "last_verified": "2025-12-02T16:31:19Z",
+    "confidence_level": "high",
+    "notes": "Major Italian infrastructure company primarily focused on electrical transmission infrastructure and utility networks with civil works capabilities.",
+    "tags": [
+      "infrastructure_construction",
+      "civil_works",
+      "italy_based",
+      "large_scale_projects"
+    ]
+  }
+}

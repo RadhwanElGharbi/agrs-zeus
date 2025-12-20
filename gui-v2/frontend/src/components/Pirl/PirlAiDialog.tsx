@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { useProject } from '@/lib/context/ProjectContext'
-import { listPirlOutputs, type PirlOutput, fetchPipelineSpecs, type PipelineSpecs } from '@/lib/api/dataClient'
+import { listPirlOutputs, type PirlOutput, fetchPipelineSpecs, type PipelineSpecs, listPirlJobs, type PirlJob, type PirlJobCreateResponse } from '@/lib/api/dataClient'
 import {
   X, Brain, Settings2, DollarSign, Activity,
   ChevronRight, Play, RotateCcw, Save, Box,
@@ -43,7 +43,7 @@ interface PirlAiDialogProps {
   onClose: () => void
 }
 
-type PirlSection = 'objectives' | 'hydraulics' | 'cost' | 'constraints' | 'review' | 'results'
+type PirlSection = 'objectives' | 'hydraulics' | 'cost' | 'constraints' | 'review' | 'jobs' | 'results'
 
 // Type definitions for all form data
 interface ObjectivesData {
@@ -282,9 +282,32 @@ const defaultConstraints: ConstraintsData = {
   }
 }
 
+// Helper functions for hydraulic calculations
+function calculateFlowVelocity(flowRate: number, innerDiameter: number): number {
+  const area = Math.PI * Math.pow(innerDiameter / 2, 2)
+  return area > 0 ? flowRate / area : 0
+}
+
+function calculateReynolds(velocity: number, diameter: number, density: number, viscosity: number): number {
+  return viscosity > 0 ? (density * velocity * diameter) / viscosity : 0
+}
+
+function getFlowRegime(reynolds: number): string {
+  if (reynolds < 2300) return 'Laminar'
+  if (reynolds < 4000) return 'Transitional'
+  return 'Turbulent'
+}
+
+function calculatePressureDrop(length: number, diameter: number, velocity: number, density: number, friction: number): number {
+  // Darcy-Weisbach equation: ΔP = f * (L/D) * (ρ * v²/2)
+  if (diameter <= 0) return 0
+  return friction * (length / diameter) * (density * velocity * velocity / 2) / 1e6 // Convert to MPa
+}
+
 export function PirlAiDialog({ open, onClose }: PirlAiDialogProps) {
   const { currentProject } = useProject()
   const [pirlResults, setPirlResults] = useState<PirlOutput[]>([])
+  const [pirlJobs, setPirlJobs] = useState<PirlJob[]>([])
   const [activeSection, setActiveSection] = useState<PirlSection>('objectives')
   const [isClosing, setIsClosing] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -292,6 +315,7 @@ export function PirlAiDialog({ open, onClose }: PirlAiDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitSuccess, setSubmitSuccess] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [lastCreatedJob, setLastCreatedJob] = useState<PirlJobCreateResponse['job'] | null>(null)
 
   // Form state
   const [objectives, setObjectives] = useState<ObjectivesData>(defaultObjectives)
@@ -302,40 +326,134 @@ export function PirlAiDialog({ open, onClose }: PirlAiDialogProps) {
   // 3D Viewer mode
   const [viewMode, setViewMode] = useState<ViewMode>('pipe')
 
+  // Calculate flow statistics from hydraulics data
+  const innerDiameter = (hydraulics.mechanical.outerDiameter - 2 * hydraulics.mechanical.wallThickness) / 1000 // meters
+  const flowRate = parseFloat(hydraulics.operating.flowRate) || 1.0
+  const fluidViscosity = parseFloat(hydraulics.fluidComposition.viscosity) || 0.000011
+  const fluidDensity = (parseFloat(hydraulics.fluidComposition.specificGravity) || 0.58) * 1.225 // kg/m³
+  const velocity = calculateFlowVelocity(flowRate, innerDiameter)
+  const reynolds = calculateReynolds(velocity, innerDiameter, fluidDensity, fluidViscosity)
+  const flowRegime = getFlowRegime(reynolds)
+  // Estimate friction factor (Blasius equation for turbulent flow in smooth pipes)
+  const frictionFactor = reynolds > 2300 ? 0.316 / Math.pow(reynolds, 0.25) : 64 / Math.max(reynolds, 1)
+  const pressureDrop = calculatePressureDrop(72000, innerDiameter, velocity, fluidDensity, frictionFactor) // Assume 72km pipeline
+
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // Load jobs function - can be called to refresh
+  const loadJobs = useCallback(() => {
+    if (currentProject) {
+      listPirlJobs(currentProject)
+        .then(setPirlJobs)
+        .catch(err => console.error('Failed to load PIRL jobs:', err))
+    }
+  }, [currentProject])
 
   useEffect(() => {
     if (open) {
       setIsClosing(false)
       setSubmitSuccess(false)
       setSubmitError(null)
+      setLastCreatedJob(null)
       if (currentProject) {
         listPirlOutputs(currentProject)
           .then(setPirlResults)
           .catch(console.error)
 
+        // Load existing jobs
+        loadJobs()
+
         // Fetch pipeline specs
         fetchPipelineSpecs(currentProject)
           .then(specs => {
             setPipelineSpecs(specs)
-            // Initialize editable values from specs
+
+            // Determine outer diameter (support both formats)
+            let outerDiameter = defaultHydraulics.mechanical.outerDiameter
+            let wallThickness = defaultHydraulics.mechanical.wallThickness
+
+            if (specs.diameter_mm !== undefined) {
+              // Legacy/detailed format (Ravenna-Chieti style)
+              outerDiameter = specs.diameter_mm
+              wallThickness = specs.wall_thickness_mm ?? specs.thickness_mm ?? wallThickness
+            } else if (specs.outer_diameter !== undefined) {
+              // New project format (meters, convert to mm)
+              outerDiameter = specs.outer_diameter * 1000
+              if (specs.inner_diameter !== undefined) {
+                wallThickness = (specs.outer_diameter - specs.inner_diameter) * 1000 / 2
+              }
+            }
+
+            // Get operating conditions from hydraulics sub-object or top-level
+            const h = specs.hydraulics
+            const inletPressure = h?.initial_pressure_bar ?? specs.mop_bar ?? parseFloat(defaultHydraulics.operating.inletPressure)
+            const deliveryPressure = h?.min_delivery_pressure_bar ?? parseFloat(defaultHydraulics.operating.deliveryPressure)
+            const flowRate = h?.volumetric_flow_rate_m3_s ?? specs.flow_rate_m3_s ?? parseFloat(defaultHydraulics.operating.flowRate)
+            const inletTemp = h?.operating_temperature_k ?? specs.operating_temp_k ?? parseFloat(defaultHydraulics.operating.inletTemp)
+            const specificGravity = h?.gas_specific_gravity ?? parseFloat(defaultHydraulics.fluidComposition.specificGravity)
+            const roughness = h?.pipe_roughness_mm ?? parseFloat(defaultHydraulics.operating.roughness)
+
+            // Convert MAOP from bar to kPa if available
+            const maop = specs.mop_bar ? (specs.mop_bar * 100).toString() : defaultHydraulics.mechanical.maop
+
+            // Initialize hydraulics form from specs
             setHydraulics(prev => ({
               ...prev,
               mechanical: {
                 ...prev.mechanical,
-                outerDiameter: specs.outer_diameter * 1000, // Convert to mm
-                wallThickness: (specs.outer_diameter - specs.inner_diameter) * 1000, // Convert to mm
+                outerDiameter,
+                wallThickness,
+                maop,
+              },
+              operating: {
+                ...prev.operating,
+                inletPressure: inletPressure.toString(),
+                deliveryPressure: deliveryPressure.toString(),
+                flowRate: flowRate.toString(),
+                inletTemp: inletTemp.toString(),
+                roughness: roughness.toString(),
+              },
+              fluidComposition: {
+                ...prev.fluidComposition,
+                specificGravity: specificGravity.toString(),
               }
             }))
+
+            // Initialize constraints from specs
+            if (specs.max_slope_percent !== undefined || specs.depth_of_cover_m !== undefined) {
+              setConstraints(prev => ({
+                ...prev,
+                constructabilityLimits: {
+                  ...prev.constructabilityLimits,
+                  maxLongSlope: specs.max_slope_percent?.toString() ?? prev.constructabilityLimits.maxLongSlope,
+                  minDepthOfCover: specs.depth_of_cover_m?.toString() ?? prev.constructabilityLimits.minDepthOfCover,
+                  minBendRadius: specs.hdd_min_bend_radius_m
+                    ? (specs.hdd_min_bend_radius_m / outerDiameter * 1000).toFixed(0)
+                    : prev.constructabilityLimits.minBendRadius,
+                  maxBendAngle: specs.field_bend_max_angle_deg?.toString() ?? prev.constructabilityLimits.maxBendAngle,
+                }
+              }))
+            }
           })
           .catch(err => {
             console.error('Failed to load pipeline specs:', err)
           })
       }
     }
-  }, [open, currentProject])
+  }, [open, currentProject, loadJobs])
+
+  // Refresh jobs periodically when dialog is open
+  useEffect(() => {
+    if (!open || !currentProject) return
+
+    const interval = setInterval(() => {
+      loadJobs()
+    }, 30000) // Refresh every 30 seconds
+
+    return () => clearInterval(interval)
+  }, [open, currentProject, loadJobs])
 
   const handleClose = () => {
     setIsClosing(true)
@@ -373,12 +491,16 @@ export function PirlAiDialog({ open, onClose }: PirlAiDialogProps) {
 
       if (!response.ok) {
         const error = await response.json()
-        throw new Error(error.detail || 'Failed to save PIRL request')
+        throw new Error(error.detail || 'Failed to create PIRL job')
       }
 
-      const result = await response.json()
+      const result: PirlJobCreateResponse = await response.json()
       setSubmitSuccess(true)
-      console.log('PIRL request saved:', result)
+      setLastCreatedJob(result.job)
+      console.log('PIRL job created:', result)
+
+      // Refresh jobs list
+      loadJobs()
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : 'Unknown error occurred')
     } finally {
@@ -389,10 +511,10 @@ export function PirlAiDialog({ open, onClose }: PirlAiDialogProps) {
   if (!mounted || !open) return null
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 font-mono">
       <div
         className={cn(
-          "absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity duration-300",
+          "absolute inset-0 bg-black/90 backdrop-blur-sm transition-opacity duration-300",
           isClosing ? "opacity-0" : "opacity-100"
         )}
         onClick={handleClose}
@@ -401,22 +523,27 @@ export function PirlAiDialog({ open, onClose }: PirlAiDialogProps) {
       <div
         data-tour="pirl-dialog"
         className={cn(
-          "relative z-10 w-[1400px] max-w-[95vw] h-[85vh] bg-card border border-border rounded-lg shadow-xl flex flex-col overflow-hidden transition-all duration-300",
+          "relative z-10 w-[1400px] max-w-[95vw] h-[85vh] bg-[#0a0a0a]/95 backdrop-blur-xl border border-red-500/20 rounded-lg shadow-[0_0_50px_-20px_rgba(239,68,68,0.5)] flex flex-col overflow-hidden transition-all duration-300",
           isClosing ? "scale-95 opacity-0" : "scale-100 opacity-100"
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/30">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-red-500/20 bg-red-900/10">
           <div className="flex items-center gap-4">
-            <div className="p-2 rounded-md bg-primary/10 text-primary">
+            <div className="p-2 rounded-md bg-red-500/20 text-red-400 shadow-[0_0_15px_-3px_rgba(239,68,68,0.4)]">
               <Brain className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-foreground">PIRL AI Studio</h2>
-              <p className="text-xs text-muted-foreground">Physics Informed Reinforcement Learning Suite</p>
+              <h2 className="text-lg font-bold text-white tracking-wide uppercase">PIRL AI Studio</h2>
+              <p className="text-xs text-red-200/50 font-mono">Physics Informed Reinforcement Learning Suite</p>
             </div>
           </div>
-          <Button variant="ghost" size="icon" onClick={handleClose}>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleClose}
+            className="text-white/50 hover:text-white hover:bg-white/10"
+          >
             <X className="w-4 h-4" />
           </Button>
         </div>
@@ -424,7 +551,7 @@ export function PirlAiDialog({ open, onClose }: PirlAiDialogProps) {
         {/* Main Layout */}
         <div className="flex flex-1 overflow-hidden">
           {/* Left Sidebar Navigation */}
-          <div className="w-64 bg-card border-r border-border flex flex-col">
+          <div className="w-64 bg-black/20 border-r border-red-500/10 flex flex-col">
             <div className="p-3 space-y-1">
               {[
                 { id: 'objectives', label: 'Objectives', icon: TargetIcon },
@@ -432,6 +559,7 @@ export function PirlAiDialog({ open, onClose }: PirlAiDialogProps) {
                 { id: 'cost', label: 'Cost Matrix', icon: DollarSign },
                 { id: 'constraints', label: 'Constraints', icon: AlertTriangle },
                 { id: 'review', label: 'Review & Launch', icon: Play },
+                ...(pirlJobs.length > 0 ? [{ id: 'jobs', label: `Jobs (${pirlJobs.length})`, icon: Loader2 }] : []),
                 ...(pirlResults.length > 0 ? [{ id: 'results', label: 'Results', icon: Sparkles }] : [])
               ].map((item) => {
                 const isActive = activeSection === item.id
@@ -441,10 +569,10 @@ export function PirlAiDialog({ open, onClose }: PirlAiDialogProps) {
                     key={item.id}
                     onClick={() => setActiveSection(item.id as PirlSection)}
                     className={cn(
-                      "w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors",
+                      "w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-all duration-200",
                       isActive
-                        ? "bg-primary/10 text-primary"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                        ? "bg-red-500/20 text-red-400 border-l-2 border-red-500 shadow-[inset_10px_0_20px_-10px_rgba(239,68,68,0.2)]"
+                        : "text-white/50 hover:text-white hover:bg-white/5 border-l-2 border-transparent"
                     )}
                   >
                     <Icon className="w-4 h-4" />
@@ -454,19 +582,22 @@ export function PirlAiDialog({ open, onClose }: PirlAiDialogProps) {
               })}
             </div>
 
-            <div className="mt-auto p-4 border-t border-border">
-              <div className="p-3 bg-muted/30 rounded-md border border-border">
-                <h4 className="text-xs font-semibold text-foreground mb-2">Model Status</h4>
+            <div className="mt-auto p-4 border-t border-red-500/10">
+              <div className="p-3 bg-red-900/10 rounded-md border border-red-500/20">
+                <h4 className="text-xs font-semibold text-red-200 mb-2 uppercase tracking-wider">Model Status</h4>
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                  <span className="text-xs text-muted-foreground">PIRL-v2.4 Ready</span>
+                  <div className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                  </div>
+                  <span className="text-xs text-emerald-400 font-mono">PIRL-v2.4 READY</span>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Center Content Area */}
-          <div className="flex-1 flex flex-col bg-background relative overflow-hidden">
+          <div className="flex-1 flex flex-col bg-transparent relative overflow-hidden">
             <div className="flex-1 overflow-y-auto p-8">
               {activeSection === 'objectives' && (
                 <ObjectivesSection
@@ -501,51 +632,88 @@ export function PirlAiDialog({ open, onClose }: PirlAiDialogProps) {
                   isSubmitting={isSubmitting}
                   submitSuccess={submitSuccess}
                   submitError={submitError}
+                  lastCreatedJob={lastCreatedJob}
+                  onViewJobs={() => setActiveSection('jobs')}
                 />
               )}
+              {activeSection === 'jobs' && <JobsSection jobs={pirlJobs} onRefresh={loadJobs} />}
               {activeSection === 'results' && <ResultsSection results={pirlResults} />}
             </div>
           </div>
 
           {/* Right 3D Visualization */}
-          <div className="w-[400px] bg-muted/10 border-l border-border flex flex-col">
-            <div className="p-3 border-b border-border flex items-center justify-between">
+          <div className="w-[400px] bg-black/20 border-l border-red-500/10 flex flex-col">
+            <div className="p-3 border-b border-red-500/10 flex items-center justify-between bg-red-900/5">
               <div className="flex items-center gap-2">
-                <Box className="w-4 h-4 text-muted-foreground" />
-                <span className="text-xs font-semibold text-foreground">Real-time Simulation</span>
+                <Box className="w-4 h-4 text-red-400" />
+                <span className="text-xs font-bold text-white uppercase tracking-wider">Real-time Simulation</span>
               </div>
               <div className="flex gap-1">
-                <span className="px-2 py-0.5 text-[10px] bg-blue-500/10 text-blue-600 border border-blue-200 dark:border-blue-800 rounded-full font-medium">Fluid Dynamics</span>
+                <button
+                  onClick={() => setViewMode('pipe')}
+                  className={cn(
+                    "px-2 py-0.5 text-[10px] border rounded-sm font-mono transition-colors",
+                    viewMode === 'pipe'
+                      ? "bg-red-500/20 text-red-300 border-red-500/30"
+                      : "bg-transparent text-white/30 border-white/10 hover:text-white hover:border-white/30"
+                  )}
+                >
+                  PIPE
+                </button>
+                <button
+                  onClick={() => setViewMode('cfd')}
+                  className={cn(
+                    "px-2 py-0.5 text-[10px] border rounded-sm font-mono transition-colors",
+                    viewMode === 'cfd'
+                      ? "bg-blue-500/20 text-blue-300 border-blue-500/30"
+                      : "bg-transparent text-white/30 border-white/10 hover:text-white hover:border-white/30"
+                  )}
+                >
+                  CFD
+                </button>
               </div>
             </div>
 
-            <div className="flex-1 relative bg-muted/5">
+            <div className="flex-1 relative bg-black/40">
               <PipelineViewer3D
                 diameter={hydraulics.mechanical.outerDiameter / 1000}
                 wallThickness={hydraulics.mechanical.wallThickness / 1000}
                 length={20}
                 showCutaway={true}
-                flowVelocity={2.5}
+                viewMode={viewMode}
+                flowRate={parseFloat(hydraulics.operating.flowRate) || 1.0}
+                inletPressure={parseFloat(hydraulics.operating.inletPressure) || 75}
+                outletPressure={parseFloat(hydraulics.operating.deliveryPressure) || 45}
+                temperature={parseFloat(hydraulics.operating.inletTemp) || 288}
+                fluidViscosity={parseFloat(hydraulics.fluidComposition.viscosity) || 0.000011}
+                fluidDensity={parseFloat(hydraulics.fluidComposition.specificGravity) * 1.225 || 0.7}
               />
             </div>
 
             {/* Mini Stats */}
-            <div className="border-t border-border bg-card p-4 grid grid-cols-2 gap-4">
+            <div className="border-t border-red-500/10 bg-black/40 p-4 grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                <span className="text-[10px] text-muted-foreground uppercase block">Est. Flow Rate</span>
-                <span className="text-sm font-mono text-foreground">{hydraulics.operating.flowRate} m³/s</span>
+                <span className="text-[9px] text-white/30 uppercase block tracking-widest">Flow Rate</span>
+                <span className="text-sm font-mono text-emerald-400">{hydraulics.operating.flowRate} m³/s</span>
               </div>
               <div className="space-y-1">
-                <span className="text-[10px] text-muted-foreground uppercase block">Pressure Drop</span>
-                <span className="text-sm font-mono text-foreground">-- MPa</span>
+                <span className="text-[9px] text-white/30 uppercase block tracking-widest">Pressure Drop</span>
+                <span className="text-sm font-mono text-amber-400">{pressureDrop.toFixed(3)} MPa</span>
               </div>
               <div className="space-y-1">
-                <span className="text-[10px] text-muted-foreground uppercase block">Reynolds No.</span>
-                <span className="text-sm font-mono text-foreground">--</span>
+                <span className="text-[9px] text-white/30 uppercase block tracking-widest">Reynolds No.</span>
+                <span className={cn(
+                  "text-sm font-mono",
+                  flowRegime === 'Laminar' ? "text-blue-400" :
+                  flowRegime === 'Transitional' ? "text-yellow-400" : "text-red-400"
+                )}>
+                  {reynolds > 1e6 ? `${(reynolds / 1e6).toFixed(2)}M` : reynolds > 1e3 ? `${(reynolds / 1e3).toFixed(1)}k` : reynolds.toFixed(0)}
+                  <span className="text-[9px] ml-1 opacity-60">({flowRegime})</span>
+                </span>
               </div>
               <div className="space-y-1">
-                <span className="text-[10px] text-muted-foreground uppercase block">Velocity</span>
-                <span className="text-sm font-mono text-foreground">-- m/s</span>
+                <span className="text-[9px] text-white/30 uppercase block tracking-widest">Velocity</span>
+                <span className="text-sm font-mono text-cyan-400">{velocity.toFixed(2)} m/s</span>
               </div>
             </div>
           </div>
@@ -561,8 +729,8 @@ export function PirlAiDialog({ open, onClose }: PirlAiDialogProps) {
 function SectionHeader({ title, description }: { title: string, description: string }) {
   return (
     <div className="mb-8">
-      <h3 className="text-xl font-semibold text-foreground mb-2">{title}</h3>
-      <p className="text-sm text-muted-foreground max-w-3xl leading-relaxed">{description}</p>
+      <h3 className="text-xl font-bold text-white mb-2 tracking-wide">{title}</h3>
+      <p className="text-sm text-white/50 max-w-3xl leading-relaxed font-light">{description}</p>
     </div>
   )
 }
@@ -579,8 +747,8 @@ function SliderInput({
   return (
     <div className="space-y-3">
       <div className="flex justify-between text-xs font-medium">
-        <span className="text-muted-foreground">{label}</span>
-        <span className="text-primary">{value}%</span>
+        <span className="text-white/70">{label}</span>
+        <span className="text-red-400 font-mono">{value}%</span>
       </div>
       <input
         type="range"
@@ -588,7 +756,7 @@ function SliderInput({
         max="100"
         value={value}
         onChange={(e) => onChange(parseInt(e.target.value))}
-        className="w-full h-1.5 bg-muted rounded-full appearance-none cursor-pointer accent-primary"
+        className="w-full h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-red-500"
       />
     </div>
   )
@@ -608,15 +776,15 @@ function InputGroup({
   return (
     <div className="space-y-1.5">
       <div className="flex justify-between items-end">
-        <label className="text-[10px] text-muted-foreground uppercase tracking-wider">{label}</label>
-        {unit && <span className="text-[9px] text-muted-foreground font-mono">{unit}</span>}
+        <label className="text-[10px] text-white/40 uppercase tracking-wider">{label}</label>
+        {unit && <span className="text-[9px] text-white/30 font-mono">{unit}</span>}
       </div>
       <div className="relative group">
         <input
           type="text"
           value={value}
           onChange={(e) => onChange?.(e.target.value)}
-          className="w-full bg-muted/50 border border-input text-foreground text-sm px-3 py-2 rounded-md focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all font-mono"
+          className="w-full bg-white/5 border border-white/10 text-white text-sm px-3 py-2 rounded-sm focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 transition-all font-mono hover:bg-white/10"
         />
       </div>
     </div>
@@ -652,10 +820,10 @@ function ObjectivesSection({ data, onChange }: ObjectivesSectionProps) {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
         <div className="space-y-8">
-          <div className="bg-card border border-border p-6 rounded-lg space-y-6">
-            <div className="flex items-center justify-between border-b border-border pb-4 mb-4">
-              <h4 className="text-sm font-semibold text-foreground">Primary Weights</h4>
-              <Settings2 className="w-4 h-4 text-muted-foreground" />
+          <div className="bg-white/5 border border-white/10 p-6 rounded-lg space-y-6">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-4">
+              <h4 className="text-sm font-bold text-white uppercase tracking-wide">Primary Weights</h4>
+              <Settings2 className="w-4 h-4 text-white/50" />
             </div>
             <SliderInput
               label="Cost Optimization (CAPEX)"
@@ -679,10 +847,10 @@ function ObjectivesSection({ data, onChange }: ObjectivesSectionProps) {
             />
           </div>
 
-          <div className="bg-card border border-border p-6 rounded-lg space-y-6">
-            <div className="flex items-center justify-between border-b border-border pb-4 mb-4">
-              <h4 className="text-sm font-semibold text-foreground">Geometric Preferences</h4>
-              <Ruler className="w-4 h-4 text-muted-foreground" />
+          <div className="bg-white/5 border border-white/10 p-6 rounded-lg space-y-6">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-4">
+              <h4 className="text-sm font-bold text-white uppercase tracking-wide">Geometric Preferences</h4>
+              <Ruler className="w-4 h-4 text-white/50" />
             </div>
             <SliderInput
               label="Maximize Existing ROW Usage"
@@ -703,9 +871,9 @@ function ObjectivesSection({ data, onChange }: ObjectivesSectionProps) {
         </div>
 
         <div className="space-y-6">
-          <div className="bg-muted/30 border border-border p-6 rounded-lg">
-            <h4 className="text-sm font-semibold text-foreground mb-4">Routing Profiles</h4>
-            <p className="text-xs text-muted-foreground mb-6">Select a routing profile strategy.</p>
+          <div className="bg-red-900/10 border border-red-500/20 p-6 rounded-lg">
+            <h4 className="text-sm font-bold text-white mb-4 uppercase tracking-wide">Routing Profiles</h4>
+            <p className="text-xs text-white/50 mb-6">Select a routing profile strategy.</p>
 
             <div className="space-y-3">
               {['Cost Aggressive', 'Balanced Strategy', 'Timeline Critical'].map((profile, i) => (
@@ -713,25 +881,33 @@ function ObjectivesSection({ data, onChange }: ObjectivesSectionProps) {
                   key={i}
                   onClick={() => onChange({ ...data, activeProfile: profile })}
                   className={cn(
-                    "flex items-center justify-between p-3 border hover:border-primary/50 transition-colors cursor-pointer rounded-md group",
-                    data.activeProfile === profile ? "bg-primary/10 border-primary/30" : "bg-card border-border"
+                    "flex items-center justify-between p-3 border transition-all duration-200 cursor-pointer rounded-sm group",
+                    data.activeProfile === profile
+                      ? "bg-red-500/20 border-red-500/40 shadow-[0_0_15px_-5px_rgba(239,68,68,0.3)]"
+                      : "bg-white/5 border-white/5 hover:border-red-500/30 hover:bg-red-500/10"
                   )}
                 >
                   <div className="flex items-center gap-3">
                     <div className={cn(
-                      "w-8 h-8 rounded-md flex items-center justify-center font-mono text-xs transition-colors",
-                      data.activeProfile === profile ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground group-hover:text-primary"
+                      "w-8 h-8 rounded-sm flex items-center justify-center font-mono text-xs transition-colors",
+                      data.activeProfile === profile ? "bg-red-500/20 text-red-300" : "bg-white/10 text-white/30 group-hover:text-red-400"
                     )}>
                       {i + 1}
                     </div>
                     <div>
-                      <div className="text-sm text-foreground font-medium">{profile}</div>
-                      <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                      <div className={cn(
+                        "text-sm font-medium transition-colors",
+                        data.activeProfile === profile ? "text-white" : "text-white/70 group-hover:text-white"
+                      )}>{profile}</div>
+                      <div className="text-[10px] text-white/30 uppercase tracking-wider">
                         {data.activeProfile === profile ? 'Active' : 'Draft'}
                       </div>
                     </div>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                  <ChevronRight className={cn(
+                    "w-4 h-4 transition-colors",
+                    data.activeProfile === profile ? "text-red-400" : "text-white/20 group-hover:text-red-400"
+                  )} />
                 </div>
               ))}
             </div>
@@ -779,10 +955,10 @@ function HydraulicsSection({ data, onChange }: HydraulicsSectionProps) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Left Column: Mechanical & Geometry */}
         <div className="space-y-8">
-          <div className="bg-card border border-border p-6 rounded-lg space-y-6">
-            <div className="flex items-center justify-between border-b border-border pb-4">
-              <h4 className="text-sm font-semibold text-foreground">Mechanical Design</h4>
-              <Settings2 className="w-4 h-4 text-muted-foreground" />
+          <div className="bg-white/5 border border-white/10 p-6 rounded-lg space-y-6">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <h4 className="text-sm font-bold text-white uppercase tracking-wide">Mechanical Design</h4>
+              <Settings2 className="w-4 h-4 text-white/50" />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <InputGroup
@@ -836,10 +1012,10 @@ function HydraulicsSection({ data, onChange }: HydraulicsSectionProps) {
             </div>
           </div>
 
-          <div className="bg-card border border-border p-6 rounded-lg space-y-6">
-            <div className="flex items-center justify-between border-b border-border pb-4">
-              <h4 className="text-sm font-semibold text-foreground">Operating Conditions</h4>
-              <Activity className="w-4 h-4 text-muted-foreground" />
+          <div className="bg-white/5 border border-white/10 p-6 rounded-lg space-y-6">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <h4 className="text-sm font-bold text-white uppercase tracking-wide">Operating Conditions</h4>
+              <Activity className="w-4 h-4 text-white/50" />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <InputGroup
@@ -884,17 +1060,17 @@ function HydraulicsSection({ data, onChange }: HydraulicsSectionProps) {
 
         {/* Right Column: Fluid Composition */}
         <div className="space-y-8">
-           <div className="bg-card border border-border p-6 rounded-lg space-y-6 h-full">
-            <div className="flex items-center justify-between border-b border-border pb-4">
-              <h4 className="text-sm font-semibold text-blue-500">Fluid Composition (Gas)</h4>
+          <div className="bg-white/5 border border-white/10 p-6 rounded-lg space-y-6 h-full">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <h4 className="text-sm font-bold text-blue-400 uppercase tracking-wide">Fluid Composition (Gas)</h4>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] text-muted-foreground uppercase bg-muted px-2 py-0.5 rounded-md">Chromatography</span>
-                <Droplet className="w-4 h-4 text-blue-500/50" />
+                <span className="text-[10px] text-blue-300 uppercase bg-blue-500/10 px-2 py-0.5 rounded-sm border border-blue-500/20">Chromatography</span>
+                <Droplet className="w-4 h-4 text-blue-400" />
               </div>
             </div>
 
             <div className="space-y-4">
-              <p className="text-xs text-muted-foreground italic">Define molar composition for Equation of State (EOS) calculations.</p>
+              <p className="text-xs text-white/40 italic font-light">Define molar composition for Equation of State (EOS) calculations.</p>
               <div className="grid grid-cols-2 gap-x-6 gap-y-4">
                 <InputGroup
                   label="Methane (C1)"
@@ -946,7 +1122,7 @@ function HydraulicsSection({ data, onChange }: HydraulicsSectionProps) {
                 />
               </div>
 
-              <div className="mt-6 pt-6 border-t border-border grid grid-cols-2 gap-4">
+              <div className="mt-6 pt-6 border-t border-white/10 grid grid-cols-2 gap-4">
                 <InputGroup
                   label="Specific Gravity"
                   value={data.fluidComposition.specificGravity}
@@ -996,7 +1172,7 @@ function CostMatrixSection({ data, onChange }: CostMatrixSectionProps) {
       />
 
       {/* Tabs */}
-      <div className="flex items-center gap-1 border-b border-border mb-6">
+      <div className="flex items-center gap-1 border-b border-white/10 mb-6">
         {[
           { id: 'base', label: 'Base Construction', icon: DollarSign },
           { id: 'terrain', label: 'Terrain & Land', icon: Layers },
@@ -1009,8 +1185,8 @@ function CostMatrixSection({ data, onChange }: CostMatrixSectionProps) {
             className={cn(
               "flex items-center gap-2 px-4 py-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2",
               costTab === tab.id
-                ? "text-primary border-primary bg-muted/10"
-                : "text-muted-foreground border-transparent hover:text-foreground hover:bg-muted/50"
+                ? "text-red-400 border-red-500 bg-red-500/10"
+                : "text-white/40 border-transparent hover:text-white hover:bg-white/5"
             )}
           >
             <tab.icon className="w-3 h-3" />
@@ -1037,16 +1213,16 @@ interface CostTableProps {
 
 function CostTable({ headers, rows, onCellChange }: CostTableProps) {
   return (
-    <div className="border border-border rounded-lg overflow-hidden mb-8">
+    <div className="border border-white/10 rounded-lg overflow-hidden mb-8">
       <table className="w-full text-left text-sm">
-        <thead className="bg-muted/50 text-[10px] uppercase tracking-wider text-muted-foreground">
+        <thead className="bg-white/5 text-[10px] uppercase tracking-wider text-white/50">
           <tr>
-            {headers.map((h, i) => <th key={i} className="px-4 py-3 font-semibold">{h}</th>)}
+            {headers.map((h, i) => <th key={i} className="px-4 py-3 font-bold">{h}</th>)}
           </tr>
         </thead>
-        <tbody className="divide-y divide-border bg-card text-foreground font-mono text-xs">
+        <tbody className="divide-y divide-white/5 bg-transparent text-white/80 font-mono text-xs">
           {rows.map((row, rowIdx) => (
-            <tr key={rowIdx} className="hover:bg-muted/20 transition-colors">
+            <tr key={rowIdx} className="hover:bg-white/5 transition-colors">
               {row.map((cell, colIdx) => (
                 <td key={colIdx} className="px-4 py-2">
                   {onCellChange ? (
@@ -1055,12 +1231,12 @@ function CostTable({ headers, rows, onCellChange }: CostTableProps) {
                       value={cell}
                       onChange={(e) => onCellChange(rowIdx, colIdx, e.target.value)}
                       className={cn(
-                        "w-full bg-transparent border-0 focus:outline-none focus:ring-1 focus:ring-primary rounded px-1 py-1",
-                        colIdx === 0 ? "font-sans font-medium" : "text-muted-foreground"
+                        "w-full bg-transparent border-0 focus:outline-none focus:ring-1 focus:ring-red-500 rounded px-1 py-1",
+                        colIdx === 0 ? "font-sans font-bold text-white" : "text-white/70"
                       )}
                     />
                   ) : (
-                    <span className={colIdx === 0 ? "font-sans font-medium" : "text-muted-foreground"}>
+                    <span className={colIdx === 0 ? "font-sans font-bold text-white" : "text-white/70"}>
                       {cell}
                     </span>
                   )}
@@ -1099,7 +1275,7 @@ function BaseConstructionTab({ data, onChange }: { data: CostMatrixData, onChang
   return (
     <div className="space-y-6">
       <div>
-        <h4 className="text-sm font-semibold text-foreground mb-4">Material Costs (Pipe)</h4>
+        <h4 className="text-sm font-bold text-white mb-4 uppercase tracking-wide">Material Costs (Pipe)</h4>
         <CostTable
           headers={['Diameter', 'Wall Thickness', 'Grade', 'Cost per Meter', 'Weight (kg/m)']}
           rows={data.materialCosts.map(r => [r.diameter, r.wallThickness, r.grade, r.costPerMeter, r.weight])}
@@ -1108,7 +1284,7 @@ function BaseConstructionTab({ data, onChange }: { data: CostMatrixData, onChang
       </div>
 
       <div>
-        <h4 className="text-sm font-semibold text-foreground mb-4">Labor Rates (Hourly)</h4>
+        <h4 className="text-sm font-bold text-white mb-4 uppercase tracking-wide">Labor Rates (Hourly)</h4>
         <CostTable
           headers={['Region', 'Welder', 'Equipment Operator', 'Laborer', 'Engineer']}
           rows={data.laborRates.map(r => [r.region, r.welder, r.equipmentOperator, r.laborer, r.engineer])}
@@ -1117,7 +1293,7 @@ function BaseConstructionTab({ data, onChange }: { data: CostMatrixData, onChang
       </div>
 
       <div>
-        <h4 className="text-sm font-semibold text-foreground mb-4">Equipment Rental (Daily)</h4>
+        <h4 className="text-sm font-bold text-white mb-4 uppercase tracking-wide">Equipment Rental (Daily)</h4>
         <CostTable
           headers={['Equipment', 'Capacity', 'Daily Rate', 'Monthly Rate']}
           rows={data.equipmentRental.map(r => [r.equipment, r.capacity, r.dailyRate, r.monthlyRate])}
@@ -1146,7 +1322,7 @@ function TerrainLandTab({ data, onChange }: { data: CostMatrixData, onChange: (d
   return (
     <div className="space-y-6">
       <div>
-        <h4 className="text-sm font-semibold text-foreground mb-4">Terrain Multipliers</h4>
+        <h4 className="text-sm font-bold text-white mb-4 uppercase tracking-wide">Terrain Multipliers</h4>
         <CostTable
           headers={['Terrain Type', 'Cost Multiplier', 'Cost per km', 'Rationale']}
           rows={data.terrainMultipliers.map(r => [r.terrainType, r.multiplier, r.costPerKm, r.rationale])}
@@ -1155,7 +1331,7 @@ function TerrainLandTab({ data, onChange }: { data: CostMatrixData, onChange: (d
       </div>
 
       <div>
-        <h4 className="text-sm font-semibold text-foreground mb-4">ROW Acquisition (USA Avg)</h4>
+        <h4 className="text-sm font-bold text-white mb-4 uppercase tracking-wide">ROW Acquisition (USA Avg)</h4>
         <CostTable
           headers={['Land Use', 'Permanent Easement ($/acre)', 'Temporary Easement', 'Total per km (50\' ROW)']}
           rows={data.rowAcquisition.map(r => [r.landUse, r.permanentEasement, r.temporaryEasement, r.totalPerKm])}
@@ -1184,7 +1360,7 @@ function CrossingsTab({ data, onChange }: { data: CostMatrixData, onChange: (dat
   return (
     <div className="space-y-6">
       <div>
-        <h4 className="text-sm font-semibold text-foreground mb-4">Water Crossings</h4>
+        <h4 className="text-sm font-bold text-white mb-4 uppercase tracking-wide">Water Crossings</h4>
         <CostTable
           headers={['Type', 'Width', 'Open Cut ($/m)', 'HDD Cost ($/m)', 'HDD Multiplier']}
           rows={data.waterCrossings.map(r => [r.type, r.width, r.openCut, r.hddCost, r.hddMultiplier])}
@@ -1193,7 +1369,7 @@ function CrossingsTab({ data, onChange }: { data: CostMatrixData, onChange: (dat
       </div>
 
       <div>
-        <h4 className="text-sm font-semibold text-foreground mb-4">Infrastructure Crossings</h4>
+        <h4 className="text-sm font-bold text-white mb-4 uppercase tracking-wide">Infrastructure Crossings</h4>
         <CostTable
           headers={['Infrastructure', 'Cost per Crossing', 'Method', 'Notes']}
           rows={data.infrastructureCrossings.map(r => [r.infrastructure, r.costPerCrossing, r.method, r.notes])}
@@ -1229,7 +1405,7 @@ function RegionalFactorsTab({ data, onChange }: { data: CostMatrixData, onChange
   return (
     <div className="space-y-6">
       <div>
-        <h4 className="text-sm font-semibold text-foreground mb-4">Regional Cost Multipliers</h4>
+        <h4 className="text-sm font-bold text-white mb-4 uppercase tracking-wide">Regional Cost Multipliers</h4>
         <CostTable
           headers={['Region', 'Cost per km', 'Labor Index', 'Material Index', 'Notes']}
           rows={data.regionalFactors.map(r => [r.region, r.costPerKm, r.laborIndex, r.materialIndex, r.notes])}
@@ -1238,7 +1414,7 @@ function RegionalFactorsTab({ data, onChange }: { data: CostMatrixData, onChange
       </div>
 
       <div>
-        <h4 className="text-sm font-semibold text-foreground mb-4">Permitting & Environmental</h4>
+        <h4 className="text-sm font-bold text-white mb-4 uppercase tracking-wide">Permitting & Environmental</h4>
         <CostTable
           headers={['Item', 'Cost Range', 'Timeline/Notes']}
           rows={data.permitting.map(r => [r.item, r.costRange, r.timeline])}
@@ -1247,7 +1423,7 @@ function RegionalFactorsTab({ data, onChange }: { data: CostMatrixData, onChange
       </div>
 
       <div>
-        <h4 className="text-sm font-semibold text-foreground mb-4">Indirect Costs & Facilities</h4>
+        <h4 className="text-sm font-bold text-white mb-4 uppercase tracking-wide">Indirect Costs & Facilities</h4>
         <CostTable
           headers={['Item', 'Cost', 'Description']}
           rows={data.indirectCosts.map(r => [r.item, r.cost, r.description])}
@@ -1300,30 +1476,30 @@ function ConstraintsSection({ data, onChange }: ConstraintsSectionProps) {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
         <div className="space-y-6">
-          <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest border-b border-border pb-2">Geographical Exclusions</h4>
+          <h4 className="text-xs font-bold text-white/50 uppercase tracking-widest border-b border-white/10 pb-2">Geographical Exclusions</h4>
           <div className="grid grid-cols-1 gap-3">
             {exclusionItems.map((item) => (
               <div
                 key={item.key}
                 onClick={() => toggleExclusion(item.key)}
                 className={cn(
-                  "p-3 border rounded-md flex items-center gap-4 transition-all cursor-pointer group",
+                  "p-3 border rounded-sm flex items-center gap-4 transition-all cursor-pointer group",
                   data.geographicalExclusions[item.key]
-                    ? "bg-primary/5 border-primary/30"
-                    : "bg-card border-border hover:bg-muted"
+                    ? "bg-red-500/10 border-red-500/30 shadow-[0_0_10px_-5px_rgba(239,68,68,0.2)]"
+                    : "bg-white/5 border-white/5 hover:bg-white/10 hover:border-white/10"
                 )}
               >
                 <button className={cn(
-                  "w-5 h-5 rounded border flex items-center justify-center transition-colors",
-                  data.geographicalExclusions[item.key] ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground/50"
+                  "w-5 h-5 rounded-sm border flex items-center justify-center transition-colors",
+                  data.geographicalExclusions[item.key] ? "bg-red-500 border-red-500 text-white" : "border-white/20 bg-transparent"
                 )}>
                   {data.geographicalExclusions[item.key] && <CheckCircle2 className="w-3.5 h-3.5" />}
                 </button>
                 <div className="flex-1">
-                  <h4 className={cn("text-xs font-semibold uppercase tracking-wide", data.geographicalExclusions[item.key] ? "text-foreground" : "text-muted-foreground")}>
+                  <h4 className={cn("text-xs font-bold uppercase tracking-wide transition-colors", data.geographicalExclusions[item.key] ? "text-white" : "text-white/50")}>
                     {item.label}
                   </h4>
-                  <p className="text-[10px] text-muted-foreground">{item.desc}</p>
+                  <p className="text-[10px] text-white/40 font-light">{item.desc}</p>
                 </div>
               </div>
             ))}
@@ -1331,9 +1507,9 @@ function ConstraintsSection({ data, onChange }: ConstraintsSectionProps) {
         </div>
 
         <div className="space-y-6">
-          <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-widest border-b border-border pb-2">Constructability Limits</h4>
-          <div className="bg-card border border-border p-6 rounded-lg space-y-6">
-             <div className="grid grid-cols-2 gap-4">
+          <h4 className="text-xs font-bold text-white/50 uppercase tracking-widest border-b border-white/10 pb-2">Constructability Limits</h4>
+          <div className="bg-white/5 border border-white/10 p-6 rounded-lg space-y-6">
+            <div className="grid grid-cols-2 gap-4">
               <InputGroup
                 label="Max Slope (Long.)"
                 value={data.constructabilityLimits.maxLongSlope}
@@ -1383,9 +1559,9 @@ function ConstraintsSection({ data, onChange }: ConstraintsSectionProps) {
                 onChange={(val) => updateConstructability('strainLimit', val)}
               />
             </div>
-             <p className="text-[10px] text-muted-foreground italic pt-2 border-t border-border">
-               * Violating these limits requires special construction methods (e.g., winch assist, induction bends) which significantly increase cost.
-             </p>
+            <p className="text-[10px] text-white/30 italic pt-2 border-t border-white/10 font-light">
+              * Violating these limits requires special construction methods (e.g., winch assist, induction bends) which significantly increase cost.
+            </p>
           </div>
         </div>
       </div>
@@ -1401,27 +1577,89 @@ interface ReviewSectionProps {
   isSubmitting: boolean
   submitSuccess: boolean
   submitError: string | null
+  lastCreatedJob: PirlJobCreateResponse['job'] | null
+  onViewJobs: () => void
 }
 
-function ReviewSection({ objectives, hydraulics, constraints, onSubmit, isSubmitting, submitSuccess, submitError }: ReviewSectionProps) {
+function ReviewSection({ objectives, hydraulics, constraints, onSubmit, isSubmitting, submitSuccess, submitError, lastCreatedJob, onViewJobs }: ReviewSectionProps) {
   const activeConstraints = Object.values(constraints.geographicalExclusions).filter(Boolean).length
+
+  // Timer state for countdown
+  const [remainingTime, setRemainingTime] = useState<number | null>(null)
+
+  useEffect(() => {
+    if (lastCreatedJob?.estimated_completion) {
+      const updateTimer = () => {
+        const now = new Date()
+        const completion = new Date(lastCreatedJob.estimated_completion)
+        const diff = Math.max(0, Math.floor((completion.getTime() - now.getTime()) / 1000))
+        setRemainingTime(diff)
+      }
+      updateTimer()
+      const interval = setInterval(updateTimer, 1000)
+      return () => clearInterval(interval)
+    }
+  }, [lastCreatedJob])
+
+  // Format time as HH:MM:SS
+  const formatTime = (seconds: number) => {
+    const h = Math.floor(seconds / 3600)
+    const m = Math.floor((seconds % 3600) / 60)
+    const s = seconds % 60
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
+  }
 
   return (
     <div className="animate-in fade-in duration-500 h-full flex flex-col">
       <SectionHeader
         title="Review & Launch Simulation"
-        description="Verify all parameters before initializing the PIRL training session. This will save your configuration and spin up the compute cluster."
+        description="Verify all parameters before initializing the PIRL training session. This will create a job that will process for 24 hours."
       />
 
       <div className="flex-1 flex items-center justify-center">
         <div className="w-full max-w-lg bg-card border border-border p-8 rounded-lg text-center space-y-6">
 
-          {submitSuccess ? (
+          {submitSuccess && lastCreatedJob ? (
             <>
-              <CheckCircle2 className="w-16 h-16 text-emerald-500 mx-auto" />
+              <div className="relative">
+                <CheckCircle2 className="w-16 h-16 text-emerald-500 mx-auto" />
+                <div className="absolute -top-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center animate-bounce">
+                  <span className="text-white text-xs font-bold">1</span>
+                </div>
+              </div>
               <div>
-                <h3 className="text-xl font-semibold text-foreground mb-2">Configuration Saved!</h3>
-                <p className="text-muted-foreground text-sm">Your PIRL request has been saved to the project directory.</p>
+                <h3 className="text-xl font-semibold text-foreground mb-2">Job Created Successfully!</h3>
+                <p className="text-muted-foreground text-sm mb-4">Job ID: <span className="font-mono text-emerald-400">{lastCreatedJob.job_id}</span></p>
+              </div>
+
+              {/* 24-hour Timer Display */}
+              <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-6">
+                <div className="text-[10px] text-red-300/60 uppercase tracking-widest mb-2">Time Remaining</div>
+                <div className="text-4xl font-mono font-bold text-red-400 tracking-wider">
+                  {remainingTime !== null ? formatTime(remainingTime) : '24:00:00'}
+                </div>
+                <div className="text-[10px] text-white/40 mt-2">Estimated completion: {new Date(lastCreatedJob.estimated_completion).toLocaleString()}</div>
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => {
+                    // Reset for new submission
+                    setRemainingTime(null)
+                  }}
+                >
+                  <Play className="w-4 h-4 mr-2" />
+                  Submit Another
+                </Button>
+                <Button
+                  className="flex-1 bg-red-600 hover:bg-red-500"
+                  onClick={onViewJobs}
+                >
+                  <Loader2 className="w-4 h-4 mr-2" />
+                  View All Jobs
+                </Button>
               </div>
             </>
           ) : (
@@ -1430,7 +1668,7 @@ function ReviewSection({ objectives, hydraulics, constraints, onSubmit, isSubmit
 
               <div>
                 <h3 className="text-xl font-semibold text-foreground mb-2">Ready to Initialize</h3>
-                <p className="text-muted-foreground text-sm">Estimated Training Time: <span className="text-foreground font-medium">4h 30m</span></p>
+                <p className="text-muted-foreground text-sm">Processing Time: <span className="text-foreground font-medium">24 hours</span></p>
               </div>
 
               <div className="grid grid-cols-2 gap-4 text-left bg-muted/20 p-4 rounded-md text-xs font-mono">
@@ -1461,7 +1699,7 @@ function ReviewSection({ objectives, hydraulics, constraints, onSubmit, isSubmit
                 {isSubmitting ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Saving Configuration...
+                    Creating Job...
                   </>
                 ) : (
                   <>
@@ -1478,6 +1716,169 @@ function ReviewSection({ objectives, hydraulics, constraints, onSubmit, isSubmit
   )
 }
 
+// Jobs Section with individual timers
+function JobsSection({ jobs, onRefresh }: { jobs: PirlJob[], onRefresh: () => void }) {
+  const [timers, setTimers] = useState<Record<string, number>>({})
+
+  // Update all timers every second
+  useEffect(() => {
+    const updateTimers = () => {
+      const now = new Date()
+      const newTimers: Record<string, number> = {}
+      jobs.forEach(job => {
+        if (job.estimated_completion) {
+          const completion = new Date(job.estimated_completion)
+          newTimers[job.job_id] = Math.max(0, Math.floor((completion.getTime() - now.getTime()) / 1000))
+        }
+      })
+      setTimers(newTimers)
+    }
+    updateTimers()
+    const interval = setInterval(updateTimers, 1000)
+    return () => clearInterval(interval)
+  }, [jobs])
+
+  const formatTime = (seconds: number) => {
+    const h = Math.floor(seconds / 3600)
+    const m = Math.floor((seconds % 3600) / 60)
+    const s = seconds % 60
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
+  }
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'processing': return 'text-amber-400'
+      case 'completed': return 'text-emerald-400'
+      case 'failed': return 'text-red-400'
+      default: return 'text-white/50'
+    }
+  }
+
+  const getStatusBg = (status: string) => {
+    switch (status) {
+      case 'processing': return 'bg-amber-500/10 border-amber-500/20'
+      case 'completed': return 'bg-emerald-500/10 border-emerald-500/20'
+      case 'failed': return 'bg-red-500/10 border-red-500/20'
+      default: return 'bg-white/5 border-white/10'
+    }
+  }
+
+  return (
+    <div className="animate-in fade-in duration-500 h-full flex flex-col">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h3 className="text-xl font-bold text-white mb-2 tracking-wide">Active PIRL Jobs</h3>
+          <p className="text-sm text-white/50 max-w-3xl leading-relaxed font-light">
+            Monitor your submitted PIRL optimization jobs. Each job has a 24-hour processing window.
+          </p>
+        </div>
+        <Button variant="outline" size="sm" onClick={onRefresh} className="border-white/10">
+          <RotateCcw className="w-4 h-4 mr-2" />
+          Refresh
+        </Button>
+      </div>
+
+      {jobs.length === 0 ? (
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center text-white/40">
+            <Loader2 className="w-12 h-12 mx-auto mb-4 opacity-20" />
+            <p>No jobs submitted yet</p>
+            <p className="text-xs mt-1">Go to Review & Launch to submit a new job</p>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 overflow-y-auto pb-4">
+          {jobs.map((job) => (
+            <div
+              key={job.job_id}
+              className={cn(
+                "border rounded-lg p-5 transition-all",
+                getStatusBg(job.status)
+              )}
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-mono text-sm font-bold text-white">{job.job_id}</span>
+                    <span className={cn(
+                      "px-2 py-0.5 text-[10px] uppercase tracking-wider rounded-full border font-bold",
+                      getStatusColor(job.status),
+                      getStatusBg(job.status)
+                    )}>
+                      {job.status}
+                    </span>
+                  </div>
+                  <div className="text-[10px] text-white/40">
+                    Profile: <span className="text-white/60">{job.active_profile}</span>
+                  </div>
+                </div>
+
+                {/* Timer */}
+                {job.status === 'processing' && timers[job.job_id] !== undefined && (
+                  <div className="text-right">
+                    <div className="text-[9px] text-white/30 uppercase tracking-widest mb-1">Time Remaining</div>
+                    <div className="text-2xl font-mono font-bold text-red-400">
+                      {formatTime(timers[job.job_id])}
+                    </div>
+                  </div>
+                )}
+                {job.status === 'completed' && (
+                  <div className="text-right">
+                    <CheckCircle2 className="w-8 h-8 text-emerald-400" />
+                  </div>
+                )}
+              </div>
+
+              {/* Progress bar */}
+              {job.status === 'processing' && (
+                <div className="mb-3">
+                  <div className="flex justify-between text-[10px] text-white/40 mb-1">
+                    <span>{job.current_phase}</span>
+                    <span>{job.progress_percent}%</span>
+                  </div>
+                  <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-amber-500 to-red-500 transition-all duration-500"
+                      style={{ width: `${job.progress_percent}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Phases */}
+              {job.phases && job.phases.length > 0 && (
+                <div className="flex gap-1 mt-3">
+                  {job.phases.map((phase, idx) => (
+                    <div
+                      key={idx}
+                      className={cn(
+                        "flex-1 h-1 rounded-full transition-all",
+                        phase.status === 'completed' ? 'bg-emerald-500' :
+                        phase.status === 'in_progress' ? 'bg-amber-500 animate-pulse' :
+                        'bg-white/10'
+                      )}
+                      title={phase.name}
+                    />
+                  ))}
+                </div>
+              )}
+
+              <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/5">
+                <div className="text-[10px] text-white/30">
+                  Created: {new Date(job.created_at).toLocaleString()}
+                </div>
+                <div className="text-[10px] text-white/30 font-mono truncate max-w-[200px]" title={job.directory}>
+                  {job.directory.split('/').slice(-3).join('/')}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function ResultsSection({ results }: { results: PirlOutput[] }) {
   return (
     <div className="animate-in fade-in duration-500 h-full flex flex-col">
@@ -1488,27 +1889,27 @@ function ResultsSection({ results }: { results: PirlOutput[] }) {
 
       <div className="grid grid-cols-1 gap-4 pb-8">
         {results.map((result, i) => (
-          <div key={i} className="relative group bg-card border border-border rounded-lg p-6 hover:bg-muted/20 transition-all">
+          <div key={i} className="relative group bg-white/5 border border-white/10 rounded-lg p-6 hover:bg-white/10 hover:border-red-500/30 transition-all duration-300">
 
             <div className="flex items-center justify-between relative z-10">
               <div className="flex items-center gap-5 flex-1 min-w-0 mr-8">
-                <div className="flex-shrink-0 p-3 bg-primary/10 border border-primary/20 rounded-md">
-                  <Sparkles className="w-6 h-6 text-primary" />
+                <div className="flex-shrink-0 p-3 bg-red-500/10 border border-red-500/20 rounded-md group-hover:bg-red-500/20 group-hover:shadow-[0_0_15px_-5px_rgba(239,68,68,0.4)] transition-all">
+                  <Sparkles className="w-6 h-6 text-red-500" />
                 </div>
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3 mb-1">
-                    <h4 className="text-base font-semibold text-foreground truncate" title={result.filename}>
+                    <h4 className="text-base font-bold text-white truncate tracking-wide" title={result.filename}>
                       {result.filename}
                     </h4>
-                    <span className="flex-shrink-0 px-2 py-0.5 text-[10px] bg-emerald-500/10 text-emerald-600 border border-emerald-200 dark:border-emerald-800 rounded-full font-medium uppercase">
+                    <span className="flex-shrink-0 px-2 py-0.5 text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full font-bold uppercase tracking-wider">
                       Optimal
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-4 text-xs font-mono text-muted-foreground">
+                  <div className="flex items-center gap-4 text-xs font-mono text-white/40">
                     <span className="flex items-center gap-1.5">
-                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                      <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
                       {new Date(result.last_modified).toLocaleString()}
                     </span>
                   </div>
@@ -1516,11 +1917,11 @@ function ResultsSection({ results }: { results: PirlOutput[] }) {
               </div>
 
               <div className="flex gap-3 flex-shrink-0">
-                <Button variant="outline" size="sm" className="text-xs">
+                <Button variant="outline" size="sm" className="text-xs border-white/10 text-white/70 hover:text-white hover:bg-white/10 hover:border-white/20 font-mono uppercase tracking-wider">
                   <Download className="w-3.5 h-3.5 mr-2" />
                   Download
                 </Button>
-                <Button size="sm" className="text-xs">
+                <Button size="sm" className="text-xs bg-red-600 hover:bg-red-500 text-white font-mono uppercase tracking-wider shadow-[0_0_15px_-5px_rgba(239,68,68,0.4)] border border-red-400/20">
                   <MapIcon className="w-3.5 h-3.5 mr-2" />
                   Load to Map
                 </Button>

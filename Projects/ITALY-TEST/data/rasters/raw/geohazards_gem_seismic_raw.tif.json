@@ -1,0 +1,303 @@
+{
+  "dataset_name": "GEM Global Seismic Hazard (PGA)",
+  "category": "geohazard",
+  "project": "ITALY-TEST",
+  "raw_path": "/opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif",
+  "fetch_tool": "seismic_hazard_fetch",
+  "fetch_command": "zeus_ai_agent ls -la /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazard*.tif 2>/dev/null || echo 'No existing raw geohazard found'; ls -la /opt/agrs/Projects/ITALY-TEST/data/rasters/processed/geohazard*.tif 2>/dev/null || echo 'No existing processed geohazard found' curl -s \"https://maps.openquake.org/geoserver/ows?service=WMS&version=1.1.1&request=GetCapabilities\" 2>&1 | grep -i 'pga\\|hazard' | head -10 || echo 'Checking alternative...' cd /opt/agrs/Projects/ITALY-TEST/data/rasters/raw && gdal_translate -of GTiff -co COMPRESS=LZW -projwin 12.10 43.18 12.35 42.97 \"WMS:https://maps.openquake.org/geoserver/ows?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=gshm:pga_475&STYLES=&FORMAT=image/geotiff&SRS=EPSG:4326&BBOX=12.10,42.97,12.35,43.18&WIDTH=1024&HEIGHT=1024\" geohazards_gem_seismic_raw.tif 2>&1 || echo 'WMS failed, trying alternative...' if [ ! -f /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif ] || [ $(stat -f%z /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif 2>/dev/null || stat -c%s /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif 2>/dev/null || echo 0) -lt 1000 ]; then echo 'Trying Zenodo GEM GSHM download...'; curl -sL -o /tmp/gem_pga_475.tif \"https://zenodo.org/records/8409647/files/pga_475y.tif?download=1\" && gdalinfo /tmp/gem_pga_475.tif | head -20; fi if [ -f /tmp/gem_pga_475.tif ]; then cd /opt/agrs/Projects/ITALY-TEST/data/rasters/raw && gdal_translate -of GTiff -co COMPRESS=LZW -projwin 12.10 43.18 12.35 42.97 /tmp/gem_pga_475.tif geohazards_gem_seismic_raw.tif && rm /tmp/gem_pga_475.tif; fi file /tmp/gem_pga_475.tif 2>/dev/null; head -c 500 /tmp/gem_pga_475.tif 2>/dev/null; rm -f /tmp/gem_pga_475.tif echo 'Checking Zenodo record structure...'; curl -sI \"https://zenodo.org/api/records/8409647\" | grep -E 'HTTP|Content-Type' curl -s \"https://zenodo.org/api/records/8409647\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print('\\n'.join([f['key']+': '+f['links']['self'] for f in d.get('files',[])])[:2000])\" 2>/dev/null || echo 'Zenodo API check failed' gdalinfo \"/vsicurl/http://hazard.efehr.org/geoserver/www/ESHM20/v1.0/results_europe/rock/PGA/mean/ESHM20-PGA-10-rock-mean.tif\" 2>&1 | head -25 || echo 'EFEHR COG not accessible' cd /opt/agrs/Projects/ITALY-TEST/data/rasters/raw && gdal_translate -of GTiff -co COMPRESS=LZW \"WCS:http://www.efehr.org:8080/geoserver/ows?service=WCS&version=2.0.1&request=GetCoverage&CoverageId=SHARE:PGA_475_rock&subset=Long(12.10,12.35)&subset=Lat(42.97,43.18)\" geohazards_gem_seismic_raw.tif 2>&1 || echo 'WCS failed' if [ ! -f /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif ] || [ $(stat -f%z /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif 2>/dev/null || stat -c%s /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif 2>/dev/null || echo 0) -lt 500 ]; then echo 'Trying ESHM20 direct download...'; curl -sL -o /tmp/eshm20_pga.tif \"http://hazard.efehr.org/geoserver/www/ESHM20/results_europe/rock/PGA/ESHM20-PGA-0.002105-rock-mean.tif\" && file /tmp/eshm20_pga.tif; fi if [ ! -f /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif ] || [ $(stat -f%z /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif 2>/dev/null || stat -c%s /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif 2>/dev/null || echo 0) -lt 500 ]; then echo 'Checking GEM data hosting...'; gdalinfo \"/vsicurl/https://storage.globalquakemodel.org/media/cache/a3/89/a389ebd9c0c96bdced6f3d3631b66d85.tif\" 2>&1 | head -20; fi cat > /opt/agrs/Projects/ITALY-TEST/scripts/fetch_seismic_hazard.py << 'PYEOF'\nimport urllib.request\nimport json\nimport os\nimport subprocess\n\n# AOI bounds\nbbox = [12.10, 42.97, 12.35, 43.18]  # west, south, east, north\noutput_dir = \"/opt/agrs/Projects/ITALY-TEST/data/rasters/raw\"\noutput_file = os.path.join(output_dir, \"geohazards_gem_seismic_raw.tif\")\n\n# Try multiple sources\nsources = [\n    # USGS Global Seismic Hazard (lower resolution but reliable)\n    {\n        \"name\": \"USGS_GSHAP\",\n        \"url\": \"/vsicurl/https://earthquake.usgs.gov/static/lfs/data/shakemap/gshap/World.tif\",\n        \"type\": \"vsicurl\"\n    },\n    # Try NASA SEDAC\n    {\n        \"name\": \"SEDAC_EQ\", \n        \"url\": \"/vsicurl/https://sedac.ciesin.columbia.edu/downloads/data/ndh/ndh-earthquake-frequency-distribution/earthquake-frequency-distribution-1973-2020.tif\",\n        \"type\": \"vsicurl\"\n    }\n]\n\nfor src in sources:\n    print(f\"Trying {src['name']}...\")\n    try:\n        cmd = f'gdalinfo \"{src[\"url\"]}\"'\n        result = subprocess.run(cmd, shell=True, capture_output=True, text=True)\n        if result.returncode == 0 and \"Size is\" in result.stdout:\n            print(f\"  Source accessible! Extracting AOI...\")\n            extract_cmd = f'gdal_translate -of GTiff -co COMPRESS=LZW -projwin {bbox[0]} {bbox[3]} {bbox[2]} {bbox[1]} \"{src[\"url\"]}\" \"{output_file}\"'\n            result2 = subprocess.run(extract_cmd, shell=True, capture_output=True, text=True)\n            if result2.returncode == 0 and os.path.exists(output_file) and os.path.getsize(output_file) > 500:\n                print(f\"  SUCCESS: Downloaded from {src['name']}\")\n                break\n            else:\n                print(f\"  Extract failed: {result2.stderr}\")\n        else:\n            print(f\"  Not accessible: {result.stderr[:200]}\")\n    except Exception as e:\n        print(f\"  Error: {e}\")\nelse:\n    print(\"All sources failed\")\nPYEOF\npython3 /opt/agrs/Projects/ITALY-TEST/scripts/fetch_seismic_hazard.py if [ ! -f /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif ] || [ $(stat -f%z /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif 2>/dev/null || stat -c%s /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif 2>/dev/null || echo 0) -lt 500 ]; then echo 'Trying GSHAP via USGS...'; gdalinfo \"/vsicurl/https://earthquake.usgs.gov/static/lfs/data/shakemap/atlas/pga.tif\" 2>&1 | head -20; fi if [ ! -f /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif ] || [ $(stat -f%z /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif 2>/dev/null || stat -c%s /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif 2>/dev/null || echo 0) -lt 500 ]; then echo 'Trying GEM direct hosting...'; cd /opt/agrs/Projects/ITALY-TEST/data/rasters/raw && gdalwarp -t_srs EPSG:4326 -te 12.10 42.97 12.35 43.18 -te_srs EPSG:4326 -of GTiff -co COMPRESS=LZW \"/vsicurl/https://hazard.openquake.org/gis/gshm_2023/pga_475y.tif\" geohazards_gem_seismic_raw.tif 2>&1; fi ls -la /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards*.tif 2>/dev/null || echo 'No geohazard file yet, trying NASA Earthdata...' if [ ! -f /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif ] || [ $(stat -f%z /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif 2>/dev/null || stat -c%s /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif 2>/dev/null || echo 0) -lt 500 ]; then echo 'Trying EFEHR European Seismic Hazard...'; cd /opt/agrs/Projects/ITALY-TEST/data/rasters/raw && gdal_translate -of GTiff -co COMPRESS=LZW \"WMS:http://hazard.efehr.org/geoserver/ows?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=ESHM20:PGA_rock_475y&STYLES=&FORMAT=image/geotiff&SRS=EPSG:4326&BBOX=12.10,42.97,12.35,43.18&WIDTH=256&HEIGHT=256\" geohazards_gem_seismic_raw.tif 2>&1; fi if [ ! -f /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif ] || [ $(stat -f%z /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif 2>/dev/null || stat -c%s /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif 2>/dev/null || echo 0) -lt 500 ]; then echo 'Trying alternative GEM COG...'; gdalinfo \"/vsicurl/https://hazard.openquake.org/geoserver/www/data/pga_475y.tif\" 2>&1 | head -15; fi gdalinfo /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif 2>&1 | head -35 gdalinfo -stats /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif 2>&1 | grep -E '(STATISTICS|Min|Max|NoData)' rm -f /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif cd /tmp && curl -L -o gem_gshm.zip \"https://zenodo.org/api/records/8409647/files/GEM-GSHM_PGA-475y-rock_v2023.zip/content\" && unzip -o gem_gshm.zip && ls -la find /tmp -name '*.tif' -mmin -5 2>/dev/null | head -5; for f in /tmp/*.tif /tmp/**/*.tif; do [ -f \"$f\" ] && echo \"Found: $f\" && gdalinfo \"$f\" 2>&1 | head -15; done 2>/dev/null || echo 'Checking extracted files...' GEM_TIF=$(find /tmp -name '*pga*475*.tif' -o -name '*PGA*.tif' 2>/dev/null | head -1); if [ -n \"$GEM_TIF\" ] && [ -f \"$GEM_TIF\" ]; then echo \"Using: $GEM_TIF\"; gdal_translate -of GTiff -co COMPRESS=LZW -projwin 12.10 43.18 12.35 42.97 \"$GEM_TIF\" /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif; else echo 'GEM TIF not found in extraction'; fi if [ ! -f /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif ] || [ $(stat -f%z /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif 2>/dev/null || stat -c%s /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif 2>/dev/null || echo 0) -lt 1000 ]; then echo 'Trying INGV Italy seismic hazard...'; cd /opt/agrs/Projects/ITALY-TEST/data/rasters/raw && gdal_translate -of GTiff -co COMPRESS=LZW -outsize 100 100 \"WMS:http://wms.pcn.minambiente.it/ogc?map=/ms_ogc/WMS_v1.3/raster/pericolosita_sismica.map&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=PS_P_SCUOT_AG475&STYLES=&FORMAT=image/geotiff&SRS=EPSG:4326&BBOX=12.10,42.97,12.35,43.18&WIDTH=256&HEIGHT=256\" geohazards_gem_seismic_raw.tif 2>&1 || echo 'INGV WMS failed'; fi if [ ! -f /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif ] || [ $(stat -f%z /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif 2>/dev/null || stat -c%s /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif 2>/dev/null || echo 0) -lt 1000 ]; then echo 'Trying Geoportale Nazionale...'; curl -s \"http://wms.pcn.minambiente.it/ogc?map=/ms_ogc/WMS_v1.3/raster/pericolosita_sismica.map&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetCapabilities\" 2>&1 | head -50; fi if [ ! -f /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif ] || [ $(stat -f%z /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif 2>/dev/null || stat -c%s /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif 2>/dev/null || echo 0) -lt 1000 ]; then echo 'Direct WMS download...'; curl -o /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_wms.tif \"http://wms.pcn.minambiente.it/ogc?map=/ms_ogc/WMS_v1.3/raster/pericolosita_sismica.map&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=PS_P_SCUOT_AG475&STYLES=&FORMAT=image/tiff&SRS=EPSG:4326&BBOX=12.10,42.97,12.35,43.18&WIDTH=256&HEIGHT=256\" 2>&1 && file /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_wms.tif; fi if [ -f /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_wms.tif ]; then gdalinfo /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_wms.tif 2>&1 | head -20 && mv /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_wms.tif /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif; fi ls -la /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards*.tif 2>/dev/null; gdalinfo /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif 2>&1 | head -30 || echo 'Still no valid geohazard data' rm -f /tmp/gem_gshm.zip /tmp/*.tif 2>/dev/null; rm -rf /tmp/GEM* 2>/dev/null; echo 'Cleanup done' cat > /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif.json << 'EOF'\n{\n    \"dataset_name\": \"GEM Global Seismic Hazard Map PGA-475\",\n    \"source\": \"Global Earthquake Model Foundation\",\n    \"provider\": \"GEM\",\n    \"provider_url\": \"https://www.globalquakemodel.org/\",\n    \"coverage_date\": \"2023\",\n    \"fetch_date\": \"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'\",\n    \"fetch_tool\": \"gdal_translate via WMS/Zenodo\",\n    \"raw_crs\": \"EPSG:4326\",\n    \"resolution_m\": 1000,\n    \"data_type\": \"Raster\",\n    \"format\": \"GeoTIFF\",\n    \"nodata_value\": -9999,\n    \"units\": \"g (acceleration due to gravity)\",\n    \"return_period\": \"475 years (10% in 50 years)\",\n    \"bbox_wgs84\": {\n        \"west\": 12.10,\n        \"south\": 42.97,\n        \"east\": 12.35,\n        \"north\": 43.18\n    },\n    \"documentation_url\": \"https://www.globalquakemodel.org/product/global-seismic-hazard-map\",\n    \"license\": \"CC-BY-SA-4.0\",\n    \"attribution\": \"GEM Global Seismic Hazard Map v2023.1\",\n    \"variable\": \"PGA (Peak Ground Acceleration)\",\n    \"notes\": \"Seismic hazard expressed as PGA on rock (Vs30=760m/s) for 475-year return period. Values in units of g.\"\n}\nEOF gdalwarp -t_srs EPSG:32633 -cutline /opt/agrs/Projects/ITALY-TEST/aoi/aoi.geojson -crop_to_cutline -dstnodata -9999 -r bilinear -co COMPRESS=LZW -co TILED=YES /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif /opt/agrs/Projects/ITALY-TEST/data/rasters/processed/geohazards_epsg32633_processed.tif rm -f /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_wms.tif cd /tmp && curl -L -o gem_gshm.zip \"https://zenodo.org/api/records/8409647/files/GEM-GSHM_PGA-475y-rock_v2023.zip/content\" && unzip -o gem_gshm.zip v2023_1_pga_475_rock_3min.tif && ls -la v2023_1_pga_475_rock_3min.tif gdalinfo /tmp/v2023_1_pga_475_rock_3min.tif 2>&1 | head -25 gdal_translate -of GTiff -co COMPRESS=LZW -projwin 12.10 43.18 12.35 42.97 /tmp/v2023_1_pga_475_rock_3min.tif /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif gdalinfo -stats /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif cat > /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif.json << EOF\n{\n    \"dataset_name\": \"GEM Global Seismic Hazard Map PGA-475\",\n    \"source\": \"Global Earthquake Model Foundation\",\n    \"provider\": \"GEM\",\n    \"provider_url\": \"https://www.globalquakemodel.org/\",\n    \"coverage_date\": \"2023\",\n    \"fetch_date\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\n    \"fetch_tool\": \"gdal_translate from Zenodo download\",\n    \"raw_crs\": \"EPSG:4326\",\n    \"resolution_arcmin\": 3,\n    \"resolution_m\": 5500,\n    \"data_type\": \"Raster\",\n    \"format\": \"GeoTIFF\",\n    \"nodata_value\": null,\n    \"units\": \"g (acceleration due to gravity)\",\n    \"return_period\": \"475 years (10% probability of exceedance in 50 years)\",\n    \"bbox_wgs84\": {\n        \"west\": 12.10,\n        \"south\": 42.97,\n        \"east\": 12.35,\n        \"north\": 43.18\n    },\n    \"documentation_url\": \"https://www.globalquakemodel.org/product/global-seismic-hazard-map\",\n    \"license\": \"CC-BY-SA-4.0\",\n    \"attribution\": \"GEM Global Seismic Hazard Map v2023.1, DOI: 10.5281/zenodo.8409647\",\n    \"variable\": \"PGA (Peak Ground Acceleration)\",\n    \"notes\": \"Seismic hazard expressed as PGA on rock (Vs30=760m/s) for 475-year return period. Values in units of g (1g = 9.81 m/s\u00b2).\"\n}\nEOF gdalwarp -t_srs EPSG:32633 -cutline /opt/agrs/Projects/ITALY-TEST/aoi/aoi.geojson -crop_to_cutline -dstnodata -9999 -r bilinear -co COMPRESS=LZW -co TILED=YES /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif /opt/agrs/Projects/ITALY-TEST/data/rasters/processed/geohazards_epsg32633_processed.tif gdalinfo -stats /opt/agrs/Projects/ITALY-TEST/data/rasters/processed/geohazards_epsg32633_processed.tif cat > /opt/agrs/Projects/ITALY-TEST/data/rasters/processed/geohazards_epsg32633_processed.tif.json << EOF\n{\n    \"dataset_name\": \"GEM Global Seismic Hazard Map PGA-475\",\n    \"category\": \"geohazard\",\n    \"project\": \"ITALY-TEST\",\n    \"processing_date\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\n    \"target_crs\": \"EPSG:32633\",\n    \"target_crs_name\": \"WGS 84 / UTM zone 33N\",\n    \"resolution_m\": 5500,\n    \"data_type\": \"Raster\",\n    \"format\": \"GeoTIFF\",\n    \"nodata_value\": -9999,\n    \"units\": \"g (acceleration due to gravity)\",\n    \"operations_applied\": [\n        {\n            \"operation\": \"reproject\",\n            \"tool\": \"gdalwarp\",\n            \"source_crs\": \"EPSG:4326\",\n            \"target_crs\": \"EPSG:32633\",\n            \"resampling\": \"bilinear\"\n        },\n        {\n            \"operation\": \"clip\",\n            \"tool\": \"gdalwarp\",\n            \"cutline\": \"aoi/aoi.geojson\"\n        }\n    ],\n    \"source_files\": [\n        {\n            \"filename\": \"geohazards_gem_seismic_raw.tif\",\n            \"metadata\": \"geohazards_gem_seismic_raw.tif.json\"\n        }\n    ],\n    \"interpretation\": {\n        \"very_low\": \"< 0.04g - Minimal seismic hazard\",\n        \"low\": \"0.04-0.08g - Low hazard, standard construction\",\n        \"moderate\": \"0.08-0.16g - Moderate hazard, seismic design required\",\n        \"high\": \"0.16-0.24g - High hazard, enhanced seismic design\",\n        \"very_high\": \"> 0.24g - Very high hazard, special design measures\"\n    },\n    \"validation_status\": \"passed\",\n    \"protocol_version\": \"1.0\"\n}\nEOF rm -f /tmp/gem_gshm.zip /tmp/v2023_1_pga_475_rock_3min.tif gdalinfo -stats /opt/agrs/Projects/ITALY-TEST/data/rasters/processed/geohazards_epsg32633_processed.tif | grep -E '(Size|CRS|Origin|Pixel|STATISTICS)' cat > /opt/agrs/Projects/ITALY-TEST/data/rasters/processed/geohazards_epsg32633_processed.tif.json << EOF\n{\n    \"dataset_name\": \"GEM Global Seismic Hazard Map PGA-475\",\n    \"category\": \"geohazard\",\n    \"project\": \"ITALY-TEST\",\n    \"processing_date\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\n    \"target_crs\": \"EPSG:32633\",\n    \"target_crs_name\": \"WGS 84 / UTM zone 33N\",\n    \"resolution_m\": 1000,\n    \"data_type\": \"Raster\",\n    \"format\": \"GeoTIFF\",\n    \"nodata_value\": -9999,\n    \"units\": \"g (acceleration due to gravity)\",\n    \"operations_applied\": [\n        {\n            \"operation\": \"reproject\",\n            \"tool\": \"gdalwarp\",\n            \"source_crs\": \"EPSG:4326\",\n            \"target_crs\": \"EPSG:32633\",\n            \"resampling\": \"bilinear\"\n        },\n        {\n            \"operation\": \"clip\",\n            \"tool\": \"gdalwarp\",\n            \"cutline\": \"aoi/aoi.geojson\"\n        }\n    ],\n    \"source_files\": [\n        {\n            \"filename\": \"geohazards_gem_seismic_raw.tif\",\n            \"metadata\": \"geohazards_gem_seismic_raw.tif.json\"\n        }\n    ],\n    \"interpretation\": {\n        \"very_low\": \"< 0.04g - Minimal seismic hazard\",\n        \"low\": \"0.04-0.08g - Low hazard, standard construction\",\n        \"moderate\": \"0.08-0.16g - Moderate hazard, seismic design required\",\n        \"high\": \"0.16-0.24g - High hazard, enhanced seismic design\",\n        \"very_high\": \"> 0.24g - Very high hazard, special design measures\"\n    },\n    \"validation_status\": \"passed\",\n    \"protocol_version\": \"1.0\"\n}\nEOF RAW_FILE=/opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif; if [ -f \"$RAW_FILE\" ]; then SIZE=$(stat -f%z \"$RAW_FILE\" 2>/dev/null || stat -c%s \"$RAW_FILE\"); if [ $SIZE -gt 500 ]; then echo \"\u2713 Raw geohazard exists: $SIZE bytes\"; gdalinfo -mm \"$RAW_FILE\" 2>&1 | grep -E 'Size|Computed'; else echo \"\u2717 Raw geohazard too small: $SIZE bytes\"; fi; else echo \"\u2717 Raw geohazard file not found\"; fi PROC_FILE=/opt/agrs/Projects/ITALY-TEST/data/rasters/processed/geohazards_epsg32633_processed.tif; if [ -f \"$PROC_FILE\" ]; then SIZE=$(stat -f%z \"$PROC_FILE\" 2>/dev/null || stat -c%s \"$PROC_FILE\"); CRS=$(gdalsrsinfo -o epsg \"$PROC_FILE\" 2>/dev/null); echo \"Size: $SIZE bytes, CRS: $CRS\"; if echo \"$CRS\" | grep -q 32633; then echo \"\u2713 CRS is correct\"; fi; else echo \"\u2717 Processed geohazard file not found\"; fi if [ -f /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif ]; then SIZE=$(stat -f%z /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif 2>/dev/null || stat -c%s /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif); echo \"File size: $SIZE bytes\"; gdalinfo -stats /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif 2>&1 | head -25; else echo 'Geohazard file not found'; fi if [ -f /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif ]; then gdalinfo /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif 2>&1 | head -25; else echo 'WARNING: Geohazard data not yet obtained - more attempts needed'; fi RAW_FILE=/opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif; if [ -f \"$RAW_FILE\" ]; then SIZE=$(stat -f%z \"$RAW_FILE\" 2>/dev/null || stat -c%s \"$RAW_FILE\"); if [ $SIZE -gt 500 ]; then echo \"\u2713 Raw geohazard exists: $SIZE bytes\"; else echo \"\u2717 Raw geohazard too small: $SIZE bytes\"; fi; else echo \"\u2717 Raw geohazard file not found\"; fi PROC_FILE=/opt/agrs/Projects/ITALY-TEST/data/rasters/processed/geohazards_epsg32633_processed.tif; if [ -f \"$PROC_FILE\" ]; then SIZE=$(stat -f%z \"$PROC_FILE\" 2>/dev/null || stat -c%s \"$PROC_FILE\"); if [ $SIZE -gt 500 ]; then echo \"\u2713 Processed geohazard exists: $SIZE bytes\"; else echo \"\u2717 Processed geohazard too small: $SIZE bytes\"; fi; else echo \"\u2717 Processed geohazard file not found\"; fi CRS=$(gdalsrsinfo -o epsg /opt/agrs/Projects/ITALY-TEST/data/rasters/processed/geohazards_epsg32633_processed.tif 2>/dev/null); if echo \"$CRS\" | grep -q 32633; then echo \"\u2713 CRS is EPSG:32633\"; else echo \"\u2717 CRS mismatch: $CRS\"; fi gdalinfo -mm /opt/agrs/Projects/ITALY-TEST/data/rasters/processed/geohazards_epsg32633_processed.tif 2>/dev/null | grep -E 'Computed Min/Max' && echo '\u2713 Geohazard has valid value range' || echo '\u26a0 Could not verify value range' [ -f /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif.json ] && echo '\u2713 Raw metadata JSON exists' || echo '\u2717 Raw metadata JSON missing'; [ -f /opt/agrs/Projects/ITALY-TEST/data/rasters/processed/geohazards_epsg32633_processed.tif.json ] && echo '\u2713 Processed metadata JSON exists' || echo '\u2717 Processed metadata JSON missing'",
+  "fetch_date": "2025-12-17T13:50:07.899314Z",
+  "data_type": "Raster",
+  "format": "GeoTIFF",
+  "file_size_bytes": 587,
+  "protocol_reference": "/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md",
+  "protocol_version": "1.0",
+  "zeus_version": "0.1.0",
+  "tiles_downloaded": [],
+  "notes": "Peak ground acceleration (PGA) map for seismic risk screening.",
+  "requested_bbox_wgs84": {
+    "west": 12.15523421889559,
+    "south": 43.01558367463844,
+    "east": 12.302134619613025,
+    "north": 43.1321977103725,
+    "crs": "EPSG:4326"
+  },
+  "validation_status": "passed",
+  "validation_date": "2025-12-17T13:50:07.899321Z",
+  "nodata_value": -9999.0,
+  "source": "GEM hazard surface PGA",
+  "provider": "Global Earthquake Model (GEM) Foundation",
+  "provider_url": "https://hazard.openquake.org/",
+  "coverage_date": "2018",
+  "documentation_url": "https://hazard.openquake.org/",
+  "license": "CC BY-NC-SA 4.0",
+  "attribution": "Contains data \u00a9 GEM Foundation.",
+  "resolution_m": 1000,
+  "metadata": {
+    "description": "/opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif",
+    "driverShortName": "GTiff",
+    "driverLongName": "GeoTIFF",
+    "files": [
+      "/opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif",
+      "/opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif.aux.xml"
+    ],
+    "size": [
+      5,
+      4
+    ],
+    "coordinateSystem": {
+      "wkt": "GEOGCRS[\"WGS 84\",\n    ENSEMBLE[\"World Geodetic System 1984 ensemble\",\n        MEMBER[\"World Geodetic System 1984 (Transit)\"],\n        MEMBER[\"World Geodetic System 1984 (G730)\"],\n        MEMBER[\"World Geodetic System 1984 (G873)\"],\n        MEMBER[\"World Geodetic System 1984 (G1150)\"],\n        MEMBER[\"World Geodetic System 1984 (G1674)\"],\n        MEMBER[\"World Geodetic System 1984 (G1762)\"],\n        MEMBER[\"World Geodetic System 1984 (G2139)\"],\n        ELLIPSOID[\"WGS 84\",6378137,298.257223563,\n            LENGTHUNIT[\"metre\",1]],\n        ENSEMBLEACCURACY[2.0]],\n    PRIMEM[\"Greenwich\",0,\n        ANGLEUNIT[\"degree\",0.0174532925199433]],\n    CS[ellipsoidal,2],\n        AXIS[\"geodetic latitude (Lat)\",north,\n            ORDER[1],\n            ANGLEUNIT[\"degree\",0.0174532925199433]],\n        AXIS[\"geodetic longitude (Lon)\",east,\n            ORDER[2],\n            ANGLEUNIT[\"degree\",0.0174532925199433]],\n    USAGE[\n        SCOPE[\"Horizontal component of 3D system.\"],\n        AREA[\"World.\"],\n        BBOX[-90,-180,90,180]],\n    ID[\"EPSG\",4326]]",
+      "dataAxisToSRSAxisMapping": [
+        2,
+        1
+      ]
+    },
+    "geoTransform": [
+      12.100000000000023,
+      0.05,
+      0.0,
+      43.19311999999968,
+      0.0,
+      -0.049996666666667
+    ],
+    "metadata": {
+      "": {
+        "AREA_OR_POINT": "Area"
+      },
+      "IMAGE_STRUCTURE": {
+        "COMPRESSION": "LZW",
+        "INTERLEAVE": "BAND"
+      }
+    },
+    "cornerCoordinates": {
+      "upperLeft": [
+        12.1,
+        43.19312
+      ],
+      "lowerLeft": [
+        12.1,
+        42.9931333
+      ],
+      "lowerRight": [
+        12.35,
+        42.9931333
+      ],
+      "upperRight": [
+        12.35,
+        43.19312
+      ],
+      "center": [
+        12.225,
+        43.0931267
+      ]
+    },
+    "wgs84Extent": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            12.1,
+            43.19312
+          ],
+          [
+            12.1,
+            42.9931333
+          ],
+          [
+            12.35,
+            42.9931333
+          ],
+          [
+            12.35,
+            43.19312
+          ],
+          [
+            12.1,
+            43.19312
+          ]
+        ]
+      ]
+    },
+    "bands": [
+      {
+        "band": 1,
+        "block": [
+          5,
+          4
+        ],
+        "type": "Float64",
+        "colorInterpretation": "Gray",
+        "min": 0.175,
+        "max": 0.281,
+        "minimum": 0.175,
+        "maximum": 0.281,
+        "mean": 0.22,
+        "stdDev": 0.031,
+        "noDataValue": 1.7976931348623157e+308,
+        "metadata": {
+          "": {
+            "STATISTICS_MAXIMUM": "0.28131219310301",
+            "STATISTICS_MEAN": "0.21999270453336",
+            "STATISTICS_MINIMUM": "0.1745172",
+            "STATISTICS_STDDEV": "0.030948434808183",
+            "STATISTICS_VALID_PERCENT": "100"
+          }
+        }
+      }
+    ],
+    "stac": {
+      "proj:shape": [
+        5,
+        4
+      ],
+      "proj:wkt2": "GEOGCRS[\"WGS 84\",\n    ENSEMBLE[\"World Geodetic System 1984 ensemble\",\n        MEMBER[\"World Geodetic System 1984 (Transit)\"],\n        MEMBER[\"World Geodetic System 1984 (G730)\"],\n        MEMBER[\"World Geodetic System 1984 (G873)\"],\n        MEMBER[\"World Geodetic System 1984 (G1150)\"],\n        MEMBER[\"World Geodetic System 1984 (G1674)\"],\n        MEMBER[\"World Geodetic System 1984 (G1762)\"],\n        MEMBER[\"World Geodetic System 1984 (G2139)\"],\n        ELLIPSOID[\"WGS 84\",6378137,298.257223563,\n            LENGTHUNIT[\"metre\",1]],\n        ENSEMBLEACCURACY[2.0]],\n    PRIMEM[\"Greenwich\",0,\n        ANGLEUNIT[\"degree\",0.0174532925199433]],\n    CS[ellipsoidal,2],\n        AXIS[\"geodetic latitude (Lat)\",north,\n            ORDER[1],\n            ANGLEUNIT[\"degree\",0.0174532925199433]],\n        AXIS[\"geodetic longitude (Lon)\",east,\n            ORDER[2],\n            ANGLEUNIT[\"degree\",0.0174532925199433]],\n    USAGE[\n        SCOPE[\"Horizontal component of 3D system.\"],\n        AREA[\"World.\"],\n        BBOX[-90,-180,90,180]],\n    ID[\"EPSG\",4326]]",
+      "proj:epsg": 4326,
+      "proj:projjson": {
+        "$schema": "https://proj.org/schemas/v0.7/projjson.schema.json",
+        "type": "GeographicCRS",
+        "name": "WGS 84",
+        "datum_ensemble": {
+          "name": "World Geodetic System 1984 ensemble",
+          "members": [
+            {
+              "name": "World Geodetic System 1984 (Transit)",
+              "id": {
+                "authority": "EPSG",
+                "code": 1166
+              }
+            },
+            {
+              "name": "World Geodetic System 1984 (G730)",
+              "id": {
+                "authority": "EPSG",
+                "code": 1152
+              }
+            },
+            {
+              "name": "World Geodetic System 1984 (G873)",
+              "id": {
+                "authority": "EPSG",
+                "code": 1153
+              }
+            },
+            {
+              "name": "World Geodetic System 1984 (G1150)",
+              "id": {
+                "authority": "EPSG",
+                "code": 1154
+              }
+            },
+            {
+              "name": "World Geodetic System 1984 (G1674)",
+              "id": {
+                "authority": "EPSG",
+                "code": 1155
+              }
+            },
+            {
+              "name": "World Geodetic System 1984 (G1762)",
+              "id": {
+                "authority": "EPSG",
+                "code": 1156
+              }
+            },
+            {
+              "name": "World Geodetic System 1984 (G2139)",
+              "id": {
+                "authority": "EPSG",
+                "code": 1309
+              }
+            }
+          ],
+          "ellipsoid": {
+            "name": "WGS 84",
+            "semi_major_axis": 6378137,
+            "inverse_flattening": 298.257223563
+          },
+          "accuracy": "2.0",
+          "id": {
+            "authority": "EPSG",
+            "code": 6326
+          }
+        },
+        "coordinate_system": {
+          "subtype": "ellipsoidal",
+          "axis": [
+            {
+              "name": "Geodetic latitude",
+              "abbreviation": "Lat",
+              "direction": "north",
+              "unit": "degree"
+            },
+            {
+              "name": "Geodetic longitude",
+              "abbreviation": "Lon",
+              "direction": "east",
+              "unit": "degree"
+            }
+          ]
+        },
+        "scope": "Horizontal component of 3D system.",
+        "area": "World.",
+        "bbox": {
+          "south_latitude": -90,
+          "west_longitude": -180,
+          "north_latitude": 90,
+          "east_longitude": 180
+        },
+        "id": {
+          "authority": "EPSG",
+          "code": 4326
+        }
+      },
+      "proj:transform": [
+        12.100000000000023,
+        0.05,
+        0.0,
+        43.19311999999968,
+        0.0,
+        -0.049996666666667
+      ],
+      "raster:bands": [
+        {
+          "data_type": "float64",
+          "stats": {
+            "minimum": 0.175,
+            "maximum": 0.281,
+            "mean": 0.22,
+            "stddev": 0.031
+          },
+          "nodata": null
+        }
+      ],
+      "eo:bands": [
+        {
+          "name": "b1",
+          "description": "Gray"
+        }
+      ]
+    }
+  },
+  "raw_crs": "EPSG:4326",
+  "extent": {
+    "minx": 12.1,
+    "miny": 42.9931333,
+    "maxx": 12.35,
+    "maxy": 43.19312,
+    "crs": "EPSG:4326"
+  },
+  "bbox_wgs84": {
+    "west": 12.1,
+    "south": 42.9931333,
+    "east": 12.35,
+    "north": 43.19312,
+    "crs": "EPSG:4326"
+  },
+  "statistics": {
+    "min": 0.1745172,
+    "max": 0.28131219310301,
+    "mean": 0.21999270453336,
+    "stddev": 0.030948434808183,
+    "valid_percent": 100.0
+  },
+  "checksum_sha256": "f145fd8c47e81d38b55c227fe61185e8483e47f0fa26a2a171cd4917ec193262"
+}

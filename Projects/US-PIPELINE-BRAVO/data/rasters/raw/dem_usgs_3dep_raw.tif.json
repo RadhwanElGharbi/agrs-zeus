@@ -1,0 +1,31 @@
+{
+  "dataset_name": "USGS 3DEP 1m LiDAR DEM",
+  "source": "USGS 3DEP",
+  "provider": "USGS 3DEP",
+  "provider_url": "https://www.usgs.gov/3d-elevation-program",
+  "coverage_date": "2020-2024",
+  "fetch_date": "2025-12-04T09:55:26Z",
+  "fetch_tool": "fetch_3dep_dem.py",
+  "raw_crs": "PROJCRS[\"NAD83 / UTM zone 17N\",\n    BASEGEOGCRS[\"NAD83\",\n        DATUM[\"North American Datum 1983\",\n",
+  "resolution_m": 1,
+  "data_type": "Raster",
+  "format": "GeoTIFF",
+  "nodata_value": -9999,
+  "bbox_wgs84": {
+    "west": -81.109477,
+    "south": 38.253496,
+    "east": -80.902255,
+    "north": 38.420352
+  },
+  "tiles_downloaded": [
+    "USGS_1M_17_x49y424_WV_FEMAR3_Southcentral_2018_D19.tif",
+    "USGS_1M_17_x49y425_WV_FEMAR3_Southcentral_2018_D19.tif",
+    "USGS_1M_17_x49y426_WV_FEMAR3_Southcentral_2018_D19.tif",
+    "USGS_1M_17_x50y424_WV_FEMAR3_Southcentral_2018_D19.tif",
+    "USGS_1M_17_x50y425_WV_FEMAR3_Southcentral_2018_D19.tif",
+    "USGS_1M_17_x50y426_WV_FEMAR3_Southcentral_2018_D19.tif"
+  ],
+  "file_size_bytes": 2334316888,
+  "license": "Public Domain",
+  "notes": "Fetched from USGS 3DEP 1m LiDAR DEM"
+}

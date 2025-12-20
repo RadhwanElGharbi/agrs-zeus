@@ -210,7 +210,11 @@ export async function analyzeSegments(
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: response.statusText }))
-    throw new Error(error.detail || `Analysis failed: ${response.status}`)
+    // Ensure detail is a string, not an object
+    const detail = typeof error.detail === 'string'
+      ? error.detail
+      : (error.detail?.message || error.message || JSON.stringify(error.detail) || `Analysis failed: ${response.status}`)
+    throw new Error(detail)
   }
 
   return await response.json()
@@ -244,7 +248,11 @@ export async function analyzeSegment(
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: response.statusText }))
-    throw new Error(error.detail || `Analysis failed: ${response.status}`)
+    // Ensure detail is a string, not an object
+    const detail = typeof error.detail === 'string'
+      ? error.detail
+      : (error.detail?.message || error.message || JSON.stringify(error.detail) || `Analysis failed: ${response.status}`)
+    throw new Error(detail)
   }
 
   return await response.json()
@@ -291,6 +299,136 @@ export async function getAgenticSegmentsGeometry(routeId: string, project?: stri
     return await response.json()
   } catch (error) {
     console.error('Error getting segments geometry:', error)
+    return null
+  }
+}
+
+// ============================================================================
+// Decisions API Functions
+// ============================================================================
+
+/**
+ * Validated segment decisions data from decisions.json files.
+ *
+ * Contains geospatial analysis including elevation, slope, land cover,
+ * soil type, crossings, and construction cost estimates.
+ */
+export interface SegmentDecisions {
+  segment_id: number | string
+  decisions_available: boolean
+  route_id?: string
+  message?: string
+  // Segment metrics
+  start_coord?: [number, number]
+  end_coord?: [number, number]
+  length_m?: number
+  // Terrain analysis
+  elevation?: {
+    start_m: number
+    end_m: number
+    delta_m: number
+    slope_percent: number
+  }
+  terrain_class?: string
+  land_cover?: string
+  soil_type?: string
+  seismic_zone?: string
+  // Crossings
+  crossings?: Array<{
+    type: string
+    name?: string
+    distance_along_m?: number
+    crossing_method?: string
+    cost_estimate?: number
+    regulatory_authority?: string
+    permit_requirements?: string
+  }>
+  // Cost breakdown
+  construction_cost?: {
+    base_cost?: number
+    terrain_cost?: number
+    crossing_cost?: number
+    total?: number
+    cost_per_m?: number
+  }
+  // Decision rationale
+  decision_rationale?: {
+    construction_method?: string
+    reasoning?: string[]
+  }
+}
+
+/**
+ * Full route decisions data from decisions.json files.
+ */
+export interface RouteDecisions {
+  decisions_available: boolean
+  route_id?: string
+  message?: string
+  generated_at?: string
+  pipeline_specifications?: Record<string, unknown>
+  route_summary?: {
+    total_length_m?: number
+    segment_count?: number
+    total_crossings?: number
+    crossing_breakdown?: Record<string, number>
+    terrain_distribution?: Record<string, number>
+    total_construction_cost?: number
+    cost_per_km?: number
+  }
+  segment_decisions?: SegmentDecisions[]
+}
+
+/**
+ * Get validated decisions data for a specific segment.
+ *
+ * Returns geospatial analysis from the decisions.json sidecar file.
+ *
+ * @param routeId - Route identifier
+ * @param segmentId - Segment identifier
+ * @param project - Optional project name
+ * @returns SegmentDecisions or null on error
+ */
+export async function getSegmentDecisions(
+  routeId: string,
+  segmentId: string,
+  project?: string
+): Promise<SegmentDecisions | null> {
+  try {
+    const params = project ? `?project=${encodeURIComponent(project)}` : ''
+    const response = await fetch(
+      `${getApiBase()}/agentic/routes/${encodeURIComponent(routeId)}/segments/${encodeURIComponent(segmentId)}/decisions${params}`
+    )
+    if (!response.ok) return null
+    return await response.json()
+  } catch (error) {
+    console.error('Error getting segment decisions:', error)
+    return null
+  }
+}
+
+/**
+ * Get full validated decisions data for a route.
+ *
+ * Returns all segment decisions from the decisions.json sidecar file.
+ *
+ * @param routeId - Route identifier
+ * @param project - Optional project name
+ * @returns RouteDecisions or null on error
+ */
+export async function getRouteDecisions(
+  routeId: string,
+  project?: string
+): Promise<RouteDecisions | null> {
+  try {
+    const params = project ? `?project=${encodeURIComponent(project)}` : ''
+    const response = await fetch(
+      `${getApiBase()}/agentic/routes/${encodeURIComponent(routeId)}/decisions${params}`
+    )
+    if (!response.ok) return null
+    return await response.json()
+  } catch (error) {
+    console.error('Error getting route decisions:', error)
     return null
   }
 }

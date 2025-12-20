@@ -1,0 +1,19 @@
+{
+    "aoi_file": "aoi/aoi.geojson",
+    "aoi_area_km2": 75.36,
+    "aoi_countries": [
+        "United Arab Emirates"
+    ],
+    "crs_epsg": 32640,
+    "crs_name": "WGS 84 / UTM zone 40N",
+    "start_point": {
+        "file": "aoi/start_point.geojson",
+        "latitude": 25.197407112793726,
+        "longitude": 55.615381191548636
+    },
+    "end_point": {
+        "file": "aoi/end_point.geojson",
+        "latitude": 25.119741088420625,
+        "longitude": 55.552665866930624
+    }
+}

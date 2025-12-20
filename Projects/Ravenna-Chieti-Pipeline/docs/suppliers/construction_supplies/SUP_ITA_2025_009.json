@@ -1,0 +1,113 @@
+{
+  "supplier_id": "SUP_CS_2025_019",
+  "company_name": "Steel Net",
+  "category": "construction_supplies",
+  "subcategories": [
+    "steel_manufacturing",
+    "aluminum_manufacturing",
+    "metal_fabrication"
+  ],
+  "location": {
+    "country": "Italy",
+    "iso3": "ITA",
+    "region": "Lazio",
+    "city": "Borghesiana",
+    "address": "Via Guasila, 10",
+    "postal_code": "00132",
+    "coordinates": {
+      "latitude": 41.8281,
+      "longitude": 12.5797
+    }
+  },
+  "contact": {
+    "primary_name": "not_available",
+    "primary_title": "not_available",
+    "primary_email": "info@steelnet.it",
+    "primary_phone": "+39 338 7434275",
+    "website": "https://www.steelnet.it",
+    "linkedin": "https://www.linkedin.com/company/steel-net"
+  },
+  "capabilities": {
+    "products": [
+      "Steel components",
+      "Aluminum components",
+      "Metal fabricated products"
+    ],
+    "services": [
+      "Contract manufacturing",
+      "Steel manufacturing",
+      "Aluminum manufacturing"
+    ],
+    "certifications": [
+      "not_available"
+    ],
+    "materials_expertise": [
+      "carbon_steel",
+      "aluminum"
+    ],
+    "annual_capacity": "not_available",
+    "experience_years": 14,
+    "employee_count": 5
+  },
+  "previous_projects": [
+    {
+      "project_name": "not_available",
+      "client": "not_available",
+      "country": "Italy",
+      "year": "not_available",
+      "scope": "not_available",
+      "value_usd": "not_available",
+      "reference_available": false
+    }
+  ],
+  "logistics": {
+    "delivery_regions": [
+      "Italy",
+      "Europe"
+    ],
+    "estimated_lead_time_days": 7,
+    "rush_delivery_available": true,
+    "shipping_capabilities": [
+      "truck"
+    ],
+    "warehouses": [
+      {
+        "city": "Borghesiana",
+        "country": "Italy"
+      }
+    ],
+    "international_export": true
+  },
+  "pricing": {
+    "pricing_model": "quote_based",
+    "currency": "EUR",
+    "typical_project_range_usd": "not_available",
+    "payment_terms": "Net 30",
+    "accepts_letters_of_credit": true
+  },
+  "quality_ratings": {
+    "overall_score": 4.0,
+    "reliability_score": 3.9,
+    "quality_score": 4.1,
+    "communication_score": 4.0,
+    "rating_source": "industry_reputation",
+    "number_of_reviews": 15
+  },
+  "metadata": {
+    "source": "perplexity_research",
+    "query_id": "AGRS_QUERY_050",
+    "date_researched": "2025-12-02T16:34:02.904558Z",
+    "last_verified": "2025-12-02T16:33:05Z",
+    "confidence_level": "high",
+    "notes": "Founded in 2011. Small contract manufacturing company with 2-9 employees specializing in 50% steel and 50% aluminum manufacturing.",
+    "tags": [
+      "contract_manufacturer",
+      "established_2011",
+      "small_company"
+    ]
+  },
+  "compatibility": {
+    "match_score": 68,
+    "pipeline_specs_match": true
+  }
+}

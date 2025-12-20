@@ -330,3 +330,57 @@ async def analyze_single_segment(
             status_code=504,
             detail=f"Analysis timeout after {AGENTIC_TIMEOUT}s"
         )
+
+
+# ============================================================================
+# Decisions Endpoints - Validated Geospatial Data
+# ============================================================================
+
+@router.get("/agentic/routes/{route_id}/decisions")
+async def get_route_decisions(
+    route_id: str,
+    project: Optional[str] = Query(None, description="Project name for project-specific routes")
+):
+    """Get validated decisions data for a route.
+
+    Returns the complete decisions.json data including route-level summary,
+    all segment decisions, pipeline specifications, and total cost breakdown.
+
+    Args:
+        route_id: Route identifier
+        project: Optional project name
+
+    Returns:
+        Full validated decisions data dict
+    """
+    params = {"project": project} if project else None
+    return await _proxy_get(f"/api/routes/{route_id}/decisions", params=params)
+
+
+@router.get("/agentic/routes/{route_id}/segments/{segment_id}/decisions")
+async def get_segment_decisions(
+    route_id: str,
+    segment_id: str,
+    project: Optional[str] = Query(None, description="Project name for project-specific routes")
+):
+    """Get validated decisions data for a specific segment.
+
+    Returns segment-level validated geospatial analysis from decisions.json including:
+    - Elevation and slope statistics
+    - Terrain classification
+    - Land cover and soil type
+    - Seismic zone information
+    - Infrastructure crossings with crossing method decisions
+    - Construction cost estimate with breakdown
+    - Decision rationale
+
+    Args:
+        route_id: Route identifier
+        segment_id: Segment identifier
+        project: Optional project name
+
+    Returns:
+        Segment decisions data dict
+    """
+    params = {"project": project} if project else None
+    return await _proxy_get(f"/api/routes/{route_id}/segments/{segment_id}/decisions", params=params)

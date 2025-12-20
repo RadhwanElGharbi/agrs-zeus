@@ -1,0 +1,118 @@
+{
+  "supplier_id": "SUP_PM_2025_010",
+  "company_name": "Tectubi Raccordi",
+  "category": "pipeline_manufacturer",
+  "subcategories": [
+    "pipe_fittings",
+    "buttwelding_fittings",
+    "nuclear_grade_fittings"
+  ],
+  "location": {
+    "country": "Italy",
+    "iso3": "ITA",
+    "region": "not_available",
+    "city": "Podenzano",
+    "address": "not_available",
+    "postal_code": "not_available",
+    "coordinates": {
+      "latitude": 44.95,
+      "longitude": 9.6833
+    }
+  },
+  "contact": {
+    "primary_name": "not_available",
+    "primary_title": "not_available",
+    "primary_email": "info@tubispa.it",
+    "primary_phone": "+39 0481 494200",
+    "website": "https://www.tectubiraccordi.com",
+    "linkedin": "https://www.linkedin.com/company/tectubi-raccordi"
+  },
+  "capabilities": {
+    "products": [
+      "Steel buttwelding pipe fittings",
+      "Nuclear grade fittings",
+      "Thermal power plant fittings"
+    ],
+    "services": [
+      "Pipe fitting manufacturing",
+      "Nuclear compliance"
+    ],
+    "certifications": [
+      "Nuclear certified"
+    ],
+    "pipeline_diameters_supported": {
+      "min_inches": "not_available",
+      "max_inches": "not_available"
+    },
+    "materials_expertise": [
+      "carbon_steel",
+      "alloy_steel",
+      "stainless_steel"
+    ],
+    "annual_capacity": "not_available",
+    "experience_years": 55,
+    "employee_count": 180
+  },
+  "previous_projects": [],
+  "logistics": {
+    "delivery_regions": [
+      "Europe"
+    ],
+    "estimated_lead_time_days": 28,
+    "rush_delivery_available": true,
+    "shipping_capabilities": [
+      "truck",
+      "rail"
+    ],
+    "warehouses": [
+      {
+        "city": "not_available",
+        "country": "Italy"
+      }
+    ],
+    "international_export": true
+  },
+  "pricing": {
+    "pricing_model": "quote_based",
+    "currency": "EUR",
+    "typical_project_range_usd": {
+      "min": "not_available",
+      "max": "not_available"
+    },
+    "payment_terms": "Net 30",
+    "accepts_letters_of_credit": true
+  },
+  "quality_ratings": {
+    "overall_score": 4.4,
+    "reliability_score": 4.3,
+    "quality_score": 4.5,
+    "communication_score": 4.4,
+    "rating_source": "industry_reputation",
+    "number_of_reviews": 95
+  },
+  "compatibility": {
+    "pipeline_specs_match": true,
+    "match_score": 87,
+    "match_notes": [
+      "World-leading manufacturer of steel buttwelding pipe fittings",
+      "Specialized in nuclear and thermal power plant applications",
+      "First Italian manufacturer with nuclear capabilities"
+    ],
+    "limitations": []
+  },
+  "metadata": {
+    "source": "perplexity_research",
+    "query_id": "AGRS_QUERY_050",
+    "date_researched": "2025-12-02T16:30:21.384553Z",
+    "last_verified": "2025-12-02T16:29:25Z",
+    "confidence_level": "high",
+    "notes": "First Italian world-leading manufacturer of steel buttwelding pipe fittings for use in nuclear and thermal power plants",
+    "tags": [
+      "pipe_fittings",
+      "nuclear_certified",
+      "italy_based",
+      "specialized_manufacturer",
+      "power_generation"
+    ]
+  }
+}

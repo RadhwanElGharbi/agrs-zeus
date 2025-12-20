@@ -128,6 +128,22 @@ class AGRSControlPanel(Gtk.Window):
         self.frontend_status.get_style_context().add_class("status-label")
         status_grid.attach(self.frontend_status, 1, 1, 1, 1)
 
+        agentic_label = Gtk.Label(label="Agentic AI:")
+        agentic_label.get_style_context().add_class("status-label")
+        status_grid.attach(agentic_label, 0, 2, 1, 1)
+
+        self.agentic_status = Gtk.Label(label="Checking...")
+        self.agentic_status.get_style_context().add_class("status-label")
+        status_grid.attach(self.agentic_status, 1, 2, 1, 1)
+
+        pixelstream_label = Gtk.Label(label="PixelStream:")
+        pixelstream_label.get_style_context().add_class("status-label")
+        status_grid.attach(pixelstream_label, 0, 3, 1, 1)
+
+        self.pixelstream_status = Gtk.Label(label="Checking...")
+        self.pixelstream_status.get_style_context().add_class("status-label")
+        status_grid.attach(self.pixelstream_status, 1, 3, 1, 1)
+
         # Main buttons
         btn_grid = Gtk.Grid()
         btn_grid.set_column_spacing(10)
@@ -197,19 +213,26 @@ class AGRSControlPanel(Gtk.Window):
         self.connect("destroy", Gtk.main_quit)
         self.update_status()
 
-    def is_backend_running(self):
+    def is_port_in_use(self, port):
+        """Check if a port is in use using ss command"""
         result = subprocess.run(
-            ["pgrep", "-f", "uvicorn main:app"],
-            capture_output=True
+            ["ss", "-tlnp"],
+            capture_output=True,
+            text=True
         )
-        return result.returncode == 0
+        return f":{port} " in result.stdout
+
+    def is_backend_running(self):
+        return self.is_port_in_use(8000)
 
     def is_frontend_running(self):
-        result = subprocess.run(
-            ["pgrep", "-f", "next dev"],
-            capture_output=True
-        )
-        return result.returncode == 0
+        return self.is_port_in_use(3000)
+
+    def is_agentic_running(self):
+        return self.is_port_in_use(8001)
+
+    def is_pixelstream_running(self):
+        return self.is_port_in_use(8888)
 
     def update_status(self):
         if self.is_backend_running():
@@ -229,6 +252,24 @@ class AGRSControlPanel(Gtk.Window):
             self.frontend_status.set_text("STOPPED")
             self.frontend_status.get_style_context().remove_class("running")
             self.frontend_status.get_style_context().add_class("stopped")
+
+        if self.is_agentic_running():
+            self.agentic_status.set_text("RUNNING")
+            self.agentic_status.get_style_context().remove_class("stopped")
+            self.agentic_status.get_style_context().add_class("running")
+        else:
+            self.agentic_status.set_text("STOPPED")
+            self.agentic_status.get_style_context().remove_class("running")
+            self.agentic_status.get_style_context().add_class("stopped")
+
+        if self.is_pixelstream_running():
+            self.pixelstream_status.set_text("RUNNING")
+            self.pixelstream_status.get_style_context().remove_class("stopped")
+            self.pixelstream_status.get_style_context().add_class("running")
+        else:
+            self.pixelstream_status.set_text("STOPPED")
+            self.pixelstream_status.get_style_context().remove_class("running")
+            self.pixelstream_status.get_style_context().add_class("stopped")
 
     def run_command(self, cmd):
         def task():

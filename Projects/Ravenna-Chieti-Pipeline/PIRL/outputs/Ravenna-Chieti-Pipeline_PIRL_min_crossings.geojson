@@ -1,0 +1,2961 @@
+{
+  "type": "FeatureCollection",
+  "name": "Ravenna-Chieti-Pipeline_astar_min_crossings",
+  "crs": {
+    "type": "name",
+    "properties": {
+      "name": "EPSG:32633"
+    }
+  },
+  "metadata": {
+    "algorithm": "A* with 2x crossing penalties",
+    "optimization": "minimize_crossings",
+    "crossing_multiplier": 2,
+    "generated": "2025-12-13T07:17:38.963378",
+    "total_segments": 93,
+    "total_length_m": 35687.05,
+    "total_length_km": 35.69,
+    "total_cost_usd": 76435628.0,
+    "cost_per_km_usd": 2141831.0,
+    "regional_multiplier": 1.2,
+    "start_point_utm": [
+      397199.93,
+      4782591.48
+    ],
+    "end_point_utm": [
+      379622.91,
+      4805069.06
+    ],
+    "crossings": {
+      "road": 50,
+      "railway": 1,
+      "waterway": 13,
+      "powerline": 5,
+      "total": 69
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            397199.93,
+            4782591.48
+          ],
+          [
+            397279.94,
+            4782671.47
+          ],
+          [
+            397279.94,
+            4782831.46
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 1,
+        "length_m": 273.13,
+        "cumulative_length_m": 273.13,
+        "elevation_start": 68.1,
+        "elevation_end": 61.2,
+        "slope_percent": 4.6,
+        "terrain_class": "flat",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 513476.0,
+        "cumulative_cost_usd": 513476.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            397279.94,
+            4782831.46
+          ],
+          [
+            397733.37,
+            4783284.74
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 2,
+        "length_m": 641.14,
+        "cumulative_length_m": 914.27,
+        "elevation_start": 61.2,
+        "elevation_end": 53.7,
+        "slope_percent": 3.8,
+        "terrain_class": "flat",
+        "land_cover_class": 10,
+        "land_cover_name": "tree_cover",
+        "geohazard_risk": 0.0,
+        "cost_usd": 1250228.0,
+        "cumulative_cost_usd": 1763705.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            397733.37,
+            4783284.74
+          ],
+          [
+            397840.06,
+            4783444.72
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 3,
+        "length_m": 192.29,
+        "cumulative_length_m": 1106.56,
+        "elevation_start": 53.7,
+        "elevation_end": 51.1,
+        "slope_percent": 9.3,
+        "terrain_class": "rolling",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 399972.0,
+        "cumulative_cost_usd": 2163676.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            397840.06,
+            4783444.72
+          ],
+          [
+            397840.06,
+            4784164.65
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 4,
+        "length_m": 719.92,
+        "cumulative_length_m": 1826.48,
+        "elevation_start": 51.1,
+        "elevation_end": 46.4,
+        "slope_percent": 3.7,
+        "terrain_class": "flat",
+        "land_cover_class": 10,
+        "land_cover_name": "tree_cover",
+        "geohazard_risk": 0.0,
+        "cost_usd": 1403849.0,
+        "cumulative_cost_usd": 3567525.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            397840.06,
+            4784164.65
+          ],
+          [
+            397466.65,
+            4784564.6
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 5,
+        "length_m": 547.18,
+        "cumulative_length_m": 2373.66,
+        "elevation_start": 46.4,
+        "elevation_end": 35.7,
+        "slope_percent": 0.8,
+        "terrain_class": "flat",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 1028691.0,
+        "cumulative_cost_usd": 4596216.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            397466.65,
+            4784564.6
+          ],
+          [
+            397119.91,
+            4784564.6
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 6,
+        "length_m": 346.74,
+        "cumulative_length_m": 2720.4,
+        "elevation_start": 35.7,
+        "elevation_end": 30.5,
+        "slope_percent": 1.2,
+        "terrain_class": "flat",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 651870.0,
+        "cumulative_cost_usd": 5248086.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            397119.91,
+            4784564.6
+          ],
+          [
+            396666.48,
+            4785017.89
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 7,
+        "length_m": 641.14,
+        "cumulative_length_m": 3361.54,
+        "elevation_start": 30.5,
+        "elevation_end": 34.3,
+        "slope_percent": 3.8,
+        "terrain_class": "flat",
+        "land_cover_class": 50,
+        "land_cover_name": "built_up",
+        "geohazard_risk": 0.0,
+        "cost_usd": 1474628.0,
+        "cumulative_cost_usd": 6722715.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            396666.48,
+            4785017.89
+          ],
+          [
+            396106.36,
+            4785044.55
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 8,
+        "length_m": 560.75,
+        "cumulative_length_m": 3922.29,
+        "elevation_start": 34.3,
+        "elevation_end": 37.5,
+        "slope_percent": 4.6,
+        "terrain_class": "flat",
+        "land_cover_class": 50,
+        "land_cover_name": "built_up",
+        "geohazard_risk": 0.0,
+        "cost_usd": 1289729.0,
+        "cumulative_cost_usd": 8012443.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            396106.36,
+            4785044.55
+          ],
+          [
+            395866.31,
+            4785257.86
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 9,
+        "length_m": 321.13,
+        "cumulative_length_m": 4243.43,
+        "elevation_start": 37.5,
+        "elevation_end": 43.7,
+        "slope_percent": 8.3,
+        "terrain_class": "rolling",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 667954.0,
+        "cumulative_cost_usd": 8680397.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            395866.31,
+            4785257.86
+          ],
+          [
+            394986.13,
+            4785257.86
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 10,
+        "length_m": 880.18,
+        "cumulative_length_m": 5123.61,
+        "elevation_start": 43.7,
+        "elevation_end": 91.8,
+        "slope_percent": 3.5,
+        "terrain_class": "flat",
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 1601936.0,
+        "cumulative_cost_usd": 10282332.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            394986.13,
+            4785257.86
+          ],
+          [
+            394879.44,
+            4785364.52
+          ],
+          [
+            394799.42,
+            4785311.19
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 11,
+        "length_m": 247.02,
+        "cumulative_length_m": 5370.63,
+        "elevation_start": 91.8,
+        "elevation_end": 93.7,
+        "slope_percent": 11.4,
+        "terrain_class": "hilly",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 587898.0,
+        "cumulative_cost_usd": 10870230.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            394799.42,
+            4785311.19
+          ],
+          [
+            394559.37,
+            4785311.19
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 12,
+        "length_m": 240.05,
+        "cumulative_length_m": 5610.68,
+        "elevation_start": 93.7,
+        "elevation_end": 71.9,
+        "slope_percent": 4.4,
+        "terrain_class": "flat",
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 436892.0,
+        "cumulative_cost_usd": 11307122.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            394559.37,
+            4785311.19
+          ],
+          [
+            393839.22,
+            4786031.11
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 13,
+        "length_m": 1018.29,
+        "cumulative_length_m": 6628.96,
+        "elevation_start": 71.9,
+        "elevation_end": 105.8,
+        "slope_percent": 14.4,
+        "terrain_class": "hilly",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 2423520.0,
+        "cumulative_cost_usd": 13730642.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            393839.22,
+            4786031.11
+          ],
+          [
+            393572.5,
+            4786031.11
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 14,
+        "length_m": 266.72,
+        "cumulative_length_m": 6895.69,
+        "elevation_start": 105.8,
+        "elevation_end": 148.4,
+        "slope_percent": 10.2,
+        "terrain_class": "hilly",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 634800.0,
+        "cumulative_cost_usd": 14365441.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            393572.5,
+            4786031.11
+          ],
+          [
+            393412.47,
+            4786191.09
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 15,
+        "length_m": 226.29,
+        "cumulative_length_m": 7121.97,
+        "elevation_start": 148.4,
+        "elevation_end": 155.0,
+        "slope_percent": 10.5,
+        "terrain_class": "hilly",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 538560.0,
+        "cumulative_cost_usd": 14904001.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            393412.47,
+            4786191.09
+          ],
+          [
+            393172.42,
+            4786191.09
+          ],
+          [
+            393092.4,
+            4786271.09
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 16,
+        "length_m": 353.19,
+        "cumulative_length_m": 7475.16,
+        "elevation_start": 155.0,
+        "elevation_end": 192.2,
+        "slope_percent": 9.0,
+        "terrain_class": "rolling",
+        "land_cover_class": 50,
+        "land_cover_name": "built_up",
+        "geohazard_risk": 0.0,
+        "cost_usd": 882983.0,
+        "cumulative_cost_usd": 15786984.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            393092.4,
+            4786271.09
+          ],
+          [
+            392932.37,
+            4786271.09
+          ],
+          [
+            392825.68,
+            4786217.76
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 17,
+        "length_m": 279.31,
+        "cumulative_length_m": 7754.47,
+        "elevation_start": 192.2,
+        "elevation_end": 197.6,
+        "slope_percent": 2.0,
+        "terrain_class": "flat",
+        "land_cover_class": 50,
+        "land_cover_name": "built_up",
+        "geohazard_risk": 0.0,
+        "cost_usd": 642408.0,
+        "cumulative_cost_usd": 16429392.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            392825.68,
+            4786217.76
+          ],
+          [
+            392505.61,
+            4786244.42
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 18,
+        "length_m": 321.18,
+        "cumulative_length_m": 8075.65,
+        "elevation_start": 197.6,
+        "elevation_end": 146.2,
+        "slope_percent": 19.9,
+        "terrain_class": "mountainous",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 924986.0,
+        "cumulative_cost_usd": 17354378.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            392505.61,
+            4786244.42
+          ],
+          [
+            392292.23,
+            4786324.41
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 19,
+        "length_m": 227.88,
+        "cumulative_length_m": 8303.53,
+        "elevation_start": 146.2,
+        "elevation_end": 112.1,
+        "slope_percent": 14.8,
+        "terrain_class": "hilly",
+        "land_cover_class": 10,
+        "land_cover_name": "tree_cover",
+        "geohazard_risk": 0.0,
+        "cost_usd": 558303.0,
+        "cumulative_cost_usd": 17912682.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            392292.23,
+            4786324.41
+          ],
+          [
+            392025.51,
+            4786031.11
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 20,
+        "length_m": 396.44,
+        "cumulative_length_m": 8699.97,
+        "elevation_start": 112.1,
+        "elevation_end": 78.1,
+        "slope_percent": 6.8,
+        "terrain_class": "rolling",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 824601.0,
+        "cumulative_cost_usd": 18737282.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            392025.51,
+            4786031.11
+          ],
+          [
+            391812.13,
+            4785977.78
+          ],
+          [
+            391758.79,
+            4785924.46
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 21,
+        "length_m": 295.37,
+        "cumulative_length_m": 8995.34,
+        "elevation_start": 78.1,
+        "elevation_end": 62.3,
+        "slope_percent": 9.9,
+        "terrain_class": "rolling",
+        "land_cover_class": 10,
+        "land_cover_name": "tree_cover",
+        "geohazard_risk": 0.0,
+        "cost_usd": 635044.0,
+        "cumulative_cost_usd": 19372327.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            391758.79,
+            4785924.46
+          ],
+          [
+            391545.41,
+            4785924.46
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 22,
+        "length_m": 213.38,
+        "cumulative_length_m": 9208.72,
+        "elevation_start": 62.3,
+        "elevation_end": 57.6,
+        "slope_percent": 8.8,
+        "terrain_class": "rolling",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 443826.0,
+        "cumulative_cost_usd": 19816153.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            391545.41,
+            4785924.46
+          ],
+          [
+            391305.36,
+            4786164.43
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 23,
+        "length_m": 339.43,
+        "cumulative_length_m": 9548.15,
+        "elevation_start": 57.6,
+        "elevation_end": 46.7,
+        "slope_percent": 1.5,
+        "terrain_class": "flat",
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 617760.0,
+        "cumulative_cost_usd": 20433913.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            391305.36,
+            4786164.43
+          ],
+          [
+            391252.01,
+            4786271.09
+          ],
+          [
+            391332.03,
+            4786351.08
+          ],
+          [
+            391358.7,
+            4786484.4
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 24,
+        "length_m": 368.36,
+        "cumulative_length_m": 9916.5,
+        "elevation_start": 46.7,
+        "elevation_end": 37.9,
+        "slope_percent": 2.7,
+        "terrain_class": "flat",
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 670407.0,
+        "cumulative_cost_usd": 21104320.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            391358.7,
+            4786484.4
+          ],
+          [
+            391358.7,
+            4786911.02
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 25,
+        "length_m": 426.62,
+        "cumulative_length_m": 10343.12,
+        "elevation_start": 37.9,
+        "elevation_end": 43.4,
+        "slope_percent": 0.3,
+        "terrain_class": "flat",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 802047.0,
+        "cumulative_cost_usd": 21906367.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            391358.7,
+            4786911.02
+          ],
+          [
+            391518.74,
+            4787071.0
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 26,
+        "length_m": 226.29,
+        "cumulative_length_m": 10569.41,
+        "elevation_start": 43.4,
+        "elevation_end": 42.9,
+        "slope_percent": 1.7,
+        "terrain_class": "flat",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 425417.0,
+        "cumulative_cost_usd": 22331784.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            391518.74,
+            4787071.0
+          ],
+          [
+            391518.74,
+            4787257.65
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 27,
+        "length_m": 186.65,
+        "cumulative_length_m": 10756.05,
+        "elevation_start": 42.9,
+        "elevation_end": 34.5,
+        "slope_percent": 3.2,
+        "terrain_class": "flat",
+        "land_cover_class": 10,
+        "land_cover_name": "tree_cover",
+        "geohazard_risk": 0.0,
+        "cost_usd": 363961.0,
+        "cumulative_cost_usd": 22695745.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            391518.74,
+            4787257.65
+          ],
+          [
+            391812.13,
+            4787550.95
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 28,
+        "length_m": 414.86,
+        "cumulative_length_m": 11170.91,
+        "elevation_start": 34.5,
+        "elevation_end": 45.8,
+        "slope_percent": 7.4,
+        "terrain_class": "rolling",
+        "land_cover_class": 10,
+        "land_cover_name": "tree_cover",
+        "geohazard_risk": 0.0,
+        "cost_usd": 891943.0,
+        "cumulative_cost_usd": 23587688.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            391812.13,
+            4787550.95
+          ],
+          [
+            391812.13,
+            4787657.6
+          ],
+          [
+            391945.49,
+            4787790.92
+          ],
+          [
+            391945.49,
+            4787870.91
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 29,
+        "length_m": 375.22,
+        "cumulative_length_m": 11546.13,
+        "elevation_start": 45.8,
+        "elevation_end": 28.6,
+        "slope_percent": 5.9,
+        "terrain_class": "rolling",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 780453.0,
+        "cumulative_cost_usd": 24368141.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            391945.49,
+            4787870.91
+          ],
+          [
+            391998.84,
+            4787924.24
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 30,
+        "length_m": 75.43,
+        "cumulative_length_m": 11621.56,
+        "elevation_start": 28.6,
+        "elevation_end": 31.1,
+        "slope_percent": 5.9,
+        "terrain_class": "rolling",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 156891.0,
+        "cumulative_cost_usd": 24525032.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            391998.84,
+            4787924.24
+          ],
+          [
+            391972.17,
+            4788724.15
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 31,
+        "length_m": 800.36,
+        "cumulative_length_m": 12421.92,
+        "elevation_start": 31.1,
+        "elevation_end": 43.4,
+        "slope_percent": 8.2,
+        "terrain_class": "rolling",
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 1616724.0,
+        "cumulative_cost_usd": 26141756.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            391972.17,
+            4788724.15
+          ],
+          [
+            392052.18,
+            4788804.15
+          ],
+          [
+            392052.18,
+            4788884.14
+          ],
+          [
+            391972.17,
+            4788937.46
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 32,
+        "length_m": 289.29,
+        "cumulative_length_m": 12711.21,
+        "elevation_start": 43.4,
+        "elevation_end": 56.3,
+        "slope_percent": 6.9,
+        "terrain_class": "rolling",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 601729.0,
+        "cumulative_cost_usd": 26743486.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            391972.17,
+            4788937.46
+          ],
+          [
+            391998.84,
+            4789257.43
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 33,
+        "length_m": 321.08,
+        "cumulative_length_m": 13032.28,
+        "elevation_start": 56.3,
+        "elevation_end": 44.2,
+        "slope_percent": 13.6,
+        "terrain_class": "hilly",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 764159.0,
+        "cumulative_cost_usd": 27507645.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            391998.84,
+            4789257.43
+          ],
+          [
+            391678.77,
+            4789577.4
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 34,
+        "length_m": 452.57,
+        "cumulative_length_m": 13484.86,
+        "elevation_start": 44.2,
+        "elevation_end": 39.4,
+        "slope_percent": 5.0,
+        "terrain_class": "flat",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 850834.0,
+        "cumulative_cost_usd": 28358479.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            391678.77,
+            4789577.4
+          ],
+          [
+            391705.44,
+            4789684.05
+          ],
+          [
+            391652.1,
+            4789737.38
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 35,
+        "length_m": 185.37,
+        "cumulative_length_m": 13670.22,
+        "elevation_start": 39.4,
+        "elevation_end": 39.6,
+        "slope_percent": 7.1,
+        "terrain_class": "rolling",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 385566.0,
+        "cumulative_cost_usd": 28744045.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            391652.1,
+            4789737.38
+          ],
+          [
+            391625.43,
+            4790030.68
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 36,
+        "length_m": 294.51,
+        "cumulative_length_m": 13964.74,
+        "elevation_start": 39.6,
+        "elevation_end": 61.2,
+        "slope_percent": 18.5,
+        "terrain_class": "mountainous",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 848195.0,
+        "cumulative_cost_usd": 29592240.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            391625.43,
+            4790030.68
+          ],
+          [
+            391652.1,
+            4790217.33
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 37,
+        "length_m": 188.54,
+        "cumulative_length_m": 14153.28,
+        "elevation_start": 61.2,
+        "elevation_end": 90.0,
+        "slope_percent": 14.5,
+        "terrain_class": "hilly",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 448732.0,
+        "cumulative_cost_usd": 30040971.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            391652.1,
+            4790217.33
+          ],
+          [
+            391492.06,
+            4790403.97
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 38,
+        "length_m": 245.86,
+        "cumulative_length_m": 14399.14,
+        "elevation_start": 90.0,
+        "elevation_end": 81.7,
+        "slope_percent": 14.7,
+        "terrain_class": "hilly",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 585149.0,
+        "cumulative_cost_usd": 30626121.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            391492.06,
+            4790403.97
+          ],
+          [
+            390638.55,
+            4791230.55
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 39,
+        "length_m": 1188.16,
+        "cumulative_length_m": 15587.29,
+        "elevation_start": 81.7,
+        "elevation_end": 38.8,
+        "slope_percent": 15.4,
+        "terrain_class": "mountainous",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 3421888.0,
+        "cumulative_cost_usd": 34048009.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            390638.55,
+            4791230.55
+          ],
+          [
+            390451.85,
+            4791337.21
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 40,
+        "length_m": 215.02,
+        "cumulative_length_m": 15802.32,
+        "elevation_start": 38.8,
+        "elevation_end": 32.8,
+        "slope_percent": 4.5,
+        "terrain_class": "flat",
+        "land_cover_class": 50,
+        "land_cover_name": "built_up",
+        "geohazard_risk": 0.0,
+        "cost_usd": 494550.0,
+        "cumulative_cost_usd": 34542559.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            390451.85,
+            4791337.21
+          ],
+          [
+            390185.12,
+            4791630.51
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 41,
+        "length_m": 396.44,
+        "cumulative_length_m": 16198.76,
+        "elevation_start": 32.8,
+        "elevation_end": 30.4,
+        "slope_percent": 2.2,
+        "terrain_class": "flat",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 745312.0,
+        "cumulative_cost_usd": 35287871.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            390185.12,
+            4791630.51
+          ],
+          [
+            390131.78,
+            4791630.51
+          ],
+          [
+            390025.09,
+            4791737.16
+          ],
+          [
+            389945.07,
+            4791737.16
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 42,
+        "length_m": 284.22,
+        "cumulative_length_m": 16482.98,
+        "elevation_start": 30.4,
+        "elevation_end": 30.4,
+        "slope_percent": 0.6,
+        "terrain_class": "flat",
+        "land_cover_class": 20,
+        "land_cover_name": "shrubland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 525804.0,
+        "cumulative_cost_usd": 35813675.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            389945.07,
+            4791737.16
+          ],
+          [
+            389464.97,
+            4792217.11
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 43,
+        "length_m": 678.86,
+        "cumulative_length_m": 17161.83,
+        "elevation_start": 30.4,
+        "elevation_end": 36.6,
+        "slope_percent": 3.5,
+        "terrain_class": "flat",
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 1235520.0,
+        "cumulative_cost_usd": 37049195.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            389464.97,
+            4792217.11
+          ],
+          [
+            389304.94,
+            4792217.11
+          ],
+          [
+            389144.91,
+            4792377.09
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 44,
+        "length_m": 386.32,
+        "cumulative_length_m": 17548.15,
+        "elevation_start": 36.6,
+        "elevation_end": 38.1,
+        "slope_percent": 4.0,
+        "terrain_class": "flat",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 726280.0,
+        "cumulative_cost_usd": 37775475.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            389144.91,
+            4792377.09
+          ],
+          [
+            389011.55,
+            4792377.09
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 45,
+        "length_m": 133.36,
+        "cumulative_length_m": 17681.52,
+        "elevation_start": 38.1,
+        "elevation_end": 39.1,
+        "slope_percent": 0.4,
+        "terrain_class": "flat",
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 242718.0,
+        "cumulative_cost_usd": 38018192.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            389011.55,
+            4792377.09
+          ],
+          [
+            388744.82,
+            4792643.73
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 46,
+        "length_m": 377.14,
+        "cumulative_length_m": 18058.66,
+        "elevation_start": 39.1,
+        "elevation_end": 40.7,
+        "slope_percent": 0.5,
+        "terrain_class": "flat",
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 686400.0,
+        "cumulative_cost_usd": 38704592.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            388744.82,
+            4792643.73
+          ],
+          [
+            388744.82,
+            4792803.71
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 47,
+        "length_m": 159.98,
+        "cumulative_length_m": 18218.64,
+        "elevation_start": 40.7,
+        "elevation_end": 40.4,
+        "slope_percent": 1.4,
+        "terrain_class": "flat",
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 291169.0,
+        "cumulative_cost_usd": 38995761.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            388744.82,
+            4792803.71
+          ],
+          [
+            388584.79,
+            4792990.36
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 48,
+        "length_m": 245.86,
+        "cumulative_length_m": 18464.5,
+        "elevation_start": 40.4,
+        "elevation_end": 41.8,
+        "slope_percent": 0.8,
+        "terrain_class": "flat",
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 447467.0,
+        "cumulative_cost_usd": 39443228.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            388584.79,
+            4792990.36
+          ],
+          [
+            388584.79,
+            4793416.98
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 49,
+        "length_m": 426.62,
+        "cumulative_length_m": 18891.12,
+        "elevation_start": 41.8,
+        "elevation_end": 44.5,
+        "slope_percent": 2.8,
+        "terrain_class": "flat",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 802047.0,
+        "cumulative_cost_usd": 40245275.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            388584.79,
+            4793416.98
+          ],
+          [
+            388264.72,
+            4793736.95
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 50,
+        "length_m": 452.57,
+        "cumulative_length_m": 19343.69,
+        "elevation_start": 44.5,
+        "elevation_end": 58.6,
+        "slope_percent": 3.8,
+        "terrain_class": "flat",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 850834.0,
+        "cumulative_cost_usd": 41096109.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            388264.72,
+            4793736.95
+          ],
+          [
+            388264.72,
+            4794083.58
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 51,
+        "length_m": 346.63,
+        "cumulative_length_m": 19690.32,
+        "elevation_start": 58.6,
+        "elevation_end": 64.9,
+        "slope_percent": 4.1,
+        "terrain_class": "flat",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 651663.0,
+        "cumulative_cost_usd": 41747772.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            388264.72,
+            4794083.58
+          ],
+          [
+            388131.36,
+            4794216.9
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 52,
+        "length_m": 188.57,
+        "cumulative_length_m": 19878.89,
+        "elevation_start": 64.9,
+        "elevation_end": 71.8,
+        "slope_percent": 4.5,
+        "terrain_class": "flat",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 354514.0,
+        "cumulative_cost_usd": 42102287.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            388131.36,
+            4794216.9
+          ],
+          [
+            388131.36,
+            4794536.86
+          ],
+          [
+            388078.02,
+            4794590.19
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 53,
+        "length_m": 395.39,
+        "cumulative_length_m": 20274.29,
+        "elevation_start": 71.8,
+        "elevation_end": 67.8,
+        "slope_percent": 2.7,
+        "terrain_class": "flat",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 743341.0,
+        "cumulative_cost_usd": 42845628.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            388078.02,
+            4794590.19
+          ],
+          [
+            388051.34,
+            4794803.5
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 54,
+        "length_m": 214.97,
+        "cumulative_length_m": 20489.26,
+        "elevation_start": 67.8,
+        "elevation_end": 79.5,
+        "slope_percent": 6.8,
+        "terrain_class": "rolling",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 447141.0,
+        "cumulative_cost_usd": 43292768.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            388051.34,
+            4794803.5
+          ],
+          [
+            388051.34,
+            4794990.15
+          ],
+          [
+            388158.03,
+            4795096.8
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 55,
+        "length_m": 337.5,
+        "cumulative_length_m": 20826.76,
+        "elevation_start": 79.5,
+        "elevation_end": 87.3,
+        "slope_percent": 1.5,
+        "terrain_class": "flat",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 634507.0,
+        "cumulative_cost_usd": 43927275.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            388158.03,
+            4795096.8
+          ],
+          [
+            388131.36,
+            4795923.38
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 56,
+        "length_m": 827.01,
+        "cumulative_length_m": 21653.77,
+        "elevation_start": 87.3,
+        "elevation_end": 118.5,
+        "slope_percent": 5.9,
+        "terrain_class": "rolling",
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 1670556.0,
+        "cumulative_cost_usd": 45597831.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            388131.36,
+            4795923.38
+          ],
+          [
+            387998.0,
+            4796056.7
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 57,
+        "length_m": 188.57,
+        "cumulative_length_m": 21842.34,
+        "elevation_start": 118.5,
+        "elevation_end": 121.7,
+        "slope_percent": 7.6,
+        "terrain_class": "rolling",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 392229.0,
+        "cumulative_cost_usd": 45990059.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            387998.0,
+            4796056.7
+          ],
+          [
+            387944.65,
+            4796536.65
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 58,
+        "length_m": 482.9,
+        "cumulative_length_m": 22325.25,
+        "elevation_start": 121.7,
+        "elevation_end": 103.3,
+        "slope_percent": 9.5,
+        "terrain_class": "rolling",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 1004440.0,
+        "cumulative_cost_usd": 46994499.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            387944.65,
+            4796536.65
+          ],
+          [
+            387251.18,
+            4797203.24
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 59,
+        "length_m": 961.91,
+        "cumulative_length_m": 23287.15,
+        "elevation_start": 103.3,
+        "elevation_end": 144.4,
+        "slope_percent": 12.2,
+        "terrain_class": "hilly",
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 2231620.0,
+        "cumulative_cost_usd": 49226119.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            387251.18,
+            4797203.24
+          ],
+          [
+            387251.18,
+            4797709.85
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 60,
+        "length_m": 506.61,
+        "cumulative_length_m": 23793.76,
+        "elevation_start": 144.4,
+        "elevation_end": 180.6,
+        "slope_percent": 17.9,
+        "terrain_class": "mountainous",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 1459043.0,
+        "cumulative_cost_usd": 50685162.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            387251.18,
+            4797709.85
+          ],
+          [
+            387117.82,
+            4797843.17
+          ],
+          [
+            387117.82,
+            4797976.49
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 61,
+        "length_m": 321.89,
+        "cumulative_length_m": 24115.65,
+        "elevation_start": 180.6,
+        "elevation_end": 147.4,
+        "slope_percent": 16.3,
+        "terrain_class": "mountainous",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 927044.0,
+        "cumulative_cost_usd": 51612206.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            387117.82,
+            4797976.49
+          ],
+          [
+            387037.8,
+            4798056.48
+          ],
+          [
+            387037.8,
+            4798216.47
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 62,
+        "length_m": 273.13,
+        "cumulative_length_m": 24388.78,
+        "elevation_start": 147.4,
+        "elevation_end": 113.8,
+        "slope_percent": 16.8,
+        "terrain_class": "mountainous",
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 770214.0,
+        "cumulative_cost_usd": 52382420.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            387037.8,
+            4798216.47
+          ],
+          [
+            386824.42,
+            4798429.78
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 63,
+        "length_m": 301.71,
+        "cumulative_length_m": 24690.49,
+        "elevation_start": 113.8,
+        "elevation_end": 91.8,
+        "slope_percent": 4.2,
+        "terrain_class": "flat",
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 549120.0,
+        "cumulative_cost_usd": 52931540.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            386824.42,
+            4798429.78
+          ],
+          [
+            386771.08,
+            4799123.03
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 64,
+        "length_m": 695.31,
+        "cumulative_length_m": 25385.8,
+        "elevation_start": 91.8,
+        "elevation_end": 64.4,
+        "slope_percent": 14.5,
+        "terrain_class": "hilly",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 1654833.0,
+        "cumulative_cost_usd": 54586373.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            386771.08,
+            4799123.03
+          ],
+          [
+            386637.71,
+            4799256.35
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 65,
+        "length_m": 188.57,
+        "cumulative_length_m": 25574.37,
+        "elevation_start": 64.4,
+        "elevation_end": 66.8,
+        "slope_percent": 4.4,
+        "terrain_class": "flat",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 354514.0,
+        "cumulative_cost_usd": 54940887.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            386637.71,
+            4799256.35
+          ],
+          [
+            386637.71,
+            4799949.61
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 66,
+        "length_m": 693.26,
+        "cumulative_length_m": 26267.63,
+        "elevation_start": 66.8,
+        "elevation_end": 94.8,
+        "slope_percent": 12.0,
+        "terrain_class": "hilly",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 1649956.0,
+        "cumulative_cost_usd": 56590843.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            386637.71,
+            4799949.61
+          ],
+          [
+            386584.37,
+            4800002.94
+          ],
+          [
+            386584.37,
+            4800109.59
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 67,
+        "length_m": 182.08,
+        "cumulative_length_m": 26449.72,
+        "elevation_start": 94.8,
+        "elevation_end": 114.3,
+        "slope_percent": 13.2,
+        "terrain_class": "hilly",
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 422434.0,
+        "cumulative_cost_usd": 57013277.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            386584.37,
+            4800109.59
+          ],
+          [
+            386264.3,
+            4800482.89
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 68,
+        "length_m": 491.72,
+        "cumulative_length_m": 26941.44,
+        "elevation_start": 114.3,
+        "elevation_end": 149.4,
+        "slope_percent": 17.6,
+        "terrain_class": "mountainous",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 1416160.0,
+        "cumulative_cost_usd": 58429437.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            386264.3,
+            4800482.89
+          ],
+          [
+            386130.94,
+            4800482.89
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 69,
+        "length_m": 133.36,
+        "cumulative_length_m": 27074.8,
+        "elevation_start": 149.4,
+        "elevation_end": 133.6,
+        "slope_percent": 8.0,
+        "terrain_class": "rolling",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 277391.0,
+        "cumulative_cost_usd": 58706829.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            386130.94,
+            4800482.89
+          ],
+          [
+            385517.48,
+            4801096.15
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 70,
+        "length_m": 867.43,
+        "cumulative_length_m": 27942.23,
+        "elevation_start": 133.6,
+        "elevation_end": 72.7,
+        "slope_percent": 9.0,
+        "terrain_class": "rolling",
+        "land_cover_class": 10,
+        "land_cover_name": "tree_cover",
+        "geohazard_risk": 0.0,
+        "cost_usd": 1864971.0,
+        "cumulative_cost_usd": 60571800.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            385517.48,
+            4801096.15
+          ],
+          [
+            385144.07,
+            4801149.48
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 71,
+        "length_m": 377.2,
+        "cumulative_length_m": 28319.43,
+        "elevation_start": 72.7,
+        "elevation_end": 61.5,
+        "slope_percent": 5.0,
+        "terrain_class": "rolling",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 784576.0,
+        "cumulative_cost_usd": 61356376.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            385144.07,
+            4801149.48
+          ],
+          [
+            385064.05,
+            4801229.47
+          ],
+          [
+            385010.71,
+            4801229.47
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 72,
+        "length_m": 166.49,
+        "cumulative_length_m": 28485.92,
+        "elevation_start": 61.5,
+        "elevation_end": 59.0,
+        "slope_percent": 12.1,
+        "terrain_class": "hilly",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 396240.0,
+        "cumulative_cost_usd": 61752616.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            385010.71,
+            4801229.47
+          ],
+          [
+            384824.0,
+            4801416.12
+          ],
+          [
+            384824.0,
+            4801496.11
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 73,
+        "length_m": 343.99,
+        "cumulative_length_m": 28829.91,
+        "elevation_start": 59.0,
+        "elevation_end": 59.6,
+        "slope_percent": 11.9,
+        "terrain_class": "hilly",
+        "land_cover_class": 30,
+        "land_cover_name": "grassland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 798060.0,
+        "cumulative_cost_usd": 62550676.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            384824.0,
+            4801496.11
+          ],
+          [
+            384717.31,
+            4801496.11
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 74,
+        "length_m": 106.69,
+        "cumulative_length_m": 28936.6,
+        "elevation_start": 59.6,
+        "elevation_end": 48.9,
+        "slope_percent": 3.4,
+        "terrain_class": "flat",
+        "land_cover_class": 50,
+        "land_cover_name": "built_up",
+        "geohazard_risk": 0.0,
+        "cost_usd": 245385.0,
+        "cumulative_cost_usd": 62796061.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            384717.31,
+            4801496.11
+          ],
+          [
+            384477.26,
+            4801736.09
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 75,
+        "length_m": 339.43,
+        "cumulative_length_m": 29276.02,
+        "elevation_start": 48.9,
+        "elevation_end": 45.0,
+        "slope_percent": 1.8,
+        "terrain_class": "flat",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 638126.0,
+        "cumulative_cost_usd": 63434186.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            384477.26,
+            4801736.09
+          ],
+          [
+            384210.54,
+            4801709.42
+          ],
+          [
+            384157.2,
+            4801762.75
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 76,
+        "length_m": 343.48,
+        "cumulative_length_m": 29619.51,
+        "elevation_start": 45.0,
+        "elevation_end": 40.8,
+        "slope_percent": 3.2,
+        "terrain_class": "flat",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 645743.0,
+        "cumulative_cost_usd": 64079930.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            384157.2,
+            4801762.75
+          ],
+          [
+            384023.83,
+            4801762.75
+          ],
+          [
+            383917.14,
+            4801869.41
+          ],
+          [
+            383810.46,
+            4801869.41
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 77,
+        "length_m": 390.91,
+        "cumulative_length_m": 30010.41,
+        "elevation_start": 40.8,
+        "elevation_end": 36.3,
+        "slope_percent": 0.4,
+        "terrain_class": "flat",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 734906.0,
+        "cumulative_cost_usd": 64814836.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            383810.46,
+            4801869.41
+          ],
+          [
+            383597.08,
+            4802082.72
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 78,
+        "length_m": 301.71,
+        "cumulative_length_m": 30312.13,
+        "elevation_start": 36.3,
+        "elevation_end": 36.9,
+        "slope_percent": 1.9,
+        "terrain_class": "flat",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 567223.0,
+        "cumulative_cost_usd": 65382059.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            383597.08,
+            4802082.72
+          ],
+          [
+            383490.39,
+            4802082.72
+          ],
+          [
+            383463.72,
+            4802162.71
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 79,
+        "length_m": 191.01,
+        "cumulative_length_m": 30503.14,
+        "elevation_start": 36.9,
+        "elevation_end": 38.0,
+        "slope_percent": 1.3,
+        "terrain_class": "flat",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 359099.0,
+        "cumulative_cost_usd": 65741157.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            383463.72,
+            4802162.71
+          ],
+          [
+            382903.6,
+            4802722.65
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 80,
+        "length_m": 792.0,
+        "cumulative_length_m": 31295.14,
+        "elevation_start": 38.0,
+        "elevation_end": 45.8,
+        "slope_percent": 1.0,
+        "terrain_class": "flat",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 1488960.0,
+        "cumulative_cost_usd": 67230117.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            382903.6,
+            4802722.65
+          ],
+          [
+            382850.25,
+            4802722.65
+          ],
+          [
+            382743.57,
+            4802829.3
+          ],
+          [
+            382556.86,
+            4802829.3
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 81,
+        "length_m": 390.91,
+        "cumulative_length_m": 31686.04,
+        "elevation_start": 45.8,
+        "elevation_end": 46.0,
+        "slope_percent": 0.9,
+        "terrain_class": "flat",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 734906.0,
+        "cumulative_cost_usd": 67965023.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            382556.86,
+            4802829.3
+          ],
+          [
+            382316.81,
+            4802989.28
+          ],
+          [
+            382210.12,
+            4802989.28
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 82,
+        "length_m": 395.17,
+        "cumulative_length_m": 32081.21,
+        "elevation_start": 46.0,
+        "elevation_end": 51.0,
+        "slope_percent": 7.1,
+        "terrain_class": "rolling",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 821944.0,
+        "cumulative_cost_usd": 68786967.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            382210.12,
+            4802989.28
+          ],
+          [
+            382076.76,
+            4803122.6
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 83,
+        "length_m": 188.57,
+        "cumulative_length_m": 32269.78,
+        "elevation_start": 51.0,
+        "elevation_end": 59.0,
+        "slope_percent": 1.6,
+        "terrain_class": "flat",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 354514.0,
+        "cumulative_cost_usd": 69141481.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            382076.76,
+            4803122.6
+          ],
+          [
+            381810.04,
+            4803122.6
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 84,
+        "length_m": 266.72,
+        "cumulative_length_m": 32536.5,
+        "elevation_start": 59.0,
+        "elevation_end": 55.7,
+        "slope_percent": 2.2,
+        "terrain_class": "flat",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 501438.0,
+        "cumulative_cost_usd": 69642920.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            381810.04,
+            4803122.6
+          ],
+          [
+            381676.68,
+            4803255.92
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 85,
+        "length_m": 188.57,
+        "cumulative_length_m": 32725.07,
+        "elevation_start": 55.7,
+        "elevation_end": 57.6,
+        "slope_percent": 4.1,
+        "terrain_class": "flat",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 354514.0,
+        "cumulative_cost_usd": 69997434.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            381676.68,
+            4803255.92
+          ],
+          [
+            381436.63,
+            4803255.92
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 86,
+        "length_m": 240.05,
+        "cumulative_length_m": 32965.13,
+        "elevation_start": 57.6,
+        "elevation_end": 60.3,
+        "slope_percent": 3.1,
+        "terrain_class": "flat",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 451295.0,
+        "cumulative_cost_usd": 70448729.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            381436.63,
+            4803255.92
+          ],
+          [
+            381143.23,
+            4803549.22
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 87,
+        "length_m": 414.86,
+        "cumulative_length_m": 33379.98,
+        "elevation_start": 60.3,
+        "elevation_end": 70.3,
+        "slope_percent": 4.5,
+        "terrain_class": "flat",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 779931.0,
+        "cumulative_cost_usd": 71228660.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            381143.23,
+            4803549.22
+          ],
+          [
+            381009.87,
+            4803549.22
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 88,
+        "length_m": 133.36,
+        "cumulative_length_m": 33513.34,
+        "elevation_start": 70.3,
+        "elevation_end": 70.1,
+        "slope_percent": 3.8,
+        "terrain_class": "flat",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 250719.0,
+        "cumulative_cost_usd": 71479379.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            381009.87,
+            4803549.22
+          ],
+          [
+            380556.44,
+            4803975.84
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 89,
+        "length_m": 622.58,
+        "cumulative_length_m": 34135.92,
+        "elevation_start": 70.1,
+        "elevation_end": 87.7,
+        "slope_percent": 9.0,
+        "terrain_class": "rolling",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 1294961.0,
+        "cumulative_cost_usd": 72774340.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            380556.44,
+            4803975.84
+          ],
+          [
+            380476.42,
+            4803975.84
+          ],
+          [
+            380369.74,
+            4804082.5
+          ],
+          [
+            380316.39,
+            4804082.5
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 90,
+        "length_m": 284.22,
+        "cumulative_length_m": 34420.14,
+        "elevation_start": 87.7,
+        "elevation_end": 109.1,
+        "slope_percent": 16.6,
+        "terrain_class": "mountainous",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 818549.0,
+        "cumulative_cost_usd": 73592889.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            380316.39,
+            4804082.5
+          ],
+          [
+            379862.96,
+            4804535.78
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 91,
+        "length_m": 641.14,
+        "cumulative_length_m": 35061.28,
+        "elevation_start": 109.1,
+        "elevation_end": 113.1,
+        "slope_percent": 8.7,
+        "terrain_class": "rolling",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 1333577.0,
+        "cumulative_cost_usd": 74926466.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            379862.96,
+            4804535.78
+          ],
+          [
+            379862.96,
+            4804722.43
+          ],
+          [
+            379756.27,
+            4804829.09
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 92,
+        "length_m": 337.5,
+        "cumulative_length_m": 35398.79,
+        "elevation_start": 113.1,
+        "elevation_end": 145.7,
+        "slope_percent": 8.5,
+        "terrain_class": "rolling",
+        "land_cover_class": 40,
+        "land_cover_name": "cropland",
+        "geohazard_risk": 0.0,
+        "cost_usd": 702008.0,
+        "cumulative_cost_usd": 75628474.0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            379756.27,
+            4804829.09
+          ],
+          [
+            379756.27,
+            4804909.08
+          ],
+          [
+            379622.91,
+            4805069.06
+          ]
+        ]
+      },
+      "properties": {
+        "segment_id": 93,
+        "length_m": 288.27,
+        "cumulative_length_m": 35687.05,
+        "elevation_start": 145.7,
+        "elevation_end": 161.7,
+        "slope_percent": 11.5,
+        "terrain_class": "hilly",
+        "land_cover_class": 50,
+        "land_cover_name": "built_up",
+        "geohazard_risk": 0.0,
+        "cost_usd": 807154.0,
+        "cumulative_cost_usd": 76435628.0
+      }
+    }
+  ]
+}

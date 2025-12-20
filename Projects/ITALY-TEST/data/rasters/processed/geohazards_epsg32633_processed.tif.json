@@ -1,0 +1,74 @@
+{
+  "dataset_name": "GEM Global Seismic Hazard (PGA) (Processed)",
+  "category": "geohazard",
+  "project": "ITALY-TEST",
+  "processing_date": "2025-12-17T13:50:07.924227Z",
+  "target_crs": "EPSG:32633",
+  "target_crs_name": "WGS 84 / UTM zone 33N",
+  "data_type": "Raster",
+  "format": "GeoTIFF",
+  "processed_path": "/opt/agrs/Projects/ITALY-TEST/data/rasters/processed/geohazards_epsg32633_processed.tif",
+  "raw_path": "/opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif",
+  "raw_metadata_file": "/opt/agrs/Projects/ITALY-TEST/data/rasters/raw/geohazards_gem_seismic_raw.tif.json",
+  "source_files": [
+    {
+      "filename": "geohazards_gem_seismic_raw.tif",
+      "metadata": "geohazards_gem_seismic_raw.tif.json"
+    }
+  ],
+  "operations_applied": [
+    {
+      "operation": "reproject",
+      "tool": "gdalwarp",
+      "target_epsg": 32633
+    },
+    {
+      "operation": "clip",
+      "tool": "AOI cutline",
+      "source": "/opt/agrs/Projects/ITALY-TEST/aoi/aoi.geojson"
+    }
+  ],
+  "file_size_bytes": 1745,
+  "validation_status": "passed",
+  "validation_date": "2025-12-17T13:50:07.924254Z",
+  "protocol_reference": "/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md",
+  "protocol_version": "1.0",
+  "zeus_version": "0.1.0",
+  "notes": "Peak ground acceleration (PGA) map for seismic risk screening.",
+  "source": "GEM hazard surface PGA",
+  "provider": "Global Earthquake Model (GEM) Foundation",
+  "provider_url": "https://hazard.openquake.org/",
+  "coverage_date": "2018",
+  "documentation_url": "https://hazard.openquake.org/",
+  "license": "CC BY-NC-SA 4.0",
+  "attribution": "Contains data \u00a9 GEM Foundation.",
+  "resolution_m": {
+    "x": 5655.970265351381,
+    "y": 4277.688135829133
+  },
+  "dimensions": {
+    "width": 2,
+    "height": 3
+  },
+  "extent": {
+    "minx": 268840.543,
+    "miny": 4766334.189,
+    "maxx": 280152.483,
+    "maxy": 4779167.253,
+    "crs": "EPSG:4326"
+  },
+  "bbox_wgs84": {
+    "west": 12.1580592,
+    "south": 43.0145358,
+    "east": 12.3020484,
+    "north": 43.1333237,
+    "crs": "EPSG:4326"
+  },
+  "statistics": {
+    "min": 0.20668180942715,
+    "max": 0.22252436539704,
+    "mean": 0.21300533058027,
+    "stddev": 0.0055976080821814,
+    "valid_percent": 83.33
+  }
+}

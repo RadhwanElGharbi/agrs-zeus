@@ -1,0 +1,74 @@
+{
+  "dataset_name": "Global DEM 30m (Auto) (Processed)",
+  "category": "dem",
+  "project": "UAE-PIPELINE",
+  "processing_date": "2025-12-06T14:33:47.209505Z",
+  "target_crs": "EPSG:32640",
+  "target_crs_name": "WGS 84 / UTM zone 40N",
+  "data_type": "Raster",
+  "format": "GeoTIFF",
+  "processed_path": "/opt/agrs/Projects/UAE-PIPELINE/data/rasters/processed/dem_epsg32640_processed.tif",
+  "raw_path": "/opt/agrs/Projects/UAE-PIPELINE/data/rasters/raw/dem_global_30m_raw.tif",
+  "raw_metadata_file": "/opt/agrs/Projects/UAE-PIPELINE/data/rasters/raw/dem_global_30m_raw.tif.json",
+  "source_files": [
+    {
+      "filename": "dem_global_30m_raw.tif",
+      "metadata": "dem_global_30m_raw.tif.json"
+    }
+  ],
+  "operations_applied": [
+    {
+      "operation": "reproject",
+      "tool": "gdalwarp",
+      "target_epsg": 32640
+    },
+    {
+      "operation": "clip",
+      "tool": "AOI cutline",
+      "source": "/opt/agrs/Projects/UAE-PIPELINE/aoi/aoi.geojson"
+    }
+  ],
+  "file_size_bytes": 383174,
+  "validation_status": "passed",
+  "validation_date": "2025-12-06T14:33:47.209535Z",
+  "protocol_reference": "/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md",
+  "protocol_version": "1.0",
+  "zeus_version": "0.1.0",
+  "notes": "Core elevation surface used for slope, hydraulics and terrain costs.",
+  "source": "Copernicus DEM / NASA SRTM (auto-selected)",
+  "provider": "ESA & NASA",
+  "provider_url": "https://spacedata.copernicus.eu/collections/copernicus-digital-elevation-model",
+  "coverage_date": "2021",
+  "documentation_url": "https://spacedata.copernicus.eu/collections/copernicus-digital-elevation-model",
+  "license": "Copernicus Data License / NASA SRTM Terms",
+  "attribution": "Contains Copernicus DEM and NASA SRTM data.",
+  "resolution_m": {
+    "x": 29.368749373068443,
+    "y": 29.35373525147008
+  },
+  "dimensions": {
+    "width": 462,
+    "height": 395
+  },
+  "extent": {
+    "minx": 351524.684,
+    "miny": 2776219.012,
+    "maxx": 365093.046,
+    "maxy": 2787813.737,
+    "crs": "EPSG:4326"
+  },
+  "bbox_wgs84": {
+    "west": 55.5263518,
+    "south": 25.094483,
+    "east": 55.662132,
+    "north": 25.2004397,
+    "crs": "EPSG:4326"
+  },
+  "statistics": {
+    "min": 72.330535888672,
+    "max": 131.03358459473,
+    "mean": 103.12473777188,
+    "stddev": 10.559728545738,
+    "valid_percent": 47.9
+  }
+}

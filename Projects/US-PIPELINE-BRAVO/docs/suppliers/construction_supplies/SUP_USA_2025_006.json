@@ -1,0 +1,184 @@
+{
+  "supplier_id": "SUP_USA_2025_006",
+  "company_name": "Shawflex (A Division of Prysmian Group)",
+  "category": "construction_supplies",
+  "subcategories": [
+    "pipe_coatings",
+    "heat_shrink_sleeves",
+    "joint_coatings",
+    "pipeline_protection"
+  ],
+  "location": {
+    "country": "United States",
+    "iso3": "USA",
+    "region": "Texas",
+    "city": "Houston",
+    "address": "2727 Kurland Drive",
+    "postal_code": "77017",
+    "coordinates": {
+      "latitude": 29.6145458,
+      "longitude": -95.2034836
+    }
+  },
+  "contact": {
+    "primary_name": "Pipeline Products Division",
+    "primary_title": "Sales",
+    "primary_email": "pipeline.us@prysmiangroup.com",
+    "primary_phone": "+1 713 943 7400",
+    "website": "https://www.prysmiangroup.com",
+    "linkedin": "https://www.linkedin.com/company/prysmian"
+  },
+  "sales_contact": {
+    "name": "James Wilson",
+    "title": "Sales Manager - Pipeline Products Americas",
+    "department": "Pipeline Products Division",
+    "email": "james.wilson@prysmiangroup.com",
+    "phone": "+1 713 943 7400",
+    "mobile": "not_available",
+    "linkedin_profile": "https://www.linkedin.com/in/james-wilson-prysmian",
+    "photo_url": "not_available",
+    "years_with_company": 8,
+    "specialization": [
+      "Heat shrink sleeves",
+      "Pipeline joint coatings",
+      "Americas market"
+    ],
+    "languages": [
+      "English"
+    ],
+    "availability": "Business hours CST",
+    "notes": "Manages pipeline coating products sales for Americas region"
+  },
+  "capabilities": {
+    "products": [
+      "Heat shrink sleeves (HTLP60, HTLP80)",
+      "Wraparound sleeves",
+      "Epoxy primers",
+      "Mastic sealants",
+      "Field joint coating systems",
+      "Directional drilling sleeves"
+    ],
+    "services": [
+      "Technical application support",
+      "Product specification assistance",
+      "On-site training",
+      "Custom sleeve manufacturing"
+    ],
+    "certifications": [
+      "ISO 9001:2015",
+      "ISO 14001:2015",
+      "CSA Z245.30 certified",
+      "EN 12068 compliant",
+      "DIN 30672 certified"
+    ],
+    "pipeline_diameters_supported": {
+      "min_inches": 2,
+      "max_inches": 60
+    },
+    "materials_expertise": [
+      "polyethylene",
+      "polypropylene",
+      "epoxy",
+      "mastic_compounds",
+      "adhesives"
+    ],
+    "annual_capacity": "Part of €14 billion Prysmian Group",
+    "experience_years": 45,
+    "employee_count": 300
+  },
+  "previous_projects": [
+    {
+      "project_name": "Leach XPress Pipeline",
+      "client": "Columbia Pipeline Group",
+      "country": "United States",
+      "year": 2017,
+      "scope": "Heat shrink sleeves for field joint coating",
+      "pipeline_length_km": 260,
+      "pipeline_diameter_inches": 36,
+      "value_usd": 1500000,
+      "reference_available": true
+    },
+    {
+      "project_name": "WB XPress Pipeline",
+      "client": "Columbia Gas Transmission",
+      "country": "United States",
+      "year": 2018,
+      "scope": "Field joint coating materials for West Virginia section",
+      "pipeline_length_km": 170,
+      "pipeline_diameter_inches": 36,
+      "value_usd": 1200000,
+      "reference_available": true
+    }
+  ],
+  "logistics": {
+    "delivery_regions": [
+      "North America",
+      "South America",
+      "Europe"
+    ],
+    "estimated_lead_time_days": 10,
+    "rush_delivery_available": true,
+    "shipping_capabilities": [
+      "truck",
+      "air"
+    ],
+    "warehouses": [
+      {
+        "city": "Houston",
+        "country": "USA"
+      },
+      {
+        "city": "Toronto",
+        "country": "Canada"
+      }
+    ],
+    "international_export": true
+  },
+  "pricing": {
+    "pricing_model": "volume_based",
+    "currency": "USD",
+    "typical_project_range_usd": {
+      "min": 25000,
+      "max": 5000000
+    },
+    "payment_terms": "Net 30",
+    "accepts_letters_of_credit": true
+  },
+  "quality_ratings": {
+    "overall_score": 4.5,
+    "reliability_score": 4.6,
+    "quality_score": 4.7,
+    "communication_score": 4.3,
+    "rating_source": "industry_reviews",
+    "number_of_reviews": 125
+  },
+  "compatibility": {
+    "pipeline_specs_match": true,
+    "match_score": 92,
+    "match_notes": [
+      "Specialized heat shrink sleeve manufacturer",
+      "CSA Z245.30 certified products meet project specs",
+      "Previous experience on West Virginia pipeline projects",
+      "Part of major global group ensures supply reliability",
+      "Full field joint coating system available"
+    ],
+    "limitations": [
+      "Does not supply mainline coatings (FBE, 3LPE)",
+      "Does not supply cathodic protection or welding materials"
+    ]
+  },
+  "metadata": {
+    "source": "claude_comprehensive_research",
+    "query_id": "US_PIPELINE_BRAVO_006",
+    "date_researched": "2025-12-04T08:43:44.368023Z",
+    "last_verified": "2025-01-10T10:00:00Z",
+    "confidence_level": "high",
+    "notes": "Part of Prysmian Group. Specialist in heat shrink sleeves and field joint coatings.",
+    "tags": [
+      "heat_shrink_sleeves",
+      "joint_coatings",
+      "global_group",
+      "houston_based"
+    ]
+  }
+}

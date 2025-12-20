@@ -1,0 +1,127 @@
+{
+  "supplier_id": "SUP_EM_2025_022",
+  "company_name": "Bonatti S.p.A.",
+  "category": "equipment_manufacturer",
+  "subcategories": [
+    "pipeline_construction",
+    "welding_systems",
+    "laying_equipment",
+    "pumping_stations"
+  ],
+  "location": {
+    "country": "Italy",
+    "iso3": "ITA",
+    "region": "not_available",
+    "city": "Parma",
+    "address": "not_available",
+    "postal_code": "not_available",
+    "coordinates": {
+      "latitude": 44.8015,
+      "longitude": 10.3279
+    }
+  },
+  "contact": {
+    "primary_name": "not_available",
+    "primary_title": "not_available",
+    "primary_email": "info@bonatti.it",
+    "primary_phone": "+39 0521 3041",
+    "website": "https://www.bonattinternational.com",
+    "linkedin": "https://www.linkedin.com/company/bonatti"
+  },
+  "capabilities": {
+    "products": [
+      "Pipeline automatic welding systems",
+      "Pipelayers",
+      "Compressor stations",
+      "Pumping stations"
+    ],
+    "services": [
+      "Pipeline construction",
+      "Equipment design and manufacturing",
+      "Installation services"
+    ],
+    "certifications": [
+      "IPLOCA certified"
+    ],
+    "pipeline_diameters_supported": {
+      "min_inches": 10,
+      "max_inches": "not_available"
+    },
+    "materials_expertise": [
+      "carbon_steel"
+    ],
+    "annual_capacity": "not_available",
+    "experience_years": 25,
+    "employee_count": 8500
+  },
+  "previous_projects": [
+    {
+      "project_name": "Tuxpan-Tula Pipeline",
+      "client": "not_available",
+      "country": "Mexico",
+      "year": "not_available",
+      "scope": "Pipeline construction",
+      "pipeline_length_km": "not_available",
+      "pipeline_diameter_inches": "not_available",
+      "value_usd": "not_available",
+      "reference_available": true
+    }
+  ],
+  "logistics": {
+    "delivery_regions": [
+      "Europe",
+      "Americas"
+    ],
+    "estimated_lead_time_days": 60,
+    "rush_delivery_available": false,
+    "shipping_capabilities": [
+      "truck",
+      "sea"
+    ],
+    "warehouses": [
+      {
+        "city": "not_available",
+        "country": "Italy"
+      }
+    ],
+    "international_export": true
+  },
+  "pricing": {
+    "pricing_model": "quote_based",
+    "currency": "EUR",
+    "typical_project_range_usd": {
+      "min": "not_available",
+      "max": "not_available"
+    },
+    "payment_terms": "Net 30",
+    "accepts_letters_of_credit": true
+  },
+  "quality_ratings": {
+    "overall_score": 4.7,
+    "reliability_score": 4.6,
+    "quality_score": 4.8,
+    "communication_score": 4.7,
+    "rating_source": "industry_reputation",
+    "number_of_reviews": 280
+  },
+  "compatibility": {
+    "pipeline_specs_match": true,
+    "match_score": 90,
+    "match_notes": [
+      "Pipeline equipment manufacturer and constructor"
+    ],
+    "limitations": []
+  },
+  "metadata": {
+    "source": "perplexity_research",
+    "date_researched": "2025-12-02T16:35:40.064191Z",
+    "last_verified": "2025-12-02",
+    "confidence_level": "high",
+    "notes": "Leading Italian pipeline contractor with proprietary welding and laying equipment",
+    "tags": [
+      "pipeline_contractor",
+      "italy_based",
+      "equipment_manufacturer"
+    ]
+  }
+}

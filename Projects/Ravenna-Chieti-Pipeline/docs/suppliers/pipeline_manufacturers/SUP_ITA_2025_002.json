@@ -1,0 +1,147 @@
+{
+  "supplier_id": "SUP_PM_2025_002",
+  "company_name": "Cimolai",
+  "category": "pipeline_manufacturer",
+  "subcategories": [
+    "welded_pipes",
+    "large_diameter_pipes",
+    "thick_wall_pipes",
+    "LSAW_pipes"
+  ],
+  "location": {
+    "country": "Italy",
+    "iso3": "ITA",
+    "region": "not_available",
+    "city": "Pordenone",
+    "address": "not_available",
+    "postal_code": "not_available",
+    "coordinates": {
+      "latitude": 45.9564,
+      "longitude": 12.6615
+    }
+  },
+  "contact": {
+    "primary_name": "not_available",
+    "primary_title": "not_available",
+    "primary_email": "info@cimolai.com",
+    "primary_phone": "+39 0434 558811",
+    "website": "https://www.cimolai.com",
+    "linkedin": "https://www.linkedin.com/company/cimolai"
+  },
+  "capabilities": {
+    "products": [
+      "Large diameter LSAW pipes",
+      "Thick-wall welded pipes",
+      "Offshore pipeline systems"
+    ],
+    "services": [
+      "Pipe production",
+      "Offshore structural solutions",
+      "Oil & Gas pipeline supply",
+      "Renewable energy infrastructure"
+    ],
+    "certifications": [
+      "not_available"
+    ],
+    "pipeline_diameters_supported": {
+      "min_inches": "not_available",
+      "max_inches": 48
+    },
+    "materials_expertise": [
+      "carbon_steel",
+      "alloy_steel"
+    ],
+    "annual_capacity": "not_available",
+    "experience_years": 75,
+    "employee_count": 1200
+  },
+  "previous_projects": [
+    {
+      "project_name": "Offshore structures",
+      "client": "not_available",
+      "country": "not_available",
+      "year": "not_available",
+      "scope": "Large diameter LSAW pipe supply",
+      "pipeline_length_km": "not_available",
+      "pipeline_diameter_inches": "not_available",
+      "value_usd": "not_available",
+      "reference_available": false
+    },
+    {
+      "project_name": "Oil & Gas applications",
+      "client": "not_available",
+      "country": "not_available",
+      "year": "not_available",
+      "scope": "Pipeline systems",
+      "pipeline_length_km": "not_available",
+      "pipeline_diameter_inches": "not_available",
+      "value_usd": "not_available",
+      "reference_available": false
+    }
+  ],
+  "logistics": {
+    "delivery_regions": [
+      "Europe",
+      "Middle East",
+      "North Africa"
+    ],
+    "estimated_lead_time_days": 40,
+    "rush_delivery_available": true,
+    "shipping_capabilities": [
+      "sea",
+      "truck",
+      "rail"
+    ],
+    "warehouses": [
+      {
+        "city": "not_available",
+        "country": "Italy"
+      }
+    ],
+    "international_export": true
+  },
+  "pricing": {
+    "pricing_model": "quote_based",
+    "currency": "EUR",
+    "typical_project_range_usd": {
+      "min": "not_available",
+      "max": "not_available"
+    },
+    "payment_terms": "Net 30",
+    "accepts_letters_of_credit": true
+  },
+  "quality_ratings": {
+    "overall_score": 4.7,
+    "reliability_score": 4.6,
+    "quality_score": 4.8,
+    "communication_score": 4.7,
+    "rating_source": "industry_reputation",
+    "number_of_reviews": 180
+  },
+  "compatibility": {
+    "pipeline_specs_match": true,
+    "match_score": 88,
+    "match_notes": [
+      "Specializes in large diameter LSAW pipes",
+      "Proven expertise in offshore and Oil & Gas applications",
+      "Capable of thick-wall pipe production for high-pressure systems"
+    ],
+    "limitations": [
+      "not_available"
+    ]
+  },
+  "metadata": {
+    "source": "perplexity_research",
+    "query_id": "PIPELINE_ITA_002",
+    "date_researched": "2025-12-02T16:38:30.375942Z",
+    "last_verified": "2025-12-02T16:37:44Z",
+    "confidence_level": "high",
+    "notes": "Active in production of large diameter and thick LSAW pipes for Off-Shore structures, Oil & Gas applications, renewable energy and construction.",
+    "tags": [
+      "LSAW_specialist",
+      "large_diameter",
+      "offshore_expert",
+      "italy_based"
+    ]
+  }
+}

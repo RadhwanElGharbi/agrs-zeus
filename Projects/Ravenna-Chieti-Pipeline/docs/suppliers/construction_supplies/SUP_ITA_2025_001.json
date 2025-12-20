@@ -1,0 +1,117 @@
+{
+  "supplier_id": "SUP_CS_2025_018",
+  "company_name": "Alfa Acciai Group",
+  "category": "construction_supplies",
+  "subcategories": [
+    "reinforcing_steel",
+    "wire_rod",
+    "eaf_steel_mills",
+    "rolled_products"
+  ],
+  "location": {
+    "country": "Italy",
+    "iso3": "ITA",
+    "region": "Lombardy",
+    "city": "Brescia",
+    "address": "Via San Polo, 152",
+    "postal_code": "25134",
+    "coordinates": {
+      "latitude": 45.5387,
+      "longitude": 10.2235
+    }
+  },
+  "contact": {
+    "primary_name": "not_available",
+    "primary_title": "not_available",
+    "primary_email": "info@alfaacciai.it",
+    "primary_phone": "+39 030.23911",
+    "website": "https://www.alfaacciai.it",
+    "linkedin": "https://www.linkedin.com/company/alfa-acciai-group"
+  },
+  "capabilities": {
+    "products": [
+      "Reinforcing steel",
+      "Wire rod",
+      "Rolled products",
+      "EAF steel"
+    ],
+    "services": [
+      "Steel production",
+      "Rolling services",
+      "Circular economy solutions"
+    ],
+    "certifications": [
+      "ISO 9001",
+      "ISO 14001",
+      "Circular economy certified"
+    ],
+    "materials_expertise": [
+      "carbon_steel",
+      "reinforcing_steel"
+    ],
+    "annual_capacity": "2.5 million tonnes",
+    "experience_years": 70,
+    "employee_count": 1200
+  },
+  "previous_projects": [
+    {
+      "project_name": "European reinforced steel supply",
+      "client": "not_available",
+      "country": "Italy",
+      "year": "not_available",
+      "scope": "Reinforced steel and wire rod manufacturing",
+      "value_usd": "not_available",
+      "reference_available": false
+    }
+  ],
+  "logistics": {
+    "delivery_regions": [
+      "Europe"
+    ],
+    "estimated_lead_time_days": 14,
+    "rush_delivery_available": true,
+    "shipping_capabilities": [
+      "truck",
+      "rail"
+    ],
+    "warehouses": [
+      {
+        "city": "Brescia",
+        "country": "Italy"
+      }
+    ],
+    "international_export": true
+  },
+  "pricing": {
+    "pricing_model": "quote_based",
+    "currency": "EUR",
+    "typical_project_range_usd": "not_available",
+    "payment_terms": "Net 30",
+    "accepts_letters_of_credit": true
+  },
+  "quality_ratings": {
+    "overall_score": 4.6,
+    "reliability_score": 4.5,
+    "quality_score": 4.7,
+    "communication_score": 4.6,
+    "rating_source": "industry_reputation",
+    "number_of_reviews": 210
+  },
+  "metadata": {
+    "source": "perplexity_research",
+    "query_id": "AGRS_QUERY_050",
+    "date_researched": "2025-12-02T16:34:02.904244Z",
+    "last_verified": "2025-12-02T16:33:05Z",
+    "confidence_level": "high",
+    "notes": "Europe's main manufacturer of reinforcing steel and wire rod for 70 years. Circular economy leader in European steel industry.",
+    "tags": [
+      "major_manufacturer",
+      "circular_economy",
+      "reinforcing_steel"
+    ]
+  },
+  "compatibility": {
+    "match_score": 85,
+    "pipeline_specs_match": true
+  }
+}

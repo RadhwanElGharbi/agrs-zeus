@@ -9,7 +9,7 @@ import os
 import csv
 import json
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
@@ -679,40 +679,52 @@ def write_cost_matrix_csv(cost_matrix: CostMatrixData, csv_path: Path) -> None:
 @router.post("/pirl/{project}/requests")
 async def save_pirl_request(project: str, request_data: PirlRequestData):
     """
-    Save a PIRL configuration request.
+    Save a PIRL configuration request and create a job entry.
 
     Creates:
-    - JSON file with complete configuration in docs/PIRL/requests/
+    - JSON file with complete configuration in PIRL/jobs/<job_id>/
     - CSV file with cost matrix data in the same directory
+    - Job status file for tracking progress
 
-    Returns the paths to the created files.
+    The job directory structure:
+    <project>/PIRL/jobs/<timestamp>/
+        ├── request.json          # Full configuration
+        ├── cost_matrix.csv       # Cost matrix data
+        └── status.json           # Job status and timer info
+
+    Returns the job details including timer information.
     """
     project_path = PROJECTS_ROOT / project
 
     if not project_path.exists():
         raise HTTPException(status_code=404, detail=f"Project '{project}' not found")
 
-    # Create the requests directory structure
-    requests_dir = project_path / "docs" / "PIRL" / "requests"
-    requests_dir.mkdir(parents=True, exist_ok=True)
+    # Generate timestamp-based job ID
+    job_id = datetime.now().strftime("%Y%m%d_%H%M%S")
+    created_at = datetime.now()
 
-    # Generate timestamp for unique filenames
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    # Create the job directory structure - clear path under project root
+    # <project>/PIRL/jobs/<job_id>/
+    jobs_dir = project_path / "PIRL" / "jobs" / job_id
+    jobs_dir.mkdir(parents=True, exist_ok=True)
 
-    # Define file paths
-    json_filename = f"pirl_request_{timestamp}.json"
-    csv_filename = f"cost_matrix_{timestamp}.csv"
-    json_path = requests_dir / json_filename
-    csv_path = requests_dir / csv_filename
+    # Define file paths within the job directory
+    json_path = jobs_dir / "request.json"
+    csv_path = jobs_dir / "cost_matrix.csv"
+    status_path = jobs_dir / "status.json"
 
     try:
+        # Calculate estimated completion time (24 hours from submission)
+        estimated_completion = created_at + timedelta(hours=24)
+
         # Prepare the JSON data with metadata
         json_data = {
             "metadata": {
-                "created_at": datetime.now().isoformat(),
+                "job_id": job_id,
+                "created_at": created_at.isoformat(),
                 "project": project,
                 "version": "1.0",
-                "cost_matrix_file": csv_filename
+                "cost_matrix_file": "cost_matrix.csv"
             },
             "objectives": request_data.objectives.model_dump(),
             "hydraulics": request_data.hydraulics.model_dump(),
@@ -727,68 +739,201 @@ async def save_pirl_request(project: str, request_data: PirlRequestData):
         # Write CSV file with cost matrix
         write_cost_matrix_csv(request_data.costMatrix, csv_path)
 
+        # Create job status file with timer information
+        status_data = {
+            "job_id": job_id,
+            "status": "processing",  # processing, completed, failed
+            "created_at": created_at.isoformat(),
+            "estimated_completion": estimated_completion.isoformat(),
+            "duration_hours": 24,
+            "progress_percent": 0,
+            "current_phase": "Initializing PIRL agent",
+            "phases": [
+                {"name": "Initializing", "status": "in_progress"},
+                {"name": "Data preprocessing", "status": "pending"},
+                {"name": "Route optimization", "status": "pending"},
+                {"name": "Cost analysis", "status": "pending"},
+                {"name": "Results generation", "status": "pending"}
+            ]
+        }
+
+        with open(status_path, 'w', encoding='utf-8') as f:
+            json.dump(status_data, f, indent=2)
+
+        print(f"[PIRL] Created job {job_id} at {jobs_dir}")
         print(f"[PIRL] Saved request configuration to {json_path}")
         print(f"[PIRL] Saved cost matrix CSV to {csv_path}")
+        print(f"[PIRL] Job status file at {status_path}")
 
         return JSONResponse(
             status_code=201,
             content={
                 "success": True,
-                "message": "PIRL request saved successfully",
-                "files": {
-                    "json": str(json_path),
-                    "csv": str(csv_path)
+                "message": "PIRL job created successfully",
+                "job": {
+                    "job_id": job_id,
+                    "status": "processing",
+                    "created_at": created_at.isoformat(),
+                    "estimated_completion": estimated_completion.isoformat(),
+                    "duration_hours": 24,
+                    "directory": str(jobs_dir)
                 },
-                "request_id": timestamp
+                "files": {
+                    "request": str(json_path),
+                    "cost_matrix": str(csv_path),
+                    "status": str(status_path)
+                }
             }
         )
 
     except Exception as e:
-        print(f"[PIRL] Error saving request: {e}")
+        print(f"[PIRL] Error creating job: {e}")
+        # Clean up on failure
+        if jobs_dir.exists():
+            import shutil
+            shutil.rmtree(jobs_dir, ignore_errors=True)
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to save PIRL request: {str(e)}"
+            detail=f"Failed to create PIRL job: {str(e)}"
         )
 
 
-@router.get("/pirl/{project}/requests")
-async def list_pirl_requests(project: str):
+@router.get("/pirl/{project}/jobs")
+async def list_pirl_jobs(project: str):
     """
-    List all saved PIRL requests for a project.
+    List all PIRL jobs for a project with their current status and timer info.
 
-    Returns metadata about each saved request.
+    Jobs are stored in <project>/PIRL/jobs/<job_id>/
+    Each job has:
+    - request.json: Full configuration
+    - cost_matrix.csv: Cost matrix data
+    - status.json: Job status and timer info
+
+    Returns list of jobs with status and remaining time.
     """
     project_path = PROJECTS_ROOT / project
 
     if not project_path.exists():
         raise HTTPException(status_code=404, detail=f"Project '{project}' not found")
 
-    requests_dir = project_path / "docs" / "PIRL" / "requests"
+    jobs_dir = project_path / "PIRL" / "jobs"
 
-    if not requests_dir.exists():
+    if not jobs_dir.exists():
         return []
 
-    requests = []
+    jobs = []
+    now = datetime.now()
 
-    for json_file in requests_dir.glob("pirl_request_*.json"):
+    for job_path in jobs_dir.iterdir():
+        if not job_path.is_dir():
+            continue
+
+        job_id = job_path.name
+        status_file = job_path / "status.json"
+        request_file = job_path / "request.json"
+
         try:
-            with open(json_file, 'r', encoding='utf-8') as f:
-                data = json.load(f)
+            # Read status file
+            if status_file.exists():
+                with open(status_file, 'r', encoding='utf-8') as f:
+                    status_data = json.load(f)
+            else:
+                status_data = {"status": "unknown"}
 
-            requests.append({
-                "filename": json_file.name,
-                "created_at": data.get("metadata", {}).get("created_at"),
-                "cost_matrix_file": data.get("metadata", {}).get("cost_matrix_file"),
-                "primary_objective": data.get("objectives", {}).get("primary_objective")
+            # Read request metadata
+            request_metadata = {}
+            if request_file.exists():
+                with open(request_file, 'r', encoding='utf-8') as f:
+                    request_data = json.load(f)
+                    request_metadata = request_data.get("metadata", {})
+                    objectives = request_data.get("objectives", {})
+
+            # Calculate remaining time
+            estimated_completion_str = status_data.get("estimated_completion")
+            remaining_seconds = 0
+            if estimated_completion_str:
+                estimated_completion = datetime.fromisoformat(estimated_completion_str)
+                remaining_delta = estimated_completion - now
+                remaining_seconds = max(0, int(remaining_delta.total_seconds()))
+
+            jobs.append({
+                "job_id": job_id,
+                "status": status_data.get("status", "unknown"),
+                "created_at": status_data.get("created_at") or request_metadata.get("created_at"),
+                "estimated_completion": estimated_completion_str,
+                "remaining_seconds": remaining_seconds,
+                "progress_percent": status_data.get("progress_percent", 0),
+                "current_phase": status_data.get("current_phase", "Unknown"),
+                "phases": status_data.get("phases", []),
+                "active_profile": objectives.get("activeProfile", "Unknown"),
+                "directory": str(job_path)
             })
+
         except Exception as e:
-            print(f"Error reading {json_file}: {e}")
-            requests.append({"filename": json_file.name, "error": str(e)})
+            print(f"[PIRL] Error reading job {job_id}: {e}")
+            jobs.append({
+                "job_id": job_id,
+                "status": "error",
+                "error": str(e),
+                "directory": str(job_path)
+            })
 
-    # Sort by filename (timestamp) descending
-    requests.sort(key=lambda x: x.get("filename", ""), reverse=True)
+    # Sort by job_id (timestamp) descending - newest first
+    jobs.sort(key=lambda x: x.get("job_id", ""), reverse=True)
 
-    return requests
+    return jobs
+
+
+@router.get("/pirl/{project}/jobs/{job_id}")
+async def get_pirl_job(project: str, job_id: str):
+    """
+    Get details of a specific PIRL job.
+    """
+    project_path = PROJECTS_ROOT / project
+
+    if not project_path.exists():
+        raise HTTPException(status_code=404, detail=f"Project '{project}' not found")
+
+    job_dir = project_path / "PIRL" / "jobs" / job_id
+
+    if not job_dir.exists():
+        raise HTTPException(status_code=404, detail=f"Job '{job_id}' not found")
+
+    status_file = job_dir / "status.json"
+    request_file = job_dir / "request.json"
+
+    result = {
+        "job_id": job_id,
+        "directory": str(job_dir)
+    }
+
+    # Read status
+    if status_file.exists():
+        with open(status_file, 'r', encoding='utf-8') as f:
+            result["status_data"] = json.load(f)
+
+        # Calculate remaining time
+        now = datetime.now()
+        estimated_completion_str = result["status_data"].get("estimated_completion")
+        if estimated_completion_str:
+            estimated_completion = datetime.fromisoformat(estimated_completion_str)
+            remaining_delta = estimated_completion - now
+            result["remaining_seconds"] = max(0, int(remaining_delta.total_seconds()))
+
+    # Read full request
+    if request_file.exists():
+        with open(request_file, 'r', encoding='utf-8') as f:
+            result["request_data"] = json.load(f)
+
+    return result
+
+
+@router.get("/pirl/{project}/requests")
+async def list_pirl_requests(project: str):
+    """
+    List all PIRL jobs for a project (alias for /jobs endpoint for backwards compatibility).
+    """
+    return await list_pirl_jobs(project)
 
 
 

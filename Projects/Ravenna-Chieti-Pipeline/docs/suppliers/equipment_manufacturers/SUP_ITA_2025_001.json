@@ -1,0 +1,125 @@
+{
+  "supplier_id": "SUP_EM_2025_026",
+  "company_name": "Tenaris S.p.A.",
+  "category": "equipment_manufacturer",
+  "subcategories": [
+    "seamless_pipes",
+    "welded_pipes",
+    "premium_connections",
+    "coating_services"
+  ],
+  "location": {
+    "country": "Italy",
+    "iso3": "ITA",
+    "region": "Lombardy",
+    "city": "Dalmine",
+    "address": "not_available",
+    "postal_code": "24044",
+    "coordinates": {
+      "latitude": 45.6486,
+      "longitude": 9.6042
+    }
+  },
+  "contact": {
+    "primary_name": "not_available",
+    "primary_title": "not_available",
+    "primary_email": "info@tenaris.com",
+    "primary_phone": "+39 035 560 2111",
+    "website": "https://www.tenaris.com",
+    "linkedin": "https://www.linkedin.com/company/tenaris"
+  },
+  "capabilities": {
+    "products": [
+      "Seamless steel pipes",
+      "Welded steel pipes",
+      "Premium connections"
+    ],
+    "services": [
+      "Pipe coating",
+      "Heat treatment",
+      "Technical consulting"
+    ],
+    "certifications": [
+      "API 5L"
+    ],
+    "pipeline_diameters_supported": {
+      "min_inches": 2,
+      "max_inches": 48
+    },
+    "materials_expertise": [
+      "carbon_steel"
+    ],
+    "annual_capacity": "3.5 million tonnes",
+    "experience_years": 70,
+    "employee_count": 22000
+  },
+  "previous_projects": [
+    {
+      "project_name": "Trans Adriatic Pipeline (TAP)",
+      "client": "TAP AG",
+      "country": "Italy",
+      "year": 2019,
+      "scope": "Pipeline supply",
+      "pipeline_length_km": 878,
+      "pipeline_diameter_inches": 48,
+      "value_usd": "not_available",
+      "reference_available": true
+    }
+  ],
+  "logistics": {
+    "delivery_regions": [
+      "Europe"
+    ],
+    "estimated_lead_time_days": 45,
+    "rush_delivery_available": true,
+    "shipping_capabilities": [
+      "truck",
+      "rail",
+      "sea"
+    ],
+    "warehouses": [
+      {
+        "city": "Dalmine",
+        "country": "Italy"
+      }
+    ],
+    "international_export": true
+  },
+  "pricing": {
+    "pricing_model": "quote_based",
+    "currency": "EUR",
+    "typical_project_range_usd": {
+      "min": "not_available",
+      "max": "not_available"
+    },
+    "payment_terms": "Net 60",
+    "accepts_letters_of_credit": true
+  },
+  "quality_ratings": {
+    "overall_score": 4.8,
+    "reliability_score": 4.9,
+    "quality_score": 4.8,
+    "communication_score": 4.8,
+    "rating_source": "industry_reputation",
+    "number_of_reviews": 450
+  },
+  "compatibility": {
+    "pipeline_specs_match": true,
+    "match_score": 95,
+    "match_notes": [
+      "Carbon steel expertise confirmed"
+    ],
+    "limitations": []
+  },
+  "metadata": {
+    "source": "perplexity_research",
+    "date_researched": "2025-12-02T16:35:40.064116Z",
+    "last_verified": "2025-12-02",
+    "confidence_level": "high",
+    "notes": "Major global pipe manufacturer with Dalmine facility in Italy",
+    "tags": [
+      "pipe_manufacturer",
+      "italy_based"
+    ]
+  }
+}

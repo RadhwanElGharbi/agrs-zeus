@@ -1,0 +1,55 @@
+{
+    "dataset_name": "OpenStreetMap Power Lines",
+    "category": "power_lines",
+    "project": "ITALY-TEST",
+    "processing_date": "2025-12-17T13:52:46Z",
+    "target_crs": "EPSG:32633",
+    "target_crs_name": "WGS 84 / UTM zone 33N",
+    "data_type": "Vector",
+    "geometry_type": "LineString",
+    "format": "GeoPackage",
+    "layer_name": "power_lines",
+    "feature_count": 5,
+    "operations_applied": [
+        {
+            "operation": "reproject",
+            "tool": "ogr2ogr",
+            "source_crs": "EPSG:4326",
+            "target_crs": "EPSG:32633"
+        },
+        {
+            "operation": "clip",
+            "tool": "ogr2ogr",
+            "clipsrc": "aoi/aoi.geojson"
+        }
+    ],
+    "source_files": [
+        {
+            "filename": "osm_power_lines_raw.gpkg",
+            "metadata": "osm_power_lines_raw.gpkg.json"
+        }
+    ],
+    "schema": {
+        "osm_id": "OSM way ID",
+        "name": "Line name",
+        "power": "Power type (line, minor_line, cable)",
+        "voltage": "Raw voltage tag from OSM",
+        "voltage_v": "Voltage in volts (computed)",
+        "voltage_kv": "Voltage in kilovolts (computed)",
+        "voltage_class": "Classification (low/medium/high/extra_high)",
+        "cables": "Number of cables",
+        "operator": "Operator",
+        "frequency": "Frequency",
+        "ref": "Reference",
+        "crossing_cost": "Cost category for pipeline crossing",
+        "location": "Location (underground, overhead)"
+    },
+    "voltage_classification": {
+        "low": "< 1kV",
+        "medium": "1kV - 50kV",
+        "high": "50kV - 200kV",
+        "extra_high": "> 200kV"
+    },
+    "validation_status": "passed",
+    "protocol_version": "1.0"
+}

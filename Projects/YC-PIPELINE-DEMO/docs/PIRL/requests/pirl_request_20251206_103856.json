@@ -1,0 +1,104 @@
+{
+  "metadata": {
+    "created_at": "2025-12-06T10:38:56.211512",
+    "project": "YC-PIPELINE-DEMO",
+    "version": "1.0",
+    "cost_matrix_file": "cost_matrix_20251206_103856.csv"
+  },
+  "objectives": {
+    "primaryWeights": {
+      "costOptimization": 80.0,
+      "constructionSpeed": 40.0,
+      "regulatoryMinimization": 60.0,
+      "environmentalImpact": 70.0
+    },
+    "geometricPreferences": {
+      "existingRowUsage": 90.0,
+      "minimizeCrossings": 50.0,
+      "terrainFlatness": 60.0
+    },
+    "activeProfile": "Cost Aggressive"
+  },
+  "hydraulics": {
+    "mechanical": {
+      "outerDiameter": 660.4,
+      "wallThickness": 11.0,
+      "grade": "483",
+      "locationClass": "1",
+      "designFactor": "0.72",
+      "jointFactor": "1.0",
+      "tempDerating": "1.0",
+      "maop": "9930"
+    },
+    "operating": {
+      "inletPressure": "75.0",
+      "deliveryPressure": "45.0",
+      "flowRate": "1.0",
+      "inletTemp": "288.15",
+      "groundTemp": "283.15",
+      "roughness": "0.045"
+    },
+    "fluidComposition": {
+      "methane": "92.5",
+      "ethane": "4.2",
+      "propane": "1.5",
+      "butane": "0.8",
+      "nitrogen": "0.6",
+      "co2": "0.4",
+      "h2s": "0.0",
+      "waterContent": "< 7",
+      "specificGravity": "0.58",
+      "viscosity": "1.1e-5",
+      "critPressure": "46.0",
+      "critTemp": "190.6"
+    }
+  },
+  "costMatrix": {
+    "materialCosts": [
+      {
+        "diameter": "24\" (610mm)",
+        "wallThickness": "11.1mm",
+        "grade": "X65",
+        "costPerMeter": "$280 - $400",
+        "weight": "168"
+      }
+    ],
+    "laborRates": [],
+    "equipmentRental": [],
+    "terrainMultipliers": [
+      {
+        "terrainType": "Flat Terrain (0-2\u00b0)",
+        "multiplier": "1.0",
+        "costPerKm": "$0.5M - $1.0M",
+        "rationale": "Standard trenching"
+      }
+    ],
+    "rowAcquisition": [],
+    "waterCrossings": [],
+    "infrastructureCrossings": [],
+    "regionalFactors": [],
+    "permitting": [],
+    "indirectCosts": []
+  },
+  "constraints": {
+    "geographicalExclusions": {
+      "protectedAreas": true,
+      "urbanDensity": true,
+      "indigenousLands": true,
+      "waterBodies": true,
+      "culturalHeritage": false,
+      "militaryZones": true,
+      "geohazards": true
+    },
+    "constructabilityLimits": {
+      "maxLongSlope": "30",
+      "maxSideSlope": "15",
+      "minBendRadius": "20",
+      "maxBendAngle": "90",
+      "minDepthOfCover": "1.2",
+      "rowWidth": "30",
+      "buoyancyControl": "1.1",
+      "strainLimit": "0.5"
+    }
+  }
+}

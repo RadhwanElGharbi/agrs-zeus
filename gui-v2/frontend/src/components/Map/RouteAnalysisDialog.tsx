@@ -42,7 +42,6 @@ export function RouteAnalysisDialog({ isOpen, onClose, routeId, project }: Route
   const [selectedSection, setSelectedSection] = useState<number>(0)
   const [earthworksParams, setEarthworksParams] = useState({
     row_width: 20,
-    section_spacing: 50,
     grading_slope: 10
   })
 
@@ -274,6 +273,7 @@ export function RouteAnalysisDialog({ isOpen, onClose, routeId, project }: Route
           >
             <Shovel className="w-4 h-4" />
             Earthworks
+            <span className="px-1.5 py-0.5 text-[9px] font-bold bg-amber-500/20 text-amber-400 rounded uppercase tracking-wider">Experimental</span>
           </button>
         </div>
 
@@ -701,15 +701,6 @@ export function RouteAnalysisDialog({ isOpen, onClose, routeId, project }: Route
                             className="w-full px-3 py-2 bg-black/40 border border-white/10 rounded-sm text-white text-xs font-mono focus:border-red-500/50 focus:outline-none transition-colors"
                           />
                         </div>
-                        <div>
-                          <label className="block text-[10px] text-white/50 uppercase tracking-wider mb-1">Section Spacing (m)</label>
-                          <input
-                            type="number"
-                            value={earthworksParams.section_spacing}
-                            onChange={(e) => setEarthworksParams(prev => ({ ...prev, section_spacing: Number(e.target.value) }))}
-                            className="w-full px-3 py-2 bg-black/40 border border-white/10 rounded-sm text-white text-xs font-mono focus:border-red-500/50 focus:outline-none transition-colors"
-                          />
-                        </div>
                         <button
                           onClick={recalculateEarthworks}
                           className="w-full mt-2 px-4 py-2 bg-red-600 hover:bg-red-500 text-white text-xs font-bold uppercase tracking-wider rounded-sm shadow-[0_0_15px_-5px_rgba(239,68,68,0.4)] transition-all"
@@ -1081,8 +1072,8 @@ export function RouteAnalysisDialog({ isOpen, onClose, routeId, project }: Route
                                 <td className="p-2 text-white/70">{section.grading_elevation.toFixed(2)}</td>
                                 <td className="p-2 text-amber-500">{section.cut_area.toFixed(2)}</td>
                                 <td className="p-2 text-cyan-500">{section.fill_area.toFixed(2)}</td>
-                                <td className="p-2 text-amber-500/70">{(section.cut_area * earthworksParams.section_spacing).toFixed(1)}</td>
-                                <td className="p-2 text-cyan-500/70">{(section.fill_area * earthworksParams.section_spacing).toFixed(1)}</td>
+                                <td className="p-2 text-amber-500/70">{section.cut_volume.toFixed(1)}</td>
+                                <td className="p-2 text-cyan-500/70">{section.fill_volume.toFixed(1)}</td>
                                 <td className="p-2 text-white/30">-</td>
                                 <td className="p-2 text-white/30">-</td>
                                 <td className="p-2 text-white/30">-</td>

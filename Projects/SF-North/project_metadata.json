@@ -1,0 +1,16 @@
+{
+    "project_name": "SF-North",
+    "project_id": "ARTEMIS_SF_North_USA_2025_001",
+    "date_created": "2025-12-06T17:36:53Z",
+    "status": "active",
+    "project_creator": "Rad",
+    "collaborators": [],
+    "organization": "Artemis",
+    "country": "United States",
+    "iso3": "USA",
+    "measurement_system": "SI",
+    "crs": {
+        "epsg": 32610,
+        "name": "WGS 84 / UTM zone 10N"
+    }
+}

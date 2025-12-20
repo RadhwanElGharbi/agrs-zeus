@@ -829,11 +829,61 @@ export async function getPirlJob(projectName: string, jobId: string): Promise<Pi
   return response.json();
 }
 
+export interface PipelineSpecsHydraulics {
+  initial_pressure_bar?: number;
+  min_delivery_pressure_bar?: number;
+  max_operating_pressure_bar?: number;
+  volumetric_flow_rate_m3_s?: number;
+  operating_temperature_k?: number;
+  gas_molecular_weight_kg_kmol?: number;
+  gas_specific_gravity?: number;
+  pipe_roughness_mm?: number;
+  enable_hydraulics?: boolean;
+  enable_compressor_placement?: boolean;
+  compressor_capex_per_kw_usd?: number;
+  compressor_opex_fraction?: number;
+  energy_cost_usd_per_kwh?: number;
+}
+
 export interface PipelineSpecs {
-  product: string;
-  inner_diameter: number;
-  outer_diameter: number;
-  measurement_system: string;
+  // New project format
+  product?: string;
+  inner_diameter?: number;
+  outer_diameter?: number;
+  measurement_system?: string;
+
+  // Legacy/detailed format (Ravenna-Chieti style)
+  diameter_mm?: number;
+  wall_thickness_mm?: number;
+  thickness_mm?: number;
+  material?: string;
+  type?: string;
+  mop_bar?: number;
+  dp_bar?: number;
+  mop_pa?: number;
+  dp_pa?: number;
+  depth_of_cover_m?: number;
+  hdd_min_bend_radius_m?: number;
+  hdd_min_radius_m?: number;
+  hdd_applicable?: boolean;
+  hot_bend_angles_deg?: number[];
+  hot_bend_min_radius_m?: number;
+  hot_bend_max_count?: number;
+  field_bend_max_angle_deg?: number;
+  house_min_distance_m?: number;
+  houses_min_distance_m?: number;
+  poles_min_distance_m?: number;
+  powerlines_min_distance_m?: number;
+  existing_pipelines_min_distance_m?: number;
+  max_slope_percent?: number;
+  prefer_orthogonal_crossings?: boolean;
+  prefer_existing_rows?: boolean;
+  orthogonal_crossing_threshold_deg?: number;
+  existing_row_bonus_usd_per_m?: number;
+  flow_rate_m3_s?: number;
+  operating_temp_k?: number;
+  max_pressure_drop_mpa?: number;
+  hydraulics?: PipelineSpecsHydraulics;
 }
 
 export async function fetchPipelineSpecs(projectName: string): Promise<PipelineSpecs> {
@@ -913,7 +963,6 @@ export interface MassHaulPoint {
 
 export interface EarthworksParameters {
   row_width: number;
-  section_spacing: number;
   grading_slope: number;
   batter_cut_angle: number;
   batter_fill_angle: number;
@@ -945,7 +994,6 @@ export async function fetchEarthworksAnalysis(
   routeName: string,
   params?: {
     row_width?: number;
-    section_spacing?: number;
     grading_slope?: number;
     batter_cut_angle?: number;
     batter_fill_angle?: number;
@@ -954,7 +1002,6 @@ export async function fetchEarthworksAnalysis(
   const base = await getApiBaseAsync();
   const queryParams = new URLSearchParams();
   if (params?.row_width) queryParams.set('row_width', params.row_width.toString());
-  if (params?.section_spacing) queryParams.set('section_spacing', params.section_spacing.toString());
   if (params?.grading_slope) queryParams.set('grading_slope', params.grading_slope.toString());
   if (params?.batter_cut_angle) queryParams.set('batter_cut_angle', params.batter_cut_angle.toString());
   if (params?.batter_fill_angle) queryParams.set('batter_fill_angle', params.batter_fill_angle.toString());

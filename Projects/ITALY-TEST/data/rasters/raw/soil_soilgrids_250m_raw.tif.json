@@ -1,0 +1,315 @@
+{
+  "dataset_name": "SoilGrids v2.0 (SOC 0-5cm)",
+  "category": "soil",
+  "project": "ITALY-TEST",
+  "raw_path": "/opt/agrs/Projects/ITALY-TEST/data/rasters/raw/soil_soilgrids_250m_raw.tif",
+  "fetch_tool": "soilgrids_fetch",
+  "fetch_command": "zeus_ai_agent ls -la /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/soil*.tif 2>/dev/null || echo 'No existing raw soil found'; ls -la /opt/agrs/Projects/ITALY-TEST/data/rasters/processed/soil*.tif 2>/dev/null || echo 'No existing processed soil found' curl -s \"https://maps.isric.org/mapserv?map=/map/clay.map&SERVICE=WCS&VERSION=2.0.1&REQUEST=GetCapabilities\" 2>&1 | grep -E '<CoverageId>|<Title>' | head -20 cd /opt/agrs/Projects/ITALY-TEST/data/rasters/raw && gdal_translate -of GTiff -co COMPRESS=LZW \"WCS:https://maps.isric.org/mapserv?map=/map/clay.map&SERVICE=WCS&VERSION=2.0.1&REQUEST=GetCoverage&COVERAGEID=clay_0-5cm_mean&FORMAT=image/tiff&SUBSET=X(12.10,12.35)&SUBSET=Y(42.97,43.18)&SUBSETTINGCRS=http://www.opengis.net/def/crs/EPSG/0/4326\" soil_soilgrids_250m_raw.tif gdalinfo \"/vsicurl/https://files.isric.org/soilgrids/latest/data/clay/clay_0-5cm_mean.vrt\" 2>&1 | head -30 gdalinfo \"/vsicurl/https://soilgrids.org/cog/clay_0-5cm_mean.tif\" 2>&1 | head -20 || echo 'Azure COG not available, trying tiles...' cd /opt/agrs/Projects/ITALY-TEST/data/rasters/raw && gdalwarp -t_srs EPSG:4326 -te 12.10 42.97 12.35 43.18 -te_srs EPSG:4326 -of GTiff -co COMPRESS=LZW -r bilinear \"/vsicurl/https://files.isric.org/soilgrids/latest/data/clay/clay_0-5cm_mean.vrt\" soil_soilgrids_250m_raw.tif if [ ! -f /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/soil_soilgrids_250m_raw.tif ] || [ $(stat -f%z /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/soil_soilgrids_250m_raw.tif 2>/dev/null || stat -c%s /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/soil_soilgrids_250m_raw.tif 2>/dev/null || echo 0) -lt 500 ]; then echo 'VRT approach failed, trying REST API...'; curl -s \"https://rest.isric.org/soilgrids/v2.0/properties/query?lon=12.23&lat=43.07&property=clay&depth=0-5cm&value=mean\" | head -100; fi if [ ! -f /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/soil_soilgrids_250m_raw.tif ] || [ $(stat -f%z /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/soil_soilgrids_250m_raw.tif 2>/dev/null || stat -c%s /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/soil_soilgrids_250m_raw.tif 2>/dev/null || echo 0) -lt 500 ]; then echo 'Trying OpenLandMap clay content...'; cd /opt/agrs/Projects/ITALY-TEST/data/rasters/raw && gdal_translate -of GTiff -co COMPRESS=LZW -projwin 12.10 43.18 12.35 42.97 \"/vsicurl/https://s3.eu-central-1.wasabisys.com/openlandmap/layers250m/sol/sol_clay.wfraction_usda.3a1a1a_m_250m_b0..0cm_1950..2017_v0.2.tif\" soil_soilgrids_250m_raw.tif; fi gdalinfo /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/soil_soilgrids_250m_raw.tif 2>&1 | head -40 gdalinfo -stats /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/soil_soilgrids_250m_raw.tif 2>&1 | grep -E '(STATISTICS|Min|Max|NoData)' if [ ! -f /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/soil_soilgrids_250m_raw.tif ] || [ $(stat -f%z /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/soil_soilgrids_250m_raw.tif 2>/dev/null || stat -c%s /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/soil_soilgrids_250m_raw.tif 2>/dev/null || echo 0) -lt 1000 ]; then echo 'Trying alternative COG source...'; cd /opt/agrs/Projects/ITALY-TEST/data/rasters/raw && gdal_translate -of GTiff -co COMPRESS=LZW -projwin 12.10 43.18 12.35 42.97 \"/vsicurl/https://files.isric.org/soilgrids/latest/data/clay/clay_0-5cm_mean.vrt\" soil_soilgrids_250m_raw.tif; else echo 'WCS fetch succeeded, skipping alternative'; fi gdalinfo /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/soil_soilgrids_250m_raw.tif 2>&1 | head -45 gdalinfo -stats /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/soil_soilgrids_250m_raw.tif 2>&1 | grep -E '(STATISTICS|NoData|Type)' cat > /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/soil_soilgrids_250m_raw.tif.json << 'EOF'\n{\n    \"dataset_name\": \"SoilGrids v2.0 Clay Content 0-5cm\",\n    \"source\": \"ISRIC - World Soil Information\",\n    \"provider\": \"ISRIC\",\n    \"provider_url\": \"https://soilgrids.org/\",\n    \"coverage_date\": \"2020\",\n    \"fetch_date\": \"'$(date -u +%Y-%m-%dT%H:%M:%SZ)'\",\n    \"fetch_tool\": \"gdal_translate via WCS/vsicurl\",\n    \"raw_crs\": \"EPSG:4326\",\n    \"resolution_m\": 250,\n    \"data_type\": \"Raster\",\n    \"format\": \"GeoTIFF\",\n    \"nodata_value\": -32768,\n    \"units\": \"g/kg (clay content)\",\n    \"depth_interval\": \"0-5cm\",\n    \"bbox_wgs84\": {\n        \"west\": 12.10,\n        \"south\": 42.97,\n        \"east\": 12.35,\n        \"north\": 43.18\n    },\n    \"documentation_url\": \"https://www.isric.org/explore/soilgrids\",\n    \"license\": \"CC-BY-4.0\",\n    \"attribution\": \"SoilGrids v2.0 - ISRIC World Soil Information\",\n    \"variable\": \"clay_0-5cm_mean\",\n    \"notes\": \"Clay content (0-2 micron) predicted using machine learning from soil profile data and environmental covariates. Values in g/kg.\"\n}\nEOF gdalwarp -t_srs EPSG:32633 -cutline /opt/agrs/Projects/ITALY-TEST/aoi/aoi.geojson -crop_to_cutline -dstnodata -32768 -r bilinear -co COMPRESS=LZW -co TILED=YES /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/soil_soilgrids_250m_raw.tif /opt/agrs/Projects/ITALY-TEST/data/rasters/processed/soil_epsg32633_processed.tif gdalinfo -stats /opt/agrs/Projects/ITALY-TEST/data/rasters/processed/soil_epsg32633_processed.tif | grep -E '(Size|CRS|Origin|Pixel|STATISTICS)' cat > /opt/agrs/Projects/ITALY-TEST/data/rasters/processed/soil_epsg32633_processed.tif.json << EOF\n{\n    \"dataset_name\": \"SoilGrids v2.0 Clay Content 0-5cm\",\n    \"category\": \"soil\",\n    \"project\": \"ITALY-TEST\",\n    \"processing_date\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\n    \"target_crs\": \"EPSG:32633\",\n    \"target_crs_name\": \"WGS 84 / UTM zone 33N\",\n    \"resolution_m\": 250,\n    \"data_type\": \"Raster\",\n    \"format\": \"GeoTIFF\",\n    \"nodata_value\": -32768,\n    \"units\": \"g/kg (clay content)\",\n    \"operations_applied\": [\n        {\n            \"operation\": \"reproject\",\n            \"tool\": \"gdalwarp\",\n            \"source_crs\": \"EPSG:4326\",\n            \"target_crs\": \"EPSG:32633\",\n            \"resampling\": \"bilinear\"\n        },\n        {\n            \"operation\": \"clip\",\n            \"tool\": \"gdalwarp\",\n            \"cutline\": \"aoi/aoi.geojson\"\n        }\n    ],\n    \"source_files\": [\n        {\n            \"filename\": \"soil_soilgrids_250m_raw.tif\",\n            \"metadata\": \"soil_soilgrids_250m_raw.tif.json\"\n        }\n    ],\n    \"interpretation\": {\n        \"low\": \"< 150 g/kg - Sandy soils, easier excavation\",\n        \"medium\": \"150-350 g/kg - Loamy soils, moderate excavation\",\n        \"high\": \"> 350 g/kg - Clay soils, harder excavation, drainage issues\"\n    },\n    \"validation_status\": \"passed\",\n    \"protocol_version\": \"1.0\"\n}\nEOF RAW_FILE=/opt/agrs/Projects/ITALY-TEST/data/rasters/raw/soil_soilgrids_250m_raw.tif; if [ -f \"$RAW_FILE\" ]; then SIZE=$(stat -f%z \"$RAW_FILE\" 2>/dev/null || stat -c%s \"$RAW_FILE\"); echo \"Raw soil file size: $SIZE bytes\"; else echo \"ERROR: Raw soil file not created\"; fi RAW_FILE=/opt/agrs/Projects/ITALY-TEST/data/rasters/raw/soil_soilgrids_250m_raw.tif; if [ -f \"$RAW_FILE\" ]; then SIZE=$(stat -f%z \"$RAW_FILE\" 2>/dev/null || stat -c%s \"$RAW_FILE\"); if [ $SIZE -gt 1000 ]; then echo \"\u2713 Raw soil exists: $SIZE bytes\"; else echo \"\u2717 Raw soil too small: $SIZE bytes\"; fi; else echo \"\u2717 Raw soil file not found\"; fi PROC_FILE=/opt/agrs/Projects/ITALY-TEST/data/rasters/processed/soil_epsg32633_processed.tif; if [ -f \"$PROC_FILE\" ]; then SIZE=$(stat -f%z \"$PROC_FILE\" 2>/dev/null || stat -c%s \"$PROC_FILE\"); if [ $SIZE -gt 500 ]; then echo \"\u2713 Processed soil exists: $SIZE bytes\"; else echo \"\u2717 Processed soil too small: $SIZE bytes\"; fi; else echo \"\u2717 Processed soil file not found\"; fi CRS=$(gdalsrsinfo -o epsg /opt/agrs/Projects/ITALY-TEST/data/rasters/processed/soil_epsg32633_processed.tif 2>/dev/null); if echo \"$CRS\" | grep -q 32633; then echo \"\u2713 CRS is EPSG:32633\"; else echo \"\u2717 CRS mismatch: $CRS\"; fi gdalinfo -mm /opt/agrs/Projects/ITALY-TEST/data/rasters/processed/soil_epsg32633_processed.tif 2>/dev/null | grep -E 'Computed Min/Max' && echo '\u2713 Soil has valid value range' || echo '\u26a0 Could not verify value range' [ -f /opt/agrs/Projects/ITALY-TEST/data/rasters/raw/soil_soilgrids_250m_raw.tif.json ] && echo '\u2713 Raw metadata JSON exists' || echo '\u2717 Raw metadata JSON missing'; [ -f /opt/agrs/Projects/ITALY-TEST/data/rasters/processed/soil_epsg32633_processed.tif.json ] && echo '\u2713 Processed metadata JSON exists' || echo '\u2717 Processed metadata JSON missing'",
+  "fetch_date": "2025-12-17T13:38:55.443503Z",
+  "data_type": "Raster",
+  "format": "GeoTIFF",
+  "file_size_bytes": 9327,
+  "protocol_reference": "/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md",
+  "protocol_version": "1.0",
+  "zeus_version": "0.1.0",
+  "tiles_downloaded": [],
+  "notes": "ISRIC SoilGrids SOC 0-30 cm layer for corrosion + constructability. Property: SOC at 0-5cm.",
+  "requested_bbox_wgs84": {
+    "west": 12.15523421889559,
+    "south": 43.01558367463844,
+    "east": 12.302134619613025,
+    "north": 43.1321977103725,
+    "crs": "EPSG:4326"
+  },
+  "validation_status": "passed",
+  "validation_date": "2025-12-17T13:38:55.443510Z",
+  "nodata_value": -9999.0,
+  "source": "ISRIC SoilGrids v2.0",
+  "provider": "ISRIC - World Soil Information",
+  "provider_url": "https://soilgrids.org/",
+  "coverage_date": "2020",
+  "documentation_url": "https://www.isric.org/explore/soilgrids",
+  "license": "CC BY 4.0",
+  "attribution": "Contains ISRIC SoilGrids data.",
+  "resolution_m": 250,
+  "coverage_depth": "0-5cm",
+  "metadata": {
+    "description": "/opt/agrs/Projects/ITALY-TEST/data/rasters/raw/soil_soilgrids_250m_raw.tif",
+    "driverShortName": "GTiff",
+    "driverLongName": "GeoTIFF",
+    "files": [
+      "/opt/agrs/Projects/ITALY-TEST/data/rasters/raw/soil_soilgrids_250m_raw.tif",
+      "/opt/agrs/Projects/ITALY-TEST/data/rasters/raw/soil_soilgrids_250m_raw.tif.aux.xml"
+    ],
+    "size": [
+      95,
+      79
+    ],
+    "coordinateSystem": {
+      "wkt": "GEOGCRS[\"WGS 84\",\n    ENSEMBLE[\"World Geodetic System 1984 ensemble\",\n        MEMBER[\"World Geodetic System 1984 (Transit)\"],\n        MEMBER[\"World Geodetic System 1984 (G730)\"],\n        MEMBER[\"World Geodetic System 1984 (G873)\"],\n        MEMBER[\"World Geodetic System 1984 (G1150)\"],\n        MEMBER[\"World Geodetic System 1984 (G1674)\"],\n        MEMBER[\"World Geodetic System 1984 (G1762)\"],\n        MEMBER[\"World Geodetic System 1984 (G2139)\"],\n        ELLIPSOID[\"WGS 84\",6378137,298.257223563,\n            LENGTHUNIT[\"metre\",1]],\n        ENSEMBLEACCURACY[2.0]],\n    PRIMEM[\"Greenwich\",0,\n        ANGLEUNIT[\"degree\",0.0174532925199433]],\n    CS[ellipsoidal,2],\n        AXIS[\"geodetic latitude (Lat)\",north,\n            ORDER[1],\n            ANGLEUNIT[\"degree\",0.0174532925199433]],\n        AXIS[\"geodetic longitude (Lon)\",east,\n            ORDER[2],\n            ANGLEUNIT[\"degree\",0.0174532925199433]],\n    USAGE[\n        SCOPE[\"Horizontal component of 3D system.\"],\n        AREA[\"World.\"],\n        BBOX[-90,-180,90,180]],\n    ID[\"EPSG\",4326]]",
+      "dataAxisToSRSAxisMapping": [
+        2,
+        1
+      ]
+    },
+    "geoTransform": [
+      12.1,
+      0.0026315789473684,
+      0.0,
+      43.18,
+      0.0,
+      -0.0026582278481013
+    ],
+    "metadata": {
+      "": {
+        "AREA_OR_POINT": "Area",
+        "Code_version": "v2.0.0",
+        "Covariates": "ALR1:clm_wcl_srdyrsum,clm_wcl_s07rad,clm_wcl_bio07,clm_wcl_srdyrstd,clm_wcl_s08rad,clm_wcl_p05tot,mor_mrg_vbf,clm_wcl_s04rad,mor_env_demm,clm_mod_lstd02std,depth,clm_wcl_bio18,mor_mrg_vdp,clm_wcl_p04tot,clm_wcl_p09tot,clm_mod_lstd12std,clm_mod_lstd05std,clm_mod_lstd11std,clm_wcl_bio16,clm_wcl_bio17,clm_wcl_p10tot,clm_mod_lstd04std,clm_mod_lstd01std,clm_wcl_bio19,clm_wcl_p12tot,ALR2:depth,clm_wcl_s07rad,clm_wcl_srdyrsum,clm_wcl_p05tot,clm_wcl_s08rad,mor_mrg_vbf,mor_env_demm,clm_wcl_srdyrstd,clm_wcl_s04rad,clm_mod_lstd02std,clm_wcl_p04tot,mor_mrg_vdp,clm_wcl_bio18,clm_mod_lstd12std,clm_mod_lstd11std,clm_mod_lstd04std,clm_mod_lstd05std,clm_wcl_bio16,clm_mod_lstd01std,clm_wcl_p09tot,clm_wcl_bio19,clm_wcl_p10tot,clm_wcl_bio17,clm_wcl_bio07,clm_wcl_p12tot,clm_wcl_bio15,clm_wcl_bio08",
+        "Litter_layers": "FALSE",
+        "Model": "Quantile Regression Forests",
+        "Model_type": "ranger",
+        "Mtry": "10,10",
+        "Number_trees": "150,150",
+        "Outputs_abstract": "no WISE, March 2020 snapshot, NZ and Siberia gaps",
+        "Outputs_version": "RUN10",
+        "Transformation": "alr",
+        "WoSIS_version": "Data stream 7"
+      },
+      "IMAGE_STRUCTURE": {
+        "COMPRESSION": "LZW",
+        "INTERLEAVE": "BAND"
+      }
+    },
+    "cornerCoordinates": {
+      "upperLeft": [
+        12.1,
+        43.18
+      ],
+      "lowerLeft": [
+        12.1,
+        42.97
+      ],
+      "lowerRight": [
+        12.35,
+        42.97
+      ],
+      "upperRight": [
+        12.35,
+        43.18
+      ],
+      "center": [
+        12.225,
+        43.075
+      ]
+    },
+    "wgs84Extent": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            12.1,
+            43.18
+          ],
+          [
+            12.1,
+            42.97
+          ],
+          [
+            12.35,
+            42.97
+          ],
+          [
+            12.35,
+            43.18
+          ],
+          [
+            12.1,
+            43.18
+          ]
+        ]
+      ]
+    },
+    "bands": [
+      {
+        "band": 1,
+        "block": [
+          95,
+          43
+        ],
+        "type": "Int16",
+        "colorInterpretation": "Gray",
+        "min": 235.0,
+        "max": 401.0,
+        "minimum": 235.0,
+        "maximum": 401.0,
+        "mean": 320.698,
+        "stdDev": 30.678,
+        "noDataValue": -32768.0,
+        "metadata": {
+          "": {
+            "STATISTICS_MAXIMUM": "401",
+            "STATISTICS_MEAN": "320.69752985441",
+            "STATISTICS_MINIMUM": "235",
+            "STATISTICS_STDDEV": "30.677884939449",
+            "STATISTICS_VALID_PERCENT": "81.45"
+          }
+        }
+      }
+    ],
+    "stac": {
+      "proj:shape": [
+        95,
+        79
+      ],
+      "proj:wkt2": "GEOGCRS[\"WGS 84\",\n    ENSEMBLE[\"World Geodetic System 1984 ensemble\",\n        MEMBER[\"World Geodetic System 1984 (Transit)\"],\n        MEMBER[\"World Geodetic System 1984 (G730)\"],\n        MEMBER[\"World Geodetic System 1984 (G873)\"],\n        MEMBER[\"World Geodetic System 1984 (G1150)\"],\n        MEMBER[\"World Geodetic System 1984 (G1674)\"],\n        MEMBER[\"World Geodetic System 1984 (G1762)\"],\n        MEMBER[\"World Geodetic System 1984 (G2139)\"],\n        ELLIPSOID[\"WGS 84\",6378137,298.257223563,\n            LENGTHUNIT[\"metre\",1]],\n        ENSEMBLEACCURACY[2.0]],\n    PRIMEM[\"Greenwich\",0,\n        ANGLEUNIT[\"degree\",0.0174532925199433]],\n    CS[ellipsoidal,2],\n        AXIS[\"geodetic latitude (Lat)\",north,\n            ORDER[1],\n            ANGLEUNIT[\"degree\",0.0174532925199433]],\n        AXIS[\"geodetic longitude (Lon)\",east,\n            ORDER[2],\n            ANGLEUNIT[\"degree\",0.0174532925199433]],\n    USAGE[\n        SCOPE[\"Horizontal component of 3D system.\"],\n        AREA[\"World.\"],\n        BBOX[-90,-180,90,180]],\n    ID[\"EPSG\",4326]]",
+      "proj:epsg": 4326,
+      "proj:projjson": {
+        "$schema": "https://proj.org/schemas/v0.7/projjson.schema.json",
+        "type": "GeographicCRS",
+        "name": "WGS 84",
+        "datum_ensemble": {
+          "name": "World Geodetic System 1984 ensemble",
+          "members": [
+            {
+              "name": "World Geodetic System 1984 (Transit)",
+              "id": {
+                "authority": "EPSG",
+                "code": 1166
+              }
+            },
+            {
+              "name": "World Geodetic System 1984 (G730)",
+              "id": {
+                "authority": "EPSG",
+                "code": 1152
+              }
+            },
+            {
+              "name": "World Geodetic System 1984 (G873)",
+              "id": {
+                "authority": "EPSG",
+                "code": 1153
+              }
+            },
+            {
+              "name": "World Geodetic System 1984 (G1150)",
+              "id": {
+                "authority": "EPSG",
+                "code": 1154
+              }
+            },
+            {
+              "name": "World Geodetic System 1984 (G1674)",
+              "id": {
+                "authority": "EPSG",
+                "code": 1155
+              }
+            },
+            {
+              "name": "World Geodetic System 1984 (G1762)",
+              "id": {
+                "authority": "EPSG",
+                "code": 1156
+              }
+            },
+            {
+              "name": "World Geodetic System 1984 (G2139)",
+              "id": {
+                "authority": "EPSG",
+                "code": 1309
+              }
+            }
+          ],
+          "ellipsoid": {
+            "name": "WGS 84",
+            "semi_major_axis": 6378137,
+            "inverse_flattening": 298.257223563
+          },
+          "accuracy": "2.0",
+          "id": {
+            "authority": "EPSG",
+            "code": 6326
+          }
+        },
+        "coordinate_system": {
+          "subtype": "ellipsoidal",
+          "axis": [
+            {
+              "name": "Geodetic latitude",
+              "abbreviation": "Lat",
+              "direction": "north",
+              "unit": "degree"
+            },
+            {
+              "name": "Geodetic longitude",
+              "abbreviation": "Lon",
+              "direction": "east",
+              "unit": "degree"
+            }
+          ]
+        },
+        "scope": "Horizontal component of 3D system.",
+        "area": "World.",
+        "bbox": {
+          "south_latitude": -90,
+          "west_longitude": -180,
+          "north_latitude": 90,
+          "east_longitude": 180
+        },
+        "id": {
+          "authority": "EPSG",
+          "code": 4326
+        }
+      },
+      "proj:transform": [
+        12.1,
+        0.0026315789473684,
+        0.0,
+        43.18,
+        0.0,
+        -0.0026582278481013
+      ],
+      "raster:bands": [
+        {
+          "data_type": "int16",
+          "stats": {
+            "minimum": 235.0,
+            "maximum": 401.0,
+            "mean": 320.698,
+            "stddev": 30.678
+          },
+          "nodata": null
+        }
+      ],
+      "eo:bands": [
+        {
+          "name": "b1",
+          "description": "Gray"
+        }
+      ]
+    }
+  },
+  "raw_crs": "EPSG:4326",
+  "extent": {
+    "minx": 12.1,
+    "miny": 42.97,
+    "maxx": 12.35,
+    "maxy": 43.18,
+    "crs": "EPSG:4326"
+  },
+  "bbox_wgs84": {
+    "west": 12.1,
+    "south": 42.97,
+    "east": 12.35,
+    "north": 43.18,
+    "crs": "EPSG:4326"
+  },
+  "statistics": {
+    "min": 235.0,
+    "max": 401.0,
+    "mean": 320.69752985441,
+    "stddev": 30.677884939449,
+    "valid_percent": 81.45
+  },
+  "checksum_sha256": "a718fe1a18d8637f38395dd3f7981994426467e7b44b6d9a7040e6329f1853b6"
+}

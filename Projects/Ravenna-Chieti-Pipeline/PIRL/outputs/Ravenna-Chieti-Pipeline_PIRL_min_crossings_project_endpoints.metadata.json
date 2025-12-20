@@ -1,0 +1,325 @@
+{
+  "route_file": "Ravenna-Chieti-Pipeline_PIRL_min_crossings_project_endpoints.geojson",
+  "generated_at": "2025-12-13T07:59:18.348431",
+  "metadata_version": "1.0",
+  "route_info": {
+    "length_m": 72669.85,
+    "length_km": 72.67,
+    "start_point": [
+      379649.58,
+      4805042.4
+    ],
+    "end_point": [
+      408348.93,
+      4750434.95
+    ],
+    "crs": "EPSG:32633"
+  },
+  "generation_method": {
+    "method": "PIRL Engine - Minimum Crossings",
+    "algorithm": "PIRL Engine",
+    "constraint_enforcement": "cost_penalties",
+    "description": "Route optimized to minimize infrastructure crossings using 2x crossing cost multipliers (project endpoints)",
+    "source": "pirl_engine",
+    "optimization_target": "minimize_crossings",
+    "crossing_multiplier": 2.0,
+    "water_blocked": false,
+    "built_up_blocked": false
+  },
+  "saipem_constraints": {
+    "max_slope_percent": 20.0,
+    "house_clearance_m": 13.5,
+    "powerline_clearance_m": 6.0,
+    "railway_clearance_m": 10.0,
+    "water_blocked": false,
+    "built_up_blocked": false
+  },
+  "constraint_compliance": {
+    "slope": {
+      "compliant": true,
+      "max_allowed": 20.0,
+      "violations": [],
+      "total_violation_length_m": 0,
+      "max_found": 19.79
+    },
+    "built_up": {
+      "compliant": false,
+      "violations": [],
+      "total_violation_length_m": 800.0
+    },
+    "water": {
+      "compliant": false,
+      "violations": [],
+      "total_violation_length_m": 480.0
+    },
+    "overall_compliant": false
+  },
+  "terrain_statistics": {
+    "slope": {
+      "min": 0.0,
+      "max": 19.79,
+      "mean": 4.42,
+      "median": 3.24,
+      "std": 4.05
+    },
+    "elevation": {
+      "min": 0.0,
+      "max": 169.17,
+      "range": 169.17,
+      "total_gain": 549.28
+    },
+    "terrain_distribution": {
+      "flat_pct": 69.62,
+      "rolling_pct": 20.48,
+      "hilly_pct": 6.14,
+      "mountainous_pct": 3.75,
+      "steep_pct": 0.0
+    }
+  },
+  "landcover_distribution": {
+    "bare_sparse": {
+      "length_m": 2720.57,
+      "percentage": 34.81,
+      "landcover_class": 60
+    },
+    "cropland": {
+      "length_m": 1707.02,
+      "percentage": 21.84,
+      "landcover_class": 40
+    },
+    "built_up": {
+      "length_m": 800.17,
+      "percentage": 10.24,
+      "landcover_class": 50
+    },
+    "grassland": {
+      "length_m": 1493.65,
+      "percentage": 19.11,
+      "landcover_class": 30
+    },
+    "tree_cover": {
+      "length_m": 373.41,
+      "percentage": 4.78,
+      "landcover_class": 10
+    },
+    "shrubland": {
+      "length_m": 213.38,
+      "percentage": 2.73,
+      "landcover_class": 20
+    },
+    "wetland": {
+      "length_m": 26.67,
+      "percentage": 0.34,
+      "landcover_class": 90
+    },
+    "water": {
+      "length_m": 480.1,
+      "percentage": 6.14,
+      "landcover_class": 80
+    }
+  },
+  "infrastructure_crossings": {
+    "roads": {
+      "total": 106,
+      "by_type": {
+        "all_types": 106
+      },
+      "cost": 6360000
+    },
+    "railways": {
+      "total": 6,
+      "by_type": {
+        "rail": 6
+      },
+      "cost": 7200000
+    },
+    "waterways": {
+      "total": 38,
+      "by_type": {
+        "all_types": 38
+      },
+      "cost": 3040000
+    },
+    "powerlines": {
+      "total": 8,
+      "cost": 1200000
+    }
+  },
+  "cost_breakdown": {
+    "base_construction": {
+      "cost": 6251976.0,
+      "rate_per_m": 800.0
+    },
+    "trenching": {
+      "cost": 2122702.15,
+      "breakdown": {
+        "soft_soil": {
+          "length_m": 5440.78,
+          "cost": 1088156.42
+        },
+        "medium_soil": {
+          "length_m": 1600.51,
+          "cost": 560177.05
+        },
+        "hard_soil": {
+          "length_m": 479.84,
+          "cost": 239919.58
+        },
+        "rock_mixed": {
+          "length_m": 293.06,
+          "cost": 234449.1
+        }
+      }
+    },
+    "landcover": {
+      "cost": 812436.8,
+      "breakdown": {
+        "bare_sparse": {
+          "length_m": 2720.57,
+          "cost": 27205.7,
+          "rate": 10.0
+        },
+        "cropland": {
+          "length_m": 1707.02,
+          "cost": 136561.6,
+          "rate": 80.0
+        },
+        "built_up": {
+          "length_m": 800.17,
+          "cost": 400085.0,
+          "rate": 500.0
+        },
+        "grassland": {
+          "length_m": 1493.65,
+          "cost": 29873.0,
+          "rate": 20.0
+        },
+        "tree_cover": {
+          "length_m": 373.41,
+          "cost": 56011.5,
+          "rate": 150.0
+        },
+        "shrubland": {
+          "length_m": 213.38,
+          "cost": 10669.0,
+          "rate": 50.0
+        },
+        "wetland": {
+          "length_m": 26.67,
+          "cost": 8001.0,
+          "rate": 300.0
+        },
+        "water": {
+          "length_m": 480.1,
+          "cost": 144030.0,
+          "rate": 300.0
+        }
+      }
+    },
+    "crossings": {
+      "cost": 17800000,
+      "breakdown": {
+        "roads": 6360000,
+        "railways": 7200000,
+        "waterways": 3040000,
+        "powerlines": 1200000
+      }
+    },
+    "subtotal": 26987114.95,
+    "regional_multiplier": 1.2,
+    "total": 32384537.94,
+    "cost_per_km": 4143910.72
+  },
+  "cost_matrix": {
+    "version": "2.0",
+    "calibration_date": "2025-12-13",
+    "reference": "SNAM Ravenna-Chieti reconstruction, EU pipeline benchmarks",
+    "base_construction_per_m": 800.0,
+    "trenching_per_m": {
+      "soft_soil": {
+        "slope_range": "0-5%",
+        "cost": 200.0,
+        "description": "Alluvial plains, easy excavation"
+      },
+      "medium_soil": {
+        "slope_range": "5-10%",
+        "cost": 350.0,
+        "description": "Mixed soil, standard equipment"
+      },
+      "hard_soil": {
+        "slope_range": "10-15%",
+        "cost": 500.0,
+        "description": "Compact soil, soft rock"
+      },
+      "rock_mixed": {
+        "slope_range": "15-25%",
+        "cost": 800.0,
+        "description": "Rock outcrops, ripping needed"
+      },
+      "hard_rock": {
+        "slope_range": ">25%",
+        "cost": 1500.0,
+        "description": "Solid rock, blasting required"
+      }
+    },
+    "landcover_per_m": {
+      "cropland": {
+        "class": 40,
+        "cost": 80.0,
+        "description": "Compensation + restoration"
+      },
+      "grassland": {
+        "class": 30,
+        "cost": 20.0,
+        "description": "Minimal, topsoil handling"
+      },
+      "tree_cover": {
+        "class": 10,
+        "cost": 150.0,
+        "description": "Clearing + grubbing + restoration"
+      },
+      "shrubland": {
+        "class": 20,
+        "cost": 50.0,
+        "description": "Light clearing"
+      },
+      "built_up": {
+        "class": 50,
+        "cost": 500.0,
+        "description": "Utility relocation, permits"
+      },
+      "bare_sparse": {
+        "class": 60,
+        "cost": 10.0,
+        "description": "Easiest terrain"
+      },
+      "water": {
+        "class": 80,
+        "cost": 300.0,
+        "description": "Special construction (HDD typically)"
+      },
+      "wetland": {
+        "class": 90,
+        "cost": 300.0,
+        "description": "Environmental mitigation"
+      },
+      "snow_ice": {
+        "class": 70,
+        "cost": 200.0,
+        "description": "Seasonal constraints"
+      },
+      "unknown": {
+        "class": 0,
+        "cost": 50.0,
+        "description": "Default"
+      }
+    },
+    "crossing_costs": {
+      "road": 60000,
+      "railway": 1200000,
+      "waterway": 80000,
+      "powerline": 150000
+    },
+    "regional_multiplier": 1.2
+  }
+}

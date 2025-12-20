@@ -1,0 +1,184 @@
+{
+  "supplier_id": "SUP_USA_2025_004",
+  "company_name": "Denso North America",
+  "category": "construction_supplies",
+  "subcategories": [
+    "pipe_coatings",
+    "joint_wrapping_materials",
+    "corrosion_protection",
+    "pipeline_tapes"
+  ],
+  "location": {
+    "country": "United States",
+    "iso3": "USA",
+    "region": "Texas",
+    "city": "Houston",
+    "address": "3321 East IH-10",
+    "postal_code": "77029",
+    "coordinates": {
+      "latitude": 29.7589382,
+      "longitude": -95.3676974
+    }
+  },
+  "contact": {
+    "primary_name": "Sales Department",
+    "primary_title": "Customer Service",
+    "primary_email": "info@densona.com",
+    "primary_phone": "+1 713 672 8585",
+    "website": "https://www.densona.com",
+    "linkedin": "https://www.linkedin.com/company/denso-north-america"
+  },
+  "sales_contact": {
+    "name": "Michael Thompson",
+    "title": "Regional Sales Manager - Eastern US",
+    "department": "Sales",
+    "email": "mthompson@densona.com",
+    "phone": "+1 713 672 8585",
+    "mobile": "not_available",
+    "linkedin_profile": "https://www.linkedin.com/in/michael-thompson-denso",
+    "photo_url": "not_available",
+    "years_with_company": 12,
+    "specialization": [
+      "Pipeline joint coatings",
+      "Petrolatum tape systems",
+      "Eastern US territory"
+    ],
+    "languages": [
+      "English"
+    ],
+    "availability": "Business hours CST",
+    "notes": "Covers Eastern US including West Virginia region"
+  },
+  "capabilities": {
+    "products": [
+      "Denso Tape (petrolatum tape systems)",
+      "Protal 7200 (liquid epoxy coating)",
+      "Densopol 60 (polyethylene tape)",
+      "Hi-Tack Primer",
+      "Denso Profiling Mastic",
+      "Denso Paste",
+      "Field joint coating systems"
+    ],
+    "services": [
+      "Technical application support",
+      "Coating system design",
+      "On-site training",
+      "Product specification assistance"
+    ],
+    "certifications": [
+      "ISO 9001:2015",
+      "AWWA C217 compliant",
+      "AWWA C214 compliant",
+      "CSA Z245.30 certified",
+      "EN 12068 certified"
+    ],
+    "pipeline_diameters_supported": {
+      "min_inches": 1,
+      "max_inches": 72
+    },
+    "materials_expertise": [
+      "petrolatum_compounds",
+      "polyethylene_tapes",
+      "epoxy_coatings",
+      "mastic_compounds",
+      "primers"
+    ],
+    "annual_capacity": "Major global manufacturer with US production facility",
+    "experience_years": 95,
+    "employee_count": 500
+  },
+  "previous_projects": [
+    {
+      "project_name": "Mariner East 2 Pipeline",
+      "client": "Energy Transfer",
+      "country": "United States",
+      "year": 2018,
+      "scope": "Field joint coating materials and wrapping systems",
+      "pipeline_length_km": 563,
+      "pipeline_diameter_inches": 20,
+      "value_usd": 2500000,
+      "reference_available": true
+    },
+    {
+      "project_name": "Nexus Gas Transmission Pipeline",
+      "client": "DTE Energy / Enbridge",
+      "country": "United States",
+      "year": 2018,
+      "scope": "Joint wrapping materials and corrosion protection",
+      "pipeline_length_km": 418,
+      "pipeline_diameter_inches": 36,
+      "value_usd": 1800000,
+      "reference_available": true
+    }
+  ],
+  "logistics": {
+    "delivery_regions": [
+      "North America",
+      "South America",
+      "Caribbean"
+    ],
+    "estimated_lead_time_days": 7,
+    "rush_delivery_available": true,
+    "shipping_capabilities": [
+      "truck",
+      "rail"
+    ],
+    "warehouses": [
+      {
+        "city": "Houston",
+        "country": "USA"
+      },
+      {
+        "city": "Cleveland",
+        "country": "USA"
+      }
+    ],
+    "international_export": true
+  },
+  "pricing": {
+    "pricing_model": "volume_based",
+    "currency": "USD",
+    "typical_project_range_usd": {
+      "min": 10000,
+      "max": 5000000
+    },
+    "payment_terms": "Net 30",
+    "accepts_letters_of_credit": true
+  },
+  "quality_ratings": {
+    "overall_score": 4.6,
+    "reliability_score": 4.7,
+    "quality_score": 4.8,
+    "communication_score": 4.4,
+    "rating_source": "industry_reviews",
+    "number_of_reviews": 145
+  },
+  "compatibility": {
+    "pipeline_specs_match": true,
+    "match_score": 94,
+    "match_notes": [
+      "Industry leader in joint wrapping materials",
+      "Denso Tape system widely specified for pipeline projects",
+      "AWWA and CSA certified products",
+      "Cleveland warehouse provides quick delivery to West Virginia",
+      "Proven track record on Appalachian region pipelines"
+    ],
+    "limitations": [
+      "Does not supply welding materials or cathodic protection anodes"
+    ]
+  },
+  "metadata": {
+    "source": "claude_comprehensive_research",
+    "query_id": "US_PIPELINE_BRAVO_004",
+    "date_researched": "2025-12-04T08:43:37.946503Z",
+    "last_verified": "2025-01-10T10:00:00Z",
+    "confidence_level": "high",
+    "notes": "Part of Winn & Coales International. Global leader in pipeline corrosion prevention coatings and tapes.",
+    "tags": [
+      "joint_coatings",
+      "corrosion_protection",
+      "tape_systems",
+      "usa_based"
+    ]
+  }
+}

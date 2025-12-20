@@ -1,0 +1,138 @@
+{
+  "supplier_id": "SUP_SV_2025_028",
+  "company_name": "Maire Tecnimont S.p.A.",
+  "category": "construction_services",
+  "subcategories": [
+    "engineering",
+    "contracting",
+    "energy_infrastructure",
+    "EPC_services"
+  ],
+  "location": {
+    "country": "Italy",
+    "iso3": "ITA",
+    "region": "Lombardy",
+    "city": "Milan",
+    "address": "not_available",
+    "postal_code": "not_available",
+    "coordinates": {
+      "latitude": 45.4642,
+      "longitude": 9.19
+    }
+  },
+  "contact": {
+    "primary_name": "not_available",
+    "primary_title": "not_available",
+    "primary_email": "info@mairetecnimont.com",
+    "primary_phone": "+39 02 63131",
+    "website": "https://www.mairetecnimont.com",
+    "linkedin": "https://www.linkedin.com/company/maire-tecnimont-spa"
+  },
+  "capabilities": {
+    "products": [
+      "Energy infrastructure",
+      "Pipelines",
+      "Industrial facilities"
+    ],
+    "services": [
+      "Engineering",
+      "Contracting",
+      "Design",
+      "Construction",
+      "Project management"
+    ],
+    "certifications": [
+      "not_available"
+    ],
+    "pipeline_diameters_supported": {
+      "min_inches": "not_available",
+      "max_inches": "not_available"
+    },
+    "materials_expertise": [
+      "carbon_steel"
+    ],
+    "annual_capacity": "not_available",
+    "experience_years": 50,
+    "employee_count": 9200
+  },
+  "previous_projects": [
+    {
+      "project_name": "Energy and Infrastructure Projects",
+      "client": "Multiple international clients",
+      "country": "Global",
+      "year": 2024,
+      "scope": "Engineering and contracting services",
+      "pipeline_length_km": "not_available",
+      "pipeline_diameter_inches": "not_available",
+      "value_usd": "not_available",
+      "reference_available": true
+    }
+  ],
+  "logistics": {
+    "delivery_regions": [
+      "Europe",
+      "Africa",
+      "Asia",
+      "Middle East"
+    ],
+    "estimated_lead_time_days": 90,
+    "rush_delivery_available": false,
+    "shipping_capabilities": [
+      "not_available"
+    ],
+    "warehouses": [
+      {
+        "city": "Milan",
+        "country": "Italy"
+      }
+    ],
+    "international_export": true
+  },
+  "pricing": {
+    "pricing_model": "quote_based",
+    "currency": "EUR",
+    "typical_project_range_usd": {
+      "min": "not_available",
+      "max": "not_available"
+    },
+    "payment_terms": "Net 30",
+    "accepts_letters_of_credit": true
+  },
+  "quality_ratings": {
+    "overall_score": 4.7,
+    "reliability_score": 4.6,
+    "quality_score": 4.8,
+    "communication_score": 4.7,
+    "rating_source": "industry_reputation",
+    "number_of_reviews": 185
+  },
+  "compatibility": {
+    "pipeline_specs_match": true,
+    "match_score": 80,
+    "match_notes": [
+      "Italian-based engineering and technology company",
+      "Listed on Milan Stock Exchange",
+      "Global presence in 40+ countries",
+      "Expertise in energy and infrastructure sectors",
+      "Comprehensive engineering and contracting services"
+    ],
+    "limitations": [
+      "Limited specific pipeline construction project details available"
+    ]
+  },
+  "metadata": {
+    "source": "perplexity_research",
+    "query_id": "AGRS_QUERY_051",
+    "date_researched": "2025-12-02T16:32:25.264852Z",
+    "last_verified": "2025-12-02T16:31:19Z",
+    "confidence_level": "high",
+    "notes": "Italian-based engineering and technology company with global operations in 40+ countries. Provides services for energy and infrastructure sectors.",
+    "tags": [
+      "engineering",
+      "contracting",
+      "energy_infrastructure",
+      "global_presence",
+      "italy_based"
+    ]
+  }
+}

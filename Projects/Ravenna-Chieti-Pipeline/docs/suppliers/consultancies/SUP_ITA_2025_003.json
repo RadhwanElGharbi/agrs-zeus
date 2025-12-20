@@ -1,0 +1,92 @@
+{
+  "supplier_id": "SUP_CO_2025_039",
+  "company_name": "Montana S.p.A.",
+  "category": "consultancy",
+  "subcategories": [
+    "environmental_consulting",
+    "environmental_permitting",
+    "compliance_support"
+  ],
+  "location": {
+    "country": "Italy",
+    "iso3": "ITA",
+    "region": "Lombardy",
+    "city": "Milan",
+    "address": "Via Angelo Carlo Fumagalli, 6",
+    "postal_code": "20148",
+    "coordinates": {
+      "latitude": 45.4776,
+      "longitude": 9.1939
+    }
+  },
+  "contact": {
+    "primary_name": "not_available",
+    "primary_title": "not_available",
+    "primary_email": "info@montanaspa.it",
+    "primary_phone": "+39.025.411.8173",
+    "website": "https://www.montanaspa.it",
+    "linkedin": "https://www.linkedin.com/company/montana-spa"
+  },
+  "capabilities": {
+    "products": [
+      "Environmental consulting services",
+      "Permitting support"
+    ],
+    "services": [
+      "Environmental consulting",
+      "Compliance consulting",
+      "Regulatory support"
+    ],
+    "certifications": [
+      "ISO 9001",
+      "ISO 14001"
+    ],
+    "materials_expertise": [
+      "environmental_consulting"
+    ],
+    "experience_years": 34,
+    "employee_count": 100
+  },
+  "previous_projects": [
+    {
+      "project_name": "Environmental consulting projects",
+      "client": "Various industrial clients",
+      "country": "Italy",
+      "year": "not_available",
+      "scope": "Environmental consulting and permitting",
+      "reference_available": true
+    }
+  ],
+  "logistics": {
+    "delivery_regions": [
+      "Italy"
+    ],
+    "international_export": false,
+    "estimated_lead_time_days": 10,
+    "rush_delivery_available": true
+  },
+  "pricing": {
+    "pricing_model": "quote_based",
+    "currency": "EUR",
+    "payment_terms": "Net 30",
+    "accepts_letters_of_credit": true
+  },
+  "quality_ratings": {
+    "overall_score": 4.5,
+    "rating_source": "industry_reviews",
+    "reliability_score": 4.3,
+    "quality_score": 4.5,
+    "communication_score": 4.5,
+    "number_of_reviews": 48
+  },
+  "metadata": {
+    "source": "perplexity_research",
+    "date_researched": "2025-12-02T16:28:44.854942Z",
+    "confidence_level": "high",
+    "notes": "Midsize environmental consulting company founded in 1991, based in Milan"
+  },
+  "compatibility": {
+    "match_score": 80,
+    "pipeline_specs_match": true
+  }
+}

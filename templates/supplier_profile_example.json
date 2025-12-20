@@ -1,0 +1,182 @@
+{
+  "supplier_id": "SUP_ITA_2025_001",
+  "company_name": "Tenaris S.p.A.",
+  "category": "pipeline_manufacturer",
+  "subcategories": [
+    "seamless_pipes",
+    "welded_pipes",
+    "premium_connections",
+    "coating_services"
+  ],
+  "location": {
+    "country": "Italy",
+    "iso3": "ITA",
+    "region": "Lombardy",
+    "city": "Dalmine",
+    "address": "Piazza Caduti 6 Luglio 1944, 1",
+    "postal_code": "24044",
+    "coordinates": {
+      "latitude": 45.6486,
+      "longitude": 9.6042
+    }
+  },
+  "contact": {
+    "primary_name": "Commercial Department",
+    "primary_title": "Sales Director",
+    "primary_email": "info.italy@tenaris.com",
+    "primary_phone": "+39 035 563 111",
+    "website": "https://www.tenaris.com",
+    "linkedin": "https://www.linkedin.com/company/tenaris"
+  },
+  "sales_contact": {
+    "name": "Marco Rossi",
+    "title": "Regional Sales Director - Europe",
+    "department": "Commercial Sales",
+    "email": "marco.rossi@tenaris.com",
+    "phone": "+39 035 563 245",
+    "mobile": "+39 335 123 4567",
+    "linkedin_profile": "https://www.linkedin.com/in/marcorossi-tenaris",
+    "photo_url": "https://media.licdn.com/dms/image/v2/example-photo.jpg",
+    "years_with_company": 12,
+    "specialization": [
+      "Large diameter transmission pipe",
+      "Oil & gas transmission projects",
+      "European market"
+    ],
+    "languages": ["Italian", "English", "French"],
+    "availability": "Available 9-6 CET, email/phone",
+    "notes": "Experienced in large-scale European pipeline projects. Prefer initial contact via email."
+  },
+  "capabilities": {
+    "products": [
+      "Seamless steel pipes",
+      "Welded steel pipes",
+      "Premium connections",
+      "Sucker rods",
+      "Coiled tubing"
+    ],
+    "services": [
+      "Pipe threading",
+      "Pipe coating (FBE, 3LPE, 3LPP)",
+      "Heat treatment",
+      "Non-destructive testing",
+      "Technical consulting"
+    ],
+    "certifications": [
+      "ISO 9001:2015",
+      "ISO 14001:2015",
+      "ISO 45001:2018",
+      "API 5L",
+      "API 5CT",
+      "DNV GL Type Approval"
+    ],
+    "pipeline_diameters_supported": {
+      "min_inches": 2,
+      "max_inches": 48
+    },
+    "materials_expertise": [
+      "carbon_steel",
+      "alloy_steel",
+      "stainless_steel",
+      "duplex_stainless",
+      "chrome_molybdenum"
+    ],
+    "annual_capacity": "3.5 million tonnes of steel tubes",
+    "experience_years": 70,
+    "employee_count": 22000
+  },
+  "previous_projects": [
+    {
+      "project_name": "Trans Adriatic Pipeline (TAP)",
+      "client": "TAP AG",
+      "country": "Italy",
+      "year": 2019,
+      "scope": "Supply of 48\" line pipe with 3LPE coating",
+      "pipeline_length_km": 878,
+      "pipeline_diameter_inches": 48,
+      "value_usd": 150000000,
+      "reference_available": true
+    },
+    {
+      "project_name": "TANAP Pipeline",
+      "client": "TANAP Consortium",
+      "country": "Turkey",
+      "year": 2018,
+      "scope": "Premium grade line pipe supply",
+      "pipeline_length_km": 1850,
+      "pipeline_diameter_inches": 56,
+      "value_usd": 200000000,
+      "reference_available": true
+    }
+  ],
+  "logistics": {
+    "delivery_regions": [
+      "Europe",
+      "Middle East",
+      "North Africa",
+      "Americas"
+    ],
+    "estimated_lead_time_days": 90,
+    "rush_delivery_available": true,
+    "shipping_capabilities": [
+      "truck",
+      "rail",
+      "sea"
+    ],
+    "warehouses": [
+      { "city": "Dalmine", "country": "Italy" },
+      { "city": "Houston", "country": "USA" },
+      { "city": "Buenos Aires", "country": "Argentina" }
+    ],
+    "international_export": true
+  },
+  "pricing": {
+    "pricing_model": "quote_based",
+    "currency": "EUR",
+    "typical_project_range_usd": {
+      "min": 500000,
+      "max": 500000000
+    },
+    "payment_terms": "Net 60",
+    "accepts_letters_of_credit": true
+  },
+  "quality_ratings": {
+    "overall_score": 4.7,
+    "reliability_score": 4.8,
+    "quality_score": 4.9,
+    "communication_score": 4.5,
+    "rating_source": "industry_reviews",
+    "number_of_reviews": 156
+  },
+  "compatibility": {
+    "pipeline_specs_match": true,
+    "match_score": 95,
+    "match_notes": [
+      "Supports required 36\" diameter",
+      "API 5L PSL2 certification matches project requirements",
+      "3LPE coating capability available",
+      "Experience with similar terrain conditions in Italy"
+    ],
+    "limitations": [
+      "Lead time may require early order placement"
+    ]
+  },
+  "metadata": {
+    "source": "perplexity_research",
+    "query_id": "AGRS_QUERY_050",
+    "date_researched": "2025-12-02T10:00:00Z",
+    "last_verified": "2025-12-02T10:00:00Z",
+    "confidence_level": "high",
+    "notes": "Major global pipe manufacturer with strong presence in Italy. Excellent track record on large-scale pipeline projects.",
+    "tags": [
+      "premium_manufacturer",
+      "large_diameter",
+      "coated_pipes",
+      "italy_based"
+    ]
+  }
+}
+
+
+
+

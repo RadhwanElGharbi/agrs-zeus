@@ -1,0 +1,140 @@
+{
+  "supplier_id": "SUP_SV_2025_034",
+  "company_name": "SICIM S.p.A.",
+  "category": "construction_services",
+  "subcategories": [
+    "EPC_services",
+    "pipeline_construction",
+    "oil_and_gas",
+    "infrastructure"
+  ],
+  "location": {
+    "country": "Italy",
+    "iso3": "ITA",
+    "region": "Emilia-Romagna",
+    "city": "Busseto",
+    "address": "not_available",
+    "postal_code": "not_available",
+    "coordinates": {
+      "latitude": 45.0067,
+      "longitude": 10.428
+    }
+  },
+  "contact": {
+    "primary_name": "not_available",
+    "primary_title": "not_available",
+    "primary_email": "info@sicim.eu",
+    "primary_phone": "+39 0524 93111",
+    "website": "https://www.sicim.eu",
+    "linkedin": "https://www.linkedin.com/company/sicim-spa"
+  },
+  "capabilities": {
+    "products": [
+      "Pipelines",
+      "Power generation facilities",
+      "Infrastructure projects"
+    ],
+    "services": [
+      "Engineering, Procurement, and Construction (EPC)",
+      "Feasibility studies",
+      "Design",
+      "Construction",
+      "Commissioning",
+      "Digital project management"
+    ],
+    "certifications": [
+      "not_available"
+    ],
+    "pipeline_diameters_supported": {
+      "min_inches": "not_available",
+      "max_inches": "not_available"
+    },
+    "materials_expertise": [
+      "carbon_steel"
+    ],
+    "annual_capacity": "not_available",
+    "experience_years": 63,
+    "employee_count": 5000
+  },
+  "previous_projects": [
+    {
+      "project_name": "Oil and Gas Infrastructure Projects",
+      "client": "Eni, Shell, BP",
+      "country": "Global",
+      "year": 2023,
+      "scope": "Complex EPC projects for oil and gas industry",
+      "pipeline_length_km": "not_available",
+      "pipeline_diameter_inches": "not_available",
+      "value_usd": "not_available",
+      "reference_available": true
+    }
+  ],
+  "logistics": {
+    "delivery_regions": [
+      "Europe",
+      "Africa",
+      "Middle East",
+      "Asia",
+      "Americas"
+    ],
+    "estimated_lead_time_days": 75,
+    "rush_delivery_available": false,
+    "shipping_capabilities": [
+      "not_available"
+    ],
+    "warehouses": [
+      {
+        "city": "Busseto",
+        "country": "Italy"
+      }
+    ],
+    "international_export": true
+  },
+  "pricing": {
+    "pricing_model": "quote_based",
+    "currency": "EUR",
+    "typical_project_range_usd": {
+      "min": "not_available",
+      "max": "not_available"
+    },
+    "payment_terms": "Net 30",
+    "accepts_letters_of_credit": true
+  },
+  "quality_ratings": {
+    "overall_score": 4.6,
+    "reliability_score": 4.5,
+    "quality_score": 4.7,
+    "communication_score": 4.6,
+    "rating_source": "client_feedback",
+    "number_of_reviews": 210
+  },
+  "compatibility": {
+    "pipeline_specs_match": true,
+    "match_score": 85,
+    "match_notes": [
+      "Proven track record delivering complex projects on time and budget",
+      "Long-term partnerships with major clients: Eni, Shell, BP",
+      "Expertise in entire value chain from feasibility to commissioning",
+      "Digital technologies for project management and cost optimization",
+      "Renewable energy and sustainability solutions"
+    ],
+    "limitations": [
+      "not_available"
+    ]
+  },
+  "metadata": {
+    "source": "perplexity_research",
+    "query_id": "AGRS_QUERY_051",
+    "date_researched": "2025-12-02T16:32:25.264769Z",
+    "last_verified": "2025-12-02T16:31:19Z",
+    "confidence_level": "high",
+    "notes": "Founded 1962. EUR 1.2779 billion in revenue. Italian EPC contractor providing engineering, procurement, and construction services for oil and gas and power generation.",
+    "tags": [
+      "EPC_contractor",
+      "pipeline_construction",
+      "oil_and_gas",
+      "global_presence",
+      "italy_based"
+    ]
+  }
+}

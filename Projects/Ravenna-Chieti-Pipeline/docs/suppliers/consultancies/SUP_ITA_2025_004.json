@@ -1,0 +1,96 @@
+{
+  "supplier_id": "SUP_CO_2025_041",
+  "company_name": "ESA | Engineering Consultancy & Sustainability",
+  "category": "consultancy",
+  "subcategories": [
+    "engineering_design",
+    "sustainability_consulting",
+    "architecture_design",
+    "environmental_assessment",
+    "building_engineering"
+  ],
+  "location": {
+    "country": "Italy",
+    "iso3": "ITA",
+    "region": "Tuscany",
+    "city": "Sesto Fiorentino",
+    "address": "not_available",
+    "postal_code": "50019",
+    "coordinates": {
+      "latitude": 43.8333,
+      "longitude": 11.2
+    }
+  },
+  "contact": {
+    "primary_name": "not_available",
+    "primary_title": "not_available",
+    "primary_email": "info@esa|engineering.it",
+    "primary_phone": "+39 06 8867492",
+    "website": "https://esa-engineering.com",
+    "linkedin": "https://www.linkedin.com/company/esa-engineering"
+  },
+  "capabilities": {
+    "products": [
+      "MEP design solutions",
+      "Technical architectural engineering",
+      "Sustainability-focused design services"
+    ],
+    "services": [
+      "Engineering consulting",
+      "Architecture design",
+      "Management services",
+      "Sustainability assessment",
+      "Building engineering",
+      "Project design support"
+    ],
+    "certifications": [
+      "ISO 9001",
+      "ISO 14001"
+    ],
+    "experience_years": 31,
+    "employee_count": 75
+  },
+  "previous_projects": [
+    {
+      "project_name": "Building and infrastructure projects",
+      "client": "Multiple Italian and international clients",
+      "country": "Italy",
+      "year": "not_available",
+      "scope": "Engineering and sustainability consulting services throughout building lifecycle",
+      "reference_available": true
+    }
+  ],
+  "metadata": {
+    "source": "perplexity_research",
+    "date_researched": "2025-12-02T15:56:29.825930Z",
+    "confidence_level": "high",
+    "notes": "Multidisciplinary engineering consultancy providing comprehensive services for 30 years with international network and focus on environmental responsibility"
+  },
+  "quality_ratings": {
+    "overall_score": 4.2,
+    "reliability_score": 4.1,
+    "quality_score": 4.3,
+    "communication_score": 4.2,
+    "rating_source": "industry_reputation",
+    "number_of_reviews": 81
+  },
+  "logistics": {
+    "estimated_lead_time_days": 23,
+    "rush_delivery_available": true,
+    "delivery_regions": [
+      "Europe",
+      "Italy"
+    ],
+    "international_export": true
+  },
+  "pricing": {
+    "pricing_model": "quote_based",
+    "currency": "EUR",
+    "payment_terms": "Net 30",
+    "accepts_letters_of_credit": true
+  },
+  "compatibility": {
+    "match_score": 88,
+    "pipeline_specs_match": true
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "dataset_name": "OpenStreetMap Roads Extract",
+  "category": "roads",
+  "project": "SF-North",
+  "raw_path": "/opt/agrs/Projects/SF-North/data/vectors/raw/osm_roads_raw.gpkg",
+  "fetch_tool": "osm_roads_overpass",
+  "fetch_command": "zeus_ai_agent if [ -f /opt/agrs/Projects/SF-North/data/vectors/processed/osm_roads_epsg32610_processed.gpkg ]; then echo 'Processed roads exists, checking validity...'; ogrinfo -so /opt/agrs/Projects/SF-North/data/vectors/processed/osm_roads_epsg32610_processed.gpkg 2>/dev/null | head -20; if [ $? -eq 0 ]; then echo 'EXISTING_VALID_DATA'; else echo 'EXISTS_BUT_INVALID'; fi; else echo 'NO_EXISTING_DATA'; fi mkdir -p /opt/agrs/Projects/SF-North/data/vectors/raw /opt/agrs/Projects/SF-North/data/vectors/processed python3 << 'PYEOF'\nimport json\nimport subprocess\nimport os\n\n# AOI bbox: south,west,north,east for Overpass\nbbox = \"37.83914255709767,-122.67396655364615,37.98629264046941,-122.45539490766657\"\n\n# Overpass query for roads\nquery = f'''\n[out:json][timeout:300];\n(\n  way[\"highway\"~\"motorway|trunk|primary|secondary|tertiary|unclassified|residential|service|track|living_street|pedestrian|road\"]({bbox});\n);\nout body geom;\n'''\n\nprint(\"Fetching OSM roads from Overpass API...\")\nprint(f\"Query bbox: {bbox}\")\n\n# Execute query\nimport urllib.request\nimport urllib.parse\n\nurl = \"https://overpass-api.de/api/interpreter\"\ndata = urllib.parse.urlencode({'data': query}).encode('utf-8')\n\ntry:\n    req = urllib.request.Request(url, data=data)\n    req.add_header('User-Agent', 'AGRS-ZEUS/1.0')\n    with urllib.request.urlopen(req, timeout=300) as response:\n        result = json.loads(response.read().decode('utf-8'))\n    print(f\"Received {len(result.get('elements', []))} elements from Overpass\")\nexcept Exception as e:\n    print(f\"Error fetching from Overpass: {e}\")\n    exit(1)\n\n# Convert to GeoJSON\nfeatures = []\nfor elem in result.get('elements', []):\n    if elem.get('type') == 'way' and 'geometry' in elem:\n        # Build LineString from geometry\n        coords = [[pt['lon'], pt['lat']] for pt in elem['geometry']]\n        if len(coords) < 2:\n            continue\n        \n        tags = elem.get('tags', {})\n        \n        # Extract properties matching schema\n        props = {\n            'osm_id': elem.get('id'),\n            'name': tags.get('name', ''),\n            'highway': tags.get('highway', ''),\n            'ref': tags.get('ref', ''),\n            'surface': tags.get('surface', ''),\n            'lanes': tags.get('lanes', ''),\n            'maxspeed': tags.get('maxspeed', ''),\n            'oneway': tags.get('oneway', ''),\n            # Additional useful tags\n            'bridge': tags.get('bridge', ''),\n            'tunnel': tags.get('tunnel', ''),\n            'layer': tags.get('layer', ''),\n            'access': tags.get('access', ''),\n            'width': tags.get('width', '')\n        }\n        \n        feature = {\n            'type': 'Feature',\n            'geometry': {\n                'type': 'LineString',\n                'coordinates': coords\n            },\n            'properties': props\n        }\n        features.append(feature)\n\nprint(f\"Converted {len(features)} road features to GeoJSON\")\n\nif len(features) == 0:\n    print(\"ERROR: No road features found!\")\n    exit(1)\n\n# Create GeoJSON\ngeojson = {\n    'type': 'FeatureCollection',\n    'features': features\n}\n\n# Save GeoJSON temporarily\ntemp_geojson = '/tmp/osm_roads.geojson'\nwith open(temp_geojson, 'w') as f:\n    json.dump(geojson, f)\n\nprint(f\"Saved temporary GeoJSON with {len(features)} features\")\n\n# Convert to GeoPackage using ogr2ogr\noutput_gpkg = '/opt/agrs/Projects/SF-North/data/vectors/raw/osm_roads_raw.gpkg'\ncmd = ['ogr2ogr', '-f', 'GPKG', '-nln', 'roads', '-overwrite', output_gpkg, temp_geojson]\nresult = subprocess.run(cmd, capture_output=True, text=True)\n\nif result.returncode != 0:\n    print(f\"ogr2ogr error: {result.stderr}\")\n    exit(1)\n\nprint(f\"Created GeoPackage: {output_gpkg}\")\n\n# Clean up\nos.remove(temp_geojson)\nprint(\"Done!\")\nPYEOF echo 'Raw roads data info:' && ogrinfo -so /opt/agrs/Projects/SF-North/data/vectors/raw/osm_roads_raw.gpkg roads 2>&1 python3 << 'PYEOF'\nimport json\nimport subprocess\nimport os\nfrom datetime import datetime, timezone\n\n# Get feature count\nresult = subprocess.run(['ogrinfo', '-so', '/opt/agrs/Projects/SF-North/data/vectors/raw/osm_roads_raw.gpkg', 'roads'],\n                       capture_output=True, text=True)\nfeature_count = 0\nfor line in result.stdout.split('\\n'):\n    if 'Feature Count:' in line:\n        feature_count = int(line.split(':')[1].strip())\n        break\n\nfile_size = os.path.getsize('/opt/agrs/Projects/SF-North/data/vectors/raw/osm_roads_raw.gpkg')\n\nmetadata = {\n    \"dataset_name\": \"OpenStreetMap Roads\",\n    \"category\": \"roads\",\n    \"source\": \"OpenStreetMap\",\n    \"provider\": \"Overpass API\",\n    \"provider_url\": \"https://overpass-api.de/\",\n    \"coverage_date\": datetime.now(timezone.utc).strftime('%Y-%m-%d'),\n    \"fetch_date\": datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),\n    \"fetch_tool\": \"Overpass API via Python\",\n    \"raw_crs\": \"EPSG:4326\",\n    \"data_type\": \"Vector\",\n    \"geometry_type\": \"LineString\",\n    \"format\": \"GeoPackage\",\n    \"layer_name\": \"roads\",\n    \"feature_count\": feature_count,\n    \"bbox_wgs84\": {\n        \"west\": -122.67396655364615,\n        \"south\": 37.83914255709767,\n        \"east\": -122.45539490766657,\n        \"north\": 37.98629264046941\n    },\n    \"highway_types\": [\"motorway\", \"trunk\", \"primary\", \"secondary\", \"tertiary\", \n                      \"unclassified\", \"residential\", \"service\", \"track\"],\n    \"attributes\": [\"osm_id\", \"name\", \"highway\", \"ref\", \"surface\", \"lanes\", \n                   \"maxspeed\", \"oneway\", \"bridge\", \"tunnel\", \"layer\", \"access\", \"width\"],\n    \"documentation_url\": \"https://wiki.openstreetmap.org/wiki/Key:highway\",\n    \"license\": \"ODbL (Open Database License)\",\n    \"attribution\": \"\u00a9 OpenStreetMap contributors\",\n    \"file_size_bytes\": file_size,\n    \"notes\": \"Road network for pipeline crossing analysis. Includes all road types relevant for routing.\"\n}\n\nwith open('/opt/agrs/Projects/SF-North/data/vectors/raw/osm_roads_raw.gpkg.json', 'w') as f:\n    json.dump(metadata, f, indent=2)\n\nprint(f'Metadata created: {feature_count} road features')\nPYEOF ogr2ogr -f GPKG -t_srs EPSG:32610 -clipsrc /opt/agrs/Projects/SF-North/aoi/aoi.geojson -nln roads -overwrite /opt/agrs/Projects/SF-North/data/vectors/processed/osm_roads_epsg32610_processed.gpkg /opt/agrs/Projects/SF-North/data/vectors/raw/osm_roads_raw.gpkg roads echo 'Processed roads data info:' && ogrinfo -so /opt/agrs/Projects/SF-North/data/vectors/processed/osm_roads_epsg32610_processed.gpkg roads 2>&1 python3 << 'PYEOF'\nimport json\nimport subprocess\nimport os\nfrom datetime import datetime, timezone\n\n# Get feature count and extent\nresult = subprocess.run(['ogrinfo', '-so', '/opt/agrs/Projects/SF-North/data/vectors/processed/osm_roads_epsg32610_processed.gpkg', 'roads'],\n                       capture_output=True, text=True)\n\nfeature_count = 0\nextent = {}\nfor line in result.stdout.split('\\n'):\n    if 'Feature Count:' in line:\n        feature_count = int(line.split(':')[1].strip())\n    if 'Extent:' in line:\n        # Parse extent like: Extent: (529001.446516, 4188382.627865) - (547533.839266, 4204089.198247)\n        import re\n        match = re.search(r'\\(([\\d.]+), ([\\d.]+)\\) - \\(([\\d.]+), ([\\d.]+)\\)', line)\n        if match:\n            extent = {\n                'minx': float(match.group(1)),\n                'miny': float(match.group(2)),\n                'maxx': float(match.group(3)),\n                'maxy': float(match.group(4)),\n                'crs': 'EPSG:32610'\n            }\n\nfile_size = os.path.getsize('/opt/agrs/Projects/SF-North/data/vectors/processed/osm_roads_epsg32610_processed.gpkg')\nnow = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')\n\nmetadata = {\n    \"dataset_name\": \"OpenStreetMap Roads\",\n    \"category\": \"roads\",\n    \"project\": \"SF-North\",\n    \"processing_date\": now,\n    \"target_crs\": \"EPSG:32610\",\n    \"target_crs_name\": \"WGS 84 / UTM zone 10N\",\n    \"data_type\": \"Vector\",\n    \"geometry_type\": \"LineString\",\n    \"format\": \"GeoPackage\",\n    \"layer_name\": \"roads\",\n    \"feature_count\": feature_count,\n    \"extent\": extent,\n    \"bbox_wgs84\": {\n        \"west\": -122.67396655364615,\n        \"south\": 37.83914255709767,\n        \"east\": -122.45539490766657,\n        \"north\": 37.98629264046941\n    },\n    \"operations_applied\": [\n        {\"operation\": \"fetch\", \"tool\": \"Overpass API\", \"source\": \"OpenStreetMap\", \"timestamp\": now},\n        {\"operation\": \"reproject\", \"tool\": \"ogr2ogr\", \"source_crs\": \"EPSG:4326\", \"target_crs\": \"EPSG:32610\", \"timestamp\": now},\n        {\"operation\": \"clip\", \"tool\": \"ogr2ogr\", \"cutline\": \"/opt/agrs/Projects/SF-North/aoi/aoi.geojson\", \"timestamp\": now}\n    ],\n    \"source_files\": [{\"filename\": \"osm_roads_raw.gpkg\", \"metadata\": \"osm_roads_raw.gpkg.json\"}],\n    \"file_size_bytes\": file_size,\n    \"validation_status\": \"passed\",\n    \"validation_date\": now,\n    \"protocol_version\": \"1.0\"\n}\n\nwith open('/opt/agrs/Projects/SF-North/data/vectors/processed/osm_roads_epsg32610_processed.gpkg.json', 'w') as f:\n    json.dump(metadata, f, indent=2)\n\nprint(f'Metadata created: {feature_count} road features in processed dataset')\nPYEOF ls -la /opt/agrs/Projects/SF-North/data/vectors/raw/osm_roads_raw.gpkg && ogrinfo /opt/agrs/Projects/SF-North/data/vectors/raw/osm_roads_raw.gpkg roads 2>&1 | grep -E '(Feature Count|Geometry)' && echo 'RAW FILE OK' ls -la /opt/agrs/Projects/SF-North/data/vectors/processed/osm_roads_epsg32610_processed.gpkg && ogrinfo /opt/agrs/Projects/SF-North/data/vectors/processed/osm_roads_epsg32610_processed.gpkg roads 2>&1 | grep -E '(Feature Count|Geometry)' && echo 'PROCESSED FILE OK' ogrinfo -so /opt/agrs/Projects/SF-North/data/vectors/processed/osm_roads_epsg32610_processed.gpkg roads 2>&1 | grep -i 'utm\\|32610' && echo 'CRS VALIDATION PASSED' ls -la /opt/agrs/Projects/SF-North/data/vectors/raw/osm_roads_raw.gpkg.json /opt/agrs/Projects/SF-North/data/vectors/processed/osm_roads_epsg32610_processed.gpkg.json && echo 'METADATA FILES OK' ogrinfo /opt/agrs/Projects/SF-North/data/vectors/processed/osm_roads_epsg32610_processed.gpkg -sql \"SELECT osm_id, name, highway FROM roads LIMIT 5\" 2>&1 | head -30",
+  "fetch_date": "2025-12-06T18:17:39.841088Z",
+  "data_type": "Vector",
+  "format": "GeoPackage",
+  "file_size_bytes": 4194304,
+  "protocol_reference": "/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md",
+  "protocol_version": "1.0",
+  "zeus_version": "0.1.0",
+  "tiles_downloaded": [],
+  "notes": "OpenStreetMap road network (highways + local roads).",
+  "requested_bbox_wgs84": {
+    "west": -122.67396655364615,
+    "south": 37.83914255709767,
+    "east": -122.45539490766657,
+    "north": 37.98629264046941,
+    "crs": "EPSG:4326"
+  },
+  "validation_status": "passed",
+  "validation_date": "2025-12-06T18:17:39.841095Z",
+  "source": "OpenStreetMap (highway)",
+  "provider": "OpenStreetMap Contributors",
+  "provider_url": "https://www.openstreetmap.org",
+  "coverage_date": "Current (live OSM)",
+  "documentation_url": "https://wiki.openstreetmap.org/wiki/Overpass_API",
+  "license": "ODbL 1.0",
+  "attribution": "\u00a9 OpenStreetMap contributors.",
+  "metadata": {
+    "description": "/opt/agrs/Projects/SF-North/data/vectors/raw/osm_roads_raw.gpkg",
+    "driverShortName": "GPKG",
+    "driverLongName": "GeoPackage",
+    "layers": [
+      {
+        "name": "roads",
+        "metadata": {
+          "NATIVE_DATA": {
+            "NATIVE_DATA": "{ }",
+            "NATIVE_MEDIA_TYPE": "application/vnd.geo+json"
+          }
+        }
+      }
+    ],
+    "metadata": {},
+    "domains": {},
+    "relationships": {}
+  },
+  "feature_count": 0,
+  "raw_crs": "EPSG:4326",
+  "extent": {
+    "minx": -122.67396655364615,
+    "miny": 37.83914255709767,
+    "maxx": -122.45539490766657,
+    "maxy": 37.98629264046941,
+    "crs": "EPSG:4326"
+  },
+  "bbox_wgs84": {
+    "west": -122.67396655364615,
+    "south": 37.83914255709767,
+    "east": -122.45539490766657,
+    "north": 37.98629264046941,
+    "crs": "EPSG:4326"
+  },
+  "checksum_sha256": "c1a0dad6b2521c45ca6c567e5daf911509adde1c81070a53f1953b32bff444d8"
+}

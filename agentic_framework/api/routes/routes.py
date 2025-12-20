@@ -76,6 +76,75 @@ def load_sidecar_metadata(route_id: str, project: Optional[str] = None) -> Optio
     return None
 
 
+# Cache for decisions data
+_decisions_cache: dict = {}
+
+
+def load_decisions_data(route_id: str, project: Optional[str] = None) -> Optional[dict]:
+    """Load decisions.json file for a route if it exists.
+
+    The decisions.json contains segment-by-segment validated geospatial analysis
+    including elevation, slope, land cover, soil, crossings, and cost estimates.
+    """
+    import json
+    from pathlib import Path
+
+    cache_key = f"{project}:{route_id}" if project else route_id
+    if cache_key in _decisions_cache:
+        return _decisions_cache[cache_key]
+
+    if project:
+        base_path = Path(f"/opt/agrs/Projects/{project}/PIRL/outputs")
+    else:
+        base_path = Path("/opt/agrs/agentic_framework/data/routes")
+
+    route_filename = route_id if route_id.endswith('.geojson') else f"{route_id}.geojson"
+    decisions_path = base_path / route_filename.replace('.geojson', '.decisions.json')
+
+    if decisions_path.exists():
+        try:
+            with open(decisions_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                _decisions_cache[cache_key] = data
+                return data
+        except Exception as e:
+            logger.warning(f"Error reading decisions file {decisions_path}: {e}")
+    return None
+
+
+def get_segment_decisions(route_id: str, segment_id: str, project: Optional[str] = None) -> Optional[dict]:
+    """Get decisions data for a specific segment.
+
+    Returns the segment's validated geospatial data including:
+    - Elevation statistics
+    - Slope and terrain classification
+    - Land cover and soil type
+    - Seismic zone
+    - Infrastructure crossings with method decisions
+    - Construction cost estimate
+    - Decision rationale
+    """
+    decisions = load_decisions_data(route_id, project)
+    if not decisions:
+        return None
+
+    # Find segment in segment_decisions array
+    segment_decisions = decisions.get("segment_decisions", [])
+
+    # Try matching by segment_id (could be int or string)
+    try:
+        seg_id_int = int(segment_id)
+    except ValueError:
+        seg_id_int = None
+
+    for seg in segment_decisions:
+        seg_decision_id = seg.get("segment_id")
+        if str(seg_decision_id) == str(segment_id) or seg_decision_id == seg_id_int:
+            return seg
+
+    return None
+
+
 @router.get("/routes", response_model=List[RouteListItem])
 async def list_routes(project: Optional[str] = None) -> List[RouteListItem]:
     """List all available routes.
@@ -384,6 +453,106 @@ async def get_segment_detail(route_id: str, segment_id: str, project: Optional[s
         },
         "step": segment_data.step,
     }
+
+
+@router.get("/routes/{route_id}/segments/{segment_id}/decisions")
+async def get_segment_decisions_endpoint(
+    route_id: str,
+    segment_id: str,
+    project: Optional[str] = None
+) -> dict:
+    """Get validated geospatial decisions data for a specific segment.
+
+    Returns segment-level analysis from the decisions.json sidecar file including:
+    - Elevation and slope statistics
+    - Terrain classification
+    - Land cover and soil type
+    - Seismic zone information
+    - Infrastructure crossings with crossing method decisions
+    - Construction cost estimate with breakdown
+    - Decision rationale
+
+    Args:
+        route_id: Route identifier
+        segment_id: Segment identifier
+        project: Optional project name for project-specific routes
+
+    Returns:
+        Segment decisions data dict, or empty dict if not available
+
+    Raises:
+        HTTPException: 404 if route not found
+    """
+    try:
+        load_route(route_id, project)
+    except RouteNotFoundError:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Route '{route_id}' not found"
+        )
+
+    # Get segment decisions from decisions.json
+    segment_decisions = get_segment_decisions(route_id, segment_id, project)
+
+    if segment_decisions is None:
+        # Return empty dict if no decisions data available
+        return {
+            "segment_id": segment_id,
+            "route_id": route_id,
+            "decisions_available": False,
+            "message": "No validated decisions data available for this segment"
+        }
+
+    # Add metadata about the data source
+    segment_decisions["decisions_available"] = True
+    segment_decisions["route_id"] = route_id
+
+    return segment_decisions
+
+
+@router.get("/routes/{route_id}/decisions")
+async def get_route_decisions_endpoint(
+    route_id: str,
+    project: Optional[str] = None
+) -> dict:
+    """Get full validated decisions data for a route.
+
+    Returns the complete decisions.json data including:
+    - Route-level summary statistics
+    - All segment decisions
+    - Pipeline specifications
+    - Crossing analysis summary
+    - Total cost breakdown
+
+    Args:
+        route_id: Route identifier
+        project: Optional project name for project-specific routes
+
+    Returns:
+        Full decisions data dict, or summary if not available
+
+    Raises:
+        HTTPException: 404 if route not found
+    """
+    try:
+        load_route(route_id, project)
+    except RouteNotFoundError:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Route '{route_id}' not found"
+        )
+
+    decisions = load_decisions_data(route_id, project)
+
+    if decisions is None:
+        return {
+            "route_id": route_id,
+            "decisions_available": False,
+            "message": "No validated decisions data available for this route"
+        }
+
+    decisions["decisions_available"] = True
+    return decisions
 
 
 @router.get("/routes/{route_id}/geometry")

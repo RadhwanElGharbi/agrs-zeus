@@ -1,0 +1,2772 @@
+{
+  "document_info": {
+    "title": "Route Decision Analysis - Ravenna-Chieti Pipeline",
+    "subtitle": "Shortest Path Route (Dijkstra)",
+    "route_id": "Ravenna-Chieti-Pipeline_dijkstra_shortest",
+    "version": "3.0",
+    "format": "Segment-by-Segment Analysis",
+    "generated_at": "2025-12-17T03:40:52.961934Z",
+    "generated_by": "AGRS ZEUS Platform",
+    "validation_status": "Cross-validated with GDAL/Rasterio/GeoPandas",
+    "optimization_method": "Dijkstra Shortest Path"
+  },
+  "data_sources": {
+    "elevation": {
+      "source": "Copernicus DEM GLO-30",
+      "resolution": "30m"
+    },
+    "land_cover": {
+      "source": "ESA WorldCover 2021",
+      "resolution": "10m"
+    },
+    "soil": {
+      "source": "SoilGrids 2.0",
+      "resolution": "250m"
+    },
+    "seismic": {
+      "source": "GEM/INGV"
+    },
+    "infrastructure": {
+      "source": "OpenStreetMap"
+    }
+  },
+  "pipeline_specifications": {
+    "product": "Natural Gas",
+    "diameter_nominal": "DN650 (26 inch)",
+    "diameter_mm": 660.4,
+    "wall_thickness_mm": 11.1,
+    "material": "Carbon Steel",
+    "max_operating_pressure_bar": 70,
+    "design_pressure_bar": 75,
+    "depth_of_cover_m": 1.5,
+    "max_slope_percent": 20.0
+  },
+  "route_summary": {
+    "total_length_km": 29.78,
+    "total_segments": 1,
+    "start_point": {
+      "easting": 379622.91,
+      "northing": 4805069.06
+    },
+    "end_point": {
+      "easting": 397199.93,
+      "northing": 4782591.48
+    },
+    "elevation_statistics": {
+      "min_m": 91.5,
+      "max_m": 91.5,
+      "mean_m": 91.5
+    },
+    "slope_statistics": {
+      "max_percent": 0.88,
+      "mean_percent": 0.88,
+      "segments_over_20pct": 0
+    },
+    "compliance_status": {
+      "slope_compliant": true,
+      "status": "COMPLIANT"
+    }
+  },
+  "terrain_analysis": {
+    "land_cover_distribution": {
+      "cropland": {
+        "km": 29.78,
+        "percent": 100.0
+      }
+    },
+    "soil_distribution": {
+      "loam": {
+        "km": 29.78,
+        "percent": 100.0
+      }
+    }
+  },
+  "crossing_summary": {
+    "total_crossings": 96,
+    "by_type": {
+      "road": {
+        "count": 74,
+        "total_cost_eur": 4440000
+      },
+      "railway": {
+        "count": 1,
+        "total_cost_eur": 1200000
+      },
+      "waterway": {
+        "count": 17,
+        "total_cost_eur": 1360000
+      },
+      "powerline": {
+        "count": 4,
+        "total_cost_eur": 600000
+      }
+    },
+    "by_method": {
+      "open_cut": 91,
+      "HDD": 5
+    },
+    "total_crossing_cost_eur": 7600000
+  },
+  "cost_estimate": {
+    "class": "Class 4 (\u00b130%)",
+    "terrain_cost_eur": 13398961.0,
+    "crossing_cost_eur": 7600000,
+    "total_cost_eur": 20998961.0,
+    "cost_per_km_eur": 705244.0
+  },
+  "segment_decisions": [
+    {
+      "segment_id": 1,
+      "km_start": 0.0,
+      "km_end": 29.775,
+      "length_m": 29775.47,
+      "geometry": {
+        "start_point": {
+          "easting": 379622.91,
+          "northing": 4805069.06
+        },
+        "end_point": {
+          "easting": 397199.93,
+          "northing": 4782591.48
+        },
+        "bearing_deg": 142.0,
+        "vertex_count": 845,
+        "crs": "EPSG:32633"
+      },
+      "elevation": {
+        "start_m": 161.69,
+        "end_m": 68.13,
+        "min_m": 31.42,
+        "max_m": 161.69,
+        "mean_m": 91.54
+      },
+      "slope": {
+        "average_percent": 0.31,
+        "max_percent": 0.88,
+        "terrain_class": "flat",
+        "compliant": true
+      },
+      "land_cover": {
+        "class_code": 40,
+        "class_name": "cropland",
+        "cost_factor": 1.8,
+        "note": "Agricultural - crop compensation"
+      },
+      "soil": {
+        "type": "loam",
+        "excavation": "standard",
+        "stability": "good",
+        "hdd_suitability": "good"
+      },
+      "seismic": {
+        "zone": "Zone 4",
+        "pga_g": 0.05,
+        "description": "Very low"
+      },
+      "crossings": {
+        "count": 96,
+        "details": [
+          {
+            "crossing_id": "CX-001",
+            "km": 23.858,
+            "coordinates": {
+              "easting": 393138.92,
+              "northing": 4786811.18
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "secondary",
+              "name": "Via Celeste",
+              "osm_id": 23525834
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for secondary",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Provincial permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-002",
+            "km": 24.117,
+            "coordinates": {
+              "easting": 393322.21,
+              "northing": 4786627.95
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "unclassified",
+              "name": "Unnamed road",
+              "osm_id": 23395943
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for unclassified",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-003",
+            "km": 26.894,
+            "coordinates": {
+              "easting": 395154.6,
+              "northing": 4784609.5
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "secondary",
+              "name": "Strada Provinciale 77 Santa Caterina",
+              "osm_id": 609824100
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for secondary",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Provincial permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-004",
+            "km": 26.754,
+            "coordinates": {
+              "easting": 395119.49,
+              "northing": 4784735.21
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "service",
+              "name": "Unnamed road",
+              "osm_id": 609824087
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for service",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-005",
+            "km": 26.537,
+            "coordinates": {
+              "easting": 394977.47,
+              "northing": 4784893.22
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "secondary",
+              "name": "Strada Provinciale 77 Santa Caterina",
+              "osm_id": 1102723896
+            },
+            "ground_conditions": {
+              "soil_type": "silt_loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for secondary",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Provincial permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-006",
+            "km": 22.536,
+            "coordinates": {
+              "easting": 392223.2,
+              "northing": 4787753.28
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "unclassified",
+              "name": "Via Cerretino",
+              "osm_id": 23267276
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for unclassified",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-007",
+            "km": 21.515,
+            "coordinates": {
+              "easting": 391519.69,
+              "northing": 4788483.23
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "secondary",
+              "name": "Strada Provinciale 27 Elpidiense",
+              "osm_id": 23258154
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for secondary",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Provincial permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-008",
+            "km": 20.602,
+            "coordinates": {
+              "easting": 390893.05,
+              "northing": 4789136.34
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "unclassified",
+              "name": "Unnamed road",
+              "osm_id": 23277226
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for unclassified",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-009",
+            "km": 20.679,
+            "coordinates": {
+              "easting": 390947.81,
+              "northing": 4789081.59
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "service",
+              "name": "Unnamed road",
+              "osm_id": 119789388
+            },
+            "ground_conditions": {
+              "soil_type": "silt_loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for service",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-010",
+            "km": 22.226,
+            "coordinates": {
+              "easting": 392003.72,
+              "northing": 4787972.69
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "secondary",
+              "name": "Strada Provinciale 27 Elpidiense",
+              "osm_id": 23730958
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for secondary",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Provincial permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-011",
+            "km": 23.148,
+            "coordinates": {
+              "easting": 392655.97,
+              "northing": 4787320.64
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "secondary",
+              "name": "Strada Montegranese",
+              "osm_id": 249808846
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for secondary",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Provincial permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-012",
+            "km": 23.834,
+            "coordinates": {
+              "easting": 393122.27,
+              "northing": 4786827.82
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "unclassified",
+              "name": "Unnamed road",
+              "osm_id": 23267278
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for unclassified",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-013",
+            "km": 21.899,
+            "coordinates": {
+              "easting": 391791.53,
+              "northing": 4788211.48
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "primary",
+              "name": "Strada Provinciale 219 Ete Morto",
+              "osm_id": 157199304
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for primary",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Provincial permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-014",
+            "km": 29.691,
+            "coordinates": {
+              "easting": 397132.65,
+              "northing": 4782632.07
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "unclassified",
+              "name": "Strada Comunale Vallasciano",
+              "osm_id": 128073170
+            },
+            "ground_conditions": {
+              "soil_type": "silt_loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for unclassified",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-015",
+            "km": 28.922,
+            "coordinates": {
+              "easting": 396588.87,
+              "northing": 4783175.69
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "unclassified",
+              "name": "Via Colle Vissiano",
+              "osm_id": 23289682
+            },
+            "ground_conditions": {
+              "soil_type": "silt_loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for unclassified",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-016",
+            "km": 27.169,
+            "coordinates": {
+              "easting": 395348.9,
+              "northing": 4784415.26
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "secondary",
+              "name": "Strada Provinciale 28 Faleriense",
+              "osm_id": 136788653
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for secondary",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Provincial permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-017",
+            "km": 28.136,
+            "coordinates": {
+              "easting": 396032.65,
+              "northing": 4783731.73
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "secondary",
+              "name": "Strada Provinciale 204 Lungotenna",
+              "osm_id": 23512312
+            },
+            "ground_conditions": {
+              "soil_type": "silt_loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for secondary",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Provincial permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-018",
+            "km": 27.481,
+            "coordinates": {
+              "easting": 395569.51,
+              "northing": 4784194.72
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "unclassified",
+              "name": "Unnamed road",
+              "osm_id": 23254551
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for unclassified",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-019",
+            "km": 20.314,
+            "coordinates": {
+              "easting": 390689.36,
+              "northing": 4789339.96
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "secondary",
+              "name": "Strada Provinciale 94 Veregrense",
+              "osm_id": 157199333
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for secondary",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Provincial permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-020",
+            "km": 19.471,
+            "coordinates": {
+              "easting": 390112.23,
+              "northing": 4789943.57
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "unclassified",
+              "name": "Unnamed road",
+              "osm_id": 609971131
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for unclassified",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-021",
+            "km": 19.348,
+            "coordinates": {
+              "easting": 390025.01,
+              "northing": 4790030.76
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "service",
+              "name": "Unnamed road",
+              "osm_id": 1077672975
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for service",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-022",
+            "km": 18.56,
+            "coordinates": {
+              "easting": 389705.02,
+              "northing": 4790686.44
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "tertiary",
+              "name": "Unnamed road",
+              "osm_id": 114872465
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for tertiary",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-023",
+            "km": 17.773,
+            "coordinates": {
+              "easting": 389651.68,
+              "northing": 4791451.17
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "tertiary",
+              "name": "Contrada San Tommaso",
+              "osm_id": 283791020
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for tertiary",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-024",
+            "km": 17.974,
+            "coordinates": {
+              "easting": 389651.68,
+              "northing": 4791249.88
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "track",
+              "name": "Unnamed road",
+              "osm_id": 119789447
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for track",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-025",
+            "km": 17.904,
+            "coordinates": {
+              "easting": 389651.68,
+              "northing": 4791320.05
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "service",
+              "name": "Unnamed road",
+              "osm_id": 1014308702
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for service",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-026",
+            "km": 16.738,
+            "coordinates": {
+              "easting": 389651.68,
+              "northing": 4792486.29
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "unclassified",
+              "name": "Unnamed road",
+              "osm_id": 553225363
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for unclassified",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-027",
+            "km": 17.281,
+            "coordinates": {
+              "easting": 389651.68,
+              "northing": 4791942.58
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "unclassified",
+              "name": "Localit\u00e0 Piane di Chienti",
+              "osm_id": 111773404
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for unclassified",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-028",
+            "km": 16.906,
+            "coordinates": {
+              "easting": 389651.68,
+              "northing": 4792318.3
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "trunk",
+              "name": "Strada Statale 77 della Val di Chienti",
+              "osm_id": 105080580
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "HDD",
+              "rationale": "HDD for trunk - closure prohibited",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Autostrade permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-029",
+            "km": 16.897,
+            "coordinates": {
+              "easting": 389651.68,
+              "northing": 4792326.78
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "trunk",
+              "name": "Strada Statale 77 della Val di Chienti",
+              "osm_id": 111858404
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "HDD",
+              "rationale": "HDD for trunk - closure prohibited",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Autostrade permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-030",
+            "km": 16.59,
+            "coordinates": {
+              "easting": 389651.68,
+              "northing": 4792634.21
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "service",
+              "name": "Unnamed road",
+              "osm_id": 659995150
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for service",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-031",
+            "km": 16.445,
+            "coordinates": {
+              "easting": 389651.68,
+              "northing": 4792779.34
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "service",
+              "name": "Unnamed road",
+              "osm_id": 1337731093
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for service",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-032",
+            "km": 16.424,
+            "coordinates": {
+              "easting": 389651.68,
+              "northing": 4792800.14
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "tertiary",
+              "name": "Via Abbadia",
+              "osm_id": 30922662
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for tertiary",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-033",
+            "km": 16.227,
+            "coordinates": {
+              "easting": 389533.92,
+              "northing": 4792948.1
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "tertiary",
+              "name": "Via Santissima Annunziata",
+              "osm_id": 30982606
+            },
+            "ground_conditions": {
+              "soil_type": "unknown",
+              "excavation": "standard",
+              "hdd_suitability": "moderate"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for tertiary",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-034",
+            "km": 16.337,
+            "coordinates": {
+              "easting": 389611.85,
+              "northing": 4792870.19
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "pedestrian",
+              "name": "Unnamed road",
+              "osm_id": 30980871
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for pedestrian",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-035",
+            "km": 16.171,
+            "coordinates": {
+              "easting": 389494.42,
+              "northing": 4792987.59
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "residential",
+              "name": "Via Giovanni XXIII",
+              "osm_id": 30981007
+            },
+            "ground_conditions": {
+              "soil_type": "unknown",
+              "excavation": "standard",
+              "hdd_suitability": "moderate"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for residential",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-036",
+            "km": 15.924,
+            "coordinates": {
+              "easting": 389319.74,
+              "northing": 4793162.21
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "secondary",
+              "name": "Via Roma",
+              "osm_id": 1320730482
+            },
+            "ground_conditions": {
+              "soil_type": "unknown",
+              "excavation": "standard",
+              "hdd_suitability": "moderate"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for secondary",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Provincial permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-037",
+            "km": 15.449,
+            "coordinates": {
+              "easting": 388983.5,
+              "northing": 4793498.34
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "unclassified",
+              "name": "Via Enrico Mattei",
+              "osm_id": 157199323
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for unclassified",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-038",
+            "km": 15.328,
+            "coordinates": {
+              "easting": 388897.86,
+              "northing": 4793583.96
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "residential",
+              "name": "Unnamed road",
+              "osm_id": 191418317
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for residential",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-039",
+            "km": 14.91,
+            "coordinates": {
+              "easting": 388602.74,
+              "northing": 4793878.99
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "unclassified",
+              "name": "Localit\u00e0 Selve",
+              "osm_id": 157199297
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for unclassified",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-040",
+            "km": 11.001,
+            "coordinates": {
+              "easting": 385837.92,
+              "northing": 4796642.93
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "unclassified",
+              "name": "Unnamed road",
+              "osm_id": 220565875
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for unclassified",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-041",
+            "km": 10.503,
+            "coordinates": {
+              "easting": 385486.04,
+              "northing": 4796994.7
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "residential",
+              "name": "Via Bellini",
+              "osm_id": 785697150
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for residential",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-042",
+            "km": 10.531,
+            "coordinates": {
+              "easting": 385505.59,
+              "northing": 4796975.16
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "residential",
+              "name": "Via Bellini",
+              "osm_id": 220566634
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for residential",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-043",
+            "km": 13.053,
+            "coordinates": {
+              "easting": 387289.35,
+              "northing": 4795191.96
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "unclassified",
+              "name": "Unnamed road",
+              "osm_id": 1330869108
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for unclassified",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-044",
+            "km": 13.897,
+            "coordinates": {
+              "easting": 387886.12,
+              "northing": 4794595.38
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "track",
+              "name": "Unnamed road",
+              "osm_id": 157199322
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for track",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-045",
+            "km": 12.919,
+            "coordinates": {
+              "easting": 387194.59,
+              "northing": 4795286.69
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "residential",
+              "name": "Unnamed road",
+              "osm_id": 1330869115
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for residential",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-046",
+            "km": 11.933,
+            "coordinates": {
+              "easting": 386496.79,
+              "northing": 4795984.27
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "tertiary",
+              "name": "Unnamed road",
+              "osm_id": 129738095
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for tertiary",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-047",
+            "km": 12.567,
+            "coordinates": {
+              "easting": 386945.2,
+              "northing": 4795536.0
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "unclassified",
+              "name": "Unnamed road",
+              "osm_id": 611285829
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for unclassified",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-048",
+            "km": 12.884,
+            "coordinates": {
+              "easting": 387169.89,
+              "northing": 4795311.38
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "tertiary",
+              "name": "Unnamed road",
+              "osm_id": 611285826
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for tertiary",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-049",
+            "km": 10.162,
+            "coordinates": {
+              "easting": 385244.73,
+              "northing": 4797235.93
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "unclassified",
+              "name": "Contrada Colli Asola",
+              "osm_id": 220566641
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for unclassified",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-050",
+            "km": 10.567,
+            "coordinates": {
+              "easting": 385531.13,
+              "northing": 4796949.62
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "secondary",
+              "name": "Via Giuseppe Verdi",
+              "osm_id": 1238403134
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for secondary",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Provincial permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-051",
+            "km": 10.269,
+            "coordinates": {
+              "easting": 385320.02,
+              "northing": 4797160.66
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "unclassified",
+              "name": "Contrada Lamaticci",
+              "osm_id": 210002673
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for unclassified",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-052",
+            "km": 9.899,
+            "coordinates": {
+              "easting": 385058.26,
+              "northing": 4797422.34
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "track",
+              "name": "Unnamed road",
+              "osm_id": 1380903010
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for track",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-053",
+            "km": 9.703,
+            "coordinates": {
+              "easting": 384919.9,
+              "northing": 4797560.66
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "track",
+              "name": "Unnamed road",
+              "osm_id": 1327896183
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for track",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-054",
+            "km": 8.038,
+            "coordinates": {
+              "easting": 383742.07,
+              "northing": 4798738.12
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "track",
+              "name": "Unnamed road",
+              "osm_id": 633660586
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for track",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-055",
+            "km": 7.004,
+            "coordinates": {
+              "easting": 383011.12,
+              "northing": 4799468.83
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "secondary",
+              "name": "Strada Provinciale 101 Potentina",
+              "osm_id": 210507925
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for secondary",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Provincial permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-056",
+            "km": 6.209,
+            "coordinates": {
+              "easting": 382476.84,
+              "northing": 4800042.5
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "track",
+              "name": "Unnamed road",
+              "osm_id": 209667691
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for track",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-057",
+            "km": 6.841,
+            "coordinates": {
+              "easting": 382895.79,
+              "northing": 4799584.12
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "unclassified",
+              "name": "Contrada San Nicol\u00f2",
+              "osm_id": 209349407
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for unclassified",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-058",
+            "km": 5.547,
+            "coordinates": {
+              "easting": 382476.84,
+              "northing": 4800704.52
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "service",
+              "name": "Unnamed road",
+              "osm_id": 210210998
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for service",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-059",
+            "km": 5.311,
+            "coordinates": {
+              "easting": 382417.51,
+              "northing": 4800915.5
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "tertiary",
+              "name": "Contrada Fonte Scodella",
+              "osm_id": 650315141
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for tertiary",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-060",
+            "km": 4.688,
+            "coordinates": {
+              "easting": 382370.15,
+              "northing": 4801519.29
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "unclassified",
+              "name": "Contrada San Firmano",
+              "osm_id": 210000450
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for unclassified",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-061",
+            "km": 4.222,
+            "coordinates": {
+              "easting": 382370.15,
+              "northing": 4801985.19
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "residential",
+              "name": "Via Giovanni XXIII",
+              "osm_id": 110343916
+            },
+            "ground_conditions": {
+              "soil_type": "unknown",
+              "excavation": "standard",
+              "hdd_suitability": "moderate"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for residential",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-062",
+            "km": 4.113,
+            "coordinates": {
+              "easting": 382370.15,
+              "northing": 4802093.96
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "service",
+              "name": "Via San Firmano",
+              "osm_id": 110343924
+            },
+            "ground_conditions": {
+              "soil_type": "unknown",
+              "excavation": "standard",
+              "hdd_suitability": "moderate"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for service",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-063",
+            "km": 4.033,
+            "coordinates": {
+              "easting": 382342.81,
+              "northing": 4802163.38
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "residential",
+              "name": "Via Giovanni XXIII",
+              "osm_id": 1096797461
+            },
+            "ground_conditions": {
+              "soil_type": "unknown",
+              "excavation": "standard",
+              "hdd_suitability": "moderate"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for residential",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-064",
+            "km": 3.783,
+            "coordinates": {
+              "easting": 382166.53,
+              "northing": 4802339.6
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "residential",
+              "name": "Unnamed road",
+              "osm_id": 110348629
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for residential",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-065",
+            "km": 3.675,
+            "coordinates": {
+              "easting": 382089.93,
+              "northing": 4802416.17
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "track",
+              "name": "Ciclovia del Potenza",
+              "osm_id": 1167568058
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for track",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-066",
+            "km": 3.065,
+            "coordinates": {
+              "easting": 381658.41,
+              "northing": 4802847.57
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "primary",
+              "name": "Strada Statale 571 Helvia Recina",
+              "osm_id": 130079663
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for primary",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Provincial permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-067",
+            "km": 2.791,
+            "coordinates": {
+              "easting": 381464.7,
+              "northing": 4803041.21
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "track",
+              "name": "Unnamed road",
+              "osm_id": 306028549
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for track",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-068",
+            "km": 2.619,
+            "coordinates": {
+              "easting": 381342.83,
+              "northing": 4803163.04
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "track",
+              "name": "Unnamed road",
+              "osm_id": 211885676
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for track",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-069",
+            "km": 1.867,
+            "coordinates": {
+              "easting": 380811.33,
+              "northing": 4803694.37
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "secondary",
+              "name": "Strada Regionale 77 della Val di Chienti",
+              "osm_id": 130068885
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for secondary",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Provincial permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-070",
+            "km": 0.888,
+            "coordinates": {
+              "easting": 380118.93,
+              "northing": 4804386.55
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "service",
+              "name": "Unnamed road",
+              "osm_id": 564087127
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for service",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-071",
+            "km": 1.072,
+            "coordinates": {
+              "easting": 380249.03,
+              "northing": 4804256.5
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "unclassified",
+              "name": "Unnamed road",
+              "osm_id": 562342845
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for unclassified",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-072",
+            "km": 0.2,
+            "coordinates": {
+              "easting": 379702.93,
+              "northing": 4804902.28
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "service",
+              "name": "Unnamed road",
+              "osm_id": 1448156522
+            },
+            "ground_conditions": {
+              "soil_type": "silt_loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for service",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-073",
+            "km": 0.004,
+            "coordinates": {
+              "easting": 379626.03,
+              "northing": 4805065.94
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "service",
+              "name": "Unnamed road",
+              "osm_id": 1448156524
+            },
+            "ground_conditions": {
+              "soil_type": "silt_loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for service",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-074",
+            "km": 0.26,
+            "coordinates": {
+              "easting": 379712.2,
+              "northing": 4804846.49
+            },
+            "infrastructure": {
+              "type": "road",
+              "class": "unclassified",
+              "name": "Unnamed road",
+              "osm_id": 95535349
+            },
+            "ground_conditions": {
+              "soil_type": "silt_loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for unclassified",
+              "cost_eur": 60000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-075",
+            "km": 15.245,
+            "coordinates": {
+              "easting": 388839.28,
+              "northing": 4793642.52
+            },
+            "infrastructure": {
+              "type": "railway",
+              "class": "rail",
+              "name": "Ferrovia Civitanova Marche \u2013 Fabriano",
+              "osm_id": "338993797"
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "HDD",
+              "rationale": "HDD required per RFI regulations",
+              "cost_eur": 1200000
+            },
+            "permits_required": [
+              "RFI Autorizzazione"
+            ]
+          },
+          {
+            "crossing_id": "CX-076",
+            "km": 28.019,
+            "coordinates": {
+              "easting": 395950.18,
+              "northing": 4783814.17
+            },
+            "infrastructure": {
+              "type": "waterway",
+              "class": "stream",
+              "name": "Tenna",
+              "osm_id": "23015996"
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for stream",
+              "cost_eur": 80000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-077",
+            "km": 19.665,
+            "coordinates": {
+              "easting": 390249.34,
+              "northing": 4789806.51
+            },
+            "infrastructure": {
+              "type": "waterway",
+              "class": "stream",
+              "name": "Rio Maggio",
+              "osm_id": "1345167359"
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for stream",
+              "cost_eur": 80000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-078",
+            "km": 16.578,
+            "coordinates": {
+              "easting": 389651.68,
+              "northing": 4792646.41
+            },
+            "infrastructure": {
+              "type": "waterway",
+              "class": "ditch",
+              "name": "Ditch",
+              "osm_id": "1342448640"
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for ditch",
+              "cost_eur": 80000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-079",
+            "km": 16.211,
+            "coordinates": {
+              "easting": 389522.66,
+              "northing": 4792959.36
+            },
+            "infrastructure": {
+              "type": "waterway",
+              "class": "ditch",
+              "name": "Fosso Cantagallo",
+              "osm_id": "1342448657"
+            },
+            "ground_conditions": {
+              "soil_type": "unknown",
+              "excavation": "standard",
+              "hdd_suitability": "moderate"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for ditch",
+              "cost_eur": 80000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-080",
+            "km": 16.127,
+            "coordinates": {
+              "easting": 389463.19,
+              "northing": 4793018.81
+            },
+            "infrastructure": {
+              "type": "waterway",
+              "class": "ditch",
+              "name": "Fosso Cantagallo",
+              "osm_id": "1342448658"
+            },
+            "ground_conditions": {
+              "soil_type": "unknown",
+              "excavation": "standard",
+              "hdd_suitability": "moderate"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for ditch",
+              "cost_eur": 80000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-081",
+            "km": 22.367,
+            "coordinates": {
+              "easting": 392103.71,
+              "northing": 4787872.73
+            },
+            "infrastructure": {
+              "type": "waterway",
+              "class": "stream",
+              "name": "Ete morto",
+              "osm_id": "23245965"
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for stream",
+              "cost_eur": 80000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-082",
+            "km": 17.658,
+            "coordinates": {
+              "easting": 389651.68,
+              "northing": 4791566.06
+            },
+            "infrastructure": {
+              "type": "waterway",
+              "class": "river",
+              "name": "Fiume Chienti",
+              "osm_id": "23021050"
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "HDD",
+              "rationale": "HDD for river per environmental regs",
+              "cost_eur": 80000
+            },
+            "permits_required": [
+              "AIPO permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-083",
+            "km": 12.246,
+            "coordinates": {
+              "easting": 386718.56,
+              "northing": 4795762.57
+            },
+            "infrastructure": {
+              "type": "waterway",
+              "class": "ditch",
+              "name": "Fosso Cunicchio",
+              "osm_id": "648568845"
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for ditch",
+              "cost_eur": 80000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-084",
+            "km": 8.425,
+            "coordinates": {
+              "easting": 384016.02,
+              "northing": 4798464.25
+            },
+            "infrastructure": {
+              "type": "waterway",
+              "class": "stream",
+              "name": "Asola",
+              "osm_id": "1351839074"
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for stream",
+              "cost_eur": 80000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-085",
+            "km": 7.864,
+            "coordinates": {
+              "easting": 383619.13,
+              "northing": 4798861.02
+            },
+            "infrastructure": {
+              "type": "waterway",
+              "class": "drain",
+              "name": "Drain",
+              "osm_id": "247763274"
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for drain",
+              "cost_eur": 80000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-086",
+            "km": 7.352,
+            "coordinates": {
+              "easting": 383257.53,
+              "northing": 4799222.5
+            },
+            "infrastructure": {
+              "type": "waterway",
+              "class": "ditch",
+              "name": "Ditch",
+              "osm_id": "247763270"
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for ditch",
+              "cost_eur": 80000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-087",
+            "km": 7.457,
+            "coordinates": {
+              "easting": 383331.42,
+              "northing": 4799148.64
+            },
+            "infrastructure": {
+              "type": "waterway",
+              "class": "ditch",
+              "name": "Ditch",
+              "osm_id": "247763271"
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for ditch",
+              "cost_eur": 80000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-088",
+            "km": 1.433,
+            "coordinates": {
+              "easting": 380504.27,
+              "northing": 4804001.34
+            },
+            "infrastructure": {
+              "type": "waterway",
+              "class": "stream",
+              "name": "Stream",
+              "osm_id": "130079741"
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for stream",
+              "cost_eur": 80000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-089",
+            "km": 5.076,
+            "coordinates": {
+              "easting": 382370.15,
+              "northing": 4801130.83
+            },
+            "infrastructure": {
+              "type": "waterway",
+              "class": "canal",
+              "name": "Canal",
+              "osm_id": "95534364"
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for canal",
+              "cost_eur": 80000
+            },
+            "permits_required": [
+              "Consorzio permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-090",
+            "km": 4.426,
+            "coordinates": {
+              "easting": 382370.15,
+              "northing": 4801781.49
+            },
+            "infrastructure": {
+              "type": "waterway",
+              "class": "drain",
+              "name": "Fosso Codardo",
+              "osm_id": "307179686"
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for drain",
+              "cost_eur": 80000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-091",
+            "km": 3.885,
+            "coordinates": {
+              "easting": 382238.63,
+              "northing": 4802267.52
+            },
+            "infrastructure": {
+              "type": "waterway",
+              "class": "ditch",
+              "name": "Ditch",
+              "osm_id": "564764482"
+            },
+            "ground_conditions": {
+              "soil_type": "unknown",
+              "excavation": "standard",
+              "hdd_suitability": "moderate"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut for ditch",
+              "cost_eur": 80000
+            },
+            "permits_required": [
+              "Municipal permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-092",
+            "km": 3.594,
+            "coordinates": {
+              "easting": 382032.46,
+              "northing": 4802473.63
+            },
+            "infrastructure": {
+              "type": "waterway",
+              "class": "river",
+              "name": "Fiume Potenza",
+              "osm_id": "44300958"
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "HDD",
+              "rationale": "HDD for river per environmental regs",
+              "cost_eur": 80000
+            },
+            "permits_required": [
+              "AIPO permit"
+            ]
+          },
+          {
+            "crossing_id": "CX-093",
+            "km": 16.992,
+            "coordinates": {
+              "easting": 389651.68,
+              "northing": 4792232.28
+            },
+            "infrastructure": {
+              "type": "powerline",
+              "class": "distribution",
+              "name": "Monte San Giusto-Civitanova Marche",
+              "osm_id": "123243586"
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut under power line",
+              "cost_eur": 150000
+            },
+            "permits_required": [
+              "Terna/E-Distribuzione notification"
+            ]
+          },
+          {
+            "crossing_id": "CX-094",
+            "km": 6.951,
+            "coordinates": {
+              "easting": 382973.44,
+              "northing": 4799506.5
+            },
+            "infrastructure": {
+              "type": "powerline",
+              "class": "distribution",
+              "name": "Power line",
+              "osm_id": "214262878"
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut under power line",
+              "cost_eur": 150000
+            },
+            "permits_required": [
+              "Terna/E-Distribuzione notification"
+            ]
+          },
+          {
+            "crossing_id": "CX-095",
+            "km": 5.866,
+            "coordinates": {
+              "easting": 382476.84,
+              "northing": 4800385.03
+            },
+            "infrastructure": {
+              "type": "powerline",
+              "class": "distribution",
+              "name": "Power line",
+              "osm_id": "159474569"
+            },
+            "ground_conditions": {
+              "soil_type": "loam",
+              "excavation": "standard",
+              "hdd_suitability": "good"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut under power line",
+              "cost_eur": 150000
+            },
+            "permits_required": [
+              "Terna/E-Distribuzione notification"
+            ]
+          },
+          {
+            "crossing_id": "CX-096",
+            "km": 4.164,
+            "coordinates": {
+              "easting": 382370.15,
+              "northing": 4802042.91
+            },
+            "infrastructure": {
+              "type": "powerline",
+              "class": "distribution",
+              "name": "Power line",
+              "osm_id": "214840241"
+            },
+            "ground_conditions": {
+              "soil_type": "unknown",
+              "excavation": "standard",
+              "hdd_suitability": "moderate"
+            },
+            "method_analysis": {
+              "selected_method": "open_cut",
+              "rationale": "Open-cut under power line",
+              "cost_eur": 150000
+            },
+            "permits_required": [
+              "Terna/E-Distribuzione notification"
+            ]
+          }
+        ]
+      },
+      "construction": {
+        "estimated_cost_eur": 20998961.0,
+        "cost_breakdown": {
+          "terrain_cost_eur": 13398961.0,
+          "crossing_cost_eur": 7600000
+        }
+      }
+    }
+  ]
+}

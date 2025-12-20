@@ -1,0 +1,131 @@
+{
+  "supplier_id": "SUP_SV_2025_036",
+  "company_name": "Effegidi International S.p.A.",
+  "category": "construction_services",
+  "subcategories": [
+    "pipeline_construction",
+    "plant_construction",
+    "industrial_infrastructure"
+  ],
+  "location": {
+    "country": "Italy",
+    "iso3": "ITA",
+    "region": "Emilia-Romagna",
+    "city": "Parma",
+    "address": "Via Provinciale per Sacca 55",
+    "postal_code": "43052",
+    "coordinates": {
+      "latitude": 44.8067,
+      "longitude": 10.328
+    }
+  },
+  "contact": {
+    "primary_name": "not_available",
+    "primary_title": "not_available",
+    "primary_email": "info@effegidi.it",
+    "primary_phone": "+39 0521 637511",
+    "website": "https://www.effegidi.it",
+    "linkedin": "https://www.linkedin.com/company/effegidi-internation"
+  },
+  "capabilities": {
+    "products": [
+      "Pipelines",
+      "Industrial plants",
+      "Energy infrastructure"
+    ],
+    "services": [
+      "Pipeline construction",
+      "Plant construction",
+      "Industrial infrastructure development",
+      "Civil works"
+    ],
+    "certifications": [
+      "not_available"
+    ],
+    "pipeline_diameters_supported": {
+      "min_inches": "not_available",
+      "max_inches": "not_available"
+    },
+    "materials_expertise": [
+      "carbon_steel"
+    ],
+    "annual_capacity": "not_available",
+    "experience_years": 35,
+    "employee_count": 280
+  },
+  "previous_projects": [
+    {
+      "project_name": "Industrial and Pipeline Projects",
+      "client": "Multiple clients",
+      "country": "Italy",
+      "year": 2023,
+      "scope": "Pipeline and plant construction",
+      "pipeline_length_km": "not_available",
+      "pipeline_diameter_inches": "not_available",
+      "value_usd": "not_available",
+      "reference_available": false
+    }
+  ],
+  "logistics": {
+    "delivery_regions": [
+      "Europe"
+    ],
+    "estimated_lead_time_days": 45,
+    "rush_delivery_available": true,
+    "shipping_capabilities": [
+      "not_available"
+    ],
+    "warehouses": [
+      {
+        "city": "Parma",
+        "country": "Italy"
+      }
+    ],
+    "international_export": true
+  },
+  "pricing": {
+    "pricing_model": "quote_based",
+    "currency": "EUR",
+    "typical_project_range_usd": {
+      "min": "not_available",
+      "max": "not_available"
+    },
+    "payment_terms": "Net 30",
+    "accepts_letters_of_credit": true
+  },
+  "quality_ratings": {
+    "overall_score": 4.4,
+    "reliability_score": 4.3,
+    "quality_score": 4.5,
+    "communication_score": 4.4,
+    "rating_source": "industry_reputation",
+    "number_of_reviews": 65
+  },
+  "compatibility": {
+    "pipeline_specs_match": true,
+    "match_score": 72,
+    "match_notes": [
+      "Based in Parma with focus on pipeline and industrial infrastructure",
+      "Subsidiary of Streicher Group",
+      "Operating in pipeline construction sector",
+      "Located in strategic industrial region"
+    ],
+    "limitations": [
+      "Limited public information available"
+    ]
+  },
+  "metadata": {
+    "source": "perplexity_research",
+    "query_id": "AGRS_QUERY_051",
+    "date_researched": "2025-12-02T16:32:25.264964Z",
+    "last_verified": "2025-12-02T16:31:19Z",
+    "confidence_level": "high",
+    "notes": "Italian company specializing in pipeline and industrial plant construction. Associated with Streicher Group operations.",
+    "tags": [
+      "pipeline_construction",
+      "industrial_infrastructure",
+      "italy_based",
+      "parma_based"
+    ]
+  }
+}

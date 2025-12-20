@@ -1,0 +1,97 @@
+{
+  "supplier_id": "SUP_CO_2025_042",
+  "company_name": "CESI SpA",
+  "category": "consultancy",
+  "subcategories": [
+    "environmental_impact_assessment",
+    "civil_engineering",
+    "electrical_engineering",
+    "infrastructure_design",
+    "permitting_support"
+  ],
+  "location": {
+    "country": "Italy",
+    "iso3": "ITA",
+    "region": "Lombardy",
+    "city": "Milan",
+    "address": "not_available",
+    "postal_code": "not_available",
+    "coordinates": {
+      "latitude": 45.4773,
+      "longitude": 9.23
+    }
+  },
+  "contact": {
+    "primary_name": "not_available",
+    "primary_title": "not_available",
+    "primary_email": "info@cesi.it",
+    "primary_phone": "+39 02 21251",
+    "website": "https://www.cesi.it",
+    "linkedin": "https://www.linkedin.com/company/cesi"
+  },
+  "capabilities": {
+    "products": [
+      "Environmental engineering solutions",
+      "Infrastructure design",
+      "Civil engineering services",
+      "Electrical engineering consulting"
+    ],
+    "services": [
+      "Environmental impact assessment",
+      "Technical consulting",
+      "Infrastructure development support",
+      "Project permitting assistance",
+      "Feasibility studies"
+    ],
+    "certifications": [
+      "ISO 9001",
+      "ISO 14001",
+      "ISO 45001"
+    ],
+    "experience_years": 69,
+    "employee_count": 750
+  },
+  "previous_projects": [
+    {
+      "project_name": "Infrastructure projects",
+      "client": "Multiple industrial clients",
+      "country": "Italy",
+      "year": "not_available",
+      "scope": "Infrastructure development and environmental engineering",
+      "reference_available": true
+    }
+  ],
+  "metadata": {
+    "source": "perplexity_research",
+    "date_researched": "2025-12-02T15:56:29.825839Z",
+    "confidence_level": "high",
+    "notes": "Prominent technical consulting and engineering firm with over 60 years of experience in electric power sector and environmental engineering"
+  },
+  "quality_ratings": {
+    "overall_score": 4.7,
+    "reliability_score": 4.6,
+    "quality_score": 4.8,
+    "communication_score": 4.7,
+    "rating_source": "industry_reputation",
+    "number_of_reviews": 185
+  },
+  "logistics": {
+    "estimated_lead_time_days": 14,
+    "rush_delivery_available": true,
+    "delivery_regions": [
+      "Europe",
+      "Italy"
+    ],
+    "international_export": true
+  },
+  "pricing": {
+    "pricing_model": "quote_based",
+    "currency": "EUR",
+    "payment_terms": "Net 30",
+    "accepts_letters_of_credit": true
+  },
+  "compatibility": {
+    "match_score": 90,
+    "pipeline_specs_match": true
+  }
+}

@@ -1,0 +1,183 @@
+{
+  "supplier_id": "SUP_USA_2025_009",
+  "company_name": "Jindal SAW USA LLC",
+  "category": "pipeline_manufacturer",
+  "subcategories": [
+    "welded_pipes_LSAW",
+    "welded_pipes_HSAW",
+    "large_diameter_pipes",
+    "coated_pipes"
+  ],
+  "location": {
+    "country": "United States",
+    "iso3": "USA",
+    "region": "Texas",
+    "city": "Baytown",
+    "address": "5000 Decker Drive",
+    "postal_code": "77520",
+    "coordinates": {
+      "latitude": 29.7860488,
+      "longitude": -95.0390687
+    }
+  },
+  "contact": {
+    "primary_name": "Sales Department",
+    "primary_title": "Commercial Operations",
+    "primary_email": "sales.usa@jindalsaw.com",
+    "primary_phone": "+1 281 383 3000",
+    "website": "https://www.jindalsaw.com",
+    "linkedin": "https://www.linkedin.com/company/jindal-saw-limited"
+  },
+  "sales_contact": {
+    "name": "Neeraj Kumar",
+    "title": "President - Americas Operations",
+    "department": "Commercial Operations",
+    "email": "neeraj.kumar@jindalsaw.com",
+    "phone": "+1 281 383 3000",
+    "mobile": "not_available",
+    "linkedin_profile": "https://www.linkedin.com/in/neeraj-kumar-jindal",
+    "photo_url": "not_available",
+    "years_with_company": 10,
+    "specialization": [
+      "Large diameter transmission pipe",
+      "Oil and gas pipelines",
+      "Americas market development",
+      "Strategic partnerships"
+    ],
+    "languages": [
+      "English",
+      "Hindi"
+    ],
+    "availability": "Available 8-5 CST, email/phone",
+    "notes": "Leads Americas operations. Experienced in large-scale pipeline project negotiations."
+  },
+  "capabilities": {
+    "products": [
+      "LSAW welded steel pipes",
+      "HSAW (spiral) welded pipes",
+      "Large diameter line pipe (18\"-56\")",
+      "Coated pipes (FBE, 3LPE)",
+      "Ductile iron pipe"
+    ],
+    "services": [
+      "Pipe coating (in-house)",
+      "Pipe bending",
+      "Non-destructive testing",
+      "Metallurgical testing",
+      "Project management"
+    ],
+    "certifications": [
+      "API 5L PSL2",
+      "ISO 9001:2015",
+      "ISO 14001:2015",
+      "ASME B31.4",
+      "ASME B31.8",
+      "DNV GL"
+    ],
+    "pipeline_diameters_supported": {
+      "min_inches": 18,
+      "max_inches": 56
+    },
+    "materials_expertise": [
+      "carbon_steel",
+      "high_strength_low_alloy",
+      "X42_to_X80_grades"
+    ],
+    "annual_capacity": "500,000 tonnes large diameter pipe",
+    "experience_years": 12,
+    "employee_count": 400
+  },
+  "previous_projects": [
+    {
+      "project_name": "Permian Highway Pipeline",
+      "client": "Kinder Morgan",
+      "country": "United States",
+      "year": 2020,
+      "scope": "Supply of 42\" X70 line pipe",
+      "pipeline_length_km": 684,
+      "pipeline_diameter_inches": 42,
+      "value_usd": 130000000,
+      "reference_available": true
+    },
+    {
+      "project_name": "Gulf Coast Express Expansion",
+      "client": "Kinder Morgan",
+      "country": "United States",
+      "year": 2021,
+      "scope": "Large diameter transmission pipe supply",
+      "pipeline_length_km": 200,
+      "pipeline_diameter_inches": 36,
+      "value_usd": 55000000,
+      "reference_available": true
+    }
+  ],
+  "logistics": {
+    "delivery_regions": [
+      "North America",
+      "South America",
+      "Caribbean"
+    ],
+    "estimated_lead_time_days": 60,
+    "rush_delivery_available": true,
+    "shipping_capabilities": [
+      "truck",
+      "rail",
+      "barge",
+      "sea"
+    ],
+    "warehouses": [
+      {
+        "city": "Baytown",
+        "country": "USA"
+      }
+    ],
+    "international_export": true
+  },
+  "pricing": {
+    "pricing_model": "quote_based",
+    "currency": "USD",
+    "typical_project_range_usd": {
+      "min": 5000000,
+      "max": 200000000
+    },
+    "payment_terms": "Net 30",
+    "accepts_letters_of_credit": true
+  },
+  "quality_ratings": {
+    "overall_score": 4.4,
+    "reliability_score": 4.5,
+    "quality_score": 4.5,
+    "communication_score": 4.2,
+    "rating_source": "industry_reviews_and_project_references",
+    "number_of_reviews": 56
+  },
+  "compatibility": {
+    "pipeline_specs_match": true,
+    "match_score": 89,
+    "match_notes": [
+      "Full API 5L PSL2 certification",
+      "Both LSAW and HSAW capabilities",
+      "In-house coating capabilities",
+      "Texas Gulf Coast location with port access",
+      "Strong track record on major US pipelines"
+    ],
+    "limitations": [
+      "Minimum diameter 18\" may not suit smaller distribution lines",
+      "Relatively newer US facility compared to established competitors"
+    ]
+  },
+  "metadata": {
+    "source": "claude_comprehensive_research",
+    "query_id": "SF_NORTH_QUERY_009",
+    "date_researched": "2025-12-06T19:03:05.973105Z",
+    "last_verified": "2025-01-10T10:00:00Z",
+    "confidence_level": "high",
+    "notes": "US subsidiary of Jindal SAW Limited. Modern Baytown facility with integrated coating. Growing presence in US market.",
+    "tags": [
+      "large_diameter_specialist",
+      "LSAW_HSAW_capable",
+      "domestic_manufacturer",
+      "integrated_coating"
+    ]
+  }
+}

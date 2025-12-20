@@ -37,8 +37,21 @@ export function CostMatrixDialog({ isOpen, onClose, routeId, project }: CostMatr
 
   if (!isOpen) return null
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const costMatrix = metadata?.cost_matrix as Record<string, any> | undefined
+  // Type assertion for cost matrix data structure
+  type CostMatrixType = {
+    trenching_per_m?: Record<string, { cost: number; description?: string; slope_range?: string }>
+    landcover_per_m?: Record<string, { name: string; cost: number; description?: string }>
+    road_crossings?: Record<string, number>
+    railway_crossings?: Record<string, number>
+    waterway_crossings?: Record<string, number>
+    powerline_crossing?: number
+    regional_multiplier?: number
+    base_construction_per_m?: number
+    reference?: string
+    version?: string
+    calibration_date?: string
+  }
+  const costMatrix = metadata?.cost_matrix as CostMatrixType | undefined
 
   // Format currency
   const formatCurrency = (value: number) => {
@@ -65,8 +78,7 @@ export function CostMatrixDialog({ isOpen, onClose, routeId, project }: CostMatr
   // Parse trenching costs
   const getTrenchingCosts = (): CostRate[] => {
     if (!costMatrix?.trenching_per_m) return []
-    const trenchingData = costMatrix.trenching_per_m as Record<string, { cost: number; description?: string; slope_range?: string }>
-    return Object.entries(trenchingData).map(([key, value]) => ({
+    return Object.entries(costMatrix.trenching_per_m).map(([key, value]) => ({
       name: key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
       cost: value.cost,
       description: value.description,
@@ -77,8 +89,7 @@ export function CostMatrixDialog({ isOpen, onClose, routeId, project }: CostMatr
   // Parse landcover costs
   const getLandcoverCosts = (): CostRate[] => {
     if (!costMatrix?.landcover_per_m) return []
-    const landcoverData = costMatrix.landcover_per_m as Record<string, { name: string; cost: number; description?: string }>
-    return Object.entries(landcoverData)
+    return Object.entries(costMatrix.landcover_per_m)
       .map(([, value]) => ({
         name: value.name,
         cost: value.cost,
@@ -90,8 +101,7 @@ export function CostMatrixDialog({ isOpen, onClose, routeId, project }: CostMatr
   // Parse road crossing costs
   const getRoadCrossingCosts = (): CostRate[] => {
     if (!costMatrix?.road_crossings) return []
-    const roadData = costMatrix.road_crossings as Record<string, number>
-    return Object.entries(roadData)
+    return Object.entries(costMatrix.road_crossings)
       .filter(([key]) => key !== 'default')
       .map(([key, value]) => ({
         name: key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
@@ -103,8 +113,7 @@ export function CostMatrixDialog({ isOpen, onClose, routeId, project }: CostMatr
   // Parse railway crossing costs
   const getRailwayCrossingCosts = (): CostRate[] => {
     if (!costMatrix?.railway_crossings) return []
-    const railwayData = costMatrix.railway_crossings as Record<string, number>
-    return Object.entries(railwayData)
+    return Object.entries(costMatrix.railway_crossings)
       .filter(([key]) => key !== 'default')
       .map(([key, value]) => ({
         name: key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
@@ -116,8 +125,7 @@ export function CostMatrixDialog({ isOpen, onClose, routeId, project }: CostMatr
   // Parse waterway crossing costs
   const getWaterwayCrossingCosts = (): CostRate[] => {
     if (!costMatrix?.waterway_crossings) return []
-    const waterwayData = costMatrix.waterway_crossings as Record<string, number>
-    return Object.entries(waterwayData)
+    return Object.entries(costMatrix.waterway_crossings)
       .filter(([key]) => key !== 'default')
       .map(([key, value]) => ({
         name: key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),

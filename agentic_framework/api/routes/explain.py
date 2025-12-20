@@ -5,7 +5,7 @@ AI agent analysis on pipeline route segments.
 """
 import logging
 import time
-from typing import List
+from typing import List, Optional
 
 from fastapi import APIRouter, HTTPException, Response
 
@@ -16,6 +16,7 @@ from agents.cache import get_cached_response, save_to_cache
 from agents.fallback import get_fallback_response, should_use_fallback
 from agents.executor import run_full_analysis
 from config.settings import Settings
+from api.routes.routes import get_segment_decisions, load_decisions_data
 
 
 logger = logging.getLogger(__name__)
@@ -34,7 +35,8 @@ router = APIRouter()
 )
 async def explain_segments(
     request: ExplainRequest,
-    response: Response
+    response: Response,
+    project: Optional[str] = None
 ) -> List[ExplainResponse]:
     """Analyze pipeline route segments using AI agents.
 
@@ -43,6 +45,7 @@ async def explain_segments(
 
     Args:
         request: ExplainRequest with route_id and segment_ids
+        project: Optional project name for project-specific routes
 
     Returns:
         List of ExplainResponse objects, one per segment
@@ -54,11 +57,11 @@ async def explain_segments(
     route_id = request.route_id
     segment_ids = request.segment_ids
 
-    logger.info(f"Explain request: route={route_id}, segments={segment_ids}")
+    logger.info(f"Explain request: route={route_id}, segments={segment_ids}, project={project}")
 
     # Validate route exists
     try:
-        route_data = load_route(route_id)
+        route_data = load_route(route_id, project)
     except RouteNotFoundError:
         raise HTTPException(
             status_code=404,
@@ -66,7 +69,7 @@ async def explain_segments(
         )
 
     # Validate all segment IDs exist in route
-    available_segments = get_all_segment_ids(route_id)
+    available_segments = get_all_segment_ids(route_id, project)
     missing_segments = [
         seg_id for seg_id in segment_ids
         if seg_id not in available_segments
@@ -77,6 +80,12 @@ async def explain_segments(
             status_code=404,
             detail=f"Segments not found in route '{route_id}': {missing_segments}"
         )
+
+    # Pre-load decisions data for this route (shared across segments)
+    route_decisions = load_decisions_data(route_id, project)
+    has_decisions = route_decisions is not None
+    if has_decisions:
+        logger.info(f"Loaded decisions.json for route {route_id}")
 
     # Process each segment
     results: List[ExplainResponse] = []
@@ -94,14 +103,18 @@ async def explain_segments(
         # Check if we should use fallback mode
         if should_use_fallback():
             logger.info(f"Using fallback for segment {segment_id} (fallback mode enabled)")
-            segment_data = extract_segment_data(route_id, segment_id)
+            segment_data = extract_segment_data(route_id, segment_id, project)
             segment_dict = _segment_to_dict(segment_data) if segment_data else {}
+            # Enrich with decisions data
+            decisions = get_segment_decisions(route_id, segment_id, project)
+            if decisions:
+                segment_dict["decisions"] = decisions
             fallback = get_fallback_response(segment_id, segment_dict)
             results.append(ExplainResponse(**fallback))
             continue
 
         # Extract segment data
-        segment_data = extract_segment_data(route_id, segment_id)
+        segment_data = extract_segment_data(route_id, segment_id, project)
         if segment_data is None:
             logger.error(f"Failed to extract data for segment {segment_id}")
             raise HTTPException(
@@ -111,6 +124,12 @@ async def explain_segments(
 
         # Convert to dict for agent processing
         segment_dict = _segment_to_dict(segment_data)
+
+        # Enrich with validated decisions data from decisions.json
+        decisions = get_segment_decisions(route_id, segment_id, project)
+        if decisions:
+            segment_dict["decisions"] = decisions
+            logger.debug(f"Enriched segment {segment_id} with decisions data")
 
         # Run full analysis
         try:
@@ -160,7 +179,8 @@ async def explain_single_segment(
     route_id: str,
     segment_id: str,
     response: Response,
-    skip_cache: bool = False
+    skip_cache: bool = False,
+    project: Optional[str] = None
 ) -> ExplainResponse:
     """Analyze a single pipeline route segment.
 
@@ -170,15 +190,18 @@ async def explain_single_segment(
         route_id: Route identifier
         segment_id: Segment identifier
         skip_cache: If True, bypass cache and force fresh analysis
+        project: Optional project name for project-specific routes
 
     Returns:
         ExplainResponse for the segment
     """
     start_time = time.time()
 
+    logger.info(f"Single explain request: route={route_id}, segment={segment_id}, project={project}")
+
     # Validate route exists
     try:
-        load_route(route_id)
+        load_route(route_id, project)
     except RouteNotFoundError:
         raise HTTPException(
             status_code=404,
@@ -198,13 +221,17 @@ async def explain_single_segment(
     # Check if we should use fallback mode
     if should_use_fallback():
         logger.info(f"Using fallback for segment {segment_id} (fallback mode enabled)")
-        segment_data = extract_segment_data(route_id, segment_id)
+        segment_data = extract_segment_data(route_id, segment_id, project)
         segment_dict = _segment_to_dict(segment_data) if segment_data else {}
+        # Enrich with decisions data
+        decisions = get_segment_decisions(route_id, segment_id, project)
+        if decisions:
+            segment_dict["decisions"] = decisions
         fallback = get_fallback_response(segment_id, segment_dict)
         return ExplainResponse(**fallback)
 
     # Extract segment data
-    segment_data = extract_segment_data(route_id, segment_id)
+    segment_data = extract_segment_data(route_id, segment_id, project)
     if segment_data is None:
         raise HTTPException(
             status_code=404,
@@ -213,6 +240,12 @@ async def explain_single_segment(
 
     # Convert to dict
     segment_dict = _segment_to_dict(segment_data)
+
+    # Enrich with validated decisions data from decisions.json
+    decisions = get_segment_decisions(route_id, segment_id, project)
+    if decisions:
+        segment_dict["decisions"] = decisions
+        logger.debug(f"Enriched segment {segment_id} with decisions data")
 
     # Run full analysis
     try:

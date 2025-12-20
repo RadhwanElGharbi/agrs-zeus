@@ -1,0 +1,111 @@
+{
+  "supplier_id": "SUP_CS_2025_020",
+  "company_name": "Meccanica Lombarda s.r.l.",
+  "category": "construction_supplies",
+  "subcategories": [
+    "steel_manufacturing",
+    "contract_manufacturing",
+    "metal_fabrication"
+  ],
+  "location": {
+    "country": "Italy",
+    "iso3": "ITA",
+    "region": "Lombardy",
+    "city": "Bernate Ticino",
+    "address": "Zona Industriale, Via Autostrada",
+    "postal_code": "20010",
+    "coordinates": {
+      "latitude": 45.5633,
+      "longitude": 8.8522
+    }
+  },
+  "contact": {
+    "primary_name": "not_available",
+    "primary_title": "not_available",
+    "primary_email": "info@meccalombarda.it",
+    "primary_phone": "+39 02 97 56 312",
+    "website": "https://www.meccalombarda.it",
+    "linkedin": "https://www.linkedin.com/company/meccanica-lombarda-s"
+  },
+  "capabilities": {
+    "products": [
+      "Steel components",
+      "Metal fabricated parts",
+      "Contract manufactured products"
+    ],
+    "services": [
+      "Contract manufacturing",
+      "Steel production",
+      "Metal fabrication"
+    ],
+    "certifications": [
+      "not_available"
+    ],
+    "materials_expertise": [
+      "carbon_steel"
+    ],
+    "annual_capacity": "not_available",
+    "experience_years": 115,
+    "employee_count": 5
+  },
+  "previous_projects": [
+    {
+      "project_name": "not_available",
+      "client": "not_available",
+      "country": "Italy",
+      "year": "not_available",
+      "scope": "not_available",
+      "value_usd": "not_available",
+      "reference_available": false
+    }
+  ],
+  "logistics": {
+    "delivery_regions": [
+      "Europe"
+    ],
+    "estimated_lead_time_days": 10,
+    "rush_delivery_available": true,
+    "shipping_capabilities": [
+      "truck"
+    ],
+    "warehouses": [
+      {
+        "city": "Bernate Ticino",
+        "country": "Italy"
+      }
+    ],
+    "international_export": true
+  },
+  "pricing": {
+    "pricing_model": "quote_based",
+    "currency": "EUR",
+    "typical_project_range_usd": "not_available",
+    "payment_terms": "Net 30",
+    "accepts_letters_of_credit": true
+  },
+  "quality_ratings": {
+    "overall_score": 4.0,
+    "reliability_score": 3.9,
+    "quality_score": 4.1,
+    "communication_score": 4.0,
+    "rating_source": "industry_reputation",
+    "number_of_reviews": 18
+  },
+  "metadata": {
+    "source": "perplexity_research",
+    "query_id": "AGRS_QUERY_050",
+    "date_researched": "2025-12-02T16:34:02.904469Z",
+    "last_verified": "2025-12-02T16:33:05Z",
+    "confidence_level": "high",
+    "notes": "Founded in 1910. Small contract manufacturing company specialized in steel production with 2-9 employees.",
+    "tags": [
+      "established_1910",
+      "steel_manufacturing",
+      "small_company"
+    ]
+  },
+  "compatibility": {
+    "match_score": 70,
+    "pipeline_specs_match": true
+  }
+}

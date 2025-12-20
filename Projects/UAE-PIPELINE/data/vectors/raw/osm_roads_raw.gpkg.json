@@ -1,0 +1,69 @@
+{
+  "dataset_name": "OpenStreetMap Roads Extract",
+  "category": "roads",
+  "project": "UAE-PIPELINE",
+  "raw_path": "/opt/agrs/Projects/UAE-PIPELINE/data/vectors/raw/osm_roads_raw.gpkg",
+  "fetch_tool": "osm_roads_overpass",
+  "fetch_command": "zeus_ai_agent mkdir -p /opt/agrs/Projects/UAE-PIPELINE/data/vectors/raw /opt/agrs/Projects/UAE-PIPELINE/data/vectors/processed /opt/agrs/Projects/UAE-PIPELINE/scripts python3 << 'PYEOF'\nimport requests\nimport json\nimport subprocess\nimport os\nfrom datetime import datetime\n\n# AOI bbox: south,west,north,east for Overpass\nbbox = \"25.09238723282944,55.52425511945053,25.202129732657706,55.664145381704756\"\n\n# Overpass query for roads - get ALL highway types to ensure complete coverage\noverpass_query = f\"\"\"\n[out:json][timeout:300];\n(\n  way[\"highway\"~\"motorway|motorway_link|trunk|trunk_link|primary|primary_link|secondary|secondary_link|tertiary|tertiary_link|unclassified|residential|living_street|service|track|road\"]({bbox});\n);\nout body;\n>;\nout skel qt;\n\"\"\"\n\nprint(\"Querying Overpass API for roads...\")\nresponse = requests.post(\n    \"https://overpass-api.de/api/interpreter\",\n    data=overpass_query,\n    timeout=300\n)\n\nif response.status_code != 200:\n    print(f\"ERROR: Overpass API returned {response.status_code}\")\n    exit(1)\n\ndata = response.json()\n\n# Build node lookup for geometry construction\nnodes = {}\nfor elem in data.get('elements', []):\n    if elem['type'] == 'node':\n        nodes[elem['id']] = (elem['lon'], elem['lat'])\n\n# Build GeoJSON features from ways\nfeatures = []\nfor elem in data.get('elements', []):\n    if elem['type'] == 'way':\n        # Build line geometry from node references\n        coords = []\n        for node_id in elem.get('nodes', []):\n            if node_id in nodes:\n                coords.append(nodes[node_id])\n        \n        if len(coords) < 2:\n            continue  # Skip invalid geometries\n        \n        tags = elem.get('tags', {})\n        \n        # Build properties - preserve ALL original tags plus required schema fields\n        props = {\n            'osm_id': elem['id'],\n            'name': tags.get('name', ''),\n            'highway': tags.get('highway', ''),\n            'ref': tags.get('ref', ''),\n            'surface': tags.get('surface', ''),\n            'lanes': tags.get('lanes', ''),\n            'maxspeed': tags.get('maxspeed', ''),\n            'oneway': tags.get('oneway', '')\n        }\n        \n        # Preserve ALL additional OSM tags\n        for key, value in tags.items():\n            if key not in props:\n                props[f'osm_{key}'] = str(value) if not isinstance(value, str) else value\n        \n        feature = {\n            'type': 'Feature',\n            'geometry': {\n                'type': 'LineString',\n                'coordinates': coords\n            },\n            'properties': props\n        }\n        features.append(feature)\n\nprint(f\"Found {len(features)} road features\")\n\nif len(features) == 0:\n    print(\"ERROR: No road features found!\")\n    exit(1)\n\n# Create GeoJSON\ngeojson = {\n    'type': 'FeatureCollection',\n    'features': features\n}\n\n# Save temporary GeoJSON\ntemp_geojson = '/opt/agrs/Projects/UAE-PIPELINE/data/vectors/raw/osm_roads_temp.geojson'\nwith open(temp_geojson, 'w') as f:\n    json.dump(geojson, f)\n\nprint(f\"Saved temporary GeoJSON with {len(features)} features\")\n\n# Convert to GeoPackage with layer name 'roads'\nraw_gpkg = '/opt/agrs/Projects/UAE-PIPELINE/data/vectors/raw/osm_roads_raw.gpkg'\n\n# Remove existing file if present\nif os.path.exists(raw_gpkg):\n    os.remove(raw_gpkg)\n\ncmd = [\n    'ogr2ogr',\n    '-f', 'GPKG',\n    '-nln', 'roads',  # Layer name must be 'roads'\n    '-a_srs', 'EPSG:4326',\n    raw_gpkg,\n    temp_geojson\n]\n\nresult = subprocess.run(cmd, capture_output=True, text=True)\nif result.returncode != 0:\n    print(f\"ERROR: ogr2ogr failed: {result.stderr}\")\n    exit(1)\n\nprint(f\"Created raw GeoPackage: {raw_gpkg}\")\n\n# Clean up temp file\nos.remove(temp_geojson)\n\n# Create metadata JSON for raw data\nmetadata = {\n    \"dataset_name\": \"OpenStreetMap Roads\",\n    \"category\": \"roads\",\n    \"source\": \"OpenStreetMap via Overpass API\",\n    \"provider\": \"OpenStreetMap Contributors\",\n    \"provider_url\": \"https://www.openstreetmap.org/\",\n    \"fetch_date\": datetime.utcnow().strftime(\"%Y-%m-%dT%H:%M:%SZ\"),\n    \"fetch_tool\": \"overpass_api_python\",\n    \"raw_crs\": \"EPSG:4326\",\n    \"data_type\": \"Vector\",\n    \"geometry_type\": \"LineString\",\n    \"format\": \"GeoPackage\",\n    \"layer_name\": \"roads\",\n    \"feature_count\": len(features),\n    \"bbox_wgs84\": {\n        \"west\": 55.52425511945053,\n        \"south\": 25.09238723282944,\n        \"east\": 55.664145381704756,\n        \"north\": 25.202129732657706\n    },\n    \"documentation_url\": \"https://wiki.openstreetmap.org/wiki/Key:highway\",\n    \"license\": \"ODbL 1.0\",\n    \"attribution\": \"\u00a9 OpenStreetMap contributors\",\n    \"notes\": \"All original OSM attributes preserved. Schema-required fields: osm_id, name, highway, ref, surface, lanes, maxspeed, oneway\"\n}\n\nwith open(f\"{raw_gpkg}.json\", 'w') as f:\n    json.dump(metadata, f, indent=2)\n\nprint(f\"Created metadata: {raw_gpkg}.json\")\nprint(\"Raw data fetch complete!\")\nPYEOF ogr2ogr -f GPKG -t_srs EPSG:32640 -nln roads -clipsrc /opt/agrs/Projects/UAE-PIPELINE/aoi/aoi.geojson -overwrite /opt/agrs/Projects/UAE-PIPELINE/data/vectors/processed/osm_roads_epsg32640_processed.gpkg /opt/agrs/Projects/UAE-PIPELINE/data/vectors/raw/osm_roads_raw.gpkg roads python3 << 'PYEOF'\nimport json\nimport subprocess\nfrom datetime import datetime\n\nprocessed_gpkg = '/opt/agrs/Projects/UAE-PIPELINE/data/vectors/processed/osm_roads_epsg32640_processed.gpkg'\nraw_gpkg = '/opt/agrs/Projects/UAE-PIPELINE/data/vectors/raw/osm_roads_raw.gpkg'\n\n# Get feature count from processed file\nresult = subprocess.run(\n    ['ogrinfo', '-so', processed_gpkg, 'roads'],\n    capture_output=True, text=True\n)\n\nfeature_count = 0\nfor line in result.stdout.split('\\n'):\n    if 'Feature Count:' in line:\n        feature_count = int(line.split(':')[1].strip())\n        break\n\n# Get extent\nextent = {}\nfor line in result.stdout.split('\\n'):\n    if 'Extent:' in line:\n        # Parse extent line like \"Extent: (318000.0, 2777000.0) - (335000.0, 2790000.0)\"\n        import re\n        match = re.search(r'Extent: \\(([^,]+), ([^)]+)\\) - \\(([^,]+), ([^)]+)\\)', line)\n        if match:\n            extent = {\n                'minx': float(match.group(1)),\n                'miny': float(match.group(2)),\n                'maxx': float(match.group(3)),\n                'maxy': float(match.group(4)),\n                'crs': 'EPSG:32640'\n            }\n        break\n\nmetadata = {\n    \"dataset_name\": \"OpenStreetMap Roads\",\n    \"category\": \"roads\",\n    \"project\": \"UAE-PIPELINE\",\n    \"processing_date\": datetime.utcnow().strftime(\"%Y-%m-%dT%H:%M:%SZ\"),\n    \"target_crs\": \"EPSG:32640\",\n    \"target_crs_name\": \"WGS 84 / UTM zone 40N\",\n    \"data_type\": \"Vector\",\n    \"geometry_type\": \"LineString\",\n    \"format\": \"GeoPackage\",\n    \"layer_name\": \"roads\",\n    \"feature_count\": feature_count,\n    \"extent\": extent,\n    \"bbox_wgs84\": {\n        \"west\": 55.52425511945053,\n        \"south\": 25.09238723282944,\n        \"east\": 55.664145381704756,\n        \"north\": 25.202129732657706\n    },\n    \"operations_applied\": [\n        {\n            \"operation\": \"reproject\",\n            \"tool\": \"ogr2ogr\",\n            \"source_crs\": \"EPSG:4326\",\n            \"target_crs\": \"EPSG:32640\",\n            \"timestamp\": datetime.utcnow().strftime(\"%Y-%m-%dT%H:%M:%SZ\")\n        },\n        {\n            \"operation\": \"clip\",\n            \"tool\": \"ogr2ogr\",\n            \"cutline\": \"aoi/aoi.geojson\",\n            \"timestamp\": datetime.utcnow().strftime(\"%Y-%m-%dT%H:%M:%SZ\")\n        }\n    ],\n    \"source_files\": [\n        {\n            \"filename\": \"osm_roads_raw.gpkg\",\n            \"metadata\": \"osm_roads_raw.gpkg.json\"\n        }\n    ],\n    \"source\": \"OpenStreetMap via Overpass API\",\n    \"provider\": \"OpenStreetMap Contributors\",\n    \"license\": \"ODbL 1.0\",\n    \"attribution\": \"\u00a9 OpenStreetMap contributors\",\n    \"validation_status\": \"passed\" if feature_count > 0 else \"failed\",\n    \"validation_date\": datetime.utcnow().strftime(\"%Y-%m-%dT%H:%M:%SZ\"),\n    \"protocol_version\": \"1.0\"\n}\n\nwith open(f\"{processed_gpkg}.json\", 'w') as f:\n    json.dump(metadata, f, indent=2)\n\nprint(f\"Created processed metadata with {feature_count} features\")\nPYEOF ogrinfo /opt/agrs/Projects/UAE-PIPELINE/data/vectors/processed/osm_roads_epsg32640_processed.gpkg -sql \"SELECT CreateSpatialIndex('roads', 'geom')\" 2>/dev/null || echo 'Spatial index may already exist' ogrinfo -so /opt/agrs/Projects/UAE-PIPELINE/data/vectors/raw/osm_roads_raw.gpkg roads | grep -E 'Feature Count|Geometry' ls -la /opt/agrs/Projects/UAE-PIPELINE/data/vectors/raw/osm_roads_raw.gpkg.json && cat /opt/agrs/Projects/UAE-PIPELINE/data/vectors/raw/osm_roads_raw.gpkg.json | head -20 ogrinfo -so /opt/agrs/Projects/UAE-PIPELINE/data/vectors/processed/osm_roads_epsg32640_processed.gpkg roads | grep -E 'Feature Count|Geometry|PROJCRS' ls -la /opt/agrs/Projects/UAE-PIPELINE/data/vectors/processed/osm_roads_epsg32640_processed.gpkg.json ogrinfo -so /opt/agrs/Projects/UAE-PIPELINE/data/vectors/processed/osm_roads_epsg32640_processed.gpkg roads | grep -E 'osm_id|name|highway|ref|surface|lanes|maxspeed|oneway' ogrinfo /opt/agrs/Projects/UAE-PIPELINE/data/vectors/processed/osm_roads_epsg32640_processed.gpkg roads -limit 3",
+  "fetch_date": "2025-12-06T15:05:09.775845Z",
+  "data_type": "Vector",
+  "format": "GeoPackage",
+  "file_size_bytes": 864256,
+  "protocol_reference": "/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md",
+  "protocol_version": "1.0",
+  "zeus_version": "0.1.0",
+  "tiles_downloaded": [],
+  "notes": "OpenStreetMap road network (highways + local roads).",
+  "requested_bbox_wgs84": {
+    "west": 55.52425511945053,
+    "south": 25.09238723282944,
+    "east": 55.664145381704756,
+    "north": 25.202129732657706,
+    "crs": "EPSG:4326"
+  },
+  "validation_status": "passed",
+  "validation_date": "2025-12-06T15:05:09.775858Z",
+  "source": "OpenStreetMap (highway)",
+  "provider": "OpenStreetMap Contributors",
+  "provider_url": "https://www.openstreetmap.org",
+  "coverage_date": "Current (live OSM)",
+  "documentation_url": "https://wiki.openstreetmap.org/wiki/Overpass_API",
+  "license": "ODbL 1.0",
+  "attribution": "\u00a9 OpenStreetMap contributors.",
+  "metadata": {
+    "description": "/opt/agrs/Projects/UAE-PIPELINE/data/vectors/raw/osm_roads_raw.gpkg",
+    "driverShortName": "GPKG",
+    "driverLongName": "GeoPackage",
+    "layers": [
+      {
+        "name": "roads",
+        "metadata": {
+          "NATIVE_DATA": {
+            "NATIVE_DATA": "{ }",
+            "NATIVE_MEDIA_TYPE": "application/vnd.geo+json"
+          }
+        }
+      }
+    ],
+    "metadata": {},
+    "domains": {},
+    "relationships": {}
+  },
+  "feature_count": 0,
+  "raw_crs": "EPSG:4326",
+  "extent": {
+    "minx": 55.52425511945053,
+    "miny": 25.09238723282944,
+    "maxx": 55.664145381704756,
+    "maxy": 25.202129732657706,
+    "crs": "EPSG:4326"
+  },
+  "bbox_wgs84": {
+    "west": 55.52425511945053,
+    "south": 25.09238723282944,
+    "east": 55.664145381704756,
+    "north": 25.202129732657706,
+    "crs": "EPSG:4326"
+  },
+  "checksum_sha256": "2635b8dd170045b9613b3acab1c9f5c98e4f99c0527bf6f1b679f05926b4608b"
+}

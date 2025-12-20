@@ -1,0 +1,211 @@
+{
+  "project_id": "AGRS_UAE_PIPELINE_ARE_2025_001",
+  "last_updated": "2025-12-06T15:25:18Z",
+  "total_suppliers": 20,
+  "suppliers_by_category": {
+    "construction_services": 10,
+    "pipeline_manufacturer": 10
+  },
+  "suppliers": [
+    {
+      "supplier_id": "SUP_ARE_2025_001",
+      "company_name": "National Petroleum Construction Company (NPCC)",
+      "category": "construction_services",
+      "file": "construction_services/SUP_ARE_2025_001.json",
+      "coordinates": {
+        "latitude": 24.4538352,
+        "longitude": 54.3774014
+      }
+    },
+    {
+      "supplier_id": "SUP_ARE_2025_011",
+      "company_name": "Abu Dhabi Pipe Factory LLC",
+      "category": "pipeline_manufacturer",
+      "file": "pipeline_manufacturers/SUP_ARE_2025_011.json",
+      "coordinates": {
+        "latitude": 24.373808,
+        "longitude": 54.4879389
+      }
+    },
+    {
+      "supplier_id": "SUP_ARE_2025_014",
+      "company_name": "Tenaris Global Services (UAE) Ltd",
+      "category": "pipeline_manufacturer",
+      "file": "pipeline_manufacturers/SUP_ARE_2025_014.json",
+      "coordinates": {
+        "latitude": 24.4538352,
+        "longitude": 54.3774014
+      }
+    },
+    {
+      "supplier_id": "SUP_ARE_2025_019",
+      "company_name": "Welspun Corp Middle East",
+      "category": "pipeline_manufacturer",
+      "file": "pipeline_manufacturers/SUP_ARE_2025_019.json",
+      "coordinates": {
+        "latitude": 25.0742823,
+        "longitude": 55.1885387
+      }
+    },
+    {
+      "supplier_id": "SUP_ARE_2025_002",
+      "company_name": "Dodsal Engineering and Construction PTE Ltd",
+      "category": "construction_services",
+      "file": "construction_services/SUP_ARE_2025_002.json",
+      "coordinates": {
+        "latitude": 25.0742823,
+        "longitude": 55.1885387
+      }
+    },
+    {
+      "supplier_id": "SUP_ARE_2025_017",
+      "company_name": "Jindal SAW Ltd - UAE Branch",
+      "category": "pipeline_manufacturer",
+      "file": "pipeline_manufacturers/SUP_ARE_2025_017.json",
+      "coordinates": {
+        "latitude": 25.0742823,
+        "longitude": 55.1885387
+      }
+    },
+    {
+      "supplier_id": "SUP_ARE_2025_005",
+      "company_name": "Petrofac Emirates LLC",
+      "category": "construction_services",
+      "file": "construction_services/SUP_ARE_2025_005.json",
+      "coordinates": {
+        "latitude": 24.4538352,
+        "longitude": 54.3774014
+      }
+    },
+    {
+      "supplier_id": "SUP_ARE_2025_016",
+      "company_name": "Vallourec Middle East",
+      "category": "pipeline_manufacturer",
+      "file": "pipeline_manufacturers/SUP_ARE_2025_016.json",
+      "coordinates": {
+        "latitude": 24.4538352,
+        "longitude": 54.3774014
+      }
+    },
+    {
+      "supplier_id": "SUP_ARE_2025_003",
+      "company_name": "Tecnicas Reunidas Gulf LLC",
+      "category": "construction_services",
+      "file": "construction_services/SUP_ARE_2025_003.json",
+      "coordinates": {
+        "latitude": 24.4538352,
+        "longitude": 54.3774014
+      }
+    },
+    {
+      "supplier_id": "SUP_ARE_2025_018",
+      "company_name": "Sumitomo Corporation Middle East FZE",
+      "category": "pipeline_manufacturer",
+      "file": "pipeline_manufacturers/SUP_ARE_2025_018.json",
+      "coordinates": {
+        "latitude": 25.0742823,
+        "longitude": 55.1885387
+      }
+    },
+    {
+      "supplier_id": "SUP_ARE_2025_004",
+      "company_name": "Target Engineering Construction Company LLC",
+      "category": "construction_services",
+      "file": "construction_services/SUP_ARE_2025_004.json",
+      "coordinates": {
+        "latitude": 24.3798866,
+        "longitude": 54.4961046
+      }
+    },
+    {
+      "supplier_id": "SUP_ARE_2025_009",
+      "company_name": "Archirodon Construction (Overseas) Co. S.A.",
+      "category": "construction_services",
+      "file": "construction_services/SUP_ARE_2025_009.json",
+      "coordinates": {
+        "latitude": 25.0742823,
+        "longitude": 55.1885387
+      }
+    },
+    {
+      "supplier_id": "SUP_ARE_2025_007",
+      "company_name": "Galfar Engineering & Contracting SAOG",
+      "category": "construction_services",
+      "file": "construction_services/SUP_ARE_2025_007.json",
+      "coordinates": {
+        "latitude": 24.4538352,
+        "longitude": 54.3774014
+      }
+    },
+    {
+      "supplier_id": "SUP_ARE_2025_012",
+      "company_name": "Conares Metal Supply Ltd",
+      "category": "pipeline_manufacturer",
+      "file": "pipeline_manufacturers/SUP_ARE_2025_012.json",
+      "coordinates": {
+        "latitude": 24.9775987,
+        "longitude": 55.0910742
+      }
+    },
+    {
+      "supplier_id": "SUP_ARE_2025_006",
+      "company_name": "Al Jaber LEGT Engineering & Contracting (ALEC)",
+      "category": "construction_services",
+      "file": "construction_services/SUP_ARE_2025_006.json",
+      "coordinates": {
+        "latitude": 25.0742823,
+        "longitude": 55.1885387
+      }
+    },
+    {
+      "supplier_id": "SUP_ARE_2025_010",
+      "company_name": "Zakher Marine International Inc.",
+      "category": "construction_services",
+      "file": "construction_services/SUP_ARE_2025_010.json",
+      "coordinates": {
+        "latitude": 24.4538352,
+        "longitude": 54.3774014
+      }
+    },
+    {
+      "supplier_id": "SUP_ARE_2025_020",
+      "company_name": "National Pipe Company Ltd (NPC)",
+      "category": "pipeline_manufacturer",
+      "file": "pipeline_manufacturers/SUP_ARE_2025_020.json",
+      "coordinates": {
+        "latitude": 24.4538352,
+        "longitude": 54.3774014
+      }
+    },
+    {
+      "supplier_id": "SUP_ARE_2025_008",
+      "company_name": "Arabian Construction Company (ACC)",
+      "category": "construction_services",
+      "file": "construction_services/SUP_ARE_2025_008.json",
+      "coordinates": {
+        "latitude": 25.0742823,
+        "longitude": 55.1885387
+      }
+    },
+    {
+      "supplier_id": "SUP_ARE_2025_015",
+      "company_name": "Emirates Steel Arkan",
+      "category": "pipeline_manufacturer",
+      "file": "pipeline_manufacturers/SUP_ARE_2025_015.json",
+      "coordinates": {
+        "latitude": 24.373808,
+        "longitude": 54.4879389
+      }
+    },
+    {
+      "supplier_id": "SUP_ARE_2025_013",
+      "company_name": "Universal Tube & Plastic Industries Ltd (Uniplast)",
+      "category": "pipeline_manufacturer",
+      "file": "pipeline_manufacturers/SUP_ARE_2025_013.json",
+      "coordinates": {
+        "latitude": 25.0052466,
+        "longitude": 55.1556654
+      }
+    }
+  ]
+}

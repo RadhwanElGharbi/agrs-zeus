@@ -1,0 +1,112 @@
+{
+  "supplier_id": "SUP_CS_2025_015",
+  "company_name": "Rubiera Special Steel SpA",
+  "category": "construction_supplies",
+  "subcategories": [
+    "steel_manufacturing",
+    "special_steel",
+    "contract_manufacturing"
+  ],
+  "location": {
+    "country": "Italy",
+    "iso3": "ITA",
+    "region": "Emilia-Romagna",
+    "city": "Casalgrande",
+    "address": "not_available",
+    "postal_code": "not_available",
+    "coordinates": {
+      "latitude": 44.6117,
+      "longitude": 12.4325
+    }
+  },
+  "contact": {
+    "primary_name": "not_available",
+    "primary_title": "not_available",
+    "primary_email": "info@rubierasteel.it",
+    "primary_phone": "+39 0522 849111",
+    "website": "https://www.rubierasteel.it",
+    "linkedin": "https://www.linkedin.com/company/rubiera-special-stee"
+  },
+  "capabilities": {
+    "products": [
+      "Special steel",
+      "Steel components",
+      "Contract manufactured products"
+    ],
+    "services": [
+      "Contract manufacturing",
+      "Steel production",
+      "Special alloy processing"
+    ],
+    "certifications": [
+      "not_available"
+    ],
+    "materials_expertise": [
+      "carbon_steel",
+      "special_steel"
+    ],
+    "annual_capacity": "not_available",
+    "experience_years": 12,
+    "employee_count": 100
+  },
+  "previous_projects": [
+    {
+      "project_name": "not_available",
+      "client": "not_available",
+      "country": "Italy",
+      "year": "not_available",
+      "scope": "not_available",
+      "value_usd": "not_available",
+      "reference_available": false
+    }
+  ],
+  "logistics": {
+    "delivery_regions": [
+      "Europe"
+    ],
+    "estimated_lead_time_days": 14,
+    "rush_delivery_available": true,
+    "shipping_capabilities": [
+      "truck"
+    ],
+    "warehouses": [
+      {
+        "city": "Casalgrande",
+        "country": "Italy"
+      }
+    ],
+    "international_export": true
+  },
+  "pricing": {
+    "pricing_model": "quote_based",
+    "currency": "EUR",
+    "typical_project_range_usd": "not_available",
+    "payment_terms": "Net 30",
+    "accepts_letters_of_credit": true
+  },
+  "quality_ratings": {
+    "overall_score": 4.2,
+    "reliability_score": 4.1,
+    "quality_score": 4.3,
+    "communication_score": 4.2,
+    "rating_source": "industry_reputation",
+    "number_of_reviews": 35
+  },
+  "metadata": {
+    "source": "perplexity_research",
+    "query_id": "AGRS_QUERY_050",
+    "date_researched": "2025-12-02T16:34:02.904401Z",
+    "last_verified": "2025-12-02T16:33:05Z",
+    "confidence_level": "high",
+    "notes": "Founded in 2013. Contract manufacturing company focused on special steel production with 50-249 employees.",
+    "tags": [
+      "contract_manufacturer",
+      "special_steel",
+      "established_2013"
+    ]
+  },
+  "compatibility": {
+    "match_score": 76,
+    "pipeline_specs_match": true
+  }
+}

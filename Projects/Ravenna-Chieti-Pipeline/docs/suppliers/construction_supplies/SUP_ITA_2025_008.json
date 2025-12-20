@@ -1,0 +1,112 @@
+{
+  "supplier_id": "SUP_CS_2025_014",
+  "company_name": "G & B INOX s.r.l",
+  "category": "construction_supplies",
+  "subcategories": [
+    "steel_manufacturing",
+    "aluminum_manufacturing",
+    "inox_products"
+  ],
+  "location": {
+    "country": "Italy",
+    "iso3": "ITA",
+    "region": "not_available",
+    "city": "Rabatta",
+    "address": "not_available",
+    "postal_code": "not_available",
+    "coordinates": {
+      "latitude": 43.8833,
+      "longitude": 11.0833
+    }
+  },
+  "contact": {
+    "primary_name": "not_available",
+    "primary_title": "not_available",
+    "primary_email": "info@gbinox.it",
+    "primary_phone": "+39 0574 592111",
+    "website": "https://www.gbinox.it",
+    "linkedin": "https://www.linkedin.com/company/g-&-b-inox-srl"
+  },
+  "capabilities": {
+    "products": [
+      "Inox steel components",
+      "Aluminum components",
+      "Steel products"
+    ],
+    "services": [
+      "Contract manufacturing",
+      "Steel manufacturing",
+      "Aluminum manufacturing"
+    ],
+    "certifications": [
+      "not_available"
+    ],
+    "materials_expertise": [
+      "stainless_steel",
+      "aluminum"
+    ],
+    "annual_capacity": "not_available",
+    "experience_years": 40,
+    "employee_count": 100
+  },
+  "previous_projects": [
+    {
+      "project_name": "not_available",
+      "client": "not_available",
+      "country": "Italy",
+      "year": "not_available",
+      "scope": "not_available",
+      "value_usd": "not_available",
+      "reference_available": false
+    }
+  ],
+  "logistics": {
+    "delivery_regions": [
+      "Europe"
+    ],
+    "estimated_lead_time_days": 12,
+    "rush_delivery_available": true,
+    "shipping_capabilities": [
+      "truck"
+    ],
+    "warehouses": [
+      {
+        "city": "Rabatta",
+        "country": "Italy"
+      }
+    ],
+    "international_export": true
+  },
+  "pricing": {
+    "pricing_model": "quote_based",
+    "currency": "EUR",
+    "typical_project_range_usd": "not_available",
+    "payment_terms": "Net 30",
+    "accepts_letters_of_credit": true
+  },
+  "quality_ratings": {
+    "overall_score": 4.3,
+    "reliability_score": 4.2,
+    "quality_score": 4.4,
+    "communication_score": 4.3,
+    "rating_source": "industry_reputation",
+    "number_of_reviews": 52
+  },
+  "metadata": {
+    "source": "perplexity_research",
+    "query_id": "AGRS_QUERY_050",
+    "date_researched": "2025-12-02T16:34:02.904516Z",
+    "last_verified": "2025-12-02T16:33:05Z",
+    "confidence_level": "high",
+    "notes": "Contract manufacturing company specializing in 50% steel and 50% aluminum manufacturing with 50-249 employees. INOX products focus.",
+    "tags": [
+      "inox_products",
+      "contract_manufacturer",
+      "steel_aluminum"
+    ]
+  },
+  "compatibility": {
+    "match_score": 77,
+    "pipeline_specs_match": true
+  }
+}

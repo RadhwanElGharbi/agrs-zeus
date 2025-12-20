@@ -1,0 +1,75 @@
+{
+  "dataset_name": "SoilGrids v2.0 (SOC 0-5cm) (Processed)",
+  "category": "soil",
+  "project": "ITALY-TEST",
+  "processing_date": "2025-12-17T13:38:55.468882Z",
+  "target_crs": "EPSG:32633",
+  "target_crs_name": "WGS 84 / UTM zone 33N",
+  "data_type": "Raster",
+  "format": "GeoTIFF",
+  "processed_path": "/opt/agrs/Projects/ITALY-TEST/data/rasters/processed/soil_epsg32633_processed.tif",
+  "raw_path": "/opt/agrs/Projects/ITALY-TEST/data/rasters/raw/soil_soilgrids_250m_raw.tif",
+  "raw_metadata_file": "/opt/agrs/Projects/ITALY-TEST/data/rasters/raw/soil_soilgrids_250m_raw.tif.json",
+  "source_files": [
+    {
+      "filename": "soil_soilgrids_250m_raw.tif",
+      "metadata": "soil_soilgrids_250m_raw.tif.json"
+    }
+  ],
+  "operations_applied": [
+    {
+      "operation": "reproject",
+      "tool": "gdalwarp",
+      "target_epsg": 32633
+    },
+    {
+      "operation": "clip",
+      "tool": "AOI cutline",
+      "source": "/opt/agrs/Projects/ITALY-TEST/aoi/aoi.geojson"
+    }
+  ],
+  "file_size_bytes": 5209,
+  "validation_status": "passed",
+  "validation_date": "2025-12-17T13:38:55.468905Z",
+  "protocol_reference": "/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md",
+  "protocol_version": "1.0",
+  "zeus_version": "0.1.0",
+  "notes": "ISRIC SoilGrids SOC 0-30 cm layer for corrosion + constructability. Property: SOC at 0-5cm.",
+  "source": "ISRIC SoilGrids v2.0",
+  "provider": "ISRIC - World Soil Information",
+  "provider_url": "https://soilgrids.org/",
+  "coverage_date": "2020",
+  "documentation_url": "https://www.isric.org/explore/soilgrids",
+  "license": "CC BY 4.0",
+  "attribution": "Contains ISRIC SoilGrids data.",
+  "resolution_m": {
+    "x": 257.0895575159719,
+    "y": 256.661288149748
+  },
+  "coverage_depth": "0-5cm",
+  "dimensions": {
+    "width": 44,
+    "height": 50
+  },
+  "extent": {
+    "minx": 268840.543,
+    "miny": 4766334.189,
+    "maxx": 280152.483,
+    "maxy": 4779167.253,
+    "crs": "EPSG:4326"
+  },
+  "bbox_wgs84": {
+    "west": 12.1580592,
+    "south": 43.0145358,
+    "east": 12.3020484,
+    "north": 43.1333237,
+    "crs": "EPSG:4326"
+  },
+  "statistics": {
+    "min": 238.0,
+    "max": 389.0,
+    "mean": 309.58745537991,
+    "stddev": 31.356947552618,
+    "valid_percent": 89.14
+  }
+}

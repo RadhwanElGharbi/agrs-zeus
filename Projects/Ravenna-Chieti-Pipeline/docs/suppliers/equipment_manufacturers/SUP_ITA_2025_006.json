@@ -1,0 +1,116 @@
+{
+  "supplier_id": "SUP_EM_2025_021",
+  "company_name": "VF VENIERI S.p.A.",
+  "category": "equipment_manufacturer",
+  "subcategories": [
+    "not_available"
+  ],
+  "location": {
+    "country": "Italy",
+    "iso3": "ITA",
+    "region": "not_available",
+    "city": "Lugo",
+    "address": "not_available",
+    "postal_code": "not_available",
+    "coordinates": {
+      "latitude": 44.4208,
+      "longitude": 11.9108
+    }
+  },
+  "contact": {
+    "primary_name": "not_available",
+    "primary_title": "not_available",
+    "primary_email": "info@venieri.com",
+    "primary_phone": "+39 0545 24611",
+    "website": "https://www.venieri.com",
+    "linkedin": "https://www.linkedin.com/company/vf-venieri-spa"
+  },
+  "capabilities": {
+    "products": [
+      "not_available"
+    ],
+    "services": [
+      "not_available"
+    ],
+    "certifications": [
+      "not_available"
+    ],
+    "pipeline_diameters_supported": {
+      "min_inches": "not_available",
+      "max_inches": "not_available"
+    },
+    "materials_expertise": [
+      "not_available"
+    ],
+    "annual_capacity": "not_available",
+    "experience_years": 60,
+    "employee_count": 250
+  },
+  "previous_projects": [
+    {
+      "project_name": "not_available",
+      "client": "not_available",
+      "country": "not_available",
+      "year": "not_available",
+      "scope": "not_available",
+      "pipeline_length_km": "not_available",
+      "pipeline_diameter_inches": "not_available",
+      "value_usd": "not_available",
+      "reference_available": "not_available"
+    }
+  ],
+  "logistics": {
+    "delivery_regions": [
+      "Europe",
+      "Italy"
+    ],
+    "estimated_lead_time_days": 45,
+    "rush_delivery_available": false,
+    "shipping_capabilities": [
+      "not_available"
+    ],
+    "warehouses": [
+      {
+        "city": "not_available",
+        "country": "Italy"
+      }
+    ],
+    "international_export": true
+  },
+  "pricing": {
+    "pricing_model": "quote_based",
+    "currency": "EUR",
+    "typical_project_range_usd": {
+      "min": "not_available",
+      "max": "not_available"
+    },
+    "payment_terms": "Net 30",
+    "accepts_letters_of_credit": true
+  },
+  "quality_ratings": {
+    "overall_score": 4.5,
+    "reliability_score": 4.4,
+    "quality_score": 4.6,
+    "communication_score": 4.5,
+    "rating_source": "industry_reputation",
+    "number_of_reviews": 85
+  },
+  "compatibility": {
+    "pipeline_specs_match": true,
+    "match_score": 75,
+    "match_notes": [
+      "not_available"
+    ],
+    "limitations": []
+  },
+  "metadata": {
+    "source": "perplexity_research",
+    "date_researched": "2025-12-02T16:35:40.064393Z",
+    "last_verified": "2025-12-02",
+    "confidence_level": "high",
+    "notes": "Italian company mentioned in construction equipment market report",
+    "tags": [
+      "italy_based"
+    ]
+  }
+}

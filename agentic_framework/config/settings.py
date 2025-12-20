@@ -28,9 +28,10 @@ class Settings:
     # Data Paths
     DATA_DIR: Path = BASE_DIR / "data"
     # Routes are stored under the project's PIRL outputs folder
+    # Default to Ravenna-Chieti-Pipeline project
     ROUTES_DIR: Path = Path(os.getenv(
         "ROUTES_DIR",
-        "/opt/agrs/Projects/test_project2/PIRL/outputs"
+        "/opt/agrs/Projects/Ravenna-Chieti-Pipeline/PIRL/outputs"
     ))
     LAYERS_DIR: Path = DATA_DIR / "layers"
     PROMPTS_DIR: Path = BASE_DIR / "prompts"

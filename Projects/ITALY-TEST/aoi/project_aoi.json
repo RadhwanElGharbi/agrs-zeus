@@ -1,0 +1,14 @@
+{
+    "aoi_file": "aoi/aoi.geojson",
+    "aoi_area_km2": 138.24,
+    "aoi_countries": [
+        "Italy"
+    ],
+    "crs_epsg": 32633,
+    "crs_name": "WGS 84 / UTM zone 33N",
+    "start_point": {
+        "file": "aoi/start_point.geojson",
+        "latitude": 43.12241739358237,
+        "longitude": 12.284468405130212
+    }
+}

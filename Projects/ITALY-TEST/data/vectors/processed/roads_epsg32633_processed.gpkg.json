@@ -1,0 +1,44 @@
+{
+    "dataset_name": "OpenStreetMap Roads",
+    "category": "roads",
+    "project": "ITALY-TEST",
+    "processing_date": "2025-12-17T13:50:56Z",
+    "target_crs": "EPSG:32633",
+    "target_crs_name": "WGS 84 / UTM zone 33N",
+    "data_type": "Vector",
+    "geometry_type": "LineString",
+    "format": "GeoPackage",
+    "layer_name": "roads",
+    "feature_count": 2048,
+    "operations_applied": [
+        {
+            "operation": "reproject",
+            "tool": "ogr2ogr",
+            "source_crs": "EPSG:4326",
+            "target_crs": "EPSG:32633"
+        },
+        {
+            "operation": "clip",
+            "tool": "ogr2ogr",
+            "clipsrc": "aoi/aoi.geojson"
+        }
+    ],
+    "source_files": [
+        {
+            "filename": "osm_roads_raw.gpkg",
+            "metadata": "osm_roads_raw.gpkg.json"
+        }
+    ],
+    "schema": {
+        "osm_id": "OSM way ID",
+        "name": "Road name",
+        "highway": "Road classification (motorway, primary, secondary, etc.)",
+        "ref": "Road reference number",
+        "surface": "Surface type (paved, asphalt, gravel, etc.)",
+        "lanes": "Number of lanes",
+        "maxspeed": "Speed limit",
+        "oneway": "One-way flag (yes/no)"
+    },
+    "validation_status": "passed",
+    "protocol_version": "1.0"
+}
