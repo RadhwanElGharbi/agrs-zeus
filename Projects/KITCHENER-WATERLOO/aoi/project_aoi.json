@@ -1,0 +1,9 @@
+{
+    "aoi_file": "aoi/aoi.geojson",
+    "aoi_area_km2": 99.56,
+    "aoi_countries": [
+        "Canada"
+    ],
+    "crs_epsg": 32617,
+    "crs_name": "WGS 84 / UTM zone 17N"
+}

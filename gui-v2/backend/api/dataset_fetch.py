@@ -4062,38 +4062,81 @@ def get_dataset_job(job_id: str) -> Dict[str, Any]:
 
 
 
+def _get_job_snapshot_sync(job_id: str) -> Optional[Dict[str, Any]]:
+    """Synchronous helper to get job snapshot under lock - runs in thread pool."""
+    with JOB_LOCK:
+        job = JOB_REGISTRY.get(job_id)
+        return _job_to_response(job) if job else None
+
+
 @router.get("/dataset-jobs/{job_id}/stream")
 async def stream_dataset_job(job_id: str):
-    """Stream real-time updates for a dataset fetch job via SSE."""
-    if job_id not in JOB_REGISTRY:
+    """Stream real-time updates for a dataset fetch job via SSE.
+
+    Uses asyncio.to_thread to avoid blocking the event loop when acquiring locks.
+    Sends keep-alive comments every 15 seconds to prevent connection timeouts.
+    """
+    # Initial check - use to_thread to avoid blocking
+    initial_snapshot = await asyncio.to_thread(_get_job_snapshot_sync, job_id)
+    if initial_snapshot is None:
         raise HTTPException(status_code=404, detail=f"Job '{job_id}' not found.")
 
     async def event_generator():
         last_serialized: Optional[str] = None
+        keepalive_counter = 0
+
         while True:
-            with JOB_LOCK:
-                job = JOB_REGISTRY.get(job_id)
-                snapshot = _job_to_response(job) if job else None
-            if not snapshot:
+            try:
+                # Use asyncio.to_thread to run lock acquisition in thread pool
+                # This prevents blocking the event loop
+                snapshot = await asyncio.to_thread(_get_job_snapshot_sync, job_id)
+
+                if not snapshot:
+                    # Job was removed from registry
+                    yield f"data: {json.dumps({'status': 'not_found', 'error': 'Job no longer exists'})}\n\n"
+                    break
+
+                # Serialize and check for changes
+                serialized = json.dumps(snapshot, default=str)
+
+                if serialized != last_serialized:
+                    yield f"data: {serialized}\n\n"
+                    last_serialized = serialized
+                    keepalive_counter = 0  # Reset keepalive counter on actual data
+                else:
+                    # Send keep-alive comment every 15 iterations (15 seconds at 1s interval)
+                    keepalive_counter += 1
+                    if keepalive_counter >= 15:
+                        yield f": keepalive {int(asyncio.get_event_loop().time())}\n\n"
+                        keepalive_counter = 0
+
+                # Check for terminal states
+                status = snapshot.get("status")
+                if status in ("succeeded", "failed", "partial"):
+                    # Send final state and close
+                    break
+
+                # Short sleep for responsive updates
+                await asyncio.sleep(0.5)
+
+            except asyncio.CancelledError:
+                # Client disconnected
                 break
-            # snapshot is now a plain dict, serialize directly
-            serialized = json.dumps(snapshot, default=str)
-            if serialized != last_serialized:
-                yield f"data: {serialized}\n\n"
-                last_serialized = serialized
-            # Check for terminal states including "partial"
-            if snapshot.get("status") in ("succeeded", "failed", "partial"):
-                break
-            await asyncio.sleep(1.0)
+            except Exception as e:
+                # Log error but try to continue
+                yield f"data: {json.dumps({'error': str(e)})}\n\n"
+                await asyncio.sleep(1.0)
 
     # SSE requires specific headers to prevent buffering and enable real-time streaming
     return StreamingResponse(
         event_generator(),
         media_type="text/event-stream",
         headers={
-            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0",
             "X-Accel-Buffering": "no",  # Disable nginx buffering
             "Connection": "keep-alive",
+            "Content-Type": "text/event-stream; charset=utf-8",
+            "Transfer-Encoding": "chunked",
         }
     )
 

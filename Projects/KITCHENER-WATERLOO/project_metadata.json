@@ -1,0 +1,16 @@
+{
+    "project_name": "KITCHENER-WATERLOO",
+    "project_id": "AGRS_KITCHENER_WATERLOO_CAN_2025_001",
+    "date_created": "2025-12-21T16:30:41Z",
+    "status": "active",
+    "project_creator": "Rad",
+    "collaborators": [],
+    "organization": "AGRS",
+    "country": "Canada",
+    "iso3": "CAN",
+    "measurement_system": "SI",
+    "crs": {
+        "epsg": 32617,
+        "name": "WGS 84 / UTM zone 17N"
+    }
+}

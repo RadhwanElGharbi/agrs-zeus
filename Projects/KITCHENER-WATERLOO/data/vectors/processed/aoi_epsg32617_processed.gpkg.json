@@ -1,0 +1,21 @@
+{
+    "dataset_name": "Area of Interest",
+    "filename": "aoi_epsg32617_processed.gpkg",
+    "category": "aoi",
+    "type": "vector",
+    "format": "GeoPackage",
+    "geometry_type": "Polygon",
+    "source": "User-provided AOI",
+    "provider": "Project initialization",
+    "target_crs": "EPSG:32617",
+    "original_crs": "EPSG:4326",
+    "reprojected": true,
+    "date_acquired": "2025-12-21",
+    "fetch_tool": "project_creation",
+    "processing_steps": [
+        "reproject",
+        "convert"
+    ],
+    "validation_status": "passed",
+    "metadata_version": "2.0"
+}

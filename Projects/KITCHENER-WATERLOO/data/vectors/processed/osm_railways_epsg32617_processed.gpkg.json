@@ -1,0 +1,60 @@
+{
+  "dataset_name": "OpenStreetMap Railways Extract (Processed)",
+  "category": "railways",
+  "project": "KITCHENER-WATERLOO",
+  "processing_date": "2025-12-21T16:35:34.849061Z",
+  "target_crs": "EPSG:32617",
+  "target_crs_name": "WGS 84 / UTM zone 17N",
+  "data_type": "Vector",
+  "format": "GeoPackage",
+  "processed_path": "/opt/agrs/Projects/KITCHENER-WATERLOO/data/vectors/processed/osm_railways_epsg32617_processed.gpkg",
+  "raw_path": "/opt/agrs/Projects/KITCHENER-WATERLOO/data/vectors/raw/osm_railways_raw.gpkg",
+  "raw_metadata_file": "/opt/agrs/Projects/KITCHENER-WATERLOO/data/vectors/raw/osm_railways_raw.gpkg.json",
+  "source_files": [
+    {
+      "filename": "osm_railways_raw.gpkg",
+      "metadata": "osm_railways_raw.gpkg.json"
+    }
+  ],
+  "operations_applied": [
+    {
+      "operation": "reproject",
+      "tool": "ogr2ogr",
+      "target_epsg": 32617
+    },
+    {
+      "operation": "clip",
+      "tool": "AOI cutline",
+      "source": "/opt/agrs/Projects/KITCHENER-WATERLOO/aoi/aoi.geojson"
+    }
+  ],
+  "file_size_bytes": 131072,
+  "validation_status": "passed",
+  "validation_date": "2025-12-21T16:35:34.849129Z",
+  "protocol_reference": "/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md",
+  "protocol_version": "1.0",
+  "zeus_version": "0.1.0",
+  "notes": "OpenStreetMap rail corridors for crossing avoidance.",
+  "source": "OpenStreetMap (railway)",
+  "provider": "OpenStreetMap Contributors",
+  "provider_url": "https://www.openstreetmap.org",
+  "coverage_date": "Current (live OSM)",
+  "documentation_url": "https://wiki.openstreetmap.org/wiki/Overpass_API",
+  "license": "ODbL 1.0",
+  "attribution": "\u00a9 OpenStreetMap contributors.",
+  "feature_count": 0,
+  "extent": {
+    "minx": -80.65323507080731,
+    "miny": 43.44164780695971,
+    "maxx": -80.43934431217959,
+    "maxy": 43.549031811333464,
+    "crs": "EPSG:4326"
+  },
+  "bbox_wgs84": {
+    "west": -80.65323507080731,
+    "south": 43.44164780695971,
+    "east": -80.43934431217959,
+    "north": 43.549031811333464,
+    "crs": "EPSG:4326"
+  }
+}
