@@ -1530,5 +1530,24 @@
         "x_forwarded_for": "198.84.184.6"
       }
     }
+  },
+  "Kf_Un6tE3-uR2rAHHyXIeYD7jKa9gy7_bhI1yXZCZ5k": {
+    "username": "rad_admin",
+    "name": "RAD Admin",
+    "role": "admin",
+    "company": "AGRS Global",
+    "created_at": "2025-12-21T20:35:57.648371",
+    "expires_at": "2025-12-22T20:35:57.648360",
+    "client_info": {
+      "ip": "162.212.233.34",
+      "user_agent": "Mozilla/5.0 (X11; CrOS x86_64 14541.0.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+      "referer": "https://agrsglobal.com/",
+      "origin": "https://agrsglobal.com",
+      "proxy_ip": "10.0.0.1",
+      "forwarding_headers": {
+        "x_real_ip": "162.212.233.34",
+        "x_forwarded_for": "162.212.233.34"
+      }
+    }
   }
 }

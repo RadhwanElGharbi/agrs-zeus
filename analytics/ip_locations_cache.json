@@ -9,7 +9,7 @@
     "isp": "TekSavvy Solutions, Inc.",
     "org": "TekSavvy Solutions Inc.",
     "is_private": false,
-    "cached_at": "2025-12-18T15:52:59.454553+00:00"
+    "cached_at": "2025-12-21T20:54:58.435329+00:00"
   },
   "91.75.9.213": {
     "city": "Dubai",
@@ -45,7 +45,7 @@
     "isp": "Rogers Cable Communications Inc.",
     "org": "Rogers Telecom Inc.",
     "is_private": false,
-    "cached_at": "2025-12-18T15:53:34.673043+00:00"
+    "cached_at": "2025-12-21T20:54:57.886143+00:00"
   },
   "192.0.202.217": {
     "city": "Kitchener",
@@ -189,7 +189,7 @@
     "isp": "Saily Inc.",
     "org": "Saily Inc",
     "is_private": false,
-    "cached_at": "2025-12-18T15:53:33.957468+00:00"
+    "cached_at": "2025-12-21T20:54:26.042207+00:00"
   },
   "34.122.147.229": {
     "city": "Council Bluffs",
@@ -225,7 +225,7 @@
     "isp": "Telecom Italia S.p.A.",
     "org": "INTERBUSINESS",
     "is_private": false,
-    "cached_at": "2025-12-18T15:53:49.244972+00:00"
+    "cached_at": "2025-12-21T20:54:59.249124+00:00"
   },
   "78.4.5.211": {
     "city": "Parma",
@@ -237,7 +237,7 @@
     "isp": "BT Italia S.p.A.",
     "org": "Saipem SPA",
     "is_private": false,
-    "cached_at": "2025-12-18T15:53:46.776676+00:00"
+    "cached_at": "2025-12-21T20:54:58.807554+00:00"
   },
   "71.198.155.142": {
     "city": "San Francisco",
@@ -249,7 +249,7 @@
     "isp": "Comcast Cable Communications, LLC",
     "org": "Comcast Cable Communications, IP Services",
     "is_private": false,
-    "cached_at": "2025-12-18T15:53:47.247945+00:00"
+    "cached_at": "2025-12-21T20:54:58.913886+00:00"
   },
   "50.204.66.177": {
     "city": "Dixon",
@@ -261,7 +261,7 @@
     "isp": "Comcast Cable Communications, LLC",
     "org": "Comcast Cable Communications, LLC",
     "is_private": false,
-    "cached_at": "2025-12-18T15:53:47.779189+00:00"
+    "cached_at": "2025-12-21T20:54:59.134790+00:00"
   },
   "149.232.183.5": {
     "city": "Le Mesnil-Amelot",
@@ -273,6 +273,30 @@
     "isp": "Hub One SA",
     "org": "Infra",
     "is_private": false,
-    "cached_at": "2025-12-18T15:53:40.002782+00:00"
+    "cached_at": "2025-12-21T20:54:58.116906+00:00"
+  },
+  "4.4.52.169": {
+    "city": "Houston",
+    "region": "Texas",
+    "country": "United States",
+    "country_code": "US",
+    "lat": 29.7601,
+    "lng": -95.3701,
+    "isp": "Level 3 Communications, Inc.",
+    "org": "Level 3",
+    "is_private": false,
+    "cached_at": "2025-12-21T20:54:25.937328+00:00"
+  },
+  "192.159.178.166": {
+    "city": "Waterloo",
+    "region": "Ontario",
+    "country": "Canada",
+    "country_code": "CA",
+    "lat": 43.474,
+    "lng": -80.554,
+    "isp": "Cloudwifi",
+    "org": "Cloudwifi",
+    "is_private": false,
+    "cached_at": "2025-12-21T20:54:57.773625+00:00"
   }
 }
