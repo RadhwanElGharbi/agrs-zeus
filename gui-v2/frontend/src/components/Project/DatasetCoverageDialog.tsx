@@ -15,7 +15,8 @@ import {
   Terminal,
   Server,
   Cpu,
-  X
+  X,
+  Search
 } from 'lucide-react'
 
 import { useProject } from '@/lib/context/ProjectContext'
@@ -923,7 +924,10 @@ export function DatasetCoverageDialog({ open, onClose, onRunInBackground }: Data
                                             disabled={!!jobId}
                                             onChange={(event) => handleOverrideChange(category, event.target.value)}
                                         >
-                                            <option value="">{defaultSource ? 'Auto (Recommended)' : 'Select Source'}</option>
+                                            <option value="">{defaultSource ? 'Auto' : 'Select Source'}</option>
+                                            {defaultSource && (
+                                                <option value={defaultSource}>{defaultSource} (Recommended)</option>
+                                            )}
                                             {filteredOptions.map((option, idx) => (
                                                 <option key={`${category}-${option || idx}`} value={option}>{option}</option>
                                             ))}
@@ -1003,6 +1007,175 @@ export function DatasetCoverageDialog({ open, onClose, onRunInBackground }: Data
   )
 }
 
+function DatasetDetailDialog({
+  entry,
+  open,
+  onClose,
+  onUseDataset
+}: {
+  entry: DatasetCoverageEntry | null
+  open: boolean
+  onClose: () => void
+  onUseDataset?: (entry: DatasetCoverageEntry) => void
+}) {
+  const [isClosing, setIsClosing] = useState(false)
+
+  const handleClose = () => {
+    setIsClosing(true)
+    setTimeout(() => {
+      setIsClosing(false)
+      onClose()
+    }, 150)
+  }
+
+  if (!open || !entry) return null
+
+  const inferredCategory = inferCategoryFromEntry(entry)
+
+  const fields = [
+    { label: 'Dataset Name', value: entry.dataset },
+    { label: 'Source / Provider', value: entry.source },
+    { label: 'Data Type', value: entry.data_type },
+    { label: 'Access', value: entry.access },
+    { label: 'Coverage / Resolution', value: entry.coverage },
+    { label: 'Temporal Start', value: entry.temporal_start },
+    { label: 'Temporal End', value: entry.temporal_end },
+    { label: 'Update Frequency', value: entry.frequency },
+    { label: 'Global Dataset', value: entry.applies_globally ? 'Yes' : 'No' },
+    { label: 'Category Mapping', value: inferredCategory ? CATEGORY_LABELS[inferredCategory] : 'Unmapped' },
+  ]
+
+  return createPortal(
+    <>
+      <div
+        className={cn(
+          "fixed inset-0 bg-black/70 backdrop-blur-sm z-[200]",
+          isClosing ? "animate-fade-out" : "animate-fade-in"
+        )}
+        onClick={handleClose}
+      />
+      <div className="fixed inset-0 z-[201] flex items-center justify-center p-4 pointer-events-none">
+        <div
+          className={cn(
+            "relative w-[600px] max-w-[90vw] max-h-[80vh] bg-[#0a0a0a]/95 border border-white/10 rounded-sm shadow-[0_0_50px_-10px_rgba(0,0,0,0.8)] flex flex-col pointer-events-auto overflow-hidden",
+            isClosing ? "animate-fade-out" : "animate-fade-in"
+          )}
+        >
+          {/* Header */}
+          <header className="px-5 py-4 border-b border-white/10 flex items-start justify-between bg-black/20 shrink-0">
+            <div className="flex-1 min-w-0 pr-4">
+              <div className="flex items-center gap-2 text-[9px] text-white/40 uppercase tracking-[0.2em] font-mono mb-1">
+                <Database className="w-3 h-3" />
+                <span>Dataset Information</span>
+              </div>
+              <h3 className="text-base font-bold text-white uppercase tracking-wide font-mono truncate">
+                {entry.dataset}
+              </h3>
+              {entry.source && (
+                <div className="text-[11px] text-white/50 font-mono mt-1 truncate">
+                  {entry.source}
+                </div>
+              )}
+            </div>
+            <button
+              onClick={handleClose}
+              className="p-1.5 hover:bg-white/5 border border-transparent hover:border-white/10 rounded-sm text-white/50 hover:text-white transition-all shrink-0"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </header>
+
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+            {/* Info Grid */}
+            <div className="grid grid-cols-2 gap-3">
+              {fields.map(({ label, value }) => (
+                <div
+                  key={label}
+                  className={cn(
+                    "p-3 bg-white/[0.02] border border-white/5 rounded-sm",
+                    label === 'Coverage / Resolution' && "col-span-2"
+                  )}
+                >
+                  <div className="text-[9px] font-mono text-white/40 uppercase tracking-wider mb-1">
+                    {label}
+                  </div>
+                  <div className={cn(
+                    "text-[11px] font-mono",
+                    value ? "text-white/80" : "text-white/30 italic"
+                  )}>
+                    {value || 'Not specified'}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* URL Section */}
+            {entry.url && (
+              <div className="p-3 bg-white/[0.02] border border-white/5 rounded-sm">
+                <div className="text-[9px] font-mono text-white/40 uppercase tracking-wider mb-2">
+                  Documentation / Source URL
+                </div>
+                <a
+                  href={entry.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-[11px] font-mono text-primary hover:text-primary/80 transition-colors break-all"
+                >
+                  <ExternalLink className="w-3 h-3 shrink-0" />
+                  {entry.url}
+                </a>
+              </div>
+            )}
+          </div>
+
+          {/* Footer */}
+          <footer className="px-5 py-3 border-t border-white/10 flex items-center justify-between bg-black/20 shrink-0">
+            <div className="flex items-center gap-2">
+              {inferredCategory && (
+                <span className="text-[9px] font-mono px-2 py-1 bg-primary/10 border border-primary/30 text-primary rounded-sm uppercase">
+                  {CATEGORY_LABELS[inferredCategory].split('(')[0].trim()}
+                </span>
+              )}
+              {entry.applies_globally && (
+                <span className="text-[9px] font-mono px-2 py-1 bg-white/5 border border-white/10 text-white/50 rounded-sm uppercase">
+                  Global
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              {entry.url && (
+                <a
+                  href={entry.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider text-white/60 hover:text-white border border-white/20 hover:border-white/40 rounded-sm transition-all flex items-center gap-1.5"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                  Open Link
+                </a>
+              )}
+              {inferredCategory && onUseDataset && (
+                <button
+                  onClick={() => {
+                    onUseDataset(entry)
+                    handleClose()
+                  }}
+                  className="px-4 py-1.5 bg-primary text-black text-[10px] font-bold uppercase tracking-wider rounded-sm hover:bg-primary/90 transition-all flex items-center gap-1.5"
+                >
+                  <CheckCircle2 className="w-3 h-3" />
+                  Use Dataset
+                </button>
+              )}
+            </div>
+          </footer>
+        </div>
+      </div>
+    </>,
+    document.body
+  )
+}
+
 function CoverageSection({
   title,
   subtitle,
@@ -1014,37 +1187,97 @@ function CoverageSection({
   entries: DatasetCoverageEntry[]
   onSelectDataset?: (entry: DatasetCoverageEntry) => void
 }) {
+  const [searchQuery, setSearchQuery] = useState('')
+  const [detailEntry, setDetailEntry] = useState<DatasetCoverageEntry | null>(null)
+
+  const filteredEntries = useMemo(() => {
+    if (!searchQuery.trim()) return entries
+    const query = searchQuery.toLowerCase().trim()
+    return entries.filter((entry) => {
+      const searchableText = [
+        entry.dataset,
+        entry.source,
+        entry.data_type,
+        entry.access,
+        entry.coverage
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+      return searchableText.includes(query)
+    })
+  }, [entries, searchQuery])
+
   return (
     <section className="border border-white/5 bg-white/[0.01] rounded-sm overflow-hidden">
       <div className="px-4 py-3 border-b border-white/5 bg-white/[0.02]">
-        <div className="text-xs font-bold text-white uppercase tracking-wider">{title}</div>
-        <div className="text-[10px] font-mono text-white/40">{subtitle}</div>
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <div className="text-xs font-bold text-white uppercase tracking-wider">{title}</div>
+            <div className="text-[10px] font-mono text-white/40">{subtitle}</div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-white/30" />
+              <input
+                type="text"
+                placeholder="Search datasets..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="bg-black/50 border border-white/10 rounded-sm pl-7 pr-3 py-1.5 text-[10px] font-mono text-white placeholder:text-white/30 focus:border-primary/50 focus:ring-0 outline-none w-[200px] transition-colors"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+            <span className="text-[9px] font-mono text-white/40">
+              {filteredEntries.length === entries.length
+                ? `${entries.length} datasets`
+                : `${filteredEntries.length} / ${entries.length}`}
+            </span>
+          </div>
+        </div>
       </div>
       {entries.length === 0 ? (
         <div className="p-4 text-[10px] font-mono text-white/30 text-center uppercase">
           No matching sources found
         </div>
+      ) : filteredEntries.length === 0 ? (
+        <div className="p-4 text-[10px] font-mono text-white/30 text-center uppercase">
+          No datasets match &quot;{searchQuery}&quot;
+        </div>
       ) : (
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto max-h-[300px] overflow-y-auto">
           <table className="w-full text-left text-[10px] font-mono">
-            <thead className="bg-white/[0.03] text-white/40 uppercase tracking-wider">
+            <thead className="bg-white/[0.03] text-white/40 uppercase tracking-wider sticky top-0">
               <tr>
-                <th className="px-4 py-2 font-normal">Source</th>
-                <th className="px-4 py-2 font-normal">Type</th>
-                <th className="px-4 py-2 font-normal">Access</th>
-                <th className="px-4 py-2 font-normal">Coverage</th>
-                <th className="px-4 py-2 font-normal">Category Mapping</th>
-                <th className="px-4 py-2 font-normal text-right">Action</th>
+                <th className="px-4 py-2 font-normal bg-[#0a0a0a]">Source</th>
+                <th className="px-4 py-2 font-normal bg-[#0a0a0a]">Type</th>
+                <th className="px-4 py-2 font-normal bg-[#0a0a0a]">Access</th>
+                <th className="px-4 py-2 font-normal bg-[#0a0a0a]">Coverage</th>
+                <th className="px-4 py-2 font-normal bg-[#0a0a0a]">Category Mapping</th>
+                <th className="px-4 py-2 font-normal text-center bg-[#0a0a0a]">Link</th>
+                <th className="px-4 py-2 font-normal text-right bg-[#0a0a0a]">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5 text-white/70">
-              {entries.map((entry, i) => {
+              {filteredEntries.map((entry, i) => {
                 const inferredCategory = inferCategoryFromEntry(entry)
                 return (
                   <tr key={i} className="hover:bg-white/[0.02] transition-colors">
                     <td className="px-4 py-2">
-                      <div className="font-bold text-white">{entry.dataset}</div>
-                      {entry.source && <div className="text-white/40">{entry.source}</div>}
+                      <button
+                        onClick={() => setDetailEntry(entry)}
+                        className="text-left group"
+                      >
+                        <div className="font-bold text-white group-hover:text-primary transition-colors">{entry.dataset}</div>
+                        {entry.source && <div className="text-white/40 group-hover:text-white/50 transition-colors">{entry.source}</div>}
+                      </button>
                     </td>
                     <td className="px-4 py-2">{entry.data_type || '-'}</td>
                     <td className="px-4 py-2">{entry.access || '-'}</td>
@@ -1056,9 +1289,29 @@ function CoverageSection({
                             <span className="text-white/20">Unmapped</span>
                     )}
                   </td>
+                    <td className="px-4 py-2 text-center">
+                        {entry.url ? (
+                            <a
+                                href={entry.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 px-2 py-1 border border-white/20 rounded-sm hover:bg-white/10 hover:border-white/40 transition-all text-white/60 hover:text-white"
+                                title={`Open ${entry.dataset} documentation`}
+                            >
+                                <ExternalLink className="w-3 h-3" />
+                            </a>
+                        ) : (
+                            <span
+                                className="inline-flex items-center gap-1 px-2 py-1 border border-white/10 rounded-sm text-white/20 cursor-not-allowed"
+                                title="Documentation link not available"
+                            >
+                                <ExternalLink className="w-3 h-3" />
+                            </span>
+                        )}
+                    </td>
                     <td className="px-4 py-2 text-right">
                         {inferredCategory && onSelectDataset && (
-                            <button 
+                            <button
                                 onClick={() => onSelectDataset(entry)}
                                 className="px-2 py-1 border border-white/20 rounded-sm hover:bg-primary/10 hover:border-primary/50 hover:text-primary transition-all"
                             >
@@ -1073,6 +1326,13 @@ function CoverageSection({
           </table>
         </div>
       )}
+
+      <DatasetDetailDialog
+        entry={detailEntry}
+        open={detailEntry !== null}
+        onClose={() => setDetailEntry(null)}
+        onUseDataset={onSelectDataset}
+      />
     </section>
   )
 }

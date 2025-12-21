@@ -85,6 +85,7 @@ export interface DatasetCoverageEntry {
   temporal_end?: string | null;
   frequency?: string | null;
   applies_globally: boolean;
+  url?: string | null;
 }
 
 export interface DatasetCoverageResponse {
@@ -275,11 +276,36 @@ export async function fetchProjectMetadata(project: string): Promise<ProjectMeta
 export async function fetchProjectDatasets(project: string): Promise<ProjectDatasets> {
   const base = await getApiBaseAsync();
   const response = await fetch(`${base}/projects/${project}/datasets`);
-  
+
   if (!response.ok) {
     throw new Error(`Failed to fetch datasets for ${project}: ${response.statusText}`);
   }
-  
+
+  return response.json();
+}
+
+/**
+ * Lightweight fingerprint for detecting dataset changes
+ */
+export interface DatasetFingerprint {
+  raster_count: number;
+  vector_count: number;
+  latest_modified: string | null;
+  fingerprint: string;
+}
+
+/**
+ * Fetch lightweight dataset fingerprint for change detection.
+ * Use this for polling to detect new datasets without fetching full details.
+ */
+export async function fetchDatasetFingerprint(project: string): Promise<DatasetFingerprint> {
+  const base = await getApiBaseAsync();
+  const response = await fetch(`${base}/projects/${project}/datasets/fingerprint`);
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch dataset fingerprint for ${project}: ${response.statusText}`);
+  }
+
   return response.json();
 }
 

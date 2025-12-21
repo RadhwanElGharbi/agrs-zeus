@@ -46,7 +46,37 @@ export const AOI_LAYER_HINTS = ['aoi', 'area_of_interest']
 export const SAMPLE_ROWS = 25
 export const COLOR_PALETTE = ['#22d3ee', '#fb7185', '#a78bfa', '#f97316', '#22c55e', '#eab308', '#38bdf8']
 
+// Default colors for vector dataset categories
+export const CATEGORY_COLORS: Record<string, string> = {
+  roads: '#f97316',      // Orange
+  railways: '#22c55e',   // Green
+  powerlines: '#eab308', // Yellow
+  waterways: '#06b6d4',  // Cyan
+  pipelines: '#ef4444',  // Red
+}
+
+// Keywords to match layer names to categories
+const CATEGORY_KEYWORDS: Record<string, string[]> = {
+  roads: ['road', 'highway', 'street', 'osm_road', 'roads'],
+  railways: ['rail', 'railway', 'train', 'osm_rail', 'railways'],
+  powerlines: ['power', 'powerline', 'transmission', 'electric', 'grid', 'osm_power'],
+  waterways: ['water', 'waterway', 'river', 'stream', 'hydro', 'osm_water'],
+  pipelines: ['pipeline', 'pipe', 'gas_pipeline', 'oil_pipeline', 'osm_pipeline'],
+}
+
 export function colorForLayer(name: string): string {
+  const nameLower = name.toLowerCase()
+
+  // Check for category-specific colors based on keywords
+  for (const [category, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
+    for (const keyword of keywords) {
+      if (nameLower.includes(keyword)) {
+        return CATEGORY_COLORS[category]
+      }
+    }
+  }
+
+  // Fallback to hash-based color for other layers
   const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
   return COLOR_PALETTE[hash % COLOR_PALETTE.length]
 }

@@ -87,6 +87,7 @@ class DatasetCoverageEntry(BaseModel):
     temporal_end: Optional[str] = None
     frequency: Optional[str] = None
     applies_globally: bool = False
+    url: Optional[str] = None
 
 
 class DatasetCoverageResponse(BaseModel):
@@ -950,6 +951,82 @@ async def list_project_datasets(project_name: str):
     return ProjectDatasets(rasters=rasters, vectors=vectors)
 
 
+class DatasetFingerprint(BaseModel):
+    """Lightweight fingerprint for detecting dataset changes."""
+    raster_count: int
+    vector_count: int
+    latest_modified: Optional[str] = None
+    fingerprint: str  # Hash of filenames + mod times
+
+
+@router.get("/projects/{project_name}/datasets/fingerprint", response_model=DatasetFingerprint)
+async def get_dataset_fingerprint(project_name: str):
+    """
+    Get a lightweight fingerprint of project datasets for change detection.
+
+    This endpoint is designed for frequent polling (every 10 seconds) to detect
+    when new datasets have been added without fetching full dataset details.
+
+    Returns:
+        - raster_count: Number of processed raster files
+        - vector_count: Number of processed vector files
+        - latest_modified: ISO timestamp of most recently modified file
+        - fingerprint: MD5 hash of all filenames + modification times
+    """
+    import hashlib
+
+    project_path = resolve_project_path(project_name)
+
+    if not project_path or not project_path.exists():
+        raise HTTPException(status_code=404, detail=f"Project '{project_name}' not found")
+
+    rasters_processed_dir = project_path / "data" / "rasters" / "processed"
+    vectors_processed_dir = project_path / "data" / "vectors" / "processed"
+
+    raster_count = 0
+    vector_count = 0
+    latest_mtime = 0.0
+    fingerprint_parts = []
+
+    # Scan rasters
+    if rasters_processed_dir.exists():
+        for item in rasters_processed_dir.iterdir():
+            if item.suffix == '.tif' and not item.name.endswith('.json'):
+                raster_count += 1
+                mtime = item.stat().st_mtime
+                if mtime > latest_mtime:
+                    latest_mtime = mtime
+                fingerprint_parts.append(f"{item.name}:{mtime}")
+
+    # Scan vectors
+    if vectors_processed_dir.exists():
+        for item in vectors_processed_dir.iterdir():
+            if item.suffix == '.gpkg' and not item.name.endswith('.json'):
+                vector_count += 1
+                mtime = item.stat().st_mtime
+                if mtime > latest_mtime:
+                    latest_mtime = mtime
+                fingerprint_parts.append(f"{item.name}:{mtime}")
+
+    # Sort for consistent hash
+    fingerprint_parts.sort()
+    fingerprint_str = "|".join(fingerprint_parts)
+    fingerprint_hash = hashlib.md5(fingerprint_str.encode()).hexdigest()
+
+    # Convert latest_mtime to ISO string
+    from datetime import datetime, timezone
+    latest_modified = None
+    if latest_mtime > 0:
+        latest_modified = datetime.fromtimestamp(latest_mtime, tz=timezone.utc).isoformat()
+
+    return DatasetFingerprint(
+        raster_count=raster_count,
+        vector_count=vector_count,
+        latest_modified=latest_modified,
+        fingerprint=fingerprint_hash
+    )
+
+
 def _sanitize_str(value: Optional[str]) -> Optional[str]:
     if value is None:
         return None
@@ -989,8 +1066,21 @@ def _normalize_country_value(value: Optional[str]) -> Optional[str]:
     if not val:
         return None
 
+    # Common abbreviations that aren't standard ISO codes
+    common_abbreviations = {
+        "UAE": "ARE",
+        "UK": "GBR",
+        "USA": "USA",
+        "US": "USA",
+        "RUSSIA": "RUS",
+    }
+
     iso_to_name, name_to_iso, alpha2_to_iso = _load_iso_mappings()
     upper = val.upper()
+
+    # Check common abbreviations first
+    if upper in common_abbreviations:
+        return common_abbreviations[upper]
 
     if len(upper) == 3 and upper.isalpha():
         if upper in iso_to_name:
@@ -1083,6 +1173,7 @@ def _row_to_entry(row: Dict[str, str], is_global: bool) -> DatasetCoverageEntry:
         temporal_end=_maybe("TemporalEnd"),
         frequency=_maybe("Frequency"),
         applies_globally=is_global,
+        url=_maybe("URL"),
     )
 
 
@@ -1114,6 +1205,74 @@ def _load_tier1_rows() -> Dict[str, ListType[ListType[str]]]:
     iso_to_name, name_to_iso, _ = _load_iso_mappings()
     valid_isos = set(iso_to_name.keys())
 
+    # Keywords to filter out section headers and column header rows
+    skip_category_keywords = {
+        "comprehensive inventory", "category", "dataset name", "source/provider",
+        "for pipeline routing", "prioritize:", "updated"
+    }
+
+    # Generic placeholder dataset names to filter out (not real dataset names)
+    # These are exact matches for truly generic category/section headers
+    skip_dataset_exact = {
+        # Section headers (these never represent actual datasets)
+        "national sources", "global sources", "global sources (recommended)",
+        "global dem sources", "commercial providers", "commercial/industry sources",
+        "openstreetmap", "national dem sources",
+        # Generic placeholders (not real dataset names)
+        "lidar point clouds", "alternative global dems", "free baseline imagery",
+        "high-resolution commercial imagery", "global soil datasets", "global climate datasets",
+        "global population datasets", "global administrative boundaries",
+        "provincial pipeline registries",
+        # Names that are just category headers when they have no source
+        "national land use maps", "national road network", "national railway network",
+        "national electricity networks", "national protected areas", "national geological survey",
+        "national census data", "official national boundaries", "national water resources data",
+        "national administrative boundaries", "national lidar-derived dem",
+        "openstreetmap pipelines", "openstreetmap railways", "openstreetmap utilities",
+        "openinframap / openstreetmap utilities",
+        "archaeological sites", "military zones / restricted areas", "soil maps",
+        "permafrost data", "seismic hazard maps", "landslide hazard maps", "indigenous lands"
+    }
+    # Patterns that indicate generic/placeholder entries or notes (not real datasets)
+    skip_dataset_patterns = {
+        "best global dataset", "best global dem", "no national", "not available",
+        "were identified", "not publicly available", "requires request",
+        "not documented", "not recommended", "for pipeline routing", "prioritize:",
+        "best global option", "highest priority global"
+    }
+    # Names that are only valid when they have a source provider (column 3)
+    # These can be section headers or real datasets depending on context
+    skip_if_no_source = {
+        "copernicus dem glo-30", "copernicus dem glo-90", "copernicus dem (global coverage)",
+        "esa worldcover 2021", "global surface water explorer", "hydrosheds",
+        "era5 reanalysis", "era5 reanalysis (global)", "worldclim", "worldclim 2.1",
+        "worldclim (global)", "worldpop", "worldpop qatar", "worldpop uae", "worldpop kuwait",
+        "landscan", "landscan global population", "landscan global population database",
+        "sentinel-2 (free baseline)", "maxar technologies", "airbus intelligence", "planet labs",
+        "gadm", "gadm (global administrative areas)", "gadm qatar", "onegeology",
+        "fao harmonized world soil database", "fao harmonized world soil database (hwsd)",
+        "world database on protected areas (wdpa)", "national protected areas",
+        "national road network dataset", "national railway network",
+        "national hydrography networks", "national meteorological service",
+        "national geological survey data", "national geological survey maps",
+        "archaeological and heritage sites", "military zones and restricted areas",
+        "seismic hazard data", "coastal and marine data", "subsurface utility data",
+        "land ownership and cadastre", "national road network", "nhdplus high resolution (nhdplus hr)",
+        "national land cover database (nlcd)", "national transportation atlas database (ntad) - road networks",
+        "census tiger/line roads", "census tiger/line boundaries", "openstreetmap (osm) us coverage",
+        "north american rail network (narn)", "openstreetmap railways",
+        "eia electric power transmission lines", "openinframap / openstreetmap utilities",
+        "national pipeline mapping system (npms)", "protected areas database of the united states (pad-us)",
+        "usgs national geologic map database", "nrcs soil survey geographic database (ssurgo)",
+        "noaa national weather service api", "u.s. census bureau data",
+        "usgs earthquake hazards program - seismic hazard maps", "fema national flood hazard layer (nfhl)",
+        "bureau of land management surface management agency", "native american lands / tribal boundaries",
+        "usgs landslide hazard mapping", "archaeological site databases",
+        "military installations and restricted airspace", "usda cropscape / cropland data layer",
+        "qatar meteorology department data", "qatar rail network", "qatarenergy pipeline network",
+        "national pipeline registry"
+    }
+
     with TIER1_DATASETS_CSV.open("r", encoding="utf-8") as f:
         reader = csv.reader(f)
         for row in reader:
@@ -1125,30 +1284,62 @@ def _load_tier1_rows() -> Dict[str, ListType[ListType[str]]]:
             iso = _normalize_country_value(first)
             if not iso or iso not in valid_isos:
                 continue
+
+            # Skip section headers and column header rows
+            category = row[1].strip().lower() if len(row) > 1 else ""
+            if any(kw in category for kw in skip_category_keywords):
+                continue
+
+            # Skip rows without a real dataset name (column 2)
+            dataset_name = row[2].strip() if len(row) > 2 else ""
+            if not dataset_name or dataset_name.lower() in ("dataset name", ""):
+                continue
+
+            # Skip generic placeholder dataset names (exact matches and patterns)
+            dataset_lower = dataset_name.lower().strip()
+            if dataset_lower in skip_dataset_exact:
+                continue
+            if any(pattern in dataset_lower for pattern in skip_dataset_patterns):
+                continue
+
+            # Skip entries that need a source provider but don't have one
+            # These are often section headers using legitimate dataset names
+            source_provider = row[3].strip() if len(row) > 3 else ""
+            if dataset_lower in skip_if_no_source and not source_provider:
+                continue
+
             tier1_map.setdefault(iso, []).append(row)
     return tier1_map
 
 
 def _tier1_row_to_entry(row: ListType[str]) -> DatasetCoverageEntry:
-    get = lambda idx: _sanitize_str(row[idx]) if idx < len(row) else None
-    category = get(1)
-    dataset_name = get(2) or category or "Unnamed dataset"
-    resolution = get(4)
-    temporal = get(5)
-    notes = get(11)
+    def get_clean(idx: int) -> Optional[str]:
+        """Get sanitized value at index, stripping markdown artifacts like ** bold markers."""
+        val = _sanitize_str(row[idx]) if idx < len(row) else None
+        if val:
+            # Strip markdown bold markers
+            val = val.strip("*").strip()
+        return val or None
+
+    category = get_clean(1)
+    dataset_name = get_clean(2) or category or "Unnamed dataset"
+    resolution = get_clean(4)
+    temporal = get_clean(5)
+    notes = get_clean(11)
 
     coverage_parts = [part for part in [resolution, notes] if part]
     coverage = " | ".join(coverage_parts) if coverage_parts else None
 
     return DatasetCoverageEntry(
         dataset=dataset_name,
-        source=get(3),
+        source=get_clean(3),
         data_type=category,
-        access=get(7),
+        access=get_clean(7),
         coverage=coverage,
         temporal_start=temporal,
-        frequency=get(6),
+        frequency=get_clean(6),
         applies_globally=False,
+        url=get_clean(9),
     )
 
 
