@@ -117,9 +117,9 @@ export function LayerManager({
   }
 
   return (
-    <div className="w-[380px] max-h-[50vh] overflow-hidden font-mono">
+    <div className="w-[320px] xl:w-[380px] max-h-[calc(100vh-200px)] overflow-hidden font-mono flex flex-col">
       {/* Main Layer List Panel */}
-      <div className="bg-[#0a0a0a]/95 backdrop-blur-xl border border-white/10 rounded-sm shadow-[0_0_30px_-10px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden">
+      <div className="bg-[#0a0a0a]/95 backdrop-blur-xl border border-white/10 rounded-sm shadow-[0_0_30px_-10px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden flex-shrink-0">
         
         {/* Header */}
         <div className="flex items-center justify-between px-3 py-3 border-b border-white/10 bg-white/[0.02]">
@@ -161,8 +161,8 @@ export function LayerManager({
         )}
 
         {/* Layer List */}
-        <div 
-            className="p-1 space-y-0.5 overflow-y-auto max-h-[320px] bg-black/20"
+        <div
+            className="p-1 space-y-0.5 overflow-y-auto max-h-[200px] xl:max-h-[280px] bg-black/20"
             onMouseLeave={() => setDropTarget(null)}
         >
           {orderedLayers.map((layer) => {
@@ -299,7 +299,7 @@ export function LayerManager({
       </div>
 
       {/* Detail Inspector Panel */}
-      <div className="bg-[#0a0a0a]/95 backdrop-blur-xl border border-white/10 rounded-sm shadow-xl flex-1 overflow-hidden flex flex-col">
+      <div className="mt-3 bg-[#0a0a0a]/95 backdrop-blur-xl border border-white/10 rounded-sm shadow-xl flex-1 overflow-hidden flex flex-col min-h-0 max-h-[250px] xl:max-h-[320px]">
         <div className="flex items-center justify-between px-3 py-2 border-b border-white/10 bg-white/[0.02]">
           <div className="flex items-center gap-2 text-xs font-bold text-white uppercase tracking-wider">
             <Info className="w-3.5 h-3.5 text-primary" />

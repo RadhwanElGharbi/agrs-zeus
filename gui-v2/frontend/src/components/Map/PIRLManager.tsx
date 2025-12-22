@@ -281,8 +281,8 @@ export function PIRLManager({
   // Expanded state - full panel
   return (
     <>
-      <div className="w-[380px] font-mono">
-        <div className="bg-[#0a0a0a]/95 backdrop-blur-xl border border-purple-500/20 rounded-sm shadow-[0_0_30px_-10px_rgba(147,51,234,0.3)] flex flex-col overflow-hidden max-h-[50vh]">
+      <div className="w-[320px] xl:w-[380px] font-mono">
+        <div className="bg-[#0a0a0a]/95 backdrop-blur-xl border border-purple-500/20 rounded-sm shadow-[0_0_30px_-10px_rgba(147,51,234,0.3)] flex flex-col overflow-hidden max-h-[calc(100vh-450px)] xl:max-h-[calc(100vh-500px)]">
 
           {/* Header */}
           <div className="flex items-center justify-between px-3 py-3 border-b border-purple-500/20 bg-purple-900/10">
@@ -365,7 +365,7 @@ export function PIRLManager({
               <div className="px-3 py-1.5 bg-purple-900/5">
                 <span className="text-[9px] font-bold text-purple-400/70 uppercase tracking-wider">Active Routes</span>
               </div>
-              <div className="p-1 space-y-0.5 max-h-[150px] overflow-y-auto">
+              <div className="p-1 space-y-0.5 max-h-[100px] xl:max-h-[140px] overflow-y-auto">
                 {loadedRoutes.map((route) => {
                   const isSelectedForCompare = selectedForCompare.includes(route.routeId)
                   return (
@@ -464,7 +464,7 @@ export function PIRLManager({
                   <p className="text-[10px]">No routes available</p>
                 </div>
               ) : (
-                <div className="p-1 space-y-0.5 max-h-[200px] overflow-y-auto">
+                <div className="p-1 space-y-0.5 max-h-[120px] xl:max-h-[180px] overflow-y-auto">
                   {routes.map((route) => {
                     const isLoaded = loadedRoutes.some(r => r.routeId === route.route_id)
                     const isLoading = loadingRouteId === route.route_id

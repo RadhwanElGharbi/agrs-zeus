@@ -40,7 +40,7 @@ type CursorElevationState = {
 }
 
 export function MapViewer() {
-  const { currentProject, datasets, isProjectLoading } = useProject()
+  const { currentProject, datasets, isProjectLoading, hasNewDatasets, refreshProjectData, dismissNewDatasets } = useProject()
   const mapContainerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
   const dynamicLayerIdsRef = useRef<string[]>([])
@@ -2063,9 +2063,9 @@ export function MapViewer() {
       )}
 
       {/* Map Controls */}
-      <div className="absolute top-4 left-4 z-10 space-y-3">
+      <div className="absolute top-4 left-4 z-10 space-y-3 max-h-[calc(100vh-100px)] overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
         {/* Status HUD */}
-        <div className="bg-black/60 backdrop-blur-md border border-white/10 p-4 rounded-sm shadow-[0_0_20px_-5px_rgba(0,0,0,0.5)] w-[240px] relative overflow-hidden group">
+        <div className="bg-black/60 backdrop-blur-md border border-white/10 p-4 rounded-sm shadow-[0_0_20px_-5px_rgba(0,0,0,0.5)] w-[200px] xl:w-[240px] relative overflow-hidden group">
             {/* Scan line effect */}
             <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-50" />
             
@@ -2120,7 +2120,7 @@ export function MapViewer() {
            {/* Reset View Button */}
            <button
               onClick={handleResetView}
-              className="group w-[240px] flex items-center gap-3 px-4 py-2 bg-black/40 backdrop-blur-sm border border-white/5 hover:border-white/20 hover:bg-white/5 rounded-sm transition-all duration-200"
+              className="group w-[200px] xl:w-[240px] flex items-center gap-3 px-4 py-2 bg-black/40 backdrop-blur-sm border border-white/5 hover:border-white/20 hover:bg-white/5 rounded-sm transition-all duration-200"
            >
               <Maximize2 className="w-3 h-3 text-white/50 group-hover:text-primary transition-colors" />
               <span className="text-[10px] font-mono text-white/70 group-hover:text-white tracking-widest uppercase">RESET VIEW</span>
@@ -2131,7 +2131,7 @@ export function MapViewer() {
              onClick={() => setTerrainEnabled(prev => !prev)}
              disabled={!demLayerName}
              className={cn(
-               "group w-[240px] flex items-center gap-3 px-4 py-2 mt-1 backdrop-blur-sm border rounded-sm transition-all duration-200",
+               "group w-[200px] xl:w-[240px] flex items-center gap-3 px-4 py-2 mt-1 backdrop-blur-sm border rounded-sm transition-all duration-200",
                terrainEnabled
                  ? "bg-primary/10 border-primary/30 text-white"
                  : "bg-black/40 border-white/5 hover:border-white/20 hover:bg-white/5 text-white/70",
@@ -2157,7 +2157,7 @@ export function MapViewer() {
                onClick={handleAnalyze}
                disabled={analysisLoading}
                className={cn(
-                 "group w-[240px] flex items-center gap-3 px-4 py-2 mt-2 backdrop-blur-sm border rounded-sm transition-all duration-200",
+                 "group w-[200px] xl:w-[240px] flex items-center gap-3 px-4 py-2 mt-2 backdrop-blur-sm border rounded-sm transition-all duration-200",
                  "bg-purple-900/40 border-purple-500/30 hover:border-purple-400/50 hover:bg-purple-800/40 text-white",
                  analysisLoading && "opacity-70 cursor-wait"
                )}
@@ -2183,7 +2183,7 @@ export function MapViewer() {
       </div>
 
       {/* Right Side Panel Container - Layer Manager + PIRL Manager */}
-      <div className="absolute top-4 right-4 z-10 flex flex-col gap-3 items-end">
+      <div className="absolute top-4 right-4 z-10 flex flex-col gap-3 items-end max-h-[calc(100vh-100px)] overflow-y-auto overflow-x-visible scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
         <LayerManager
           layers={managedLayers}
           selectedLayerId={selectedLayerId}
@@ -2271,7 +2271,7 @@ export function MapViewer() {
 
       {/* AI Analysis Panel */}
       {showAnalysisPanel && (
-        <div className="absolute top-4 right-[320px] z-40 w-[400px] max-h-[calc(100vh-120px)] overflow-hidden">
+        <div className="absolute top-4 right-[340px] xl:right-[400px] z-40 w-[320px] xl:w-[400px] max-h-[calc(100vh-120px)] overflow-hidden">
           <ExplanationPanel
             result={analysisResult}
             loading={analysisLoading}
@@ -2284,7 +2284,7 @@ export function MapViewer() {
 
       {/* Validated Decisions Panel */}
       {showDecisionsPanel && (
-        <div className="absolute top-4 right-[740px] z-40 w-[380px] max-h-[calc(100vh-120px)] overflow-hidden">
+        <div className="absolute top-4 right-[680px] xl:right-[820px] z-40 w-[320px] xl:w-[380px] max-h-[calc(100vh-120px)] overflow-hidden">
           <DecisionsPanel
             decisions={decisionsData}
             loading={decisionsLoading}
@@ -2343,6 +2343,42 @@ export function MapViewer() {
             </div>
         </div>
       </div>
+
+      {/* New Datasets Available Notification */}
+      {hasNewDatasets && (
+        <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-5 fade-in duration-300">
+          <div className="px-4 py-3 bg-black/80 backdrop-blur-md border border-primary/30 rounded-sm shadow-[0_0_30px_-5px_rgba(var(--primary),0.3)] flex items-center gap-4">
+            {/* Pulsing indicator */}
+            <div className="relative">
+              <div className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(var(--primary),0.8)]" />
+              <div className="absolute inset-0 w-2 h-2 rounded-full bg-primary/50 animate-ping" />
+            </div>
+
+            {/* Message */}
+            <div className="flex flex-col">
+              <span className="text-xs font-mono text-white uppercase tracking-wider">New Datasets Detected</span>
+              <span className="text-[10px] font-mono text-white/50">Project data has been updated</span>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center gap-2 ml-2">
+              <button
+                onClick={() => refreshProjectData()}
+                className="px-3 py-1.5 bg-primary/20 hover:bg-primary/30 border border-primary/50 rounded-sm text-[10px] font-mono text-primary uppercase tracking-wider transition-all hover:shadow-[0_0_10px_rgba(var(--primary),0.3)] flex items-center gap-2"
+              >
+                <RefreshCw className="w-3 h-3" />
+                Refresh
+              </button>
+              <button
+                onClick={dismissNewDatasets}
+                className="px-2 py-1.5 hover:bg-white/10 border border-transparent hover:border-white/20 rounded-sm text-[10px] font-mono text-white/50 hover:text-white/80 uppercase tracking-wider transition-all"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Toast Notification */}
       {toast && (
