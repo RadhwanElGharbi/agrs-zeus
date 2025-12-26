@@ -571,7 +571,7 @@ export function ProjectProfileDialog({ open, onClose }: ProjectProfileDialogProp
                         <ul className="space-y-1 text-white/60">
                           <li className="flex items-start gap-2">
                             <span className="text-amber-500 mt-0.5">•</span>
-                            <span>IT5310020 "Monti Martani, Serre, Subasio" (SPA)</span>
+                            <span>IT5310020 &quot;Monti Martani, Serre, Subasio&quot; (SPA)</span>
                           </li>
                           <li className="flex items-start gap-2">
                             <span className="text-amber-500 mt-0.5">•</span>

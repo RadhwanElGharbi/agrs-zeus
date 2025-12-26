@@ -31,14 +31,40 @@ export type VectorDetail = {
   }
 }
 
+export type LineStyle = 'solid' | 'dashed' | 'dotted' | 'dash-dot' | 'long-dash' | 'short-dash'
+
 export type LayerStyleOptions = {
   fillColor?: string
   lineColor?: string
   lineWidth?: number
+  lineStyle?: LineStyle
+  lineDasharray?: number[]
   pointColor?: string
   pointSize?: number
   opacity?: number
 }
+
+// Line dash patterns in PIXELS (fixed screen distance)
+// These are the target pixel sizes - will be divided by line width when applied
+export const LINE_STYLE_PATTERNS_PX: Record<LineStyle, number[]> = {
+  'solid': [],
+  'dashed': [12, 8],      // 12px dash, 8px gap
+  'dotted': [2, 6],       // 2px dot, 6px gap
+  'dash-dot': [12, 6, 2, 6], // 12px dash, 6px gap, 2px dot, 6px gap
+  'long-dash': [20, 10],  // 20px dash, 10px gap
+  'short-dash': [6, 6],   // 6px dash, 6px gap
+}
+
+// Helper to get dasharray values adjusted for line width (for fixed pixel appearance)
+export function getDasharrayForWidth(style: LineStyle, lineWidth: number): number[] {
+  const pattern = LINE_STYLE_PATTERNS_PX[style]
+  if (pattern.length === 0) return []
+  // MapLibre dasharray values are multiplied by line width, so divide to get fixed pixels
+  return pattern.map(v => v / lineWidth)
+}
+
+// Legacy export for backwards compatibility
+export const LINE_STYLE_PATTERNS = LINE_STYLE_PATTERNS_PX
 
 export type LngLatBounds = [[number, number], [number, number]]
 
@@ -56,8 +82,9 @@ export const CATEGORY_COLORS: Record<string, string> = {
 }
 
 // Keywords to match layer names to categories
+// Note: Avoid generic keywords like "street" which match "OpenStreetMap"
 const CATEGORY_KEYWORDS: Record<string, string[]> = {
-  roads: ['road', 'highway', 'street', 'osm_road', 'roads'],
+  roads: ['road', 'highway', 'osm_road', 'roads', '_road_'],
   railways: ['rail', 'railway', 'train', 'osm_rail', 'railways'],
   powerlines: ['power', 'powerline', 'transmission', 'electric', 'grid', 'osm_power'],
   waterways: ['water', 'waterway', 'river', 'stream', 'hydro', 'osm_water'],

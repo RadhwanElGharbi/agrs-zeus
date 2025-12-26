@@ -19,7 +19,9 @@ import {
   inferGeometryType,
   buildPropertySummary,
   getRasterBounds,
-  featureBounds
+  featureBounds,
+  getDasharrayForWidth,
+  LineStyle
 } from '@/lib/map-utils'
 import { LayerManager } from './LayerManager'
 import { PIRLManager } from './PIRLManager'
@@ -1342,11 +1344,24 @@ export function MapViewer() {
   }, [applyLayerOrder, applyOpacityToMapLayer, applyVisibilityToMapLayer, managedLayers, mapReady])
 
   const handleResetView = () => {
-    mapRef.current?.flyTo({
-      center: [-80.5449, 43.4723],
-      zoom: 14.5,
-      duration: 1200
-    })
+    const map = mapRef.current
+    if (!map) return
+
+    // Find AOI layer and zoom to its bounds if available
+    const aoiLayer = managedLayers.find(l => l.isAoi && l.bounds)
+    if (aoiLayer && aoiLayer.bounds) {
+      map.fitBounds(aoiLayer.bounds as any, {
+        padding: 80,
+        duration: 1200
+      })
+    } else {
+      // Fallback to default view if no AOI
+      map.flyTo({
+        center: [0, 20],
+        zoom: 2,
+        duration: 1200
+      })
+    }
   }
 
   const handleRefreshAll = () => {
@@ -1626,6 +1641,18 @@ export function MapViewer() {
           if (opts.lineColor) map.setPaintProperty(id, 'line-color', opts.lineColor)
           if (opts.lineWidth !== undefined) map.setPaintProperty(id, 'line-width', opts.lineWidth)
           if (opts.opacity !== undefined) map.setPaintProperty(id, 'line-opacity', opts.opacity)
+          // Apply line dash pattern with fixed pixel distances
+          if (opts.lineStyle !== undefined) {
+            const lineWidth = opts.lineWidth ?? 2
+            if (opts.lineStyle === 'solid') {
+              // Solid line - remove dasharray by setting empty array
+              map.setPaintProperty(id, 'line-dasharray', [])
+            } else {
+              // Calculate dasharray for fixed pixel appearance
+              const dasharray = getDasharrayForWidth(opts.lineStyle as LineStyle, lineWidth)
+              map.setPaintProperty(id, 'line-dasharray', dasharray)
+            }
+          }
         } else if (id.includes('points')) {
           if (opts.pointColor) map.setPaintProperty(id, 'circle-color', opts.pointColor)
           if (opts.pointSize !== undefined) map.setPaintProperty(id, 'circle-radius', opts.pointSize)
@@ -2241,33 +2268,43 @@ export function MapViewer() {
         />
       )}
 
-      {styleLayerId && (
-        <StyleEditor
-          styleDraft={styleDraft}
-          onChange={setStyleDraft}
-          onApply={() => {
-             if (!styleLayerId) return
-             setStyleOverrides((prev) => ({
-               ...prev,
-               [styleLayerId]: styleDraft
-             }))
-             applyStyleToMapLayer(styleLayerId, styleDraft)
-             setStyleLayerId(null)
-          }}
-          onReset={() => {
-                    const target = styleLayerId
-                    if (!target) return
-                    setStyleOverrides((prev) => {
-                      const next = { ...prev }
-                      delete next[target]
-                      return next
-                    })
-                    applyStyleToMapLayer(target, { opacity: 1 })
-                    setStyleLayerId(null)
-                  }}
-          onCancel={() => setStyleLayerId(null)}
-        />
-      )}
+      {styleLayerId && (() => {
+        const styleLayer = managedLayers.find(l => l.id === styleLayerId)
+        if (!styleLayer) return null
+        return (
+          <StyleEditor
+            layer={{
+              id: styleLayer.id,
+              name: styleLayer.name,
+              type: styleLayer.type,
+              geometryType: styleLayer.geometryType
+            }}
+            styleDraft={styleDraft}
+            onChange={setStyleDraft}
+            onApply={() => {
+               if (!styleLayerId) return
+               setStyleOverrides((prev) => ({
+                 ...prev,
+                 [styleLayerId]: styleDraft
+               }))
+               applyStyleToMapLayer(styleLayerId, styleDraft)
+               setStyleLayerId(null)
+            }}
+            onReset={() => {
+                      const target = styleLayerId
+                      if (!target) return
+                      setStyleOverrides((prev) => {
+                        const next = { ...prev }
+                        delete next[target]
+                        return next
+                      })
+                      applyStyleToMapLayer(target, { opacity: 1 })
+                      setStyleLayerId(null)
+                    }}
+            onCancel={() => setStyleLayerId(null)}
+          />
+        )
+      })()}
 
       {/* AI Analysis Panel */}
       {showAnalysisPanel && (

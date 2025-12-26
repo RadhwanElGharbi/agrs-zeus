@@ -6,13 +6,14 @@
 
 'use client'
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback, ReactNode } from 'react'
 import {
   ProjectMetadata,
   ProjectDatasets,
   fetchProjects,
   fetchProjectMetadata,
-  fetchProjectDatasets
+  fetchProjectDatasets,
+  fetchDatasetFingerprint
 } from '@/lib/api/dataClient'
 
 // ============================================================================
@@ -30,6 +31,8 @@ interface ProjectContextType {
   error: string | null;
   refreshProjects: () => Promise<void>;
   refreshProjectData: () => Promise<void>;
+  hasNewDatasets: boolean;  // True when new datasets detected but not yet loaded
+  dismissNewDatasets: () => void;  // Dismiss the notification without refreshing
 }
 
 // ============================================================================
@@ -69,6 +72,7 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [isProjectLoading, setIsProjectLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [hasNewDatasets, setHasNewDatasets] = useState(false)
 
   // Seed projects from cache (if available) before hitting API
   useEffect(() => {
@@ -89,6 +93,9 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
 
   // Load project metadata and datasets when current project changes
   useEffect(() => {
+    // Reset notification flag when project changes
+    setHasNewDatasets(false)
+
     if (currentProject) {
       loadProjectData(currentProject)
     } else {
@@ -157,7 +164,12 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
 
   const refreshProjectData = async () => {
     if (!currentProject) return
+    setHasNewDatasets(false)  // Clear the notification flag
     await loadProjectData(currentProject)
+  }
+
+  const dismissNewDatasets = () => {
+    setHasNewDatasets(false)
   }
 
   /**
@@ -180,6 +192,64 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
     await loadProjects()
   }
 
+  // ============================================================================
+  // Background Dataset Polling (every 10 seconds)
+  // ============================================================================
+
+  const lastFingerprintRef = useRef<string | null>(null)
+  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Memoize the check function to avoid recreating on every render
+  const checkForDatasetChanges = useCallback(async () => {
+    if (!currentProject || isLoading || isProjectLoading) return
+
+    try {
+      const fingerprint = await fetchDatasetFingerprint(currentProject)
+
+      // If fingerprint changed, notify user (don't auto-refresh)
+      if (lastFingerprintRef.current !== null && lastFingerprintRef.current !== fingerprint.fingerprint) {
+        console.log('[ProjectContext] Dataset fingerprint changed, notifying user...')
+        setHasNewDatasets(true)
+      }
+
+      // Update the stored fingerprint
+      lastFingerprintRef.current = fingerprint.fingerprint
+    } catch (err) {
+      // Silent fail for polling - don't spam console
+      // Only log in development
+      if (process.env.NODE_ENV === 'development') {
+        console.debug('[ProjectContext] Fingerprint poll failed:', err)
+      }
+    }
+  }, [currentProject, isLoading, isProjectLoading])
+
+  // Set up polling when project changes
+  useEffect(() => {
+    // Clear any existing interval
+    if (pollIntervalRef.current) {
+      clearInterval(pollIntervalRef.current)
+      pollIntervalRef.current = null
+    }
+
+    // Reset fingerprint when project changes
+    lastFingerprintRef.current = null
+
+    if (!currentProject) return
+
+    // Start polling every 10 seconds
+    pollIntervalRef.current = setInterval(() => {
+      checkForDatasetChanges()
+    }, 10000)
+
+    // Cleanup on unmount or project change
+    return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current)
+        pollIntervalRef.current = null
+      }
+    }
+  }, [currentProject, checkForDatasetChanges])
+
   const value: ProjectContextType = {
     currentProject,
     setCurrentProject,
@@ -190,7 +260,9 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
     isProjectLoading,
     error,
     refreshProjects,
-    refreshProjectData
+    refreshProjectData,
+    hasNewDatasets,
+    dismissNewDatasets
   }
 
   return (

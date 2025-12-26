@@ -1252,7 +1252,7 @@ function CoverageSection({
           No datasets match &quot;{searchQuery}&quot;
         </div>
       ) : (
-        <div className="overflow-x-auto max-h-[300px] overflow-y-auto">
+        <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
           <table className="w-full text-left text-[10px] font-mono">
             <thead className="bg-white/[0.03] text-white/40 uppercase tracking-wider sticky top-0">
               <tr>
