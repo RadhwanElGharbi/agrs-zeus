@@ -22,6 +22,7 @@ import {
   Droplets,
   Route,
   AlertTriangle,
+  Loader2,
   Building2,
   Train,
   Zap,
@@ -35,7 +36,17 @@ import {
   updateProjectCRS, 
   ProjectCRSRecommendation,
   fetchRegulatoryDocs,
-  RegulatoryDoc
+  RegulatoryDoc,
+  fetchProjectRegulations,
+  refreshProjectRegulations,
+  indexRegulationEntry,
+  buildRegulatoryDocFileUrl,
+  type RegulationsResponse,
+  type MatchedRegulationEntry,
+  type RegulationIndexResponse,
+  fetchEngineeringStandards,
+  scanEngineeringStandards,
+  type EngineeringStandardEntry
 } from '@/lib/api/dataClient'
 import { CRSSelectorDialog, CRSEntry } from './CRSSelectorDialog'
 
@@ -65,6 +76,15 @@ export function ProjectProfileDialog({ open, onClose }: ProjectProfileDialogProp
   const [regDocs, setRegDocs] = useState<RegulatoryDoc[]>([])
   const [regIndex, setRegIndex] = useState<string | undefined>()
   const [loadingRegs, setLoadingRegs] = useState(false)
+  const [regulations, setRegulations] = useState<RegulationsResponse | null>(null)
+  const [loadingRegulations, setLoadingRegulations] = useState(false)
+  const [regulationsError, setRegulationsError] = useState<string | null>(null)
+  const [indexingRegulationId, setIndexingRegulationId] = useState<string | null>(null)
+  const [indexedRegulations, setIndexedRegulations] = useState<Record<string, RegulationIndexResponse>>({})
+  const [engineeringStandards, setEngineeringStandards] = useState<EngineeringStandardEntry[]>([])
+  const [loadingStandards, setLoadingStandards] = useState(false)
+  const [standardsError, setStandardsError] = useState<string | null>(null)
+  const [standardsScanInFlight, setStandardsScanInFlight] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -73,6 +93,7 @@ export function ProjectProfileDialog({ open, onClose }: ProjectProfileDialogProp
   useEffect(() => {
     if (open && activeTab === 'regulation' && currentProject) {
       setLoadingRegs(true)
+      void loadRegulations('fetch')
       fetchRegulatoryDocs(currentProject)
         .then(resp => {
           setRegDocs(resp.documents)
@@ -81,6 +102,48 @@ export function ProjectProfileDialog({ open, onClose }: ProjectProfileDialogProp
         .catch(err => console.error("Failed to load regulatory docs", err))
         .finally(() => setLoadingRegs(false))
     }
+  }, [open, activeTab, currentProject])
+
+  const loadRegulations = async (mode: 'fetch' | 'refresh' = 'fetch') => {
+    if (!currentProject) return
+    setLoadingRegulations(true)
+    setRegulationsError(null)
+    try {
+      const resp = mode === 'refresh'
+        ? await refreshProjectRegulations(currentProject)
+        : await fetchProjectRegulations(currentProject)
+      setRegulations(resp)
+    } catch (err) {
+      console.error('Failed to load regulations catalogue', err)
+      setRegulationsError(err instanceof Error ? err.message : 'Failed to load regulations catalogue')
+    } finally {
+      setLoadingRegulations(false)
+    }
+  }
+
+  const loadEngineeringStandards = async (mode: 'fetch' | 'scan' = 'fetch') => {
+    if (!currentProject) return
+    setLoadingStandards(true)
+    setStandardsError(null)
+    try {
+      const resp =
+        mode === 'scan'
+          ? await scanEngineeringStandards(currentProject)
+          : await fetchEngineeringStandards(currentProject)
+      setEngineeringStandards(resp.entries || [])
+    } catch (err) {
+      console.error('Failed to load engineering standards', err)
+      setStandardsError(err instanceof Error ? err.message : 'Failed to load engineering standards')
+    } finally {
+      setLoadingStandards(false)
+    }
+  }
+
+  useEffect(() => {
+    if (open && activeTab === 'epc_logistics' && currentProject) {
+      void loadEngineeringStandards('fetch')
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, activeTab, currentProject])
 
   useEffect(() => {
@@ -139,6 +202,42 @@ export function ProjectProfileDialog({ open, onClose }: ProjectProfileDialogProp
     }
   }
 
+  const splitStandardLabel = (value: string) => {
+    const idx = value.indexOf(' - ')
+    if (idx === -1) return { code: value, description: '' }
+    return {
+      code: value.slice(0, idx).trim(),
+      description: value.slice(idx + 3).trim()
+    }
+  }
+
+  const isPipelineDesignStandard = (entry: EngineeringStandardEntry) => {
+    const detail = (entry.type_detail || '').toLowerCase()
+    return (
+      detail.includes('design') ||
+      detail.includes('materials') ||
+      detail.includes('line pipe') ||
+      detail.includes('valves') ||
+      detail.includes('fittings') ||
+      detail.includes('flanges')
+    )
+  }
+
+  const pipelineDesignStandards = engineeringStandards.filter(isPipelineDesignStandard)
+  const constructionStandards = engineeringStandards.filter((s) => !isPipelineDesignStandard(s))
+
+  const regulationEntries: MatchedRegulationEntry[] = regulations?.entries || []
+  const normCoverage = (value?: string | null) => (value || '').trim().toLowerCase()
+  const regsByCoverage = (coverage: string) => regulationEntries.filter(e => normCoverage(e.coverage_level) === coverage)
+  const globalRegulations = regsByCoverage('global')
+  const supranationalRegulations = regsByCoverage('supranational')
+  const countryRegulations = regsByCoverage('country')
+  const admin1Regulations = regsByCoverage('admin1')
+  const otherRegulations = regulationEntries.filter(e => {
+    const c = normCoverage(e.coverage_level)
+    return c && !['global', 'supranational', 'country', 'admin1', 'admin2'].includes(c)
+  })
+
   return createPortal(
     <>
       {/* Backdrop */}
@@ -155,7 +254,7 @@ export function ProjectProfileDialog({ open, onClose }: ProjectProfileDialogProp
       {/* Dialog */}
       <div className="fixed inset-0 z-[101] flex items-center justify-center p-4 pointer-events-none">
         <div className={cn(
-          "relative w-[800px] max-w-[95vw] bg-[#0a0a0a]/95 border border-white/10 rounded-sm shadow-[0_0_50px_-10px_rgba(0,0,0,0.8)] flex flex-col pointer-events-auto overflow-hidden",
+          "relative w-[800px] max-w-[95vw] max-h-[90vh] bg-[#0a0a0a]/95 border border-white/10 rounded-sm shadow-[0_0_50px_-10px_rgba(0,0,0,0.8)] flex flex-col pointer-events-auto overflow-hidden",
           isClosing ? "animate-fade-out" : "animate-fade-in"
         )}>
           
@@ -410,13 +509,170 @@ export function ProjectProfileDialog({ open, onClose }: ProjectProfileDialogProp
                     <p className="text-xs text-white/50">Legislative framework and technical standards for AOI operations.</p>
                   </div>
                   <button 
-                    className="px-4 py-2 bg-primary/10 border border-primary/30 text-primary text-xs font-bold uppercase tracking-wider rounded-sm hover:bg-primary/20 transition-all flex items-center gap-2"
-                    onClick={() => alert("Perplexity integration pending backend implementation.")}
+                    className="px-4 py-2 bg-primary/10 border border-primary/30 text-primary text-xs font-bold uppercase tracking-wider rounded-sm hover:bg-primary/20 transition-all flex items-center gap-2 disabled:opacity-40 disabled:pointer-events-none"
+                    onClick={() => void loadRegulations('refresh')}
+                    disabled={!currentProject || loadingRegulations}
                   >
                     <Globe className="w-3 h-3" />
-                    Run Analysis
+                    {loadingRegulations ? 'Refreshing…' : 'Refresh from catalogue'}
                   </button>
                 </div>
+
+                {/* Catalogue-backed regulations */}
+                <section className="p-4 bg-black/40 border border-white/10 rounded-sm space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <div className="text-xs font-bold uppercase tracking-wider text-white/70">Applicable Regulations (Catalogue)</div>
+                      <div className="text-[10px] font-mono text-white/30">
+                        {regulations?.countries_iso3?.length ? (
+                          <span>AOI countries: {regulations.countries_iso3.join(', ')}</span>
+                        ) : (
+                          <span>AOI countries: (unknown)</span>
+                        )}
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-mono text-white/30">{regulationEntries.length} ENTRIES</span>
+                  </div>
+
+                  {loadingRegulations ? (
+                    <div className="flex items-center gap-2 text-[10px] text-white/40 font-mono uppercase tracking-[0.2em]">
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+                      <span>Loading catalogue matches…</span>
+                    </div>
+                  ) : regulationsError ? (
+                    <div className="p-3 bg-amber-500/5 border border-amber-500/20 rounded-sm text-xs text-amber-400 flex items-start gap-2">
+                      <AlertTriangle className="w-4 h-4 mt-0.5" />
+                      <span>{regulationsError}</span>
+                    </div>
+                  ) : regulationEntries.length === 0 ? (
+                    <div className="text-[10px] font-mono text-white/30 italic">No catalogue-backed regulations matched (yet).</div>
+                  ) : (
+                    <div className="grid grid-cols-1 gap-4">
+                      <RegulationsGroup
+                        title="Supranational"
+                        entries={supranationalRegulations}
+                        projectName={currentProject || ''}
+                        indexingId={indexingRegulationId}
+                        indexed={indexedRegulations}
+                        onIndex={async (entry) => {
+                          if (!currentProject) return
+                          if (!entry.direct_download_url) return
+                          if (indexingRegulationId) return
+                          setIndexingRegulationId(entry.entry_id)
+                          try {
+                            const indexedResp = await indexRegulationEntry(currentProject, entry.entry_id)
+                            setIndexedRegulations(prev => ({ ...prev, [entry.entry_id]: indexedResp }))
+                            const docsResp = await fetchRegulatoryDocs(currentProject)
+                            setRegDocs(docsResp.documents)
+                            setRegIndex(docsResp.index_content)
+                          } catch (err) {
+                            alert(err instanceof Error ? err.message : 'Failed to index regulation')
+                          } finally {
+                            setIndexingRegulationId(null)
+                          }
+                        }}
+                      />
+                      <RegulationsGroup
+                        title="Country"
+                        entries={countryRegulations}
+                        projectName={currentProject || ''}
+                        indexingId={indexingRegulationId}
+                        indexed={indexedRegulations}
+                        onIndex={async (entry) => {
+                          if (!currentProject) return
+                          if (!entry.direct_download_url) return
+                          if (indexingRegulationId) return
+                          setIndexingRegulationId(entry.entry_id)
+                          try {
+                            const indexedResp = await indexRegulationEntry(currentProject, entry.entry_id)
+                            setIndexedRegulations(prev => ({ ...prev, [entry.entry_id]: indexedResp }))
+                            const docsResp = await fetchRegulatoryDocs(currentProject)
+                            setRegDocs(docsResp.documents)
+                            setRegIndex(docsResp.index_content)
+                          } catch (err) {
+                            alert(err instanceof Error ? err.message : 'Failed to index regulation')
+                          } finally {
+                            setIndexingRegulationId(null)
+                          }
+                        }}
+                      />
+                      <RegulationsGroup
+                        title="Admin1 (State/Province/Emirate)"
+                        entries={admin1Regulations}
+                        projectName={currentProject || ''}
+                        indexingId={indexingRegulationId}
+                        indexed={indexedRegulations}
+                        onIndex={async (entry) => {
+                          if (!currentProject) return
+                          if (!entry.direct_download_url) return
+                          if (indexingRegulationId) return
+                          setIndexingRegulationId(entry.entry_id)
+                          try {
+                            const indexedResp = await indexRegulationEntry(currentProject, entry.entry_id)
+                            setIndexedRegulations(prev => ({ ...prev, [entry.entry_id]: indexedResp }))
+                            const docsResp = await fetchRegulatoryDocs(currentProject)
+                            setRegDocs(docsResp.documents)
+                            setRegIndex(docsResp.index_content)
+                          } catch (err) {
+                            alert(err instanceof Error ? err.message : 'Failed to index regulation')
+                          } finally {
+                            setIndexingRegulationId(null)
+                          }
+                        }}
+                      />
+                      <RegulationsGroup
+                        title="Global"
+                        entries={globalRegulations}
+                        projectName={currentProject || ''}
+                        indexingId={indexingRegulationId}
+                        indexed={indexedRegulations}
+                        onIndex={async (entry) => {
+                          if (!currentProject) return
+                          if (!entry.direct_download_url) return
+                          if (indexingRegulationId) return
+                          setIndexingRegulationId(entry.entry_id)
+                          try {
+                            const indexedResp = await indexRegulationEntry(currentProject, entry.entry_id)
+                            setIndexedRegulations(prev => ({ ...prev, [entry.entry_id]: indexedResp }))
+                            const docsResp = await fetchRegulatoryDocs(currentProject)
+                            setRegDocs(docsResp.documents)
+                            setRegIndex(docsResp.index_content)
+                          } catch (err) {
+                            alert(err instanceof Error ? err.message : 'Failed to index regulation')
+                          } finally {
+                            setIndexingRegulationId(null)
+                          }
+                        }}
+                      />
+                      {otherRegulations.length > 0 ? (
+                        <RegulationsGroup
+                          title="Other"
+                          entries={otherRegulations}
+                          projectName={currentProject || ''}
+                          indexingId={indexingRegulationId}
+                          indexed={indexedRegulations}
+                          onIndex={async (entry) => {
+                            if (!currentProject) return
+                            if (!entry.direct_download_url) return
+                            if (indexingRegulationId) return
+                            setIndexingRegulationId(entry.entry_id)
+                            try {
+                              const indexedResp = await indexRegulationEntry(currentProject, entry.entry_id)
+                              setIndexedRegulations(prev => ({ ...prev, [entry.entry_id]: indexedResp }))
+                              const docsResp = await fetchRegulatoryDocs(currentProject)
+                              setRegDocs(docsResp.documents)
+                              setRegIndex(docsResp.index_content)
+                            } catch (err) {
+                              alert(err instanceof Error ? err.message : 'Failed to index regulation')
+                            } finally {
+                              setIndexingRegulationId(null)
+                            }
+                          }}
+                        />
+                      ) : null}
+                    </div>
+                  )}
+                </section>
 
                 {loadingRegs ? (
                   <div className="py-12 text-center text-white/30 font-mono text-xs uppercase tracking-widest flex flex-col items-center gap-3">
@@ -424,13 +680,52 @@ export function ProjectProfileDialog({ open, onClose }: ProjectProfileDialogProp
                     Scanning Regulatory Archive...
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 gap-8">
-                    <RegulatorySection title="National Legislation" docs={regDocs.filter(d => d.category === 'national')} />
-                    <RegulatorySection title="Regional / State" docs={regDocs.filter(d => d.category === 'regional')} />
-                    <RegulatorySection title="Local / Municipal" docs={regDocs.filter(d => d.category === 'local')} />
-                    <RegulatorySection title="Technical Standards" docs={regDocs.filter(d => d.category === 'technical')} />
-                    <RegulatorySection title="Industry Best Practices" docs={regDocs.filter(d => d.category === 'industry')} />
-                  </div>
+                  <section className="p-4 bg-black/40 border border-white/10 rounded-sm space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                        <div className="text-xs font-bold uppercase tracking-wider text-white/70">Indexed Regulatory Documents</div>
+                        <div className="text-[10px] font-mono text-white/30">Stored under <span className="text-white/40">docs/regulatory_docs/…</span></div>
+                      </div>
+                      <span className="text-[10px] font-mono text-white/30">{regDocs.length} DOCS</span>
+                    </div>
+
+                    {regDocs.length === 0 ? (
+                      <div className="text-[10px] font-mono text-white/30 italic">No indexed documents yet. Use <span className="text-white/50">Index</span> on a catalogue entry to file it.</div>
+                    ) : (
+                      <div className="grid grid-cols-1 gap-2">
+                        {regDocs.map((doc, i) => (
+                          <a
+                            key={`${doc.path}:${i}`}
+                            href={currentProject ? buildRegulatoryDocFileUrl(currentProject, doc.path) : undefined}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-between gap-3 min-w-0 w-full p-2 bg-white/[0.02] border border-white/5 rounded-sm hover:bg-white/[0.05] transition-colors"
+                            title="Open document"
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <FileText className="w-4 h-4 text-primary/70 shrink-0" />
+                              <div className="min-w-0">
+                                <div className="text-xs text-white truncate" title={doc.name}>
+                                  {doc.name}
+                                </div>
+                                <div className="text-[9px] font-mono text-white/40 truncate" title={doc.path}>
+                                  {doc.path}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <span className="text-[9px] font-mono text-primary/70 bg-primary/10 px-1.5 py-0.5 rounded-sm uppercase">
+                                {doc.category}
+                              </span>
+                              <span className="text-[9px] font-mono text-white/30">
+                                {doc.size_bytes ? `${Math.round(doc.size_bytes / 1024)} KB` : ''}
+                              </span>
+                            </div>
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                  </section>
                 )}
               </div>
             )}
@@ -671,44 +966,114 @@ export function ProjectProfileDialog({ open, onClose }: ProjectProfileDialogProp
 
                 {/* Construction Standards */}
                 <section>
-                  <div className="flex items-center gap-2 mb-4 text-white/50">
-                    <Building2 className="w-4 h-4" />
-                    <h3 className="text-sm font-bold uppercase tracking-wider">Applicable Technical Standards</h3>
+                  <div className="flex items-center justify-between gap-3 mb-4 text-white/50">
+                    <div className="flex items-center gap-2">
+                      <Building2 className="w-4 h-4" />
+                      <h3 className="text-sm font-bold uppercase tracking-wider">Applicable Technical Standards</h3>
+                    </div>
+                    <button
+                      onClick={async () => {
+                        if (!currentProject || standardsScanInFlight) return
+                        setStandardsScanInFlight(true)
+                        try {
+                          await loadEngineeringStandards('scan')
+                        } finally {
+                          setStandardsScanInFlight(false)
+                        }
+                      }}
+                      disabled={!currentProject || standardsScanInFlight}
+                      className="px-3 py-2 border border-primary/30 text-primary/80 hover:bg-primary/10 hover:text-primary rounded-sm text-[10px] uppercase font-bold tracking-wider transition-all disabled:opacity-40 disabled:pointer-events-none"
+                      title="Re-scan standards catalogue (refresh cached data)"
+                    >
+                      {standardsScanInFlight ? 'SCANNING' : 'SCAN'}
+                    </button>
                   </div>
+
+                  {loadingStandards && (
+                    <div className="flex items-center gap-2 text-[10px] text-white/40 font-mono uppercase tracking-[0.2em] mb-3">
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+                      <span>Loading standards catalogue…</span>
+                    </div>
+                  )}
+
+                  {standardsError && (
+                    <div className="mb-3 p-3 bg-amber-500/5 border border-amber-500/20 rounded-sm flex items-start gap-2 text-xs text-amber-400">
+                      <AlertTriangle className="w-4 h-4 mt-0.5" />
+                      <span>{standardsError}</span>
+                    </div>
+                  )}
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="p-4 bg-black/40 border border-white/10 rounded-sm">
                       <div className="text-xs font-mono uppercase text-primary mb-2">Pipeline Design</div>
                       <ul className="space-y-1.5 text-xs text-white/60">
-                        <li className="flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-primary/50" />
-                          <span><strong className="text-white/80">ASME B31.8</strong> - Gas Transmission Systems</span>
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-primary/50" />
-                          <span><strong className="text-white/80">EN 1594</strong> - High Pressure Gas Pipelines (&gt;16 bar)</span>
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-primary/50" />
-                          <span><strong className="text-white/80">ISO 13623</strong> - Pipeline Transportation Systems</span>
-                        </li>
+                        {pipelineDesignStandards.length === 0 ? (
+                          <li className="text-[10px] font-mono text-white/30 italic py-1">
+                            {loadingStandards ? 'Loading…' : 'No pipeline design standards available.'}
+                          </li>
+                        ) : (
+                          pipelineDesignStandards.map((entry, idx) => {
+                            const { code, description } = splitStandardLabel(entry.standard)
+                            return (
+                              <li key={`${code}:${idx}`} className="flex items-start justify-between gap-2 group">
+                                <div className="flex items-start gap-2 min-w-0">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-primary/50 mt-1.5 shrink-0" />
+                                  <span className="min-w-0">
+                                    <strong className="text-white/80">{code}</strong>
+                                    {description ? <span className="text-white/60"> — {description}</span> : null}
+                                  </span>
+                                </div>
+                                {entry.url && (
+                                  <a
+                                    href={entry.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="p-1 text-white/30 hover:text-primary transition-colors opacity-0 group-hover:opacity-100 shrink-0"
+                                    title="Open standard documentation"
+                                  >
+                                    <ExternalLink className="w-3 h-3" />
+                                  </a>
+                                )}
+                              </li>
+                            )
+                          })
+                        )}
                       </ul>
                     </div>
                     <div className="p-4 bg-black/40 border border-white/10 rounded-sm">
                       <div className="text-xs font-mono uppercase text-primary mb-2">Construction & Seismic</div>
                       <ul className="space-y-1.5 text-xs text-white/60">
-                        <li className="flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-primary/50" />
-                          <span><strong className="text-white/80">NTC 2018</strong> - Italian Technical Construction Standards</span>
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-primary/50" />
-                          <span><strong className="text-white/80">Circular 7/2019</strong> - Seismic Pipeline Protection</span>
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-primary/50" />
-                          <span><strong className="text-white/80">API RP 1102</strong> - Road/Rail Crossing Design</span>
-                        </li>
+                        {constructionStandards.length === 0 ? (
+                          <li className="text-[10px] font-mono text-white/30 italic py-1">
+                            {loadingStandards ? 'Loading…' : 'No construction standards available.'}
+                          </li>
+                        ) : (
+                          constructionStandards.map((entry, idx) => {
+                            const { code, description } = splitStandardLabel(entry.standard)
+                            return (
+                              <li key={`${code}:${idx}`} className="flex items-start justify-between gap-2 group">
+                                <div className="flex items-start gap-2 min-w-0">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-primary/50 mt-1.5 shrink-0" />
+                                  <span className="min-w-0">
+                                    <strong className="text-white/80">{code}</strong>
+                                    {description ? <span className="text-white/60"> — {description}</span> : null}
+                                  </span>
+                                </div>
+                                {entry.url && (
+                                  <a
+                                    href={entry.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="p-1 text-white/30 hover:text-primary transition-colors opacity-0 group-hover:opacity-100 shrink-0"
+                                    title="Open standard documentation"
+                                  >
+                                    <ExternalLink className="w-3 h-3" />
+                                  </a>
+                                )}
+                              </li>
+                            )
+                          })
+                        )}
                       </ul>
                     </div>
                   </div>
@@ -762,7 +1127,99 @@ export function ProjectProfileDialog({ open, onClose }: ProjectProfileDialogProp
   )
 }
 
-function RegulatorySection({ title, docs }: { title: string, docs: RegulatoryDoc[] }) {
+function RegulationsGroup({
+  title,
+  entries,
+  projectName,
+  indexingId,
+  indexed,
+  onIndex
+}: {
+  title: string
+  entries: MatchedRegulationEntry[]
+  projectName: string
+  indexingId: string | null
+  indexed: Record<string, RegulationIndexResponse>
+  onIndex: (entry: MatchedRegulationEntry) => void
+}) {
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between border-b border-white/10 pb-2">
+        <h4 className="text-xs font-bold uppercase tracking-wider text-white/70">{title}</h4>
+        <span className="text-[10px] font-mono text-white/30">{entries.length} ITEMS</span>
+      </div>
+      {entries.length === 0 ? (
+        <div className="text-[10px] font-mono text-white/30 italic py-2">No entries.</div>
+      ) : (
+        <div className="grid grid-cols-1 gap-2">
+          {entries.map((entry) => {
+            const indexedResp = indexed[entry.entry_id]
+            const openUrl =
+              projectName && indexedResp?.stored_path
+                ? buildRegulatoryDocFileUrl(projectName, indexedResp.stored_path)
+                : null
+            const canIndex = Boolean(entry.direct_download_url)
+            const isIndexing = indexingId === entry.entry_id
+
+            return (
+              <div
+                key={entry.entry_id}
+                className="flex items-start justify-between gap-3 p-2 bg-white/[0.02] border border-white/5 rounded-sm hover:bg-white/[0.05] transition-colors"
+              >
+                <div className="min-w-0">
+                  <div className="text-xs text-white truncate" title={entry.title}>
+                    {entry.title}
+                  </div>
+                  <div className="text-[9px] font-mono text-white/40 truncate" title={entry.match_reason}>
+                    {entry.entry_id}
+                    {entry.authority ? <span className="text-white/30"> · {entry.authority}</span> : null}
+                    {entry.match_reason ? <span className="text-white/30"> · {entry.match_reason}</span> : null}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  {entry.source_url ? (
+                    <a
+                      href={entry.source_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-1 text-white/30 hover:text-primary transition-colors"
+                      title="Open official source"
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  ) : null}
+                  {openUrl ? (
+                    <a
+                      href={openUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-2 py-1 border border-white/10 text-white/70 hover:text-white hover:bg-white/[0.04] rounded-sm text-[10px] font-mono uppercase tracking-wider"
+                      title="Open indexed document"
+                    >
+                      Open
+                    </a>
+                  ) : null}
+                  {canIndex ? (
+                    <button
+                      className="px-2 py-1 border border-primary/30 text-primary/80 hover:bg-primary/10 hover:text-primary rounded-sm text-[10px] font-mono uppercase tracking-wider transition-all disabled:opacity-40 disabled:pointer-events-none"
+                      onClick={() => onIndex(entry)}
+                      disabled={!projectName || Boolean(indexingId) || isIndexing}
+                      title={entry.direct_download_url ? 'Download into project docs (Index)' : 'No direct download available'}
+                    >
+                      {isIndexing ? 'Indexing…' : 'Index'}
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function RegulatorySection({ title, docs, projectName }: { title: string; docs: RegulatoryDoc[]; projectName: string }) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between border-b border-white/10 pb-2">
@@ -772,12 +1229,19 @@ function RegulatorySection({ title, docs }: { title: string, docs: RegulatoryDoc
       {docs.length === 0 ? (
         <div className="text-[10px] font-mono text-white/30 italic py-2">No documentation filed.</div>
       ) : (
-        <div className="grid gap-2">
+        <div className="grid grid-cols-1 gap-2">
           {docs.map((doc, i) => (
-            <div key={i} className="flex items-center justify-between p-2 bg-white/[0.02] border border-white/5 rounded-sm hover:bg-white/[0.05] transition-colors cursor-default">
-              <div className="flex items-center gap-3 overflow-hidden">
+            <a
+              key={i}
+              href={projectName ? buildRegulatoryDocFileUrl(projectName, doc.path) : undefined}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between gap-3 min-w-0 w-full p-2 bg-white/[0.02] border border-white/5 rounded-sm hover:bg-white/[0.05] transition-colors"
+              title="Open document"
+            >
+              <div className="flex items-center gap-3 min-w-0">
                 <FileText className="w-4 h-4 text-primary/70 shrink-0" />
-                <div className="truncate">
+                <div className="min-w-0">
                   <div className="text-xs text-white truncate" title={doc.name}>{doc.name}</div>
                   <div className="text-[9px] font-mono text-white/40 truncate" title={doc.path}>{doc.path}</div>
                 </div>
@@ -785,7 +1249,7 @@ function RegulatorySection({ title, docs }: { title: string, docs: RegulatoryDoc
               <div className="text-[9px] font-mono text-white/30 shrink-0 ml-2">
                 {doc.size_bytes ? `${Math.round(doc.size_bytes / 1024)} KB` : ''}
               </div>
-            </div>
+            </a>
           ))}
         </div>
       )}

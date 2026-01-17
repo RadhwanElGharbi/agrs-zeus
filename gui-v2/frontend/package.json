@@ -1,16 +1,16 @@
 {
   "name": "agrs-zeus-gui-v2",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "AGRS ZEUS Enterprise Desktop Application",
   "main": "electron/main.js",
   "scripts": {
     "dev": "concurrently \"npm run dev:next\" \"npm run dev:electron\"",
-    "dev:next": "next dev -H 0.0.0.0",
-    "dev:electron": "wait-on http://localhost:3000 && electron . --no-sandbox",
+    "dev:next": "next dev -H 0.0.0.0 -p 3001",
+    "dev:electron": "wait-on http://localhost:3001 && electron . --no-sandbox",
     "build": "next build",
-    "build:electron": "npm run build && electron-builder",
+    "build:electron": "electron-builder",
     "electron-pack": "electron-builder --linux --x64",
-    "start": "next start",
+    "start": "next start -p 3001",
     "lint": "next lint"
   },
   "dependencies": {

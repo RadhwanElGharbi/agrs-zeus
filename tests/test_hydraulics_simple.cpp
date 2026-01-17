@@ -1,117 +1,70 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
+
+#include <cmath>
+
 #include "agrs_zeus/Hydraulics.h"
-#include "agrs_zeus/PipelineSpecifications.h"
 
 using namespace agrs::pirl;
 using Catch::Approx;
 
 TEST_CASE("Hydraulics: Basic Construction", "[hydraulics]") {
-    PipelineSpecifications specs;
-    specs.diameter_mm = 660.4;
-    specs.thickness_mm = 11.1;
-    specs.mop_bar = 70.0;
-    specs.dp_bar = 75.0;
-    specs.operating_temp_k = 288.15;  // 15°C
-    
-    SECTION("Natural gas calculator") {
-        REQUIRE_NOTHROW(HydraulicsCalculator(specs, 
-            HydraulicsCalculator::FluidType::NATURAL_GAS,
-            HydraulicsCalculator::PipeMaterial::CARBON_STEEL));
-    }
-    
-    SECTION("Crude oil calculator") {
-        REQUIRE_NOTHROW(HydraulicsCalculator(specs, 
-            HydraulicsCalculator::FluidType::OIL_CRUDE,
-            HydraulicsCalculator::PipeMaterial::CARBON_STEEL));
-    }
+  PipelineHydraulics params;
+  params.diameter_internal_m = 0.6382;  // ~24\" ID
+  params.roughness_absolute_mm = 0.045;
+  params.flow_rate_m3_s = 0.5;
+  params.operating_temperature_k = 288.15;
+
+  REQUIRE_NOTHROW(HydraulicsCalculator(params));
 }
 
-TEST_CASE("Hydraulics: Gas Segment Calculation", "[hydraulics]") {
-    PipelineSpecifications specs;
-    specs.diameter_mm = 660.4;
-    specs.thickness_mm = 11.1;
-    specs.mop_bar = 70.0;
-    specs.dp_bar = 75.0;
-    specs.operating_temp_k = 288.15;
-    
-    HydraulicsCalculator calc(specs, 
-        HydraulicsCalculator::FluidType::NATURAL_GAS,
-        HydraulicsCalculator::PipeMaterial::CARBON_STEEL);
-    
-    SECTION("Calculate horizontal segment") {
-        auto result = calc.calculate_segment(
-            100.0,      // length_m
-            0.0,        // elevation_change_m
-            0.5,        // flow_rate_m3_s
-            7.0e6,      // upstream_pressure_pa (70 bar)
-            288.15      // upstream_temperature_k (15°C)
-        );
-        
-        // Check all fields are populated
-        REQUIRE(result.flow_velocity_m_s > 0.0);
-        REQUIRE(result.reynolds_number > 0.0);
-        REQUIRE(result.friction_factor > 0.0);
-        REQUIRE(result.pressure_drop_pa >= 0.0);
-        REQUIRE(result.flow_regime >= 0);
-        REQUIRE(result.flow_regime <= 2);
-        REQUIRE_FALSE(std::isnan(result.flow_velocity_m_s));
-        REQUIRE_FALSE(std::isinf(result.flow_velocity_m_s));
-    }
-    
-    SECTION("Calculate uphill segment") {
-        auto result = calc.calculate_segment(
-            100.0,      // length_m
-            50.0,       // elevation_change_m (uphill)
-            0.5,        // flow_rate_m3_s
-            7.0e6,      // upstream_pressure_pa
-            288.15      // upstream_temperature_k
-        );
-        
-        // Uphill should have higher pressure drop
-        REQUIRE(result.pressure_drop_pa > 0.0);
-    }
+TEST_CASE("Hydraulics: Segment Calculation populates key fields", "[hydraulics]") {
+  PipelineHydraulics params;
+  params.diameter_internal_m = 0.6382;
+  params.roughness_absolute_mm = 0.045;
+  params.flow_rate_m3_s = 0.5;
+  params.operating_temperature_k = 288.15;
+
+  HydraulicsCalculator calc(params);
+
+  const auto seg = calc.calculate_segment(
+      70.0,   // entry_pressure_bar
+      100.0,  // segment_length_m
+      0.0     // elevation_change_m
+  );
+
+  REQUIRE(seg.entry_pressure_bar == Approx(70.0));
+  REQUIRE(seg.exit_pressure_bar <= seg.entry_pressure_bar);
+  REQUIRE(seg.pressure_drop_bar >= 0.0);
+  REQUIRE(seg.flow_velocity_m_s > 0.0);
+  REQUIRE(seg.reynolds_number > 0.0);
+  REQUIRE(seg.friction_factor > 0.0);
+  REQUIRE_FALSE(std::isnan(seg.flow_velocity_m_s));
+  REQUIRE_FALSE(std::isinf(seg.flow_velocity_m_s));
 }
 
-TEST_CASE("Hydraulics: Liquid Segment Calculation", "[hydraulics]") {
-    PipelineSpecifications specs;
-    specs.diameter_mm = 660.4;
-    specs.thickness_mm = 11.1;
-    specs.mop_bar = 70.0;
-    specs.dp_bar = 75.0;
-    specs.operating_temp_k = 288.15;
-    
-    HydraulicsCalculator calc(specs, 
-        HydraulicsCalculator::FluidType::OIL_CRUDE,
-        HydraulicsCalculator::PipeMaterial::CARBON_STEEL);
-    
-    SECTION("Calculate liquid segment") {
-        auto result = calc.calculate_segment(
-            100.0,      // length_m
-            0.0,        // elevation_change_m
-            0.5,        // flow_rate_m3_s
-            7.0e6,      // upstream_pressure_pa
-            288.15      // upstream_temperature_k
-        );
-        
-        // Check all fields are populated
-        REQUIRE(result.flow_velocity_m_s > 0.0);
-        REQUIRE(result.reynolds_number > 0.0);
-        REQUIRE(result.head_loss_m >= 0.0);
-        REQUIRE(result.pressure_drop_pa >= 0.0);
-        REQUIRE_FALSE(std::isnan(result.flow_velocity_m_s));
-    }
+TEST_CASE("Hydraulics: Route Calculation returns per-segment results", "[hydraulics]") {
+  PipelineHydraulics params;
+  params.diameter_internal_m = 0.6382;
+  params.roughness_absolute_mm = 0.045;
+  params.flow_rate_m3_s = 0.5;
+  params.operating_temperature_k = 288.15;
+
+  HydraulicsCalculator calc(params);
+
+  std::vector<std::pair<double, double>> route_segments = {
+      {100.0, 0.0},
+      {100.0, 10.0},
+      {100.0, -5.0},
+  };
+
+  const auto route = calc.calculate_route(route_segments, 70.0, 45.0);
+  REQUIRE(route.size() == route_segments.size());
+  REQUIRE(route.front().entry_pressure_bar == Approx(70.0));
 }
 
 TEST_CASE("Hydraulics: Module Complete", "[hydraulics][summary]") {
-    INFO("Hydraulics module fully implemented and functional");
-    INFO("- Gas pipeline calculations (compressible flow)");
-    INFO("- Liquid pipeline calculations (incompressible flow)");
-    INFO("- Reynolds number and friction factor");
-    INFO("- Pressure drop calculations");
-    INFO("- Pumping station logic");
-    INFO("- Risk detection (erosion, corrosion, cavitation)");
-    
-    REQUIRE(true);
+  INFO("Hydraulics module implemented and exercised via unit tests");
+  REQUIRE(true);
 }
 

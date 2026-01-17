@@ -3,6 +3,11 @@ build/
 build-*/
 cmake-build-*/
 
+# Node / JS (prevent committing dependencies/build output)
+node_modules/
+.next/
+out/
+
 # IDE files
 .vscode/
 .idea/
@@ -37,16 +42,31 @@ __pycache__/
 venv/
 env/
 
-# Data files (too large for Git)
-Projects/*/data/rasters/*.tif
-Projects/*/data/rasters/*.tiff
-Projects/*/data/vectors/*.gpkg
-Projects/*/data/vectors/*.shp
-Projects/*/data/vectors/*.geojson
+# Local projects / datasets / outputs should never be committed to GitHub.
+# Keep only minimal placeholder docs/structure files.
+Projects/**
+!Projects/README.md
+!Projects/**/.gitkeep
 
-# Keep directory structure but not large files
-!Projects/*/data/rasters/.gitkeep
-!Projects/*/data/vectors/.gitkeep
+# Local boundary datasets (download/cache locally; do not commit)
+data/boundaries/gadm41/
+data/boundaries/naturalearth_admin0_50m/
+
+# Local DB state
+data/postgres/
+
+# Analytics output/logs (runtime data)
+analytics/**
+!analytics/README.md
+
+# Local CRM / application intake data
+/applications/
+
+# Root-only scratch artifacts (should not be committed)
+/index.html
+/index.txt
+/package.json
+/package-lock.json
 
 # Large dataset inventories (optional)
 # data/*_datasets_inventory.csv
@@ -57,6 +77,7 @@ Projects/*/data/vectors/*.geojson
 *.log
 *.swp
 nohup.out
+*.broken*
 
 # OS files
 .DS_Store
@@ -86,6 +107,20 @@ python/pirl_venv/
 *.zip
 *.pkl
 gui-v2/backend/.tile_cache/
+
+# Backend runtime artifacts
+gui-v2/backend/profile_images/
+gui-v2/backend/tests/reports/
+
+# Backend accidental Node artifacts (backend is Python)
+/gui-v2/backend/node_modules/
+/gui-v2/backend/package.json
+/gui-v2/backend/package-lock.json
+/gui-v2/backend/=0.25.0
+
+# Cursor / AI tooling artifacts
+.cursor/
+.gemini/
 
 # Claude and Cursor credentials
 .claude_credentials

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Loader2, CheckCircle2, Circle, Database, Map, Layers, FileText, Globe, Cpu } from 'lucide-react'
+import { Loader2, CheckCircle2, Circle, Database, Map, Layers, FileText, MapPin, Cpu } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import Image from 'next/image'
 
@@ -16,46 +16,46 @@ interface LoadingStage {
 
 const LOADING_STAGES: LoadingStage[] = [
   {
-    id: 'metadata',
-    label: 'Loading Project Metadata',
-    description: 'Reading project configuration and specifications',
+    id: 'profile',
+    label: 'Loading Project Profile',
+    description: 'Fetching AOI, CRS, and project configuration',
     icon: FileText,
-    estimatedDuration: 1500
+    estimatedDuration: 1200
   },
   {
-    id: 'crs',
-    label: 'Validating Coordinate System',
-    description: 'Verifying CRS and projection parameters',
-    icon: Globe,
-    estimatedDuration: 1000
-  },
-  {
-    id: 'datasets',
-    label: 'Scanning Datasets',
-    description: 'Enumerating raster and vector data sources',
+    id: 'inventory',
+    label: 'Loading Dataset Inventory',
+    description: 'Reading raster + vector layer index',
     icon: Database,
-    estimatedDuration: 2500
+    estimatedDuration: 1400
+  },
+  {
+    id: 'rasters',
+    label: 'Registering Raster Sources',
+    description: 'Wiring tile endpoints for raster layers',
+    icon: Map,
+    estimatedDuration: 1200
   },
   {
     id: 'vectors',
     label: 'Loading Vector Layers',
-    description: 'Processing GeoJSON features and geometries',
+    description: 'Fetching GeoJSON and building vector overlays',
     icon: Layers,
     estimatedDuration: 3000
   },
   {
-    id: 'tiles',
-    label: 'Preparing Tile Services',
-    description: 'Initializing raster tile endpoints',
-    icon: Map,
-    estimatedDuration: 2000
+    id: 'annotations',
+    label: 'Loading AOI Markers & Annotations',
+    description: 'Hydrating start/end points and Operator annotations',
+    icon: MapPin,
+    estimatedDuration: 1600
   },
   {
     id: 'finalize',
-    label: 'Finalizing Project',
-    description: 'Building spatial indexes and caching',
+    label: 'Finalizing Map View',
+    description: 'Ordering layers, fitting to AOI, and enabling tools',
     icon: Cpu,
-    estimatedDuration: 2000
+    estimatedDuration: 1600
   }
 ]
 
@@ -123,145 +123,177 @@ export function ProjectLoadingDialog({ open, projectName, onComplete }: ProjectL
   const overallProgress = ((elapsedDuration + (stageProgress / 100) * LOADING_STAGES[currentStageIndex]?.estimatedDuration) / totalDuration) * 100
 
   return createPortal(
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/95 backdrop-blur-md">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 backdrop-blur-xl p-6">
+      {/* Ambient background */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(var(--primary),0.12),transparent_65%)]" />
+
       {/* Background grid effect */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff03_1px,transparent_1px),linear-gradient(to_bottom,#ffffff03_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none opacity-30" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff03_1px,transparent_1px),linear-gradient(to_bottom,#ffffff03_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none opacity-25" />
 
-      <div className="relative w-full max-w-2xl mx-auto px-6">
-        {/* Logo and Title */}
-        <div className="flex flex-col items-center mb-12">
-          <div className="relative h-20 w-64 mb-6">
-            <Image
-              src="/logo.png"
-              alt="Artemis Global Research"
-              fill
-              className="object-contain"
-              priority
-            />
-          </div>
-          <div className="text-center space-y-2">
-            <h2 className="text-2xl font-bold text-white tracking-tight">Loading Project</h2>
-            <p className="text-sm text-white/60 font-mono">{projectName}</p>
-          </div>
-        </div>
+      {/* Vignette */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_20%,rgba(0,0,0,0.9)_100%)] pointer-events-none" />
 
-        {/* Overall Progress Bar */}
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-xs font-mono text-white/50 uppercase tracking-widest">Overall Progress</span>
-            <span className="text-xs font-mono text-primary">{Math.round(overallProgress)}%</span>
-          </div>
-          <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-primary via-blue-400 to-primary bg-[length:200%_100%] animate-shimmer transition-all duration-300 ease-out"
-              style={{ width: `${overallProgress}%` }}
-            />
-          </div>
-        </div>
+      <div className="relative w-full max-w-3xl bg-[#0a0a0a]/95 border border-white/10 rounded-sm shadow-[0_0_80px_rgba(0,0,0,0.85)] overflow-hidden">
+        {/* Decorative top line */}
+        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
 
-        {/* Loading Stages */}
-        <div className="space-y-3">
-          {LOADING_STAGES.map((stage, index) => {
-            const isCompleted = index < currentStageIndex
-            const isCurrent = index === currentStageIndex
-            const isPending = index > currentStageIndex
-            const Icon = stage.icon
+        {/* Panel grid */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff02_1px,transparent_1px),linear-gradient(to_bottom,#ffffff02_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none opacity-35" />
 
-            return (
-              <div
-                key={stage.id}
-                className={cn(
-                  "relative p-4 rounded-lg border transition-all duration-500",
-                  isCompleted && "bg-emerald-500/10 border-emerald-500/30",
-                  isCurrent && "bg-primary/10 border-primary/50 shadow-[0_0_20px_rgba(var(--primary),0.3)]",
-                  isPending && "bg-white/5 border-white/10"
-                )}
-              >
-                <div className="flex items-center gap-4">
-                  {/* Status Icon */}
-                  <div
-                    className={cn(
-                      "flex-shrink-0 w-10 h-10 rounded-md flex items-center justify-center transition-all duration-300",
-                      isCompleted && "bg-emerald-500/20 text-emerald-500",
-                      isCurrent && "bg-primary/20 text-primary",
-                      isPending && "bg-white/5 text-white/30"
-                    )}
-                  >
-                    {isCompleted ? (
-                      <CheckCircle2 className="w-5 h-5" />
-                    ) : isCurrent ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                    ) : (
-                      <Circle className="w-5 h-5" />
-                    )}
-                  </div>
-
-                  {/* Stage Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Icon
-                        className={cn(
-                          "w-4 h-4",
-                          isCompleted && "text-emerald-500",
-                          isCurrent && "text-primary",
-                          isPending && "text-white/30"
-                        )}
-                      />
-                      <h3
-                        className={cn(
-                          "text-sm font-semibold transition-colors",
-                          isCompleted && "text-emerald-500",
-                          isCurrent && "text-white",
-                          isPending && "text-white/40"
-                        )}
-                      >
-                        {stage.label}
-                      </h3>
-                    </div>
-                    <p
-                      className={cn(
-                        "text-xs font-mono transition-colors",
-                        isCompleted && "text-emerald-500/60",
-                        isCurrent && "text-white/60",
-                        isPending && "text-white/30"
-                      )}
-                    >
-                      {stage.description}
-                    </p>
-
-                    {/* Progress bar for current stage */}
-                    {isCurrent && (
-                      <div className="mt-3 h-1 bg-white/10 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-primary transition-all duration-300 ease-out"
-                          style={{ width: `${stageProgress}%` }}
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Stage number */}
-                  <div
-                    className={cn(
-                      "flex-shrink-0 w-8 h-8 rounded-md flex items-center justify-center font-mono text-xs font-bold transition-colors",
-                      isCompleted && "bg-emerald-500/20 text-emerald-500",
-                      isCurrent && "bg-primary/20 text-primary",
-                      isPending && "bg-white/5 text-white/30"
-                    )}
-                  >
-                    {index + 1}
-                  </div>
+        <div className="relative z-10 p-8">
+          {/* Header */}
+          <header className="flex items-center justify-between gap-6 mb-6">
+            <div className="flex items-center gap-4 min-w-0">
+              <div className="relative h-12 w-12 shrink-0">
+                <Image
+                  src="/logo_torch.png"
+                  alt="Artemis"
+                  fill
+                  className="object-contain drop-shadow-[0_0_10px_rgba(255,255,255,0.15)]"
+                  priority
+                />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 text-[10px] text-white/40 uppercase tracking-[0.2em] font-mono">
+                  <span className="w-1.5 h-1.5 bg-primary rounded-full animate-ping" />
+                  <span>Project Initialization</span>
+                </div>
+                <div className="flex items-baseline gap-3 mt-1 min-w-0">
+                  <h2 className="text-xl font-bold text-white uppercase tracking-wide font-mono whitespace-nowrap">
+                    Loading Project
+                  </h2>
+                  <p className="text-[11px] text-white/60 font-mono truncate">
+                    {projectName}
+                  </p>
                 </div>
               </div>
-            )
-          })}
-        </div>
+            </div>
 
-        {/* Footer */}
-        <div className="mt-8 text-center">
-          <p className="text-xs text-white/40 font-mono">
-            Initializing geospatial engine and data pipelines...
-          </p>
+            <div className="text-right">
+              <div className="text-[10px] font-mono text-white/40 uppercase tracking-widest">Overall</div>
+              <div className="text-2xl font-bold text-primary font-mono">{Math.round(overallProgress)}%</div>
+            </div>
+          </header>
+
+          {/* Overall Progress */}
+          <section className="p-5 bg-white/[0.02] border border-white/10 rounded-sm space-y-3 mb-6">
+            <div className="flex items-end justify-between text-xs uppercase tracking-wider text-white/60 font-mono">
+              <span>Overall Progress</span>
+              <span className="font-bold text-primary">{Math.round(overallProgress)}%</span>
+            </div>
+            <div className="h-1 bg-white/10 w-full overflow-hidden">
+              <div
+                className="h-full bg-primary shadow-[0_0_10px_rgba(var(--primary),0.7)] transition-all duration-300 ease-out"
+                style={{ width: `${overallProgress}%` }}
+              />
+            </div>
+          </section>
+
+          {/* Loading Stages */}
+          <div className="space-y-3">
+            {LOADING_STAGES.map((stage, index) => {
+              const isCompleted = index < currentStageIndex
+              const isCurrent = index === currentStageIndex
+              const isPending = index > currentStageIndex
+              const Icon = stage.icon
+
+              return (
+                <div
+                  key={stage.id}
+                  className={cn(
+                    "relative p-4 border transition-all duration-300 bg-black/40",
+                    "rounded-sm",
+                    isCompleted && "border-emerald-500/20 bg-emerald-500/[0.03]",
+                    isCurrent && "border-primary/40 bg-primary/[0.03] shadow-[0_0_25px_rgba(var(--primary),0.18)]",
+                    isPending && "border-white/10 bg-white/[0.02]"
+                  )}
+                >
+                  <div className="flex items-center gap-4">
+                    {/* Status Icon */}
+                    <div
+                      className={cn(
+                        "flex-shrink-0 w-9 h-9 rounded-sm border flex items-center justify-center transition-all duration-300",
+                        isCompleted && "border-emerald-500/30 bg-emerald-500/10 text-emerald-400",
+                        isCurrent && "border-primary/30 bg-primary/10 text-primary",
+                        isPending && "border-white/10 bg-black/30 text-white/20"
+                      )}
+                    >
+                      {isCompleted ? (
+                        <CheckCircle2 className="w-4 h-4" />
+                      ) : isCurrent ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Circle className="w-4 h-4" />
+                      )}
+                    </div>
+
+                    {/* Stage Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Icon
+                          className={cn(
+                            "w-4 h-4",
+                            isCompleted && "text-emerald-400",
+                            isCurrent && "text-primary",
+                            isPending && "text-white/20"
+                          )}
+                        />
+                        <h3
+                          className={cn(
+                            "text-xs font-bold uppercase tracking-wider transition-colors",
+                            isCompleted && "text-emerald-400",
+                            isCurrent && "text-white",
+                            isPending && "text-white/50"
+                          )}
+                        >
+                          {stage.label}
+                        </h3>
+                      </div>
+                      <p
+                        className={cn(
+                          "text-[10px] font-mono uppercase tracking-wider transition-colors",
+                          isCompleted && "text-emerald-500/60",
+                          isCurrent && "text-white/50",
+                          isPending && "text-white/25"
+                        )}
+                      >
+                        {stage.description}
+                      </p>
+
+                      {/* Progress bar for current stage */}
+                      {isCurrent && (
+                        <div className="mt-3 h-1 bg-white/10 overflow-hidden">
+                          <div
+                            className="h-full bg-primary shadow-[0_0_8px_rgba(var(--primary),0.6)] transition-all duration-300 ease-out"
+                            style={{ width: `${stageProgress}%` }}
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Stage number */}
+                    <div
+                      className={cn(
+                        "flex-shrink-0 w-8 h-8 rounded-sm border flex items-center justify-center font-mono text-[10px] font-bold transition-colors",
+                        isCompleted && "border-emerald-500/30 bg-emerald-500/10 text-emerald-400",
+                        isCurrent && "border-primary/30 bg-primary/10 text-primary",
+                        isPending && "border-white/10 bg-black/30 text-white/20"
+                      )}
+                    >
+                      {index + 1}
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Footer */}
+          <div className="mt-6 text-center">
+            <p className="text-[10px] text-white/30 font-mono uppercase tracking-widest">
+              Initializing map layers and project data buffers...
+            </p>
+          </div>
         </div>
       </div>
     </div>,

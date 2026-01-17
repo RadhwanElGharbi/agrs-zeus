@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import Image from 'next/image'
 import {
   Map,
@@ -14,16 +14,20 @@ import {
   Target,
   MonitorPlay,
   LayoutDashboard,
-  Brain
+  Brain,
+  ClipboardList
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useProject } from '@/lib/context/ProjectContext'
+import { useMapView } from '@/lib/context/MapViewContext'
 import { useOnboarding, TourAction } from '@/lib/context/OnboardingContext'
 import { ProjectSelector } from '@/components/Project/ProjectSelector'
 import { ProjectProfileDialog } from '@/components/Project/ProjectProfileDialog'
 import { DatasetCoverageDialog } from '@/components/Project/DatasetCoverageDialog'
 import { PirlAiDialog } from '@/components/Pirl/PirlAiDialog'
 import { ZeusLoadingDialog } from '@/components/shared/ZeusLoadingDialog'
+import { fetchActiveDatasetJobs, subscribeToDatasetJob, type DatasetCategory, type DatasetFetchJob } from '@/lib/api/dataClient'
+import { ProjectAuditDialog } from '@/components/Project/ProjectAuditDialog'
 // removed DigitalTwinView import
 
 interface SidebarProps {
@@ -35,27 +39,195 @@ interface SidebarProps {
 }
 
 export function Sidebar({ className, devMode = false, activeView, onViewChange, onDatasetRunInBackground }: SidebarProps) {
-  const { currentProject } = useProject()
+  const { currentProject, isProjectLoading } = useProject()
+  const { registerGisActions, registerPirlActions } = useMapView()
   const { reportAction } = useOnboarding()
   const [collapsed, setCollapsed] = useState(false)
   const [showDatasets, setShowDatasets] = useState(false)
   const [showProfile, setShowProfile] = useState(false)
   const [showPirlAi, setShowPirlAi] = useState(false)
+  const [showAudit, setShowAudit] = useState(false)
   const [isZeusAnalyzing, setIsZeusAnalyzing] = useState(false)
 
-  const handleDatasetsClick = () => {
+  // Background activity signals (used to drive the "System Load" UI)
+  const [activeDatasetJobId, setActiveDatasetJobId] = useState<string | null>(null)
+  const [activeDatasetJobProgress, setActiveDatasetJobProgress] = useState(0)
+  const [activeDatasetJobStatus, setActiveDatasetJobStatus] = useState<DatasetFetchJob['status'] | null>(null)
+  const [activeDatasetJobCategory, setActiveDatasetJobCategory] = useState<DatasetCategory | null>(null)
+
+  // Poll for active dataset jobs for the selected project, so the UI reflects
+  // backgrounded / long-running fetches even after navigation or reload.
+  useEffect(() => {
+    setActiveDatasetJobId(null)
+    setActiveDatasetJobProgress(0)
+    setActiveDatasetJobStatus(null)
+    setActiveDatasetJobCategory(null)
+
+    if (!currentProject) return
+
+    let cancelled = false
+
+    const refreshActiveJob = async () => {
+      try {
+        const resp = await fetchActiveDatasetJobs()
+        if (cancelled) return
+
+        const active = resp?.active_jobs?.[currentProject]
+        if (!active) {
+          setActiveDatasetJobId(null)
+          setActiveDatasetJobProgress(0)
+          setActiveDatasetJobStatus(null)
+          setActiveDatasetJobCategory(null)
+          return
+        }
+
+        setActiveDatasetJobId(active.job_id)
+        setActiveDatasetJobProgress(active.progress ?? 0)
+        setActiveDatasetJobStatus(active.status as DatasetFetchJob['status'])
+        setActiveDatasetJobCategory(active.current_category ?? null)
+      } catch {
+        // Non-fatal: keep last known state.
+      }
+    }
+
+    void refreshActiveJob()
+
+    const interval = setInterval(() => {
+      void refreshActiveJob()
+    }, 6000)
+
+    return () => {
+      cancelled = true
+      clearInterval(interval)
+    }
+  }, [currentProject])
+
+  // Subscribe for live progress updates once we know the active job id.
+  useEffect(() => {
+    if (!activeDatasetJobId) return
+
+    const unsubscribe = subscribeToDatasetJob(
+      activeDatasetJobId,
+      (job) => {
+        setActiveDatasetJobProgress(job.progress ?? 0)
+        setActiveDatasetJobStatus(job.status)
+        setActiveDatasetJobCategory(job.current_category ?? null)
+
+        if (job.status === 'succeeded' || job.status === 'failed' || job.status === 'partial') {
+          setActiveDatasetJobId(null)
+          setActiveDatasetJobProgress(0)
+          setActiveDatasetJobStatus(null)
+          setActiveDatasetJobCategory(null)
+        }
+      },
+      () => {
+        // Ignore stream errors; the active-job poll keeps us in sync.
+      }
+    )
+
+    return () => unsubscribe()
+  }, [activeDatasetJobId])
+
+  const systemLoad = useMemo(() => {
+    // Only show a meaningful load once a project is selected, per requirements.
+    const baseLoad = currentProject ? 0.08 : 0
+    const activity: string[] = []
+
+    let load = baseLoad
+
+    if (currentProject) {
+      if (isProjectLoading) {
+        load += 0.22
+        activity.push('Loading project data')
+      }
+
+      if (isZeusAnalyzing) {
+        load += 0.18
+        activity.push('Preparing dataset manager')
+      }
+
+      if (activeDatasetJobId) {
+        load += 0.65
+        const pct = Math.round((activeDatasetJobProgress ?? 0) * 100)
+        activity.push(`Dataset fetch: ${pct}%${activeDatasetJobCategory ? ` (${activeDatasetJobCategory})` : ''}`)
+      }
+    }
+
+    load = Math.max(0, Math.min(1, load))
+    const percent = Math.round(load * 100)
+
+    const hasWork = activity.length > 0
+
+    let colorClass = 'bg-white/20'
+    let glowClass = ''
+    if (currentProject) {
+      if (percent >= 75) {
+        colorClass = 'bg-red-500/70'
+        glowClass = 'shadow-[0_0_6px_rgba(239,68,68,0.5)]'
+      } else if (percent >= 45) {
+        colorClass = 'bg-amber-500/70'
+        glowClass = 'shadow-[0_0_6px_rgba(245,158,11,0.45)]'
+      } else {
+        colorClass = 'bg-emerald-500/60'
+        glowClass = 'shadow-[0_0_6px_rgba(16,185,129,0.35)]'
+      }
+    }
+
+    const title = !currentProject
+      ? 'Select a project to enable system activity monitoring.'
+      : hasWork
+        ? `System Load: ${percent}% • ${activity.join(' • ')}`
+        : `System Load: ${percent}% • Idle`
+
+    return {
+      percent,
+      colorClass,
+      glowClass,
+      shouldPulse: hasWork,
+      title
+    }
+  }, [
+    currentProject,
+    isProjectLoading,
+    isZeusAnalyzing,
+    activeDatasetJobId,
+    activeDatasetJobProgress,
+    activeDatasetJobCategory
+  ])
+
+  const handleDatasetsClick = useCallback(() => {
     reportAction('click-datasets')
     if (devMode) {
       setShowDatasets(true)
       return
     }
     setIsZeusAnalyzing(true)
-  }
+  }, [devMode, reportAction])
 
-  const handleAnalysisComplete = () => {
+  const handleAnalysisComplete = useCallback(() => {
     setIsZeusAnalyzing(false)
     setShowDatasets(true)
-  }
+  }, [])
+
+  // Allow the global Header GIS "FETCH" button to open the existing Sidebar dataset fetch dialog.
+  useEffect(() => {
+    registerGisActions({
+      openFetchDatasets: () => {
+        if (!currentProject) return
+        handleDatasetsClick()
+      }
+    })
+  }, [currentProject, handleDatasetsClick, registerGisActions])
+
+  // Allow Map View to launch the same PIRL AI dialog used by the global sidebar.
+  useEffect(() => {
+    registerPirlActions({
+      openPirlAi: () => {
+        if (!currentProject) return
+        setShowPirlAi(true)
+      }
+    })
+  }, [currentProject, registerPirlActions])
 
   const handleNavClick = (onClick: (() => void) | undefined, tourAction?: TourAction) => {
     if (tourAction) {
@@ -70,6 +242,7 @@ export function Sidebar({ className, devMode = false, activeView, onViewChange, 
     { icon: LayoutDashboard, label: 'Project Management', active: activeView === 'project-management', onClick: () => currentProject && onViewChange('project-management'), description: 'Resource Planning', disabled: !currentProject, tourId: 'sidebar-project-management', tourAction: 'click-project-management' as TourAction },
     { icon: MonitorPlay, label: 'Digital Twin', active: activeView === 'digital-twin', onClick: () => currentProject && onViewChange('digital-twin'), description: 'Live Visualization', disabled: !currentProject, tourId: 'sidebar-digital-twin', tourAction: 'click-digital-twin' as TourAction },
     { icon: Layers, label: 'Datasets', onClick: () => currentProject && handleDatasetsClick(), description: 'Acquisition & Mgmt', disabled: !currentProject, tourId: 'sidebar-datasets' },
+    { icon: ClipboardList, label: 'Changelog', onClick: () => currentProject && setShowAudit(true), description: 'Audit Timeline', disabled: !currentProject, tourId: 'sidebar-audit' },
     { icon: Brain, label: 'PIRL AI', description: 'Model Status', onClick: () => currentProject && setShowPirlAi(true), disabled: !currentProject, tourId: 'sidebar-pirl-ai', tourAction: 'click-pirl-ai' as TourAction },
     { icon: Settings, label: 'Settings', description: 'System Config', tourId: 'sidebar-settings' },
   ]
@@ -211,8 +384,16 @@ export function Sidebar({ className, devMode = false, activeView, onViewChange, 
                 <Cpu className="w-3 h-3 text-white/40" />
                 <span className="text-[10px] text-white/60 font-mono uppercase tracking-wider">System Load</span>
               </div>
-              <div className="w-16 h-1 bg-white/10 rounded-full overflow-hidden">
-                <div className="h-full w-1/3 bg-emerald-500/50 animate-pulse" />
+              <div className="w-16 h-1 bg-white/10 rounded-full overflow-hidden" title={systemLoad.title}>
+                <div
+                  className={cn(
+                    'h-full transition-all duration-500',
+                    systemLoad.colorClass,
+                    systemLoad.glowClass,
+                    systemLoad.shouldPulse && 'animate-pulse'
+                  )}
+                  style={{ width: `${systemLoad.percent}%` }}
+                />
               </div>
             </div>
 
@@ -250,6 +431,7 @@ export function Sidebar({ className, devMode = false, activeView, onViewChange, 
         onRunInBackground={onDatasetRunInBackground}
       />
       <ProjectProfileDialog open={showProfile} onClose={() => setShowProfile(false)} />
+      <ProjectAuditDialog open={showAudit} onClose={() => setShowAudit(false)} projectName={currentProject} />
       <PirlAiDialog open={showPirlAi} onClose={() => setShowPirlAi(false)} />
     </div>
   )

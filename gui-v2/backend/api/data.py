@@ -17,7 +17,7 @@ from typing import Optional, Tuple
 from urllib.request import urlopen
 
 import numpy as np
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Body, HTTPException
 from fastapi.responses import JSONResponse, Response
 from PIL import Image
 import tifffile
@@ -467,6 +467,96 @@ def _find_vector_file(project_path: Path, layer: str) -> Optional[Path]:
     return None
 
 
+def _load_vector_geojson(project: str, layer: str) -> dict:
+    """
+    Load a project's vector layer as GeoJSON (dict), reusing the same caching/conversion
+    logic as the public GET endpoint.
+    """
+    project_path = get_project_path_or_404(project)
+
+    vector_file = _find_vector_file(project_path, layer)
+    if vector_file is None or not vector_file.exists():
+        raise HTTPException(status_code=404, detail=f"Vector layer '{layer}' not found in project '{project}'")
+
+    cache_key = f"{project}:{layer}"
+    _, vector_mtime_ns = _dataset_mtime(vector_file)
+
+    # In-memory cache
+    cached = GEOJSON_CACHE.get(cache_key)
+    if isinstance(cached, dict):
+        return cached
+
+    # Persistent cache
+    cache_file = _vector_cache_file(project, layer, vector_mtime_ns)
+    if cache_file.exists():
+        try:
+            with open(cache_file, "r", encoding="utf-8") as f:
+                geojson_data = json.load(f)
+            if isinstance(geojson_data, dict):
+                GEOJSON_CACHE[cache_key] = geojson_data
+                return geojson_data
+        except Exception:
+            # Fall through to regenerate if cache read fails
+            pass
+
+    try:
+        # Convert GPKG to GeoJSON using ogr2ogr
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".geojson", delete=False) as tmp_file:
+            tmp_path = tmp_file.name
+
+        # Ensure the path is free before ogr2ogr writes
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
+
+        cmd = [
+            "ogr2ogr",
+            "-f",
+            "GeoJSON",
+            "-t_srs",
+            "EPSG:4326",  # Convert to WGS84 for web display
+            tmp_path,
+            str(vector_file),
+        ]
+
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        if result.returncode != 0:
+            raise Exception(f"ogr2ogr failed: {result.stderr}")
+
+        with open(tmp_path, "r", encoding="utf-8") as f:
+            geojson_data = json.load(f)
+
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
+
+        geojson_data = _expand_other_tags(geojson_data)
+
+        if not isinstance(geojson_data, dict):
+            raise Exception("Converted GeoJSON is not an object.")
+
+        GEOJSON_CACHE[cache_key] = geojson_data
+
+        if not cache_file.exists():
+            cache_dir = cache_file.parent
+            cache_dir.mkdir(parents=True, exist_ok=True)
+            _purge_directory_contents(cache_dir)
+            cache_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            with open(cache_file, "w", encoding="utf-8") as f:
+                json.dump(geojson_data, f)
+        except Exception:
+            pass
+
+        return geojson_data
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to convert vector layer: {str(e)}")
+
+
 @router.get("/data/{project}/vectors/{layer}")
 async def get_vector_layer(project: str, layer: str):
     """
@@ -479,86 +569,118 @@ async def get_vector_layer(project: str, layer: str):
     then falls back to data/vectors/ for legacy symlinks.
     Matches by display name (from metadata) or filename pattern.
     """
-    project_path = get_project_path_or_404(project)
-    
-    vector_file = _find_vector_file(project_path, layer)
-    
-    if vector_file is None or not vector_file.exists():
-        raise HTTPException(status_code=404, detail=f"Vector layer '{layer}' not found in project '{project}'")
-    
-    cache_key = f"{project}:{layer}"
-    vector_mtime, vector_mtime_ns = _dataset_mtime(vector_file)
+    geojson_data = _load_vector_geojson(project, layer)
+    return JSONResponse(content=geojson_data)
 
-    # In-memory cache
-    if cache_key in GEOJSON_CACHE:
-        return JSONResponse(content=GEOJSON_CACHE[cache_key])
 
-    # Persistent cache
-    cache_file = _vector_cache_file(project, layer, vector_mtime_ns)
-    if cache_file.exists():
-        try:
-            with open(cache_file, "r", encoding="utf-8") as cached:
-                geojson_data = json.load(cached)
-            GEOJSON_CACHE[cache_key] = geojson_data
-            return JSONResponse(content=geojson_data)
-        except Exception:
-            # Fall through to regenerate if cache read fails
-            pass
-    
+@router.post("/data/{project}/vectors/{layer}/nearest")
+async def get_vector_nearest_features(project: str, layer: str, payload: dict = Body(...)):
+    """
+    Return the nearest vector features to a target geometry.
+
+    - For AOI polygons: prefer features that intersect the AOI; if fewer than limit, fill
+      remaining with nearest outside the AOI boundary.
+    - For POI points: nearest by distance to point.
+    """
+    target_geometry = payload.get("target_geometry")
+    limit_raw = payload.get("limit", 50)
+
+    if not isinstance(target_geometry, dict):
+        raise HTTPException(status_code=400, detail="target_geometry must be a GeoJSON Geometry object.")
     try:
-        # Convert GPKG to GeoJSON using ogr2ogr
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.geojson', delete=False) as tmp_file:
-            tmp_path = tmp_file.name
+        limit = int(limit_raw)
+    except Exception:
+        raise HTTPException(status_code=400, detail="limit must be an integer.")
+    if limit < 1 or limit > 200:
+        raise HTTPException(status_code=400, detail="limit must be between 1 and 200.")
 
-        # Ensure the path is free before ogr2ogr writes
+    geojson_data = _load_vector_geojson(project, layer)
+    features = geojson_data.get("features")
+    if not isinstance(features, list):
+        raise HTTPException(status_code=500, detail="Vector dataset has invalid GeoJSON features.")
+
+    try:
+        from shapely.geometry import shape as shp_shape
+        from shapely.ops import transform as shp_transform
+        from pyproj import Transformer
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail="Spatial dependencies not available for nearest-feature query.") from exc
+
+    try:
+        target_geom = shp_shape(target_geometry)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail="Invalid target_geometry.") from exc
+
+    # Project geometries to EPSG:3857 for distance (meters)
+    transformer = Transformer.from_crs("EPSG:4326", "EPSG:3857", always_xy=True)
+    target_m = shp_transform(lambda x, y: transformer.transform(x, y), target_geom)
+
+    is_aoi = target_geom.geom_type in {"Polygon", "MultiPolygon"}
+    target_centroid_m = target_m.centroid if is_aoi else None
+
+    inside: list[dict] = []
+    outside: list[dict] = []
+    all_candidates: list[dict] = []
+
+    for idx, feat in enumerate(features):
+        if not isinstance(feat, dict):
+            continue
+        geom_raw = feat.get("geometry")
+        if not isinstance(geom_raw, dict):
+            continue
         try:
-            os.unlink(tmp_path)
-        except OSError:
-            pass
-
-        # Run ogr2ogr to convert GPKG to GeoJSON
-        cmd = [
-            'ogr2ogr',
-            '-f', 'GeoJSON',
-            '-t_srs', 'EPSG:4326',  # Convert to WGS84 for web display
-            tmp_path,
-            str(vector_file)
-        ]
-        
-        result = subprocess.run(cmd, capture_output=True, text=True)
-        
-        if result.returncode != 0:
-            raise Exception(f"ogr2ogr failed: {result.stderr}")
-        
-        # Read the generated GeoJSON
-        with open(tmp_path, 'r', encoding='utf-8') as f:
-            geojson_data = json.load(f)
-        
-        # Clean up temp file
-        os.unlink(tmp_path)
-        
-        # Expand other_tags hstore column into proper attributes (for OSM data)
-        geojson_data = _expand_other_tags(geojson_data)
-        
-        # Cache the result
-        GEOJSON_CACHE[cache_key] = geojson_data
-
-        if not cache_file.exists():
-            cache_dir = cache_file.parent
-            cache_dir.mkdir(parents=True, exist_ok=True)
-            _purge_directory_contents(cache_dir)
-            cache_dir.mkdir(parents=True, exist_ok=True)
-        try:
-            with open(cache_file, "w", encoding="utf-8") as cached:
-                json.dump(geojson_data, cached)
+            geom = shp_shape(geom_raw)
         except Exception:
-            # Disk cache failures should not impact response
-            pass
-        
-        return JSONResponse(content=geojson_data)
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to convert vector layer: {str(e)}")
+            continue
+
+        try:
+            geom_m = shp_transform(lambda x, y: transformer.transform(x, y), geom)
+        except Exception:
+            continue
+
+        # Ensure a stable id for UI selection
+        if "id" not in feat or feat.get("id") is None:
+            props = feat.get("properties") if isinstance(feat.get("properties"), dict) else {}
+            feat_id = props.get("id") or props.get("ID") or props.get("fid") or props.get("FID") or props.get("osm_id") or None
+            feat["id"] = feat_id if feat_id is not None else f"{layer}:{idx}"
+
+        within_aoi = False
+        try:
+            if is_aoi:
+                within_aoi = bool(geom.intersects(target_geom))
+        except Exception:
+            within_aoi = False
+
+        try:
+            if is_aoi:
+                if within_aoi and target_centroid_m is not None:
+                    distance_m = float(geom_m.distance(target_centroid_m))
+                else:
+                    distance_m = float(geom_m.distance(target_m))
+            else:
+                distance_m = float(geom_m.distance(target_m))
+        except Exception:
+            continue
+
+        candidate = {"rank": 0, "within_aoi": within_aoi, "distance_m": distance_m, "feature": feat}
+        if is_aoi:
+            (inside if within_aoi else outside).append(candidate)
+        else:
+            all_candidates.append(candidate)
+
+    if is_aoi:
+        inside_sorted = sorted(inside, key=lambda c: float(c.get("distance_m", 0.0)))
+        outside_sorted = sorted(outside, key=lambda c: float(c.get("distance_m", 0.0)))
+        picked = inside_sorted[:limit]
+        if len(picked) < limit:
+            picked.extend(outside_sorted[: (limit - len(picked))])
+    else:
+        picked = sorted(all_candidates, key=lambda c: float(c.get("distance_m", 0.0)))[:limit]
+
+    for i, c in enumerate(picked, start=1):
+        c["rank"] = i
+
+    return {"dataset": {"project": project, "layer": layer}, "candidates": picked}
 
 
 def render_raster_tile(raster_file: Path, z: int, x: int, y: int) -> bytes:

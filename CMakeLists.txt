@@ -52,6 +52,7 @@ add_library(agrs_zeus_core
   src/core/LoginLogger.cpp
   src/app/Tools.cpp
   src/ai_operator/AIOperator.cpp
+  src/engineering/PressureDesign.cpp
   src/pirl/PIRL.cpp
   src/pirl/PIRL_Environment.cpp
   src/pirl/PIRL_Utils.cpp
@@ -123,6 +124,7 @@ if(AGRS_ZEUS_ENABLE_TESTS)
     tests/test_logger.cpp
     tests/test_dem_fetch.cpp
     tests/test_pipeline_specs.cpp
+    tests/test_pressure_design.cpp
     tests/test_hydraulics_simple.cpp
     tests/test_regulatory_simple.cpp)
   target_link_libraries(agrs_zeus_tests PRIVATE agrs_zeus_core Catch2::Catch2WithMain)
@@ -187,6 +189,34 @@ if(AGRS_ZEUS_BUILD_PYTHON_BINDINGS)
   )
   
   message(STATUS "Python bindings will be built: pirl_native module")
+
+  # ------------------------------------------------------------------------
+  # Engineering bindings (Phase 1): Pressure Design
+  # ------------------------------------------------------------------------
+  pybind11_add_module(zeus_engineering_native
+    python/engineering/zeus_engineering_bindings.cpp
+  )
+
+  target_link_libraries(zeus_engineering_native PRIVATE
+    agrs_zeus_core
+    ${GDAL_LIBRARIES}
+  )
+
+  target_include_directories(zeus_engineering_native PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${GDAL_INCLUDE_DIRS}
+  )
+
+  # Output the module where the FastAPI backend can import it directly.
+  set(ZEUS_BACKEND_NATIVE_DIR "${CMAKE_SOURCE_DIR}/gui-v2/backend/api/_native")
+  file(MAKE_DIRECTORY "${ZEUS_BACKEND_NATIVE_DIR}")
+  set_target_properties(zeus_engineering_native PROPERTIES
+    LIBRARY_OUTPUT_DIRECTORY "${ZEUS_BACKEND_NATIVE_DIR}"
+    RUNTIME_OUTPUT_DIRECTORY "${ZEUS_BACKEND_NATIVE_DIR}"
+    ARCHIVE_OUTPUT_DIRECTORY "${ZEUS_BACKEND_NATIVE_DIR}"
+  )
+
+  message(STATUS "Python bindings will be built: zeus_engineering_native module -> ${ZEUS_BACKEND_NATIVE_DIR}")
 endif()
 
 # PIRL Parameter Tuner (project-specific standalone tool)

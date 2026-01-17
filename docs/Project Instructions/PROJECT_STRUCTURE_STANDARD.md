@@ -48,7 +48,14 @@ All new projects MUST be created under this directory.
 │   ├── project_aoi.json           # AOI metadata (auto-populated)
 │   ├── start_point.{kml|kmz|geojson}  # Pipeline start point (optional)
 │   └── end_point.{kml|kmz|geojson}    # Pipeline end point (optional)
-├── data/                          # All fetched datasets
+├── data/                          # All datasets (fetched + user-generated)
+│   ├── creator/                   # Creator Mode: field geointelligence (AOI/POI) + attachments + audit
+│   │   ├── entries/               # One JSON per created AOI/POI (current state)
+│   │   ├── attachments/           # Uploaded files/images per entry
+│   │   └── changelog/             # Append-only JSONL changelog per entry (author + diffs)
+│   ├── sorties/                   # Sorties: field visit sessions (Who/What/Where/When/Why) + audit
+│   │   ├── entries/               # One JSON per sortie (canonical record)
+│   │   └── changelog/             # Append-only JSONL changelog per sortie (author + diffs)
 │   ├── rasters/                   # Raster data (GeoTIFF, COG)
 │   │   ├── raw/                   # Original fetched rasters (unmodified)
 │   │   │   ├── dem_tinitaly_10m_raw.tif
@@ -554,6 +561,24 @@ All fetch operations must be logged to `logs/fetch.log` or `logs/dataset_fetch.l
   - `data/rasters/processed/` for processed rasters
   - `data/vectors/processed/` for processed vectors
   - **This is the canonical location** - the GUI reads directly from `processed/` directories
+
+#### Creator Mode Geointelligence (`data/creator/`)
+- **Purpose:** Field engineers can create **AOIs/POIs** with comments and attachments directly in the GUI Map View. These are persistent project artifacts and are expected to be used later in routing/analysis workflows.
+- **Location (MANDATORY):**
+  - `data/creator/entries/` - One JSON per Creator entry (current state)
+  - `data/creator/attachments/` - Uploaded files/images grouped by entry
+  - `data/creator/changelog/` - Append-only JSONL changelog per entry (author attribution + detailed diffs)
+- **Retention policy (MANDATORY):** Deletions are **soft deletes**. The entry is hidden from the GUI by default, but the JSON, attachments, and changelog remain on disk for audit/traceability.
+- **IMPORTANT:** Creator data MUST NOT be stored under `data/vectors/` or `data/rasters/` (those directories are reserved for fetched/processed GIS datasets).
+
+#### Sorties (`data/sorties/`)
+- **Purpose:** A **Sortie** is a physical field visit to a point/area of interest where engineers capture structured on-site intelligence (Who/What/Where/When/Why). Sorties provide provenance for Operator-created AOI/POI entries.
+- **Location (MANDATORY):**
+  - `data/sorties/entries/` - One JSON per sortie (canonical record)
+  - `data/sorties/changelog/` - Append-only JSONL changelog per sortie (author attribution + detailed diffs)
+- **Auto-created:** `data/sorties/` is created automatically for all new projects during project initialization.
+- **Retention policy (MANDATORY):** Sorties are **soft archived** (not hard-deleted). Historical records must remain available for audit.
+- **IMPORTANT:** Sortie data MUST NOT be stored under `data/vectors/` or `data/rasters/`.
 
 #### Symlinks (DEPRECATED)
 

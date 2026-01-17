@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button'
 import dynamic from 'next/dynamic'
 import type { ViewMode } from './PipelineViewer3D'
 import { Target as TargetIcon } from 'lucide-react'
+import { PressureDesignSection } from './PressureDesignSection'
 
 const PipelineViewer3D = dynamic(() => import('./PipelineViewer3D').then(mod => ({ default: mod.PipelineViewer3D })), {
   ssr: false,
@@ -43,7 +44,7 @@ interface PirlAiDialogProps {
   onClose: () => void
 }
 
-type PirlSection = 'objectives' | 'hydraulics' | 'cost' | 'constraints' | 'review' | 'jobs' | 'results'
+type PirlSection = 'objectives' | 'hydraulics' | 'pressureDesign' | 'cost' | 'constraints' | 'review' | 'jobs' | 'results'
 
 // Type definitions for all form data
 interface ObjectivesData {
@@ -556,6 +557,7 @@ export function PirlAiDialog({ open, onClose }: PirlAiDialogProps) {
               {[
                 { id: 'objectives', label: 'Objectives', icon: TargetIcon },
                 { id: 'hydraulics', label: 'Hydraulics', icon: Activity },
+                { id: 'pressureDesign', label: 'Pressure Design', icon: Ruler },
                 { id: 'cost', label: 'Cost Matrix', icon: DollarSign },
                 { id: 'constraints', label: 'Constraints', icon: AlertTriangle },
                 { id: 'review', label: 'Review & Launch', icon: Play },
@@ -609,6 +611,12 @@ export function PirlAiDialog({ open, onClose }: PirlAiDialogProps) {
                 <HydraulicsSection
                   data={hydraulics}
                   onChange={setHydraulics}
+                />
+              )}
+              {activeSection === 'pressureDesign' && (
+                <PressureDesignSection
+                  projectName={currentProject || undefined}
+                  hydraulics={hydraulics as any}
                 />
               )}
               {activeSection === 'cost' && (

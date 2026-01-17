@@ -96,15 +96,46 @@ export interface DatasetCoverageResponse {
   protocol_reference: string;
 }
 
+export interface EngineeringStandardEntry {
+  standard: string;
+  source?: string | null;
+  type?: string | null;
+  type_detail?: string | null;
+  access?: string | null;
+  temporal_start?: string | null;
+  temporal_end?: string | null;
+  frequency?: string | null;
+  coverage?: string | null;
+  url?: string | null;
+  resolution?: string | null;
+  quality?: string | null;
+  notes?: string | null;
+  api_available?: string | null;
+  origins?: string | null;
+  applies_globally: boolean;
+}
+
+export interface EngineeringStandardsResponse {
+  iso3: string;
+  country?: string | null;
+  entries: EngineeringStandardEntry[];
+  catalog_reference: string;
+}
+
 export type DatasetCategory =
   | 'dem'
   | 'landcover'
   | 'soil'
-  | 'geohazard'
+  | 'geotechnical'
+  | 'seismic'
+  | 'landslides'
+  | 'geology'
+  | 'boreholes'
   | 'roads'
   | 'railways'
   | 'powerlines'
   | 'waterways'
+  | 'hydrology'
   | 'pipelines'
 
 export interface DatasetCategoryStatus {
@@ -173,7 +204,7 @@ export interface CreateProjectResponse {
 }
 
 export interface DatasetStageState {
-  status: 'queued' | 'running' | 'succeeded' | 'failed' | 'skipped';
+  status: 'queued' | 'running' | 'succeeded' | 'failed' | 'skipped' | 'cancelled';
   message?: string | null;
   started_at?: string | null;
   completed_at?: string | null;
@@ -200,7 +231,7 @@ export interface DatasetFetchJobState {
 export interface DatasetFetchJob {
   id: string;
   project: string;
-  status: 'pending' | 'running' | 'succeeded' | 'failed';
+  status: 'pending' | 'running' | 'succeeded' | 'failed' | 'partial';
   progress: number;
   current_category?: DatasetCategory | null;
   started_at?: string | null;
@@ -212,6 +243,21 @@ export interface DatasetFetchJob {
   force: boolean;
   error?: string | null;
   overrides?: Record<string, string>;
+}
+
+export interface ActiveDatasetJobsResponse {
+  active_jobs: Record<
+    string,
+    {
+      job_id: string;
+      status: string;
+      progress: number;
+      current_category?: DatasetCategory | null;
+      started_at?: string | null;
+      updated_at?: string | null;
+    }
+  >;
+  count: number;
 }
 
 export interface RouteMetadata {
@@ -232,10 +278,67 @@ export interface RouteMetadata {
   is_real_route?: boolean;  // True for actual infrastructure data (highlighted in yellow)
 }
 
+export interface RouteCrossingRecord {
+  id: string
+  category: string
+  dataset_layer: string
+  feature_id: string
+  point: [number, number]
+  intersection: {
+    type: string
+    coordinates: any
+  }
+  feature_properties: Record<string, any>
+  derived?: Record<string, any>
+}
+
+export interface RouteCrossingsDetailed {
+  version: number
+  generated_at: string
+  categories_used: string[]
+  datasets_used: Array<{ category: string; layer: string }>
+  crossings: RouteCrossingRecord[]
+  message?: string
+}
+
+export interface RouteCrossingsResponse {
+  project: string
+  route: string
+  computed: boolean
+  crossings_detailed: RouteCrossingsDetailed | null
+  message?: string
+}
+
 export interface GeoJSON {
   type: string;
   features: any[];
   [key: string]: any;
+}
+
+// ============================================================================
+// Alignment Sheets (PDF) - Types + API
+// ============================================================================
+
+export type AlignmentSheetPreset = 'detail' | 'standard' | 'overview'
+
+export interface AlignmentSheetPreviewResponse {
+  project: string
+  route: string
+  preset: string
+  total_length_m: number
+  sheet_count: number
+  sheet_length_m: number
+  h_scale: number
+  v_scale: number
+  pipeline_diameter_mm?: number | null
+  pipeline_material?: string | null
+  pipeline_type?: string | null
+  depth_of_cover_m?: number | null
+  mop_bar?: number | null
+  project_name?: string | null
+  organization?: string | null
+  country?: string | null
+  crs_epsg?: number | null
 }
 
 // ============================================================================
@@ -310,6 +413,21 @@ export async function fetchDatasetFingerprint(project: string): Promise<DatasetF
 }
 
 /**
+ * Fetch all active dataset jobs across projects.
+ * Useful to avoid stale UI state when a job was backgrounded and later completed.
+ */
+export async function fetchActiveDatasetJobs(): Promise<ActiveDatasetJobsResponse> {
+  const base = await getApiBaseAsync()
+  const response = await fetch(`${base}/dataset-jobs/active`)
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch active dataset jobs: ${response.statusText}`)
+  }
+
+  return response.json()
+}
+
+/**
  * Fetch vector data as GeoJSON
  */
 export async function fetchVectorData(project: string, layer: string): Promise<GeoJSON> {
@@ -321,6 +439,37 @@ export async function fetchVectorData(project: string, layer: string): Promise<G
   }
   
   return response.json();
+}
+
+export async function fetchNearestVectorFeatures(
+  project: string,
+  layer: string,
+  targetGeometry: GeoJSON.Geometry,
+  limit: number = 50
+): Promise<NearestVectorFeaturesResponse> {
+  const base = await getApiBaseAsync()
+  const response = await fetch(`${base}/data/${project}/vectors/${layer}/nearest`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ target_geometry: targetGeometry, limit })
+  })
+  if (!response.ok) {
+    const message = await response.text()
+    let detail = message
+    try {
+      const parsed = JSON.parse(message)
+      if (parsed && typeof parsed === 'object' && typeof (parsed as any).detail === 'string') {
+        detail = String((parsed as any).detail)
+      }
+    } catch {
+      // ignore (non-JSON)
+    }
+    if (response.status === 404 && detail === 'Not Found') {
+      detail = 'Nearest-feature endpoint not found on backend. Ensure backend is updated/restarted.'
+    }
+    throw new Error(detail || `Failed to fetch nearest features for ${layer}`)
+  }
+  return response.json()
 }
 
 /**
@@ -349,6 +498,73 @@ export async function fetchPIRLRoute(project: string, routeName: string): Promis
   }
 
   return response.json();
+}
+
+/**
+ * Preview alignment sheets (metadata only).
+ * Backend: GET /alignment-sheets/preview/{project}/{route}?preset=...
+ */
+export async function previewAlignmentSheets(
+  project: string,
+  route: string,
+  preset: AlignmentSheetPreset = 'standard'
+): Promise<AlignmentSheetPreviewResponse> {
+  const base = await getApiBaseAsync()
+  const url = new URL(
+    `${base}/alignment-sheets/preview/${encodeURIComponent(project)}/${encodeURIComponent(route)}`
+  )
+  url.searchParams.set('preset', preset)
+
+  const response = await fetch(url.toString())
+  if (!response.ok) {
+    throw new Error(`Failed to preview alignment sheets: ${response.status} ${response.statusText}`)
+  }
+
+  return response.json()
+}
+
+/**
+ * Generate + download the alignment sheets PDF.
+ * Backend: POST /alignment-sheets/generate  { project, route, preset }
+ */
+export async function downloadAlignmentSheetsPDF(
+  project: string,
+  route: string,
+  preset: AlignmentSheetPreset = 'standard'
+): Promise<void> {
+  const base = await getApiBaseAsync()
+  const response = await fetch(`${base}/alignment-sheets/generate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ project, route, preset }),
+  })
+
+  if (!response.ok) {
+    let detail = ''
+    try {
+      // Backend might return JSON detail on error
+      const contentType = response.headers.get('content-type') || ''
+      if (contentType.includes('application/json')) {
+        const json = await response.json()
+        detail = json?.detail ? ` - ${json.detail}` : ''
+      }
+    } catch (_) {}
+    throw new Error(`Failed to generate alignment sheets PDF: ${response.status} ${response.statusText}${detail}`)
+  }
+
+  const blob = await response.blob()
+
+  // Browser download
+  if (typeof window !== 'undefined') {
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${project}_${route}_alignment_sheets.pdf`
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    window.URL.revokeObjectURL(url)
+  }
 }
 
 /**
@@ -444,13 +660,53 @@ export interface RouteDetailedMetadata {
  */
 export async function fetchPIRLRouteMetadata(project: string, routeName: string): Promise<RouteDetailedMetadata> {
   const base = await getApiBaseAsync()
-  const response = await fetch(`${base}/pirl/${project}/routes/${routeName}/metadata`);
+  const encodePath = (value: string) => value.split('/').map(encodeURIComponent).join('/')
+  const response = await fetch(`${base}/pirl/${encodeURIComponent(project)}/routes/${encodePath(routeName)}/metadata`);
 
   if (!response.ok) {
     throw new Error(`Failed to fetch route metadata for ${routeName}: ${response.statusText}`);
   }
 
   return response.json();
+}
+
+/**
+ * Fetch (and optionally compute) detailed crossings for a route.
+ * Backend: GET /pirl/{project}/routes/{route}/crossings?compute_if_missing=true
+ */
+export async function fetchPIRLRouteCrossings(
+  project: string,
+  routeName: string,
+  computeIfMissing: boolean = true
+): Promise<RouteCrossingsResponse> {
+  const base = await getApiBaseAsync()
+  const encodePath = (value: string) => value.split('/').map(encodeURIComponent).join('/')
+  const url = new URL(`${base}/pirl/${encodeURIComponent(project)}/routes/${encodePath(routeName)}/crossings`)
+  url.searchParams.set('compute_if_missing', computeIfMissing ? 'true' : 'false')
+
+  const response = await fetch(url.toString())
+  if (!response.ok) {
+    const message = await response.text().catch(() => '')
+    throw new Error(message || `Failed to fetch route crossings for ${routeName}: ${response.statusText}`)
+  }
+  return response.json()
+}
+
+/**
+ * Force recomputation of detailed crossings for a route.
+ * Backend: POST /pirl/{project}/routes/{route}/crossings/compute
+ */
+export async function computePIRLRouteCrossings(project: string, routeName: string): Promise<RouteCrossingsResponse> {
+  const base = await getApiBaseAsync()
+  const encodePath = (value: string) => value.split('/').map(encodeURIComponent).join('/')
+  const response = await fetch(`${base}/pirl/${encodeURIComponent(project)}/routes/${encodePath(routeName)}/crossings/compute`, {
+    method: 'POST'
+  })
+  if (!response.ok) {
+    const message = await response.text().catch(() => '')
+    throw new Error(message || `Failed to compute route crossings for ${routeName}: ${response.statusText}`)
+  }
+  return response.json()
 }
 
 /**
@@ -467,6 +723,40 @@ export async function fetchDatasetCoverage(project: string): Promise<DatasetCove
     throw new Error(`Failed to fetch dataset coverage for ${project}: ${response.statusText}`);
   }
   
+  return response.json();
+}
+
+/**
+ * Fetch engineering/design standards catalogue entries applicable to the project's AOI (ISO3 + WLD).
+ */
+export async function fetchEngineeringStandards(project: string): Promise<EngineeringStandardsResponse> {
+  if (!project) {
+    throw new Error('Project name is required to load engineering standards');
+  }
+  const base = await getApiBaseAsync();
+  const response = await fetch(`${base}/projects/${project}/engineering-standards`);
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch engineering standards for ${project}: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Re-scan engineering standards catalogue (clears backend cache) and return refreshed entries.
+ */
+export async function scanEngineeringStandards(project: string): Promise<EngineeringStandardsResponse> {
+  if (!project) {
+    throw new Error('Project name is required to scan engineering standards');
+  }
+  const base = await getApiBaseAsync();
+  const response = await fetch(`${base}/projects/${project}/engineering-standards/scan`, { method: 'POST' });
+
+  if (!response.ok) {
+    throw new Error(`Failed to scan engineering standards for ${project}: ${response.statusText}`);
+  }
+
   return response.json();
 }
 
@@ -550,15 +840,207 @@ export async function startDatasetFetch(
     }
   }
 
+  const token = localStorage.getItem('agrs_token')
+  const headers: HeadersInit = { 'Content-Type': 'application/json' }
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
   const response = await fetch(`${base}/projects/${project}/dataset-fetch`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     body: JSON.stringify(payload)
   });
   if (!response.ok) {
     throw new Error(`Failed to start dataset fetch: ${response.statusText}`);
   }
   return response.json();
+}
+
+// ============================================================================
+// User Management (Admin)
+// ============================================================================
+
+export interface UserProfile {
+  id: string
+  serial_number: string
+  email: string
+  username: string
+  full_name: string
+  name: string
+  organization?: string | null
+  company?: string | null
+  position?: string | null
+  department?: string | null
+  station?: string | null
+  work_phone?: string | null
+  superior_user_id?: string | null
+  role: string
+  access_level?: string | null
+  is_active?: boolean
+  profile_image_url?: string | null
+  created_at?: string | null
+  updated_at?: string | null
+}
+
+export async function adminListUsers(
+  query?: string,
+  limit = 50,
+  offset = 0
+): Promise<{ users: UserProfile[]; count: number; limit: number; offset: number }> {
+  const base = await getApiBaseAsync()
+  const token = localStorage.getItem('agrs_token')
+  const headers: HeadersInit = {}
+  if (token) headers['Authorization'] = `Bearer ${token}`
+
+  const qs = new URLSearchParams()
+  if (query) qs.set('q', query)
+  qs.set('limit', String(limit))
+  qs.set('offset', String(offset))
+
+  const response = await fetch(`${base}/users?${qs.toString()}`, { headers })
+  if (!response.ok) {
+    const message = await response.text()
+    throw new Error(message || `Failed to list users: ${response.statusText}`)
+  }
+  return response.json()
+}
+
+export async function searchUserDirectory(
+  query?: string,
+  limit = 50,
+  offset = 0
+): Promise<{ users: UserProfile[]; count: number; limit: number; offset: number }> {
+  const base = await getApiBaseAsync()
+  const token = localStorage.getItem('agrs_token')
+  const headers: HeadersInit = {}
+  if (token) headers['Authorization'] = `Bearer ${token}`
+
+  const qs = new URLSearchParams()
+  if (query) qs.set('q', query)
+  qs.set('limit', String(limit))
+  qs.set('offset', String(offset))
+
+  const response = await fetch(`${base}/users/directory?${qs.toString()}`, { headers })
+  if (!response.ok) {
+    const message = await response.text()
+    throw new Error(message || `Failed to search user directory: ${response.statusText}`)
+  }
+  return response.json()
+}
+
+export async function adminCreateUser(payload: {
+  email: string
+  full_name: string
+  password: string
+  serial_number?: string
+  organization?: string
+  position?: string
+  department?: string
+  station?: string
+  work_phone?: string
+  superior_user_id?: string
+  role?: string
+  access_level?: string
+}): Promise<UserProfile> {
+  const base = await getApiBaseAsync()
+  const token = localStorage.getItem('agrs_token')
+  const headers: HeadersInit = { 'Content-Type': 'application/json' }
+  if (token) headers['Authorization'] = `Bearer ${token}`
+
+  const response = await fetch(`${base}/users`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(payload)
+  })
+  if (!response.ok) {
+    const message = await response.text()
+    throw new Error(message || `Failed to create user: ${response.statusText}`)
+  }
+  return response.json()
+}
+
+export async function adminUpdateUser(
+  userId: string,
+  payload: Record<string, any>
+): Promise<UserProfile> {
+  const base = await getApiBaseAsync()
+  const token = localStorage.getItem('agrs_token')
+  const headers: HeadersInit = { 'Content-Type': 'application/json' }
+  if (token) headers['Authorization'] = `Bearer ${token}`
+
+  const response = await fetch(`${base}/users/${userId}`, {
+    method: 'PATCH',
+    headers,
+    body: JSON.stringify(payload)
+  })
+  if (!response.ok) {
+    const message = await response.text()
+    throw new Error(message || `Failed to update user: ${response.statusText}`)
+  }
+  return response.json()
+}
+
+export async function uploadUserAvatar(userId: string, file: File): Promise<UserProfile> {
+  const base = await getApiBaseAsync()
+  const token = localStorage.getItem('agrs_token')
+  const headers: HeadersInit = {}
+  if (token) headers['Authorization'] = `Bearer ${token}`
+
+  const formData = new FormData()
+  formData.append('file', file)
+
+  const response = await fetch(`${base}/users/${userId}/avatar`, {
+    method: 'POST',
+    headers,
+    body: formData
+  })
+  if (!response.ok) {
+    const message = await response.text()
+    throw new Error(message || `Failed to upload avatar: ${response.statusText}`)
+  }
+  return response.json()
+}
+
+// ============================================================================
+// Audit (Project-scoped)
+// ============================================================================
+
+export interface AuditEventRow {
+  id: string
+  ts: string | null
+  event_type: string
+  payload: any
+  actor: {
+    id: string
+    email: string
+    serial_number: string
+    full_name: string
+    role: string
+  }
+}
+
+export async function fetchProjectAudit(
+  projectName: string,
+  options?: { userId?: string; eventType?: string; limit?: number; offset?: number }
+): Promise<{ project_name: string; user_id: string; events: AuditEventRow[]; count: number; limit: number; offset: number }> {
+  const base = await getApiBaseAsync()
+  const token = localStorage.getItem('agrs_token')
+  const headers: HeadersInit = {}
+  if (token) headers['Authorization'] = `Bearer ${token}`
+
+  const qs = new URLSearchParams()
+  if (options?.userId) qs.set('user_id', options.userId)
+  if (options?.eventType) qs.set('event_type', options.eventType)
+  if (options?.limit !== undefined) qs.set('limit', String(options.limit))
+  if (options?.offset !== undefined) qs.set('offset', String(options.offset))
+
+  const response = await fetch(`${base}/projects/${projectName}/audit?${qs.toString()}`, { headers })
+  if (!response.ok) {
+    const message = await response.text()
+    throw new Error(message || `Failed to fetch audit for ${projectName}: ${response.statusText}`)
+  }
+  return response.json()
 }
 
 /**
@@ -571,6 +1053,115 @@ export async function fetchRegulatoryDocs(project: string): Promise<RegulatoryDo
     throw new Error(`Failed to fetch regulatory documents for ${project}: ${response.statusText}`);
   }
   return response.json();
+}
+
+// ============================================================================
+// Compliance Matrix (Regulations catalogue)
+// ============================================================================
+
+export interface RegulationCatalogueEntry {
+  entry_id: string
+  title: string
+  entry_type?: string | null
+  category?: string | null
+  project_applicability?: string | null
+  coverage_level?: string | null
+  coverage_group?: string | null
+  iso3?: string | null
+  admin1_name?: string | null
+  admin1_code?: string | null
+  admin2_name?: string | null
+  admin2_code?: string | null
+  authority?: string | null
+  source_title?: string | null
+  source_url?: string | null
+  source_type?: string | null
+  direct_download_url?: string | null
+  direct_download_file_name?: string | null
+  direct_download_content_type?: string | null
+  filing_category?: string | null
+  status?: string | null
+  effective_date?: string | null
+  last_amended_date?: string | null
+  last_verified_date?: string | null
+  language?: string | null
+  notes?: string | null
+  related_entry_ids?: string | null
+}
+
+export interface MatchedRegulationEntry extends RegulationCatalogueEntry {
+  match_scope: string
+  match_reason: string
+}
+
+export interface RegulationsResponse {
+  project: string
+  generated_at: string
+  catalog_reference: string
+  countries_iso3: string[]
+  admin1: { iso3?: string | null; admin1_name?: string | null; admin1_code?: string | null }[]
+  entries: MatchedRegulationEntry[]
+  snapshot_path?: string | null
+}
+
+export interface RegulationIndexResponse {
+  stored_path: string
+  filename: string
+  category: string
+  size_bytes: number
+  media_type?: string | null
+}
+
+export async function fetchProjectRegulations(project: string): Promise<RegulationsResponse> {
+  if (!project) throw new Error('Project name is required to load regulations')
+  const base = await getApiBaseAsync()
+  const response = await fetch(`${base}/projects/${encodeURIComponent(project)}/regulations`)
+  if (!response.ok) {
+    throw new Error(`Failed to fetch regulations for ${project}: ${response.statusText}`)
+  }
+  return response.json()
+}
+
+export async function refreshProjectRegulations(project: string): Promise<RegulationsResponse> {
+  if (!project) throw new Error('Project name is required to refresh regulations')
+  const base = await getApiBaseAsync()
+  const token = localStorage.getItem('agrs_token')
+  const headers: HeadersInit = {}
+  if (token) headers['Authorization'] = `Bearer ${token}`
+  const response = await fetch(`${base}/projects/${encodeURIComponent(project)}/regulations/refresh`, {
+    method: 'POST',
+    headers
+  })
+  if (!response.ok) {
+    const message = await response.text().catch(() => '')
+    throw new Error(message || `Failed to refresh regulations for ${project}: ${response.statusText}`)
+  }
+  return response.json()
+}
+
+export async function indexRegulationEntry(project: string, entryId: string): Promise<RegulationIndexResponse> {
+  if (!project) throw new Error('Project name is required to index regulation')
+  if (!entryId) throw new Error('EntryID is required to index regulation')
+  const base = await getApiBaseAsync()
+  const token = localStorage.getItem('agrs_token')
+  const headers: HeadersInit = {}
+  if (token) headers['Authorization'] = `Bearer ${token}`
+  const response = await fetch(
+    `${base}/projects/${encodeURIComponent(project)}/regulations/${encodeURIComponent(entryId)}/index`,
+    { method: 'POST', headers }
+  )
+  if (!response.ok) {
+    const message = await response.text().catch(() => '')
+    throw new Error(message || `Failed to index regulation ${entryId}: ${response.statusText}`)
+  }
+  return response.json()
+}
+
+export function buildRegulatoryDocFileUrl(project: string, path: string): string {
+  const base = getApiBaseSync()
+  const url = new URL(`${base}/projects/${encodeURIComponent(project)}/regulatory-docs/file`)
+  url.searchParams.set('path', path)
+  return url.toString()
 }
 
 /**
@@ -617,8 +1208,14 @@ export async function previewPoint(file: File): Promise<PointPreviewResponse> {
  */
 export async function createProject(formData: FormData): Promise<CreateProjectResponse> {
   const base = await getApiBaseAsync();
+  const token = localStorage.getItem('agrs_token');
+  const headers: HeadersInit = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
   const response = await fetch(`${base}/projects/create`, {
     method: 'POST',
+    headers,
     body: formData
   });
   if (!response.ok) {
@@ -626,6 +1223,368 @@ export async function createProject(formData: FormData): Promise<CreateProjectRe
     throw new Error(message || 'Failed to create project');
   }
   return response.json();
+}
+
+// ============================================================================
+// Creator Mode (AOI/POI) API
+// ============================================================================
+
+export type CreatorEntryType = 'AOI' | 'POI'
+
+export type CreatorCategory =
+  | 'Geological'
+  | 'Environmental'
+  | 'Engineering'
+  | 'Regulatory'
+  | 'Crossing'
+  | 'Other'
+
+export type SurveyObservationType = 'New' | 'Confirm' | 'Correct' | 'Supersede'
+export type SurveyConfidence = 'Low' | 'Med' | 'High'
+export type SurveyMethod = 'Walkover' | 'Vehicle' | 'UAV' | 'Other'
+export type SurveyStatus = 'Open' | 'NeedsReview' | 'Verified' | 'Closed'
+export type SurveyGpsQuality = 'Good' | 'OK' | 'Poor'
+
+export interface CreatorSurvey {
+  observation_type?: SurveyObservationType
+  confidence?: SurveyConfidence
+  method?: SurveyMethod
+  status?: SurveyStatus
+  observed_at?: string
+  gps_quality?: SurveyGpsQuality
+  category_fields?: Record<string, string>
+}
+
+export interface NearestVectorFeatureCandidate {
+  rank: number
+  within_aoi: boolean
+  distance_m: number
+  feature: GeoJSON.Feature<GeoJSON.Geometry, Record<string, any>>
+}
+
+export interface NearestVectorFeaturesResponse {
+  dataset: { project: string; layer: string }
+  candidates: NearestVectorFeatureCandidate[]
+}
+
+export interface CreatorDatasetFeatureSelection {
+  dataset: string
+  feature: GeoJSON.Feature<GeoJSON.Geometry, Record<string, any>>
+  within_aoi?: boolean
+  distance_m?: number
+  rank?: number
+}
+
+export type CreatorDatasetType = 'raster' | 'vector'
+
+export interface CreatorDatasetRef {
+  name: string
+  type?: CreatorDatasetType
+}
+
+export interface CreatorActor {
+  username?: string
+  name?: string
+  role?: string
+  company?: string
+}
+
+export interface CreatorAttachment {
+  filename: string
+  path: string
+  size_bytes: number
+  mime: string
+  uploaded_at: string
+}
+
+export interface CreatorEntry {
+  id: string
+  type: CreatorEntryType
+  status: 'active' | 'deleted'
+  project_name: string
+  project_epsg: number
+  title: string
+  category: CreatorCategory
+  category_other?: string | null
+  comment?: string
+  datasets?: CreatorDatasetRef[]
+  survey?: CreatorSurvey
+  dataset_features?: CreatorDatasetFeatureSelection[]
+  geometry_wgs84: GeoJSON.Geometry
+  geometry_project: GeoJSON.Geometry
+  attachments: CreatorAttachment[]
+  created_at: string
+  created_by: CreatorActor
+  updated_at: string
+  updated_by: CreatorActor
+  deleted_at?: string | null
+  deleted_by?: CreatorActor | null
+}
+
+export interface CreatorGeoJSONFeatureCollection extends GeoJSON.FeatureCollection {
+  features: Array<
+    GeoJSON.Feature<
+      GeoJSON.Geometry,
+      {
+        creator_id?: string
+        creator_type?: string
+        title?: string
+        category?: string
+        category_other?: string
+        comment?: string
+        datasets?: CreatorDatasetRef[]
+        status?: string
+        created_at?: string
+        updated_at?: string
+        created_by?: string | null
+        updated_by?: string | null
+        sortie_id?: string | null
+      }
+    >
+  >
+}
+
+export function getCreatorAttachmentUrl(project: string, entryId: string, filename: string): string {
+  return `${getApiBaseSync()}/projects/${project}/creator/entries/${entryId}/attachments/${encodeURIComponent(filename)}`
+}
+
+export async function fetchCreatorGeoJSON(
+  project: string,
+  options?: { includeDeleted?: boolean }
+): Promise<CreatorGeoJSONFeatureCollection> {
+  const base = await getApiBaseAsync()
+  const includeDeleted = Boolean(options?.includeDeleted)
+  const url = `${base}/projects/${project}/creator/geojson${includeDeleted ? '?include_deleted=true' : ''}`
+  const response = await fetch(url)
+  if (!response.ok) {
+    throw new Error(`Failed to load creator geojson for ${project}: ${response.statusText}`)
+  }
+  return response.json()
+}
+
+export async function getCreatorEntry(project: string, entryId: string): Promise<CreatorEntry> {
+  const base = await getApiBaseAsync()
+  const response = await fetch(`${base}/projects/${project}/creator/entries/${entryId}`)
+  if (!response.ok) {
+    throw new Error(`Failed to load creator entry ${entryId}: ${response.statusText}`)
+  }
+  return response.json()
+}
+
+export async function getCreatorEntryChangelog(project: string, entryId: string): Promise<any[]> {
+  const base = await getApiBaseAsync()
+  const response = await fetch(`${base}/projects/${project}/creator/entries/${entryId}/changelog`)
+  if (!response.ok) {
+    throw new Error(`Failed to load creator changelog ${entryId}: ${response.statusText}`)
+  }
+  return response.json()
+}
+
+export async function createCreatorEntry(project: string, formData: FormData): Promise<CreatorEntry> {
+  const base = await getApiBaseAsync()
+  const token = localStorage.getItem('agrs_token')
+  const headers: HeadersInit = {}
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+  const response = await fetch(`${base}/projects/${project}/creator/entries`, {
+    method: 'POST',
+    headers,
+    body: formData
+  })
+  if (!response.ok) {
+    const message = await response.text()
+    throw new Error(message || 'Failed to create creator entry')
+  }
+  return response.json()
+}
+
+export async function updateCreatorEntry(project: string, entryId: string, formData: FormData): Promise<CreatorEntry> {
+  const base = await getApiBaseAsync()
+  const token = localStorage.getItem('agrs_token')
+  const headers: HeadersInit = {}
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+  const response = await fetch(`${base}/projects/${project}/creator/entries/${entryId}`, {
+    method: 'PUT',
+    headers,
+    body: formData
+  })
+  if (!response.ok) {
+    const message = await response.text()
+    throw new Error(message || 'Failed to update creator entry')
+  }
+  return response.json()
+}
+
+export async function deleteCreatorEntry(project: string, entryId: string): Promise<CreatorEntry> {
+  const base = await getApiBaseAsync()
+  const token = localStorage.getItem('agrs_token')
+  const headers: HeadersInit = {}
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+  const response = await fetch(`${base}/projects/${project}/creator/entries/${entryId}`, {
+    method: 'DELETE',
+    headers
+  })
+  if (!response.ok) {
+    const message = await response.text()
+    throw new Error(message || 'Failed to delete creator entry')
+  }
+  return response.json()
+}
+
+// ============================================================================
+// Sorties API
+// ============================================================================
+
+export interface Sortie {
+  id: string
+  project_id: string
+  code: string
+  name?: string | null
+  started_at?: string | null
+  ended_at?: string | null
+  notes?: string | null
+  metadata?: any
+  created_by_user_id?: string | null
+  created_at?: string | null
+  updated_at?: string | null
+}
+
+export interface SortieListResponse {
+  project_name: string
+  count: number
+  sorties: Sortie[]
+}
+
+export interface CreateSortieRequest {
+  code: string
+  name?: string
+  started_at?: string
+  ended_at?: string
+  notes?: string
+  metadata?: any
+}
+
+export interface UpdateSortieRequest {
+  name?: string | null
+  started_at?: string | null
+  ended_at?: string | null
+  notes?: string | null
+  metadata?: any
+}
+
+export async function fetchProjectSorties(
+  project: string,
+  options?: { q?: string; limit?: number }
+): Promise<SortieListResponse> {
+  const base = await getApiBaseAsync()
+  const token = localStorage.getItem('agrs_token')
+  const headers: HeadersInit = {}
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
+  const params = new URLSearchParams()
+  if (options?.q) params.set('q', options.q)
+  if (options?.limit) params.set('limit', String(options.limit))
+
+  const url = `${base}/projects/${project}/sorties${params.toString() ? `?${params.toString()}` : ''}`
+  const response = await fetch(url, { headers })
+  if (!response.ok) {
+    const message = await response.text()
+    let detail = message
+    try {
+      const parsed = JSON.parse(message)
+      if (parsed && typeof parsed === 'object' && typeof (parsed as any).detail === 'string') {
+        detail = String((parsed as any).detail)
+      }
+    } catch {
+      // ignore (non-JSON)
+    }
+    if (response.status === 404 && detail === 'Not Found') {
+      detail = 'Sorties endpoint not found on backend. Ensure backend is updated/restarted.'
+    }
+    throw new Error(detail || `Failed to load sorties for ${project}`)
+  }
+  return response.json()
+}
+
+export async function createProjectSortie(project: string, payload: CreateSortieRequest): Promise<Sortie> {
+  const base = await getApiBaseAsync()
+  const token = localStorage.getItem('agrs_token')
+  const headers: HeadersInit = { 'Content-Type': 'application/json' }
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+  const response = await fetch(`${base}/projects/${project}/sorties`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(payload)
+  })
+  if (!response.ok) {
+    const message = await response.text()
+    throw new Error(message || 'Failed to create sortie')
+  }
+  return response.json()
+}
+
+export async function getProjectSortie(project: string, sortieId: string): Promise<Sortie> {
+  const base = await getApiBaseAsync()
+  const token = localStorage.getItem('agrs_token')
+  const headers: HeadersInit = {}
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
+  const response = await fetch(`${base}/projects/${encodeURIComponent(project)}/sorties/${encodeURIComponent(sortieId)}`, { headers })
+  if (!response.ok) {
+    const message = await response.text()
+    throw new Error(message || `Failed to load sortie ${sortieId}`)
+  }
+  return response.json()
+}
+
+export async function updateProjectSortie(project: string, sortieId: string, payload: UpdateSortieRequest): Promise<Sortie> {
+  const base = await getApiBaseAsync()
+  const token = localStorage.getItem('agrs_token')
+  const headers: HeadersInit = { 'Content-Type': 'application/json' }
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
+  const response = await fetch(`${base}/projects/${encodeURIComponent(project)}/sorties/${encodeURIComponent(sortieId)}`, {
+    method: 'PATCH',
+    headers,
+    body: JSON.stringify(payload)
+  })
+  if (!response.ok) {
+    const message = await response.text()
+    throw new Error(message || 'Failed to update sortie')
+  }
+  return response.json()
+}
+
+export async function archiveProjectSortie(project: string, sortieId: string): Promise<Sortie> {
+  const base = await getApiBaseAsync()
+  const token = localStorage.getItem('agrs_token')
+  const headers: HeadersInit = {}
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
+  const response = await fetch(`${base}/projects/${encodeURIComponent(project)}/sorties/${encodeURIComponent(sortieId)}`, {
+    method: 'DELETE',
+    headers
+  })
+  if (!response.ok) {
+    const message = await response.text()
+    throw new Error(message || 'Failed to archive sortie')
+  }
+  return response.json()
 }
 
 /**
@@ -650,6 +1609,8 @@ export function subscribeToDatasetJob(
 ): () => void {
   let stopped = false;
   let lastJob: DatasetFetchJob | null = null;
+  const isTerminal = (status?: DatasetFetchJob['status'] | null) =>
+    status === 'succeeded' || status === 'failed' || status === 'partial';
 
   // Polling function as fallback
   const poll = async () => {
@@ -659,7 +1620,7 @@ export function subscribeToDatasetJob(
       if (stopped) return;
       lastJob = payload;
       onUpdate(payload);
-      if (payload.status === 'succeeded' || payload.status === 'failed') {
+      if (isTerminal(payload.status)) {
         stopped = true;
         return;
       }
@@ -699,7 +1660,7 @@ export function subscribeToDatasetJob(
         onUpdate(payload);
 
         // Close connection when job is complete
-        if (payload.status === 'succeeded' || payload.status === 'failed') {
+        if (isTerminal(payload.status)) {
           console.log('[DatasetJob] Job complete, closing SSE');
           source.close();
           stopped = true;
@@ -714,11 +1675,17 @@ export function subscribeToDatasetJob(
       console.warn('[DatasetJob] SSE error, falling back to polling:', event);
       source.close();
 
+      // If we already have a terminal state, treat the disconnect as normal.
+      if (!stopped && lastJob && isTerminal(lastJob.status)) {
+        stopped = true;
+        return;
+      }
+
       // If we never received a message, fall back to polling
       if (!receivedFirstMessage && !stopped) {
         console.log('[DatasetJob] Falling back to polling mode');
         poll();
-      } else if (!stopped && lastJob && lastJob.status !== 'succeeded' && lastJob.status !== 'failed') {
+      } else if (!stopped && lastJob && !isTerminal(lastJob.status)) {
         // SSE disconnected mid-stream, fall back to polling
         console.log('[DatasetJob] SSE disconnected, continuing with polling');
         poll();
@@ -921,6 +1888,44 @@ export async function fetchPipelineSpecs(projectName: string): Promise<PipelineS
   return response.json();
 }
 
+// ============================================================================
+// Engineering: Pressure Design (C++ powered)
+// ============================================================================
+
+export type PressureDesignMode = 'thickness_from_pressure' | 'pressure_from_thickness'
+
+export interface PressureDesignComputeRequest {
+  mode: PressureDesignMode
+  inputs: Record<string, any>
+  project?: string
+  save?: boolean
+}
+
+export interface PressureDesignComputeResponse {
+  mode: PressureDesignMode
+  result: Record<string, any>
+  saved?: boolean
+  artifact_path?: string
+}
+
+export async function computePressureDesign(
+  request: PressureDesignComputeRequest
+): Promise<PressureDesignComputeResponse> {
+  const base = await getApiBaseAsync()
+  const response = await fetch(`${base}/engineering/pressure-design`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(request),
+  })
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}))
+    throw new Error(err.detail || `Pressure design failed: ${response.statusText}`)
+  }
+  return response.json()
+}
+
 // Route profile types
 export interface ElevationPoint {
   distance: number;
@@ -1027,17 +2032,34 @@ export async function fetchEarthworksAnalysis(
 ): Promise<EarthworksResponse> {
   const base = await getApiBaseAsync();
   const queryParams = new URLSearchParams();
-  if (params?.row_width) queryParams.set('row_width', params.row_width.toString());
-  if (params?.grading_slope) queryParams.set('grading_slope', params.grading_slope.toString());
-  if (params?.batter_cut_angle) queryParams.set('batter_cut_angle', params.batter_cut_angle.toString());
-  if (params?.batter_fill_angle) queryParams.set('batter_fill_angle', params.batter_fill_angle.toString());
+  const maybeSetNumber = (key: string, value: number | undefined) => {
+    if (value === undefined) return
+    if (!Number.isFinite(value)) return
+    queryParams.set(key, value.toString())
+  }
+  maybeSetNumber('row_width', params?.row_width)
+  maybeSetNumber('grading_slope', params?.grading_slope)
+  maybeSetNumber('batter_cut_angle', params?.batter_cut_angle)
+  maybeSetNumber('batter_fill_angle', params?.batter_fill_angle)
 
   const queryString = queryParams.toString();
   const url = `${base}/data/${projectName}/earthworks/${encodeURIComponent(routeName)}${queryString ? '?' + queryString : ''}`;
 
   const response = await fetch(url);
   if (!response.ok) {
-    throw new Error(`Failed to fetch earthworks analysis: ${response.statusText}`);
+    let detail = response.statusText
+    try {
+      const contentType = response.headers.get('content-type') || ''
+      if (contentType.includes('application/json')) {
+        const json = await response.json()
+        if (typeof json?.detail === 'string') {
+          detail = json.detail
+        } else if (json?.detail) {
+          detail = JSON.stringify(json.detail)
+        }
+      }
+    } catch (_) {}
+    throw new Error(`Failed to fetch earthworks analysis: ${detail}`);
   }
   return response.json();
 }

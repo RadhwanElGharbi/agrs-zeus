@@ -2,7 +2,17 @@
  * API Client for AGRS ZEUS Backend
  */
 
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+function normalizeApiBaseUrl(rawBaseUrl: string): string {
+  const trimmed = (rawBaseUrl || '').trim().replace(/\/+$/, '')
+  if (!trimmed) return 'http://localhost:8000/api'
+
+  // Backend mounts routers under /api (see gui-v2/backend/main.py). Make this resilient to envs that
+  // set NEXT_PUBLIC_API_URL to the host only (e.g. http://localhost:8000).
+  if (trimmed.endsWith('/api')) return trimmed
+  return `${trimmed}/api`
+}
+
+export const API_BASE_URL = normalizeApiBaseUrl(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api')
 
 export interface HealthResponse {
   status: string;
