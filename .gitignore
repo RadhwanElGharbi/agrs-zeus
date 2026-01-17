@@ -71,6 +71,9 @@ analytics/**
 # Large dataset inventories (optional)
 # data/*_datasets_inventory.csv
 
+# Local research artifacts (raw LLM outputs; not part of the platform)
+docs/Research/Regulation/
+
 # Temporary files
 *.tmp
 *.bak
