@@ -1,13 +1,15 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { AlertTriangle, ChevronDown, ChevronRight, Loader2, Search, X } from 'lucide-react'
+import { AlertTriangle, ChevronDown, ChevronRight, Loader2, MapPin, Search, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useMapView } from '@/lib/context/MapViewContext'
 import {
   fetchCreatorGeoJSON,
   getCreatorAttachmentUrl,
   getCreatorEntry,
   getCreatorEntryChangelog,
+  updateCreatorEntry,
   type CreatorEntry,
   type CreatorGeoJSONFeatureCollection
 } from '@/lib/api/dataClient'
@@ -364,7 +366,21 @@ function ChangelogDetails({ record }: { record: any }) {
   )
 }
 
+function datasetFeaturesToFeatureCollection(selections: any): GeoJSON.FeatureCollection | null {
+  if (!Array.isArray(selections)) return null
+  const features: any[] = []
+  for (const sel of selections) {
+    const f = (sel as any)?.feature
+    if (f && typeof f === 'object' && f.type === 'Feature' && f.geometry) {
+      features.push(f)
+    }
+  }
+  if (features.length === 0) return null
+  return { type: 'FeatureCollection', features } as any
+}
+
 export function OperatorEntriesDialog({ open, onClose, projectName }: OperatorEntriesDialogProps) {
+  const { operator } = useMapView()
   const [isClosing, setIsClosing] = useState(false)
   const [query, setQuery] = useState('')
   const [typeFilter, setTypeFilter] = useState<EntryTypeFilter>('all')
@@ -381,6 +397,11 @@ export function OperatorEntriesDialog({ open, onClose, projectName }: OperatorEn
   const [detailsLoadingById, setDetailsLoadingById] = useState<Record<string, boolean>>({})
   const [changelogById, setChangelogById] = useState<Record<string, any[] | null | undefined>>({})
   const [changelogLoadingById, setChangelogLoadingById] = useState<Record<string, boolean>>({})
+
+  const [postTextById, setPostTextById] = useState<Record<string, string>>({})
+  const [postFilesById, setPostFilesById] = useState<Record<string, File[]>>({})
+  const [postSavingById, setPostSavingById] = useState<Record<string, boolean>>({})
+  const [postErrorById, setPostErrorById] = useState<Record<string, string | null>>({})
 
   useEffect(() => {
     if (open) {
@@ -401,6 +422,10 @@ export function OperatorEntriesDialog({ open, onClose, projectName }: OperatorEn
       setDetailsLoadingById({})
       setChangelogById({})
       setChangelogLoadingById({})
+      setPostTextById({})
+      setPostFilesById({})
+      setPostSavingById({})
+      setPostErrorById({})
     }, 200)
     return () => clearTimeout(t)
   }, [open])
@@ -550,6 +575,64 @@ export function OperatorEntriesDialog({ open, onClose, projectName }: OperatorEn
     setChangelogExpandedByKey((prev) => ({ ...prev, [key]: !prev[key] }))
   }, [])
 
+  const postToThread = useCallback(
+    async (entryId: string) => {
+      if (!projectName) return
+      const text = (postTextById[entryId] ?? '').trim()
+      const files = postFilesById[entryId] ?? []
+      if (!text && files.length === 0) return
+
+      setPostSavingById((prev) => ({ ...prev, [entryId]: true }))
+      setPostErrorById((prev) => ({ ...prev, [entryId]: null }))
+
+      try {
+        const fd = new FormData()
+        if (text) fd.append('comment', text)
+        for (const f of files) fd.append('attachments', f)
+
+        const updated = await updateCreatorEntry(projectName, entryId, fd)
+
+        setDetailsById((prev) => ({ ...prev, [entryId]: updated }))
+        setPostTextById((prev) => ({ ...prev, [entryId]: '' }))
+        setPostFilesById((prev) => ({ ...prev, [entryId]: [] }))
+
+        // Keep the summary list in sync (updated_at / updated_by / comment).
+        setGeojson((prev) => {
+          if (!prev || !Array.isArray((prev as any).features)) return prev
+          const features = (prev as any).features.map((feat: any) => {
+            const props = feat?.properties ?? {}
+            const id = String(props.creator_id ?? feat?.id ?? '')
+            if (id !== entryId) return feat
+            return {
+              ...feat,
+              properties: {
+                ...props,
+                comment: (updated as any).comment ?? props.comment,
+                updated_at: (updated as any).updated_at ?? props.updated_at,
+                updated_by: ((updated as any).updated_by?.username ?? props.updated_by) as any
+              }
+            }
+          })
+          return { ...(prev as any), features } as any
+        })
+
+        // Refresh thread history for this entry.
+        try {
+          const rows = await getCreatorEntryChangelog(projectName, entryId)
+          setChangelogById((prev) => ({ ...prev, [entryId]: Array.isArray(rows) ? rows : [] }))
+        } catch {
+          // ignore
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to post to thread.'
+        setPostErrorById((prev) => ({ ...prev, [entryId]: message }))
+      } finally {
+        setPostSavingById((prev) => ({ ...prev, [entryId]: false }))
+      }
+    },
+    [postFilesById, postTextById, projectName]
+  )
+
   if (!open) return null
 
   return (
@@ -696,6 +779,11 @@ export function OperatorEntriesDialog({ open, onClose, projectName }: OperatorEn
                 row.status === 'deleted'
                   ? 'bg-red-500/10 border-red-500/30 text-red-400'
                   : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+              const attachedFeaturesFc = datasetFeaturesToFeatureCollection((detail as any)?.dataset_features)
+              const postText = postTextById[row.id] ?? ''
+              const postFiles = postFilesById[row.id] ?? []
+              const postSaving = Boolean(postSavingById[row.id])
+              const postErr = postErrorById[row.id]
 
               return (
                 <div key={row.id} className="border border-white/10 bg-black/30 rounded-sm overflow-hidden">
@@ -743,6 +831,43 @@ export function OperatorEntriesDialog({ open, onClose, projectName }: OperatorEn
 
                   {isOpen && (
                     <div className="px-4 pb-4 pt-2 border-t border-white/10 space-y-4">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (row.geometryWgs84) {
+                              operator.zoomToGeoJSON(row.geometryWgs84)
+                              handleClose()
+                            }
+                          }}
+                          className="px-3 py-2 border rounded-sm text-[10px] uppercase font-bold tracking-wider transition-all bg-white/5 border-white/10 text-white/60 hover:text-white hover:border-white/20 hover:bg-white/10 flex items-center gap-2"
+                          title="Zoom to entry geometry"
+                        >
+                          <MapPin className="w-3 h-3" />
+                          Zoom Entry
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (attachedFeaturesFc) {
+                              operator.zoomToGeoJSON(attachedFeaturesFc)
+                              handleClose()
+                            }
+                          }}
+                          disabled={!attachedFeaturesFc}
+                          className={cn(
+                            'px-3 py-2 border rounded-sm text-[10px] uppercase font-bold tracking-wider transition-all flex items-center gap-2',
+                            attachedFeaturesFc
+                              ? 'bg-amber-500/10 border-amber-500/30 text-amber-200 hover:bg-amber-500/15'
+                              : 'bg-white/5 border-white/10 text-white/20 cursor-not-allowed'
+                          )}
+                          title={attachedFeaturesFc ? 'Zoom to linked dataset features' : 'No linked dataset features'}
+                        >
+                          <MapPin className="w-3 h-3" />
+                          Zoom Features
+                        </button>
+                      </div>
+
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <div className="text-[10px] text-white/40 uppercase tracking-[0.2em]">Entry</div>
@@ -855,6 +980,52 @@ export function OperatorEntriesDialog({ open, onClose, projectName }: OperatorEn
                             })}
                           </div>
                         )}
+
+                        <div className="mt-3 border-t border-white/10 pt-3 space-y-2">
+                          <div className="text-[10px] text-white/40 uppercase tracking-[0.2em]">Add Comment / Files</div>
+                          <textarea
+                            value={postText}
+                            onChange={(e) => setPostTextById((prev) => ({ ...prev, [row.id]: e.target.value }))}
+                            placeholder="Write a note (optional)…"
+                            className="w-full min-h-[70px] bg-black/40 border border-white/10 rounded-sm p-2 text-xs text-white/80 placeholder:text-white/30 outline-none focus:border-amber-500/40 font-sans"
+                          />
+                          <div className="flex items-center justify-between gap-3">
+                            <input
+                              type="file"
+                              multiple
+                              onChange={(e) => {
+                                const files = Array.from(e.target.files || [])
+                                if (files.length === 0) return
+                                setPostFilesById((prev) => ({ ...prev, [row.id]: [...(prev[row.id] ?? []), ...files] }))
+                                e.currentTarget.value = ''
+                              }}
+                              className="text-xs text-white/60"
+                            />
+                            <div className="flex items-center gap-2">
+                              {postFiles.length > 0 && <div className="text-[10px] text-white/40 font-mono">{postFiles.length} file(s)</div>}
+                              <button
+                                type="button"
+                                onClick={() => void postToThread(row.id)}
+                                disabled={postSaving || (!postText.trim() && postFiles.length === 0)}
+                                className={cn(
+                                  'px-3 py-2 border rounded-sm text-[10px] uppercase font-bold tracking-wider transition-all',
+                                  postSaving || (!postText.trim() && postFiles.length === 0)
+                                    ? 'bg-white/5 border-white/10 text-white/20 cursor-not-allowed'
+                                    : 'bg-amber-500/10 border-amber-500/30 text-amber-200 hover:bg-amber-500/15'
+                                )}
+                                title="Post to thread"
+                              >
+                                {postSaving ? 'Posting…' : 'Post'}
+                              </button>
+                            </div>
+                          </div>
+                          {postErr && (
+                            <div className="text-xs text-red-300 bg-red-500/10 border border-red-500/20 rounded-sm px-3 py-2">
+                              {postErr}
+                            </div>
+                          )}
+                          <div className="text-[10px] text-white/30 font-mono">Posts are appended; history is preserved.</div>
+                        </div>
                       </div>
 
                       {/* Geometry */}

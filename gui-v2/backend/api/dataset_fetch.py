@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import asyncio
 import copy
+import csv
 import hashlib
 import json
 import math
@@ -21,6 +22,8 @@ import shutil
 import subprocess
 import tempfile
 import threading
+import urllib.parse
+import urllib.request
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -28,10 +31,14 @@ from pathlib import Path
 from textwrap import dedent
 from typing import Any, Callable, Dict, List, Literal, Optional, Tuple
 
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Response
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
 
+from .audit import write_audit_event
+from .auth import require_auth
+from .db import get_db
 from .project_utils import resolve_project_path
 from .projects import DATASET_FETCH_PROTOCOL, _infer_project_iso3  # type: ignore
 
@@ -47,6 +54,29 @@ COPERNICUS_PRODUCT = "Copernicus_DSM_COG_10"
 PROTOCOL_VERSION = "1.0"
 SOIL_DEFAULT_DEPTH = "0-5cm"
 PROTOCOL_PATH = Path(DATASET_FETCH_PROTOCOL)
+
+CER_PIPELINES_LAYER_URL = (
+    "https://services5.arcgis.com/vNzamREXvX2WcX6d/arcgis/rest/services/"
+    "CER_Pipeline_Systems_WGS84_view/FeatureServer/3"
+)
+CPCAD_LAYER_URL = "https://maps-cartes.ec.gc.ca/arcgis/rest/services/CWS_SCF/CPCAD/MapServer/0"
+NHN_INDEX_ZIP_URL = "https://ftp.maps.canada.ca/pub/nrcan_rncan/vector/geobase_nhn_rhn/index/NHN_INDEX_WORKUNIT_LIMIT_2.zip"
+NHN_TILE_BASE_URL = "https://ftp.maps.canada.ca/pub/nrcan_rncan/vector/geobase_nhn_rhn/shp_en"
+
+# Canada Lands Survey System (CLSS) administrative boundaries (Aboriginal/Indigenous lands)
+CLSS_ABORIGINAL_LANDS_LAYER_URL = (
+    "https://proxyinternet.nrcan.gc.ca/arcgis/rest/services/CLSS-SATC/CLSS_Administrative_Boundaries/MapServer/0"
+)
+
+# Global raw-dataset cache (raw-only; no project-specific processing here)
+DBS_ROOT = Path(os.getenv("AGRS_DBS_ROOT", "/opt/agrs/DBs"))
+DB_INDEX_CSV = DBS_ROOT / "db_index.csv"
+DB_MATERIALIZE_MODE = os.getenv("AGRS_DBS_MATERIALIZE_MODE", "symlink").strip().lower()
+DB_LOCK = threading.Lock()
+
+# Initial DB entry: Canada Indigenous/Aboriginal lands (CLSS legislative boundaries)
+CAN_INDIGENOUS_LANDS_DB_ID = "can_indigenous_lands_clss_aboriginal_lands"
+CAN_INDIGENOUS_LANDS_DB_RAW_FILENAME = "aboriginal_lands_of_canada_legislative_boundaries.geojson"
 
 _AGENT_FLAG = os.getenv("ZEUS_AGENT_ENABLED", "1").strip().lower()
 AGENT_ENABLED = _AGENT_FLAG not in {"0", "false", "no"}
@@ -93,12 +123,18 @@ class DatasetDefinition:
     nodata: Optional[float] = None
     required: bool = True
     description: str = ""
+    # Backwards compatibility: allow resolving existing legacy artifacts without forcing re-fetch.
+    # This is especially important for "Auto" datasets whose canonical naming is source-agnostic
+    # (e.g., waterways/pipelines should not be prefixed with `osm_` when sourced from NHN/CER).
+    legacy_raw_filenames: List[str] = field(default_factory=list)
+    legacy_processed_basenames: List[str] = field(default_factory=list)
 
     def _base_dir(self, ctx: "FetchContext") -> Path:
         return ctx.project_path / "data" / ("rasters" if self.dataset_type == "raster" else "vectors")
 
     def get_raw_filename(self, override: Optional[str] = None) -> str:
         """Get raw filename, potentially modified based on override for DEM datasets."""
+        override_text = (override or "").lower()
         if self.key == "dem" and override:
             # Dynamic filename based on DEM source
             if _is_3dep_override(override):
@@ -111,13 +147,37 @@ class DatasetDefinition:
                 return "dem_srtm_30m_raw.tif"
             elif _is_copernicus_override(override):
                 return "dem_copernicus_30m_raw.tif"
+        if self.key == "waterways":
+            # Keep multiple sources in the same category separate:
+            # - OSM -> osm_waterways_raw.gpkg
+            # - Canada NHN (default) -> waterways_raw.gpkg
+            if _override_requests_osm(override_text):
+                return "osm_waterways_raw.gpkg"
+        if self.key == "pipelines":
+            # Keep multiple sources in the same category separate:
+            # - OSM -> osm_pipelines_raw.gpkg
+            # - Canada CER (default) -> pipelines_raw.gpkg
+            if _override_requests_osm(override_text):
+                return "osm_pipelines_raw.gpkg"
         return self.raw_filename
+
+    def get_processed_basename(self, override: Optional[str] = None) -> str:
+        """Get processed basename, potentially modified based on override for multi-source vector categories."""
+        override_text = (override or "").lower()
+        if self.key == "waterways":
+            if _override_requests_osm(override_text):
+                return "osm_waterways"
+        if self.key == "pipelines":
+            if _override_requests_osm(override_text):
+                return "osm_pipelines"
+        return self.processed_basename
 
     def raw_path(self, ctx: "FetchContext", override: Optional[str] = None) -> Path:
         return self._base_dir(ctx) / "raw" / self.get_raw_filename(override)
 
-    def processed_path(self, ctx: "FetchContext") -> Path:
-        processed_name = f"{self.processed_basename}_epsg{ctx.target_epsg}_processed.{self.processed_extension}"
+    def processed_path(self, ctx: "FetchContext", override: Optional[str] = None) -> Path:
+        processed_base = self.get_processed_basename(override)
+        processed_name = f"{processed_base}_epsg{ctx.target_epsg}_processed.{self.processed_extension}"
         return self._base_dir(ctx) / "processed" / processed_name
 
     def symlink_path(self, ctx: "FetchContext") -> Path:
@@ -127,8 +187,8 @@ class DatasetDefinition:
         raw = self.raw_path(ctx, override)
         return raw.with_suffix(raw.suffix + ".json")
 
-    def processed_metadata_path(self, ctx: "FetchContext") -> Path:
-        proc = self.processed_path(ctx)
+    def processed_metadata_path(self, ctx: "FetchContext", override: Optional[str] = None) -> Path:
+        proc = self.processed_path(ctx, override)
         return proc.with_suffix(proc.suffix + ".json")
 
 
@@ -1330,24 +1390,43 @@ def _copernicus_tile_name(lat: int, lon: int) -> str:
 
 
 def _copernicus_fetch(ctx: FetchContext, raw_path: Path, job: DatasetJobState) -> Tuple[List[str], Dict[str, object]]:
+    # Resume support: if a previous attempt already produced the raw mosaic in this
+    # staging location, reuse it to avoid re-downloading/re-mosaicking.
+    try:
+        if raw_path.exists() and raw_path.stat().st_size > 1024:
+            _log_to_job(job, ctx, f"Copernicus raw mosaic already present; reusing: {raw_path}")
+            return ["reuse_existing_raw_mosaic", str(raw_path)], {
+                "dem_dataset": "copernicus_dem_glo30",
+                "reuse_existing_raw_mosaic": True,
+            }
+    except OSError:
+        pass
+
     min_x, min_y, max_x, max_y = ctx.bbox
     lat_start = math.floor(min_y)
     lat_end = math.ceil(max_y)
     lon_start = math.floor(min_x)
     lon_end = math.ceil(max_x)
 
-    tile_names = [
-        _copernicus_tile_name(lat, lon)
-        for lat in range(lat_start, lat_end)
-        for lon in range(lon_start, lon_end)
-    ]
-    if not tile_names:
+    # NOTE: Copernicus GLO-30 is distributed as 1°x1° tiles keyed by the SW corner.
+    # We compute tiles from the AOI bbox. Some tiles are legitimately unavailable from
+    # the public Copernicus S3 endpoint (commonly over ocean). We SKIP unavailable tiles
+    # and let the AOI-bounded mosaic carry NoData where coverage is missing.
+    tile_defs: List[Tuple[str, int, int]] = []
+    for lat in range(lat_start, lat_end):
+        for lon in range(lon_start, lon_end):
+            tile_defs.append((_copernicus_tile_name(lat, lon), lat, lon))
+
+    if not tile_defs:
         raise RuntimeError("Unable to determine Copernicus DEM tiles for AOI")
 
     download_dir = Path(tempfile.mkdtemp(prefix=f"copdem_{job.id}_"))
     tile_paths: List[Path] = []
+    downloaded_tiles: List[str] = []
+    skipped_tiles: List[str] = []
+    total_tiles = len(tile_defs)
     try:
-        for tile in tile_names:
+        for idx, (tile, lat, lon) in enumerate(tile_defs):
             folder = f"{COPERNICUS_PRODUCT}_{tile}_DEM"
             filename = f"{COPERNICUS_PRODUCT}_{tile}_DEM.tif"
             url = f"{COPERNICUS_BASE_URL}/{folder}/{filename}"
@@ -1356,15 +1435,52 @@ def _copernicus_fetch(ctx: FetchContext, raw_path: Path, job: DatasetJobState) -
             cmd = [
                 "curl",
                 "-sSfL",
+                "--connect-timeout",
+                "30",
+                "--max-time",
+                "1200",
+                "--retry",
+                "3",
+                "--retry-delay",
+                "2",
+                "--retry-connrefused",
                 url,
                 "-o",
                 str(dest),
             ]
             _log_to_job(job, ctx, f"Downloading Copernicus tile {tile} from {url}")
-            _run_command(cmd, ctx.project_path, job, ctx, f"Copernicus {tile}")
+            try:
+                _run_command(cmd, ctx.project_path, job, ctx, f"Copernicus {tile}")
+            except RuntimeError as exc:
+                skipped_tiles.append(tile)
+                _log_to_job(
+                    job,
+                    ctx,
+                    f"Copernicus tile {tile} unavailable ({exc}); skipping (will be NoData in mosaic for this tile).",
+                )
+                # UX: still advance progress
+                if len(getattr(job, "categories", []) or []) == 1:
+                    with JOB_LOCK:
+                        job.progress = min(0.9, ((idx + 1) / max(total_tiles, 1)) * 0.9)
+                        job.updated_at = _utc_now()
+                continue
+
             if not dest.exists() or dest.stat().st_size < 1024:
-                raise RuntimeError(f"Failed to download Copernicus tile {tile}")
+                skipped_tiles.append(tile)
+                _log_to_job(job, ctx, f"Copernicus tile {tile} download produced empty file; skipping.")
+                if len(getattr(job, "categories", []) or []) == 1:
+                    with JOB_LOCK:
+                        job.progress = min(0.9, ((idx + 1) / max(total_tiles, 1)) * 0.9)
+                        job.updated_at = _utc_now()
+                continue
             tile_paths.append(dest)
+            downloaded_tiles.append(tile)
+            # UX: for single-category DEM jobs, report intra-category progress so the UI doesn't sit at 0%
+            if len(getattr(job, "categories", []) or []) == 1:
+                with JOB_LOCK:
+                    # Reserve the last ~10% for mosaicking + metadata + processing stages
+                    job.progress = min(0.9, ((idx + 1) / max(total_tiles, 1)) * 0.9)
+                    job.updated_at = _utc_now()
 
         if not tile_paths:
             raise RuntimeError("No Copernicus DEM tiles were downloaded")
@@ -1372,13 +1488,28 @@ def _copernicus_fetch(ctx: FetchContext, raw_path: Path, job: DatasetJobState) -
         temp_output = raw_path.with_suffix(".tmp.tif")
         if temp_output.exists():
             temp_output.unlink()
+        # IMPORTANT: use GTiff for raw mosaic output. The COG driver can be expensive for
+        # very large mosaics and may create nested temp files; we keep raw as a tiled,
+        # compressed BigTIFF and let downstream processing handle project-CRS clipping.
         warp_cmd = [
             GDALWARP_BIN,
             "-overwrite",
             "-of",
-            "COG",
+            "GTiff",
+            "-co",
+            "COMPRESS=LZW",
+            "-co",
+            "TILED=YES",
+            "-co",
+            "BIGTIFF=IF_SAFER",
+            "-co",
+            "SPARSE_OK=TRUE",
             "-t_srs",
             "EPSG:4326",
+            "-srcnodata",
+            "-32768",
+            "-dstnodata",
+            "-32768",
             "-te",
             str(min_x),
             str(min_y),
@@ -1387,6 +1518,8 @@ def _copernicus_fetch(ctx: FetchContext, raw_path: Path, job: DatasetJobState) -
             "-tr",
             "0.0002777778",
             "0.0002777778",
+            "-wo",
+            "NUM_THREADS=ALL_CPUS",
             "-multi",
             "-r",
             "bilinear",
@@ -1398,7 +1531,20 @@ def _copernicus_fetch(ctx: FetchContext, raw_path: Path, job: DatasetJobState) -
         if raw_path.exists():
             raw_path.unlink()
         temp_output.replace(raw_path)
-        return ["copernicus_dem_fetch", f"tiles={len(tile_paths)}"], {"tiles_downloaded": tile_names}
+        if len(getattr(job, "categories", []) or []) == 1:
+            with JOB_LOCK:
+                job.progress = max(float(job.progress or 0.0), 0.92)
+                job.updated_at = _utc_now()
+        info: Dict[str, object] = {
+            "tiles_downloaded": downloaded_tiles,
+            "tiles_skipped_unavailable": skipped_tiles,
+        }
+        if skipped_tiles:
+            info["note"] = (
+                "Some Copernicus DEM tiles were unavailable from the public Copernicus S3 endpoint "
+                "(often over ocean). They were skipped and will appear as NoData in the raw mosaic."
+            )
+        return ["copernicus_dem_fetch", f"tiles_ok={len(tile_paths)}", f"tiles_skipped={len(skipped_tiles)}"], info
     finally:
         shutil.rmtree(download_dir, ignore_errors=True)
 
@@ -1537,6 +1683,31 @@ def _opentopo_3dep_fetch(ctx: FetchContext, raw_path: Path, job: DatasetJobState
         shutil.rmtree(download_dir, ignore_errors=True)
 
 
+def _zeus_osm_fetch(dataset_key: str, ctx: FetchContext, raw_path: Path, job: DatasetJobState) -> Tuple[List[str], Dict[str, object]]:
+    tool_map = {
+        "roads": "osm_roads_fetch",
+        "railways": "osm_railways_fetch",
+        "powerlines": "osm_power_fetch",
+        "waterways": "osm_waterways_fetch",
+    }
+    tool = tool_map.get(dataset_key)
+    if not tool:
+        raise RuntimeError(f"No ZEUS OSM tool configured for dataset '{dataset_key}'")
+
+    cmd = [
+        str(ZEUS_BIN),
+        "tools",
+        tool,
+        "--aoi",
+        str(ctx.aoi_file),
+        "--output",
+        str(raw_path),
+        "--overwrite",
+    ]
+    _run_command(cmd, ctx.project_path, job, ctx, f"OSM {dataset_key} fetch (ZEUS tool)")
+    return [tool], {}
+
+
 def _osm_overpass_fetch(dataset_key: str, ctx: FetchContext, raw_path: Path, job: DatasetJobState) -> Tuple[List[str], Dict[str, object]]:
     """
     Fetch OSM data with proper attribute expansion for PIRL compatibility.
@@ -1609,6 +1780,732 @@ out geom;
         ]
         _run_command(convert_cmd, ctx.project_path, job, ctx, f"OSM {dataset_key} conversion")
         return [f"osm_{dataset_key}_overpass_fetch"], {}
+    finally:
+        shutil.rmtree(tmp_dir, ignore_errors=True)
+
+
+def _http_get_json(url: str, params: Dict[str, str], timeout: int = 60) -> Dict[str, Any]:
+    query = urllib.parse.urlencode(params)
+    full_url = f"{url}?{query}" if query else url
+    with urllib.request.urlopen(full_url, timeout=timeout) as response:
+        payload = response.read().decode("utf-8", errors="replace")
+    return json.loads(payload)
+
+
+def _sha256_file(path: Path) -> str:
+    h = hashlib.sha256()
+    with path.open("rb") as f:
+        for chunk in iter(lambda: f.read(1024 * 1024), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def _ensure_db_index_exists() -> None:
+    DBS_ROOT.mkdir(parents=True, exist_ok=True)
+    if DB_INDEX_CSV.exists():
+        return
+    header = [
+        "db_id",
+        "dataset_name",
+        "provider",
+        "provider_url",
+        "source",
+        "source_url",
+        "license",
+        "attribution",
+        "raw_relpath",
+        "sha256",
+        "size_bytes",
+        "acquired_utc",
+    ]
+    DB_INDEX_CSV.write_text(",".join(header) + "\n", encoding="utf-8")
+
+
+def _upsert_db_index_row(row: Dict[str, str]) -> None:
+    _ensure_db_index_exists()
+    existing_rows: List[Dict[str, str]] = []
+    try:
+        with DB_INDEX_CSV.open("r", encoding="utf-8", newline="") as f:
+            reader = csv.DictReader(f)
+            for r in reader:
+                if not r:
+                    continue
+                existing_rows.append({k: (v or "").strip() for k, v in r.items()})
+    except OSError:
+        existing_rows = []
+
+    replaced = False
+    out_rows: List[Dict[str, str]] = []
+    for r in existing_rows:
+        if (r.get("db_id") or "").strip() == (row.get("db_id") or "").strip():
+            out_rows.append(row)
+            replaced = True
+        else:
+            out_rows.append(r)
+    if not replaced:
+        out_rows.append(row)
+
+    header = [
+        "db_id",
+        "dataset_name",
+        "provider",
+        "provider_url",
+        "source",
+        "source_url",
+        "license",
+        "attribution",
+        "raw_relpath",
+        "sha256",
+        "size_bytes",
+        "acquired_utc",
+    ]
+    tmp = DB_INDEX_CSV.with_suffix(".tmp")
+    with tmp.open("w", encoding="utf-8", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=header)
+        writer.writeheader()
+        for r in out_rows:
+            writer.writerow({k: (r.get(k) or "") for k in header})
+    tmp.replace(DB_INDEX_CSV)
+
+
+def _materialize_db_raw(
+    src: Path,
+    dst: Path,
+    *,
+    log: Optional[Callable[[str], None]] = None,
+) -> str:
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        if dst.exists() or dst.is_symlink():
+            dst.unlink()
+    except OSError:
+        pass
+
+    mode = (DB_MATERIALIZE_MODE or "symlink").strip().lower()
+    attempted: List[str] = []
+    used: Optional[str] = None
+
+    def _try_symlink() -> bool:
+        attempted.append("symlink")
+        try:
+            dst.symlink_to(src)
+            nonlocal used
+            used = "symlink"
+            return True
+        except OSError:
+            return False
+
+    def _try_hardlink() -> bool:
+        attempted.append("hardlink")
+        try:
+            os.link(src, dst)
+            nonlocal used
+            used = "hardlink"
+            return True
+        except OSError:
+            return False
+
+    def _try_copy() -> bool:
+        attempted.append("copy")
+        try:
+            shutil.copy2(src, dst)
+            nonlocal used
+            used = "copy"
+            return True
+        except OSError:
+            return False
+
+    # Prefer user-selected strategy, but fall back to something that works.
+    succeeded = False
+    if mode == "hardlink":
+        succeeded = _try_hardlink() or _try_symlink() or _try_copy()
+    elif mode == "copy":
+        succeeded = _try_copy() or _try_symlink() or _try_hardlink()
+    else:  # default: symlink
+        succeeded = _try_symlink() or _try_hardlink() or _try_copy()
+
+    if not succeeded:
+        raise RuntimeError(f"Failed to materialize DB raw file into project: tried {attempted}")
+    if not used:
+        # Defensive fallback: infer by file type / inode
+        try:
+            if dst.is_symlink():
+                used = "symlink"
+            else:
+                try:
+                    if dst.stat().st_ino == src.stat().st_ino:
+                        used = "hardlink"
+                    else:
+                        used = "copy"
+                except OSError:
+                    used = "copy"
+        except OSError:
+            used = "copy"
+
+    if log:
+        log(f"DB cache materialized raw file using mode='{used}': {dst} -> {src}")
+    return used
+
+
+def _ensure_can_indigenous_lands_db(
+    *,
+    log: Optional[Callable[[str], None]] = None,
+) -> Tuple[Path, Dict[str, object]]:
+    """
+    Ensure the Canada Indigenous/Aboriginal lands raw dataset exists in the global DB cache.
+
+    Raw is stored exactly as acquired (GeoJSON from the provider's ArcGIS REST endpoint).
+    No project-specific processing (no clipping, no cleaning) occurs here.
+    """
+    db_dir = DBS_ROOT / CAN_INDIGENOUS_LANDS_DB_ID
+    raw_dir = db_dir / "raw"
+    raw_path = raw_dir / CAN_INDIGENOUS_LANDS_DB_RAW_FILENAME
+    db_json_path = db_dir / "db.json"
+
+    DBS_ROOT.mkdir(parents=True, exist_ok=True)
+    raw_dir.mkdir(parents=True, exist_ok=True)
+
+    with DB_LOCK:
+        # Fast-path: existing + checksum matches recorded db.json
+        if raw_path.exists() and db_json_path.exists():
+            try:
+                payload = json.loads(db_json_path.read_text(encoding="utf-8"))
+                if isinstance(payload, dict):
+                    raw_files = payload.get("raw_files") or []
+                    if isinstance(raw_files, list) and raw_files:
+                        recorded = raw_files[0]
+                        recorded_sha = str((recorded or {}).get("sha256") or "").strip()
+                        recorded_size = int((recorded or {}).get("size_bytes") or 0)
+                        if recorded_sha and recorded_size > 0:
+                            size = raw_path.stat().st_size
+                            if size == recorded_size and _sha256_file(raw_path) == recorded_sha:
+                                if log:
+                                    log(f"DB cache hit: {CAN_INDIGENOUS_LANDS_DB_ID} (sha256 verified)")
+                                return raw_path, payload
+            except Exception:  # noqa: BLE001
+                # Fall through to rebuild the DB entry
+                pass
+
+        if log:
+            log(f"Populating DB cache entry '{CAN_INDIGENOUS_LANDS_DB_ID}' (first-time download)...")
+
+        layer_url = CLSS_ABORIGINAL_LANDS_LAYER_URL.rstrip("/")
+        query_url = layer_url + "/query"
+
+        # Pull full objectId list (no spatial filter) for national dataset caching.
+        ids_payload = _http_get_json(
+            query_url,
+            {"f": "json", "where": "1=1", "returnIdsOnly": "true"},
+            timeout=120,
+        )
+        object_ids = ids_payload.get("objectIds") or []
+        object_ids = [int(v) for v in object_ids if v is not None]
+        if not object_ids:
+            raise RuntimeError("ArcGIS layer returned no objectIds for Indigenous lands.")
+
+        if log:
+            log(f"CLSS Aboriginal lands: {len(object_ids)} features (objectIds)")
+
+        # Download as GeoJSON in chunks (provider enforces maxRecordCount).
+        features: List[Dict[str, Any]] = []
+        # Use smaller chunks to avoid long-URL limits on some ArcGIS proxy frontends.
+        chunk_size = 100
+        for start in range(0, len(object_ids), chunk_size):
+            ids_chunk = object_ids[start : start + chunk_size]
+            params = {
+                "f": "geojson",
+                "objectIds": ",".join(str(v) for v in ids_chunk),
+                "outFields": "*",
+                "returnGeometry": "true",
+            }
+            data = _http_get_json(query_url, params, timeout=180)
+            chunk_features = data.get("features") or []
+            if not isinstance(chunk_features, list):
+                chunk_features = []
+            features.extend(chunk_features)  # type: ignore[arg-type]
+            if log:
+                log(f"Downloaded {min(start + len(ids_chunk), len(object_ids))}/{len(object_ids)} features...")
+
+        fc = {"type": "FeatureCollection", "features": features}
+
+        tmp = raw_path.with_suffix(raw_path.suffix + ".tmp")
+        tmp.write_text(json.dumps(fc, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+        tmp.replace(raw_path)
+
+        sha256 = _sha256_file(raw_path)
+        size_bytes = raw_path.stat().st_size
+        acquired_utc = _utc_iso()
+
+        payload = {
+            "db_id": CAN_INDIGENOUS_LANDS_DB_ID,
+            "dataset_name": "Aboriginal Lands of Canada Legislative Boundaries",
+            "provider": "Natural Resources Canada (NRCan) — Canada Lands Survey System (CLSS)",
+            "provider_url": "https://clss.nrcan-rncan.gc.ca",
+            "source": "CLSS Administrative Boundaries (ArcGIS MapServer layer 0)",
+            "source_url": CLSS_ABORIGINAL_LANDS_LAYER_URL,
+            "license": "Open Government Licence - Canada",
+            "attribution": "Natural Resources Canada (NRCan) — Canada Lands Survey System (CLSS).",
+            "coverage_date": "Current (monthly updates)",
+            "acquired_utc": acquired_utc,
+            "raw_files": [
+                {
+                    "path": str(raw_path.relative_to(db_dir)),
+                    "sha256": sha256,
+                    "size_bytes": int(size_bytes),
+                    "format": "GeoJSON",
+                }
+            ],
+            "notes": "Stored as provider GeoJSON output (no clipping, no cleaning).",
+        }
+
+        _write_json(db_json_path, payload)
+        _upsert_db_index_row(
+            {
+                "db_id": CAN_INDIGENOUS_LANDS_DB_ID,
+                "dataset_name": str(payload.get("dataset_name") or ""),
+                "provider": str(payload.get("provider") or ""),
+                "provider_url": str(payload.get("provider_url") or ""),
+                "source": str(payload.get("source") or ""),
+                "source_url": str(payload.get("source_url") or ""),
+                "license": str(payload.get("license") or ""),
+                "attribution": str(payload.get("attribution") or ""),
+                "raw_relpath": str(raw_path.relative_to(DBS_ROOT)),
+                "sha256": sha256,
+                "size_bytes": str(int(size_bytes)),
+                "acquired_utc": acquired_utc,
+            }
+        )
+
+        if log:
+            log(f"DB cache populated: {raw_path} ({size_bytes} bytes, sha256={sha256[:12]}...)")
+        return raw_path, payload
+
+
+def _arcgis_object_ids(
+    layer_url: str,
+    bbox: Tuple[float, float, float, float],
+    *,
+    where: str = "1=1",
+) -> List[int]:
+    west, south, east, north = bbox
+    query_url = layer_url.rstrip("/") + "/query"
+    params = {
+        "f": "json",
+        "where": where,
+        "returnIdsOnly": "true",
+        "geometry": f"{west},{south},{east},{north}",
+        "geometryType": "esriGeometryEnvelope",
+        "inSR": "4326",
+        "spatialRel": "esriSpatialRelIntersects",
+    }
+    data = _http_get_json(query_url, params)
+    ids = data.get("objectIds") or []
+    return [int(v) for v in ids]
+
+
+def _arcgis_fetch_geojson_to_gpkg(
+    layer_url: str,
+    ctx: FetchContext,
+    output_gpkg: Path,
+    job: DatasetJobState,
+    *,
+    layer_name: str,
+    where: str = "1=1",
+    chunk_size: int = 500,
+) -> Dict[str, object]:
+    """
+    Fetch an ArcGIS REST layer intersecting the project's AOI bbox and write it as a GeoPackage.
+
+    - Uses returnIdsOnly + objectIds chunking to avoid pagination assumptions.
+    - Requests f=geojson with outSR=4326 for lossless downstream processing in ZEUS.
+    """
+    object_ids = _arcgis_object_ids(layer_url, ctx.bbox, where=where)
+    if not object_ids:
+        # Valid outcome: no features intersect AOI.
+        # Create an empty GeoPackage with the expected layer name.
+        # ogr2ogr can create an empty dataset from an empty GeoJSON.
+        tmp_dir = Path(tempfile.mkdtemp(prefix=f"arcgis_empty_{job.id}_"))
+        try:
+            empty_geojson = tmp_dir / "empty.geojson"
+            empty_geojson.write_text('{"type":"FeatureCollection","features":[]}', encoding="utf-8")
+            cmd = [
+                OGR2OGR_BIN,
+                "-f",
+                "GPKG",
+                "-overwrite",
+                "-nln",
+                layer_name,
+                "-a_srs",
+                "EPSG:4326",
+                str(output_gpkg),
+                str(empty_geojson),
+            ]
+            _run_command(cmd, ctx.project_path, job, ctx, f"ArcGIS {layer_name} empty init")
+        finally:
+            shutil.rmtree(tmp_dir, ignore_errors=True)
+        return {"feature_count": 0, "object_ids": [], "chunks": 0}
+
+    query_url = layer_url.rstrip("/") + "/query"
+    tmp_dir = Path(tempfile.mkdtemp(prefix=f"arcgis_{job.id}_{layer_name}_"))
+    chunks = 0
+    try:
+        # Ensure clean output
+        if output_gpkg.exists():
+            output_gpkg.unlink()
+
+        for start in range(0, len(object_ids), chunk_size):
+            chunks += 1
+            ids_chunk = object_ids[start : start + chunk_size]
+            params = {
+                "f": "geojson",
+                "objectIds": ",".join(str(v) for v in ids_chunk),
+                "outFields": "*",
+                "returnGeometry": "true",
+                "outSR": "4326",
+            }
+            data = _http_get_json(query_url, params, timeout=120)
+            geojson_path = tmp_dir / f"chunk_{chunks}.geojson"
+            geojson_path.write_text(json.dumps(data), encoding="utf-8")
+
+            if chunks == 1:
+                cmd = [
+                    OGR2OGR_BIN,
+                    "-f",
+                    "GPKG",
+                    "-overwrite",
+                    "-nln",
+                    layer_name,
+                    "-a_srs",
+                    "EPSG:4326",
+                    "-nlt",
+                    "PROMOTE_TO_MULTI",
+                    str(output_gpkg),
+                    str(geojson_path),
+                ]
+            else:
+                cmd = [
+                    OGR2OGR_BIN,
+                    "-f",
+                    "GPKG",
+                    "-update",
+                    "-append",
+                    "-nln",
+                    layer_name,
+                    "-nlt",
+                    "PROMOTE_TO_MULTI",
+                    str(output_gpkg),
+                    str(geojson_path),
+                ]
+            _run_command(cmd, ctx.project_path, job, ctx, f"ArcGIS {layer_name} ingest (chunk {chunks})")
+
+        return {"feature_count": len(object_ids), "object_ids": object_ids, "chunks": chunks}
+    finally:
+        shutil.rmtree(tmp_dir, ignore_errors=True)
+
+
+def _cer_pipelines_fetch(ctx: FetchContext, raw_path: Path, job: DatasetJobState) -> Tuple[List[str], Dict[str, object]]:
+    _log_to_job(job, ctx, "Fetching CER pipeline systems (federal regulated pipelines) via ArcGIS FeatureServer...")
+    info = _arcgis_fetch_geojson_to_gpkg(
+        CER_PIPELINES_LAYER_URL,
+        ctx,
+        raw_path,
+        job,
+        layer_name="pipelines",
+        chunk_size=500,
+    )
+    return ["cer_pipelines_fetch", f"features={info.get('feature_count', 0)}"], {
+        "fetch_tool": "cer_pipelines_fetch",
+        "dataset_name": "CER Regulated Pipelines (Pipeline Systems)",
+        "source": "Canada Energy Regulator (CER) pipeline systems (public ArcGIS service)",
+        "provider": "Canada Energy Regulator",
+        "provider_url": "https://www.cer-rec.gc.ca/",
+        "documentation_url": "https://www.cer-rec.gc.ca/en/safety-environment/industry-performance/interactive-pipeline/",
+        # NOTE: CER service does not expose explicit license text in ArcGIS item metadata.
+        "license": "Public data via CER interactive pipeline map (verify CER terms/disclaimer for reuse)",
+        "attribution": "© Canada Energy Regulator (CER).",
+        "coverage_date": "Current",
+        "notes": "Federally regulated pipelines only; does not include provincially regulated pipelines.",
+    }
+
+
+def _cpcad_protected_areas_fetch(ctx: FetchContext, raw_path: Path, job: DatasetJobState) -> Tuple[List[str], Dict[str, object]]:
+    _log_to_job(job, ctx, "Fetching CPCAD protected and conserved areas via ECCC ArcGIS MapServer...")
+    info = _arcgis_fetch_geojson_to_gpkg(
+        CPCAD_LAYER_URL,
+        ctx,
+        raw_path,
+        job,
+        layer_name="protected_areas",
+        chunk_size=1000,
+    )
+    return ["cpcad_fetch", f"features={info.get('feature_count', 0)}"], {
+        "fetch_tool": "cpcad_fetch",
+        "dataset_name": "Canadian Protected and Conserved Areas Database (CPCAD)",
+        "source": "ECCC CPCAD (ArcGIS MapServer)",
+        "provider": "Environment and Climate Change Canada (ECCC)",
+        "provider_url": "https://www.canada.ca/en/environment-climate-change.html",
+        "documentation_url": "https://www.canada.ca/en/environment-climate-change/services/national-wildlife-areas/protected-conserved-areas-database.html",
+        "license": "Open Government Licence - Canada",
+        "attribution": "Environment and Climate Change Canada (ECCC) — Canadian Protected and Conserved Areas Database (CPCAD).",
+        "coverage_date": "Current (regular updates)",
+        "notes": "Authoritative protected and conserved areas for Canada (PA + OECM).",
+    }
+
+
+def _can_indigenous_lands_fetch(ctx: FetchContext, raw_path: Path, job: DatasetJobState) -> Tuple[List[str], Dict[str, object]]:
+    """
+    Fetch Canada Indigenous/Aboriginal lands via the global DB cache.
+
+    This keeps the project's pipeline protocol unchanged: it still has a project-local raw artifact
+    (materialized as a symlink/hardlink/copy into the staging directory), then the normal
+    project-specific processing (clip/reproject) runs as usual.
+    """
+    _log_to_job(job, ctx, "Using global DB cache for Canada Indigenous/Aboriginal lands (CLSS)...")
+
+    db_raw_path, db_meta = _ensure_can_indigenous_lands_db(log=lambda m: _log_to_job(job, ctx, m))
+    mode_used = _materialize_db_raw(db_raw_path, raw_path, log=lambda m: _log_to_job(job, ctx, m))
+
+    # Pull sha/size from db.json payload for provenance.
+    db_sha = None
+    db_size = None
+    try:
+        raw_files = (db_meta.get("raw_files") or []) if isinstance(db_meta, dict) else []
+        if isinstance(raw_files, list) and raw_files:
+            first = raw_files[0] if isinstance(raw_files[0], dict) else {}
+            db_sha = (first.get("sha256") if isinstance(first, dict) else None) or None
+            db_size = (first.get("size_bytes") if isinstance(first, dict) else None) or None
+    except Exception:  # noqa: BLE001
+        db_sha = None
+        db_size = None
+
+    return ["db_cache_materialize", CAN_INDIGENOUS_LANDS_DB_ID, f"mode={mode_used}"], {
+        "fetch_tool": "db_indigenous_lands_fetch",
+        "dataset_name": "Aboriginal Lands of Canada Legislative Boundaries",
+        "source": "NRCan CLSS Administrative Boundaries (local DB cache)",
+        "provider": "Natural Resources Canada (NRCan) — Canada Lands Survey System (CLSS)",
+        "provider_url": "https://clss.nrcan-rncan.gc.ca",
+        "documentation_url": "https://natural-resources.canada.ca/maps-tools-publications/maps/boundaries-land-surveys/tools-applications-canada-lands-surveys",
+        "license": "Open Government Licence - Canada",
+        "attribution": "Natural Resources Canada (NRCan) — Canada Lands Survey System (CLSS).",
+        "coverage_date": "Current (monthly updates)",
+        "db_id": CAN_INDIGENOUS_LANDS_DB_ID,
+        "db_path": str(db_raw_path),
+        "db_sha256": db_sha,
+        "db_size_bytes": db_size,
+        "db_materialize_mode": mode_used,
+        "db_acquired_utc": (db_meta.get("acquired_utc") if isinstance(db_meta, dict) else None),
+        "db_source_url": (db_meta.get("source_url") if isinstance(db_meta, dict) else None),
+    }
+
+
+def _nhn_waterways_fetch(ctx: FetchContext, raw_path: Path, job: DatasetJobState) -> Tuple[List[str], Dict[str, object]]:
+    """
+    Fetch NRCan National Hydro Network (NHN) waterway lines for the AOI using tile-based work units.
+
+    Strategy:
+    - Use the NHN work-unit index (zipped shapefile) to select intersecting work units by AOI bbox.
+    - Download only the required work-unit ZIPs from the NHN shapefile directory.
+    - Extract/merge the NHN Network Linear Flow layer (HN_NLFLOW_1) across work units into one raw GeoPackage.
+
+    Raw output remains in source CRS (typically EPSG:4617 NAD83(CSRS)) and may extend beyond the AOI polygon
+    because full work units are downloaded. Processing stage clips to AOI and reprojects to project CRS.
+    """
+    _log_to_job(job, ctx, "Fetching NHN waterways (tile-based) from NRCan GeoBase via FTP work-unit ZIPs...")
+
+    tmp_dir = Path(tempfile.mkdtemp(prefix=f"nhn_{job.id}_"))
+    try:
+        import zipfile
+
+        # 1) Extract intersecting work units from the index (by AOI bbox)
+        index_geojson = tmp_dir / "nhn_index_sel.geojson"
+        minx, miny, maxx, maxy = ctx.bbox
+        ogr_cmd = [
+            OGR2OGR_BIN,
+            "-f",
+            "GeoJSON",
+            str(index_geojson),
+            f"/vsizip/vsicurl/{NHN_INDEX_ZIP_URL}",
+            "-spat",
+            str(minx),
+            str(miny),
+            str(maxx),
+            str(maxy),
+        ]
+        _run_command(ogr_cmd, ctx.project_path, job, ctx, "NHN index spatial filter")
+        index = json.loads(index_geojson.read_text(encoding="utf-8"))
+        dataset_names = []
+        for feature in index.get("features", []):
+            props = feature.get("properties") or {}
+            code = (props.get("DATASETNAM") or "").strip()
+            if code:
+                dataset_names.append(code)
+        # Deduplicate (preserve order)
+        seen: set = set()
+        tiles: List[str] = []
+        for code in dataset_names:
+            if code not in seen:
+                seen.add(code)
+                tiles.append(code)
+
+        if not tiles:
+            _log_to_job(job, ctx, "NHN tile selection returned 0 work units for AOI bbox; writing empty waterways dataset.")
+            empty_geojson = tmp_dir / "empty.geojson"
+            empty_geojson.write_text('{"type":"FeatureCollection","features":[]}', encoding="utf-8")
+            _run_command(
+                [
+                    OGR2OGR_BIN,
+                    "-f",
+                    "GPKG",
+                    "-overwrite",
+                    "-nln",
+                    "waterways",
+                    "-a_srs",
+                    "EPSG:4617",
+                    str(raw_path),
+                    str(empty_geojson),
+                ],
+                ctx.project_path,
+                job,
+                ctx,
+                "NHN waterways empty init",
+            )
+            return ["nhn_waterways_fetch", "tiles=0"], {"tiles_downloaded": []}
+
+        _log_to_job(job, ctx, f"NHN work units selected: {len(tiles)}")
+
+        # 2) Download each work unit ZIP and append the NLFLOW layer into a single GPKG
+        raw_path.parent.mkdir(parents=True, exist_ok=True)
+        if raw_path.exists():
+            raw_path.unlink()
+
+        tiles_used: List[str] = []
+        tiles_skipped_no_nlflow: List[str] = []
+        wrote_any = False
+
+        for idx, code in enumerate(tiles, start=1):
+            code_upper = code.upper()
+            code_lower = code.lower()
+            subdir = code_lower[:2]
+            zip_name = f"nhn_rhn_{code_lower}_shp_en.zip"
+            zip_url = f"{NHN_TILE_BASE_URL}/{subdir}/{zip_name}"
+            zip_path = tmp_dir / zip_name
+            _run_command(
+                ["curl", "-sSfL", "--connect-timeout", "30", "--max-time", "600", zip_url, "-o", str(zip_path)],
+                ctx.project_path,
+                job,
+                ctx,
+                f"NHN tile download {idx}/{len(tiles)}",
+            )
+            if not zip_path.exists() or zip_path.stat().st_size < 1024:
+                raise RuntimeError(f"NHN tile download failed or empty for {code} ({zip_url})")
+
+            # Read NLFLOW shapefile directly from ZIP without extracting.
+            # The NHN schema/version segment varies (e.g., `_3_0_...`) so we locate the layer
+            # by scanning the ZIP contents instead of hardcoding the filename.
+            try:
+                with zipfile.ZipFile(zip_path) as zf:
+                    members = zf.namelist()
+            except Exception as exc:  # noqa: BLE001
+                raise RuntimeError(f"Unable to read NHN work-unit ZIP '{zip_name}': {exc}")
+
+            candidates = [
+                name
+                for name in members
+                if name.upper().endswith(".SHP")
+                and "HN_NLFLOW_1" in name.upper()
+                and code_upper in name.upper()
+            ]
+            if not candidates:
+                # Fallback: any NLFLOW layer in the ZIP
+                candidates = [
+                    name
+                    for name in members
+                    if name.upper().endswith(".SHP") and "HN_NLFLOW_1" in name.upper()
+                ]
+            if not candidates:
+                # Some work units (e.g., coastal-only) legitimately do not include the NLFLOW layer.
+                # Treat these as a non-fatal skip so the dataset can still be built.
+                tiles_skipped_no_nlflow.append(code)
+                sample = ", ".join(members[:12])
+                _log_to_job(
+                    job,
+                    ctx,
+                    f"NHN work unit {code}: NLFLOW layer not found in '{zip_name}' (sample: {sample}) — skipping.",
+                )
+                continue
+            internal_shp = candidates[0]
+            shp_path = f"/vsizip/{zip_path}/{internal_shp}"
+
+            if not wrote_any:
+                cmd = [
+                    OGR2OGR_BIN,
+                    "-f",
+                    "GPKG",
+                    "-overwrite",
+                    "-nln",
+                    "waterways",
+                    "-nlt",
+                    "PROMOTE_TO_MULTI",
+                    str(raw_path),
+                    shp_path,
+                ]
+            else:
+                cmd = [
+                    OGR2OGR_BIN,
+                    "-f",
+                    "GPKG",
+                    "-update",
+                    "-append",
+                    "-nln",
+                    "waterways",
+                    "-nlt",
+                    "PROMOTE_TO_MULTI",
+                    str(raw_path),
+                    shp_path,
+                ]
+            _run_command(cmd, ctx.project_path, job, ctx, f"NHN waterways merge {idx}/{len(tiles)}")
+            wrote_any = True
+            tiles_used.append(code)
+
+        if not wrote_any:
+            # We had work units, but none contained NLFLOW; write an empty dataset instead of failing.
+            _log_to_job(job, ctx, "NHN work units contained no NLFLOW layers; writing empty waterways dataset.")
+            empty_geojson = tmp_dir / "empty.geojson"
+            empty_geojson.write_text('{"type":"FeatureCollection","features":[]}', encoding="utf-8")
+            _run_command(
+                [
+                    OGR2OGR_BIN,
+                    "-f",
+                    "GPKG",
+                    "-overwrite",
+                    "-nln",
+                    "waterways",
+                    "-a_srs",
+                    "EPSG:4617",
+                    str(raw_path),
+                    str(empty_geojson),
+                ],
+                ctx.project_path,
+                job,
+                ctx,
+                "NHN waterways empty init (no NLFLOW)",
+            )
+
+        return ["nhn_waterways_fetch", f"work_units={len(tiles)}", f"nlflow_used={len(tiles_used)}"], {
+            "tiles_downloaded": tiles,
+            "tiles_used_nlflow": tiles_used,
+            "tiles_skipped_missing_nlflow": tiles_skipped_no_nlflow,
+            "fetch_tool": "nhn_waterways_fetch",
+            "dataset_name": "NRCan National Hydro Network (NHN) — Network Linear Flow",
+            "source": "NRCan GeoBase NHN (work-unit shapefiles)",
+            "provider": "Natural Resources Canada (NRCan)",
+            "provider_url": "https://open.canada.ca/",
+            "documentation_url": "https://open.canada.ca/data/en/dataset/a4b190fe-e090-4e6d-881e-b87956c07977",
+            "license": "Open Government Licence - Canada",
+            "attribution": "Natural Resources Canada (NRCan) — GeoBase National Hydro Network (NHN).",
+            "coverage_date": "Current (GeoBase NHN; annual or better)",
+            "notes": "Tile-based work units selected by AOI bbox; raw includes full work units and may extend beyond AOI polygon.",
+        }
     finally:
         shutil.rmtree(tmp_dir, ignore_errors=True)
 
@@ -2130,7 +3027,7 @@ DATASET_DEFINITIONS: Dict[str, DatasetDefinition] = {
         processed_basename="osm_roads",
         processed_extension="gpkg",
         symlink_name="roads.gpkg",
-        fetch_tool="osm_roads_overpass",
+        fetch_tool="osm_roads_fetch",
         command_builder=_overpass_placeholder_command,
         description="OpenStreetMap road network (highways + local roads).",
     ),
@@ -2142,7 +3039,7 @@ DATASET_DEFINITIONS: Dict[str, DatasetDefinition] = {
         processed_basename="osm_railways",
         processed_extension="gpkg",
         symlink_name="railways.gpkg",
-        fetch_tool="osm_railways_overpass",
+        fetch_tool="osm_railways_fetch",
         command_builder=_overpass_placeholder_command,
         description="OpenStreetMap rail corridors for crossing avoidance.",
     ),
@@ -2154,33 +3051,64 @@ DATASET_DEFINITIONS: Dict[str, DatasetDefinition] = {
         processed_basename="osm_power_lines",
         processed_extension="gpkg",
         symlink_name="power_lines.gpkg",
-        fetch_tool="osm_power_overpass",
+        fetch_tool="osm_power_fetch",
         command_builder=_overpass_placeholder_command,
         description="Transmission + distribution assets for clearance buffers.",
     ),
     "waterways": DatasetDefinition(
         key="waterways",
-        label="Waterways (OSM)",
+        label="Waterways (Auto)",
         dataset_type="vector",
-        raw_filename="osm_waterways_raw.gpkg",
-        processed_basename="osm_waterways",
+        # Canonical naming is source-agnostic (NHN for Canada by default; OSM fallback on request)
+        raw_filename="waterways_raw.gpkg",
+        processed_basename="waterways",
         processed_extension="gpkg",
         symlink_name="waterways.gpkg",
-        fetch_tool="osm_waterways_overpass",
+        fetch_tool="osm_waterways_fetch",
         command_builder=_overpass_placeholder_command,
-        description="Rivers + streams used for hydraulic constraints.",
+        description="Rivers + streams used for hydraulic constraints (NHN for Canada where available; otherwise OSM).",
+        legacy_raw_filenames=["osm_waterways_raw.gpkg"],
+        legacy_processed_basenames=["osm_waterways"],
     ),
     "pipelines": DatasetDefinition(
         key="pipelines",
-        label="Pipelines (OSM)",
+        label="Pipelines (Auto)",
         dataset_type="vector",
-        raw_filename="osm_pipelines_raw.gpkg",
+        # Canonical naming is source-agnostic (CER for Canada by default; OSM fallback on request)
+        raw_filename="pipelines_raw.gpkg",
         processed_basename="pipelines",
         processed_extension="gpkg",
         symlink_name="pipelines.gpkg",
         fetch_tool="osm_pipelines_overpass",
         command_builder=_overpass_placeholder_command,
-        description="Existing pipelines for ROW alignment + crossings.",
+        description="Existing pipelines for ROW alignment + crossings (CER for Canada by default; OSM fallback on request).",
+        legacy_raw_filenames=["osm_pipelines_raw.gpkg"],
+    ),
+    "protected_areas": DatasetDefinition(
+        key="protected_areas",
+        label="Protected Areas (CPCAD)",
+        dataset_type="vector",
+        raw_filename="protected_areas_cpcad_raw.gpkg",
+        processed_basename="protected_areas",
+        processed_extension="gpkg",
+        symlink_name="protected_areas.gpkg",
+        fetch_tool="cpcad_fetch",
+        command_builder=lambda *_args, **_kwargs: [],  # handled via native pipeline
+        required=False,
+        description="Canadian Protected and Conserved Areas Database (CPCAD) polygons for environmental constraints.",
+    ),
+    "indigenous_lands": DatasetDefinition(
+        key="indigenous_lands",
+        label="Indigenous Lands (Canada — CLSS)",
+        dataset_type="vector",
+        raw_filename="indigenous_lands_raw.geojson",
+        processed_basename="indigenous_lands",
+        processed_extension="gpkg",
+        symlink_name="indigenous_lands.gpkg",
+        fetch_tool="db_indigenous_lands_fetch",
+        command_builder=lambda *_args, **_kwargs: [],  # handled via native DB cache pipeline
+        required=False,
+        description="Canada Aboriginal/Indigenous lands legislative boundaries (NRCan CLSS), cached locally in /opt/agrs/DBs.",
     ),
 }
 
@@ -2411,6 +3339,22 @@ def _normalize_override(value: Optional[str]) -> str:
     return (value or "").strip().lower()
 
 
+def _override_requests_osm(text: str) -> bool:
+    """
+    Determine whether a user override is explicitly requesting an OpenStreetMap-derived dataset.
+
+    NOTE: The UI may pass values like "OpenStreetMap Waterways Extract", not just "OSM",
+    so we match multiple common substrings.
+    """
+    normalized = (text or "").lower()
+    return (
+        "osm" in normalized
+        or "openstreetmap" in normalized
+        or "open street map" in normalized
+        or "overpass" in normalized
+    )
+
+
 def _is_copernicus_override(text: str) -> bool:
     normalized = (text or "").lower()
     return "copernicus" in normalized or "cop30" in normalized or "glo-30" in normalized
@@ -2499,9 +3443,14 @@ def _build_metadata_context(
     if fetch_info:
         if "tiles_downloaded" in fetch_info and fetch_info["tiles_downloaded"]:
             metadata["tiles_downloaded"] = fetch_info["tiles_downloaded"]  # type: ignore[assignment]
-        for key in ("coverage_date", "notes"):
-            if key in fetch_info and fetch_info[key]:
-                metadata[key] = fetch_info[key]  # type: ignore[assignment]
+        # Allow fetchers to provide authoritative metadata (provider, license, attribution, etc.)
+        # while keeping core context fields (category/project/selected_override) stable.
+        for key, value in fetch_info.items():
+            if value is None:
+                continue
+            if key == "tiles_downloaded":
+                continue
+            metadata[key] = value  # type: ignore[assignment]
 
     if defn.key == "landcover":
         dataset_variant = fetch_info.get("landcover_dataset") if fetch_info else None
@@ -2544,9 +3493,13 @@ def _extract_epsg_from_info(info: Dict[str, Any]) -> Optional[str]:
     wkt = cs.get("wkt")
     if not wkt:
         return None
-    match = re.search(r'ID\["EPSG",\s*(\d+)\]', wkt)
-    if match:
-        return f"EPSG:{match.group(1)}"
+    # Prefer the LAST EPSG code in the WKT. Many WKT2 strings include a base CRS
+    # (e.g., EPSG:4326) before the projected CRS ID (e.g., EPSG:32613).
+    ids = re.findall(r'ID\["EPSG",\s*(\d+)\]', wkt)
+    if not ids:
+        ids = re.findall(r'AUTHORITY\["EPSG","(\d+)"\]', wkt)
+    if ids:
+        return f"EPSG:{ids[-1]}"
     return None
 
 
@@ -2672,6 +3625,259 @@ def _extract_raster_statistics(info: Dict[str, Any]) -> Optional[Dict[str, float
     return {k: v for k, v in stats.items() if v is not None}
 
 
+def _status_from_issues(errors: List[str], warnings: List[str]) -> str:
+    if errors:
+        return "failed"
+    if warnings:
+        return "passed_with_warnings"
+    return "passed"
+
+
+def _bbox_wgs84_covers_target(bbox_wgs84: Dict[str, float], target: Tuple[float, float, float, float], tol: float = 0.01) -> bool:
+    west, south, east, north = target
+    try:
+        return (
+            float(bbox_wgs84["west"]) <= float(west) + tol
+            and float(bbox_wgs84["south"]) <= float(south) + tol
+            and float(bbox_wgs84["east"]) >= float(east) - tol
+            and float(bbox_wgs84["north"]) >= float(north) - tol
+        )
+    except Exception:  # noqa: BLE001
+        return False
+
+
+def _bbox_wgs84_within_target(bbox_wgs84: Dict[str, float], target: Tuple[float, float, float, float], tol: float = 1e-6) -> bool:
+    west, south, east, north = target
+    try:
+        return (
+            float(bbox_wgs84["west"]) >= float(west) - tol
+            and float(bbox_wgs84["south"]) >= float(south) - tol
+            and float(bbox_wgs84["east"]) <= float(east) + tol
+            and float(bbox_wgs84["north"]) <= float(north) + tol
+        )
+    except Exception:  # noqa: BLE001
+        return False
+
+
+def _validate_raster_file(
+    path: Path,
+    ctx: FetchContext,
+    *,
+    expect_epsg: Optional[str] = None,
+    require_covers_aoi_bbox: bool = False,
+    require_within_aoi_bbox: bool = False,
+) -> Tuple[str, List[str], List[str]]:
+    errors: List[str] = []
+    warnings: List[str] = []
+
+    if not path.exists():
+        errors.append("File does not exist")
+        return _status_from_issues(errors, warnings), errors, warnings
+
+    if path.stat().st_size < 1024:
+        errors.append(f"File too small (<1KB): {path.name}")
+        return _status_from_issues(errors, warnings), errors, warnings
+
+    info = _gdal_info(path)
+    if not info:
+        errors.append("GDAL could not open raster (gdalinfo failed)")
+        return _status_from_issues(errors, warnings), errors, warnings
+
+    epsg = _extract_epsg_from_info(info)
+    if not epsg:
+        errors.append("CRS/EPSG could not be determined from GDAL metadata")
+    elif expect_epsg and epsg != expect_epsg:
+        errors.append(f"Unexpected CRS: {epsg} (expected {expect_epsg})")
+
+    wgs84 = info.get("wgs84Extent")
+    bbox_wgs84: Optional[Dict[str, float]] = None
+    if isinstance(wgs84, dict):
+        bbox_wgs84 = _bbox_from_wgs84_extent(wgs84)
+
+    if require_covers_aoi_bbox:
+        if bbox_wgs84 is None:
+            warnings.append("wgs84Extent unavailable; cannot confirm AOI bbox coverage")
+        elif not _bbox_wgs84_covers_target(bbox_wgs84, ctx.bbox):
+            errors.append("Raster bbox does not fully cover AOI bbox (may be incomplete download)")
+
+    if require_within_aoi_bbox:
+        if bbox_wgs84 is None:
+            warnings.append("wgs84Extent unavailable; cannot confirm raster is within AOI bbox")
+        elif not _bbox_wgs84_within_target(bbox_wgs84, ctx.bbox, tol=1e-4):
+            warnings.append("Raster bbox extends beyond AOI bbox (may include extra padding)")
+
+    stats = _extract_raster_statistics(info) or {}
+    if stats:
+        try:
+            if "min" in stats and "max" in stats and abs(float(stats["min"]) - float(stats["max"])) < 1e-12:
+                errors.append("Raster appears constant (min == max); possible bad fetch or all-NoData")
+        except Exception:  # noqa: BLE001
+            warnings.append("Could not evaluate raster min/max for constant-value check")
+        try:
+            if float(stats.get("valid_percent", 100.0)) <= 0.0:
+                errors.append("Raster has 0% valid pixels (all NoData)")
+        except Exception:  # noqa: BLE001
+            pass
+    else:
+        warnings.append("Raster statistics missing (cannot verify non-constant / non-NoData quickly)")
+
+    return _status_from_issues(errors, warnings), errors, warnings
+
+
+def _vector_feature_count(info: Dict[str, Any]) -> Optional[int]:
+    layers = info.get("layers")
+    if not isinstance(layers, list) or not layers:
+        return None
+    layer = layers[0]
+    count = layer.get("featureCount")
+    try:
+        return int(count) if count is not None else None
+    except (TypeError, ValueError):
+        return None
+
+
+def _vector_epsg(path: Path) -> Optional[str]:
+    info = _ogr_info(path)
+    if not info:
+        return None
+    layers = info.get("layers") or []
+    if not layers:
+        return None
+    layer = layers[0]
+    gfields = layer.get("geometryFields") or []
+    if not gfields:
+        return None
+    cs = (gfields[0].get("coordinateSystem") or {}) if isinstance(gfields[0], dict) else {}
+    wkt = cs.get("wkt")
+    if not isinstance(wkt, str) or not wkt.strip():
+        return None
+    # Support both modern WKT2 `ID["EPSG",32613]` and legacy WKT1 `AUTHORITY["EPSG","32613"]`.
+    # Prefer the LAST EPSG code in the WKT (e.g., projected CRS often contains a base EPSG:4326 first).
+    ids = re.findall(r'ID\["EPSG",\s*(\d+)\]', wkt)
+    if not ids:
+        ids = re.findall(r'AUTHORITY\["EPSG","(\d+)"\]', wkt)
+    if ids:
+        return f"EPSG:{ids[-1]}"
+    return None
+
+
+def _vector_bbox_wgs84(path: Path) -> Optional[Dict[str, float]]:
+    extent = _vector_extent_dict(path)
+    if not extent:
+        return None
+    crs = str(extent.get("crs") or "")
+    minx = float(extent["minx"])
+    miny = float(extent["miny"])
+    maxx = float(extent["maxx"])
+    maxy = float(extent["maxy"])
+
+    if crs.upper() == "EPSG:4326":
+        return {"west": minx, "south": miny, "east": maxx, "north": maxy, "crs": "EPSG:4326"}
+
+    if not crs.upper().startswith("EPSG:"):
+        return None
+
+    try:
+        from pyproj import Transformer
+    except Exception:  # noqa: BLE001
+        return None
+
+    transformer = Transformer.from_crs(crs, "EPSG:4326", always_xy=True)
+    xs: List[float] = []
+    ys: List[float] = []
+    for x, y in ((minx, miny), (minx, maxy), (maxx, miny), (maxx, maxy)):
+        try:
+            lon, lat = transformer.transform(x, y)
+            xs.append(float(lon))
+            ys.append(float(lat))
+        except Exception:  # noqa: BLE001
+            continue
+    if not xs or not ys:
+        return None
+    return {"west": min(xs), "south": min(ys), "east": max(xs), "north": max(ys), "crs": "EPSG:4326"}
+
+
+def _vector_extent_dict(path: Path) -> Optional[Dict[str, object]]:
+    """Return layer extent in its native CRS, plus CRS identifier if available."""
+    info = _ogr_info(path)
+    if not info:
+        return None
+    layers = info.get("layers") or []
+    if not layers:
+        return None
+    layer = layers[0]
+    gfields = layer.get("geometryFields") or []
+    if not gfields or not isinstance(gfields[0], dict):
+        return None
+    extent = gfields[0].get("extent")
+    if not (isinstance(extent, list) and len(extent) >= 4):
+        return None
+    # OGR JSON uses [minx, miny, maxx, maxy]
+    minx, miny, maxx, maxy = (float(extent[0]), float(extent[1]), float(extent[2]), float(extent[3]))
+    crs = _vector_epsg(path) or "unknown"
+    return {"minx": minx, "miny": miny, "maxx": maxx, "maxy": maxy, "crs": crs}
+
+
+def _vector_feature_count_ogr(path: Path) -> Optional[int]:
+    info = _ogr_info(path)
+    if info:
+        count = _vector_feature_count(info)
+        if count is not None:
+            return count
+    # Fallback: parse text output
+    result = subprocess.run([OGRINFO_BIN, "-al", "-so", "-q", str(path)], capture_output=True, text=True)
+    if result.returncode != 0:
+        return None
+    match = re.search(r"Feature Count:\\s*(\\d+)", result.stdout)
+    if match:
+        try:
+            return int(match.group(1))
+        except ValueError:
+            return None
+    return None
+
+
+def _validate_vector_file(
+    path: Path,
+    ctx: FetchContext,
+    *,
+    expect_epsg: Optional[str] = None,
+    require_nonempty: bool = False,
+) -> Tuple[str, List[str], List[str]]:
+    errors: List[str] = []
+    warnings: List[str] = []
+
+    if not path.exists():
+        errors.append("File does not exist")
+        return _status_from_issues(errors, warnings), errors, warnings
+
+    if path.stat().st_size < 1024:
+        errors.append(f"File too small (<1KB): {path.name}")
+        return _status_from_issues(errors, warnings), errors, warnings
+
+    info = _ogr_info(path)
+    if not info:
+        errors.append("OGR could not open vector (ogrinfo failed)")
+        return _status_from_issues(errors, warnings), errors, warnings
+
+    epsg = _vector_epsg(path)
+    if expect_epsg and epsg and epsg != expect_epsg:
+        errors.append(f"Unexpected CRS: {epsg} (expected {expect_epsg})")
+    elif expect_epsg and not epsg:
+        warnings.append("CRS/EPSG could not be determined for vector; cannot confirm target CRS")
+
+    feature_count = _vector_feature_count(info)
+    if feature_count is None:
+        warnings.append("Feature count unavailable from OGR metadata")
+    elif feature_count <= 0:
+        if require_nonempty:
+            errors.append("Vector has 0 features (unexpected for this category)")
+        else:
+            warnings.append("Vector has 0 features (may indicate no coverage for AOI)")
+
+    return _status_from_issues(errors, warnings), errors, warnings
+
+
 # ---------------------------------------------------------------------------
 # Job state + registry
 # ---------------------------------------------------------------------------
@@ -2699,7 +3905,11 @@ class DatasetJobState:
 
 JOB_REGISTRY: Dict[str, DatasetJobState] = {}
 PROJECT_ACTIVE_JOBS: Dict[str, str] = {}
-JOB_LOCK = threading.Lock()
+# Global lock guarding JOB_REGISTRY / PROJECT_ACTIVE_JOBS.
+# Use an RLock to avoid rare re-entrancy deadlocks and allow timed acquire().
+JOB_LOCK = threading.RLock()
+# If this lock can't be acquired quickly, the API should fail fast (rather than hanging the UI).
+JOB_LOCK_TIMEOUT_S = float(os.getenv("DATASET_JOB_LOCK_TIMEOUT_S", "5"))
 
 # Stage names matching frontend expectations
 STAGE_NAMES = [
@@ -2831,13 +4041,44 @@ def _ensure_symlink(link_path: Path, target_path: Path) -> None:
 
 
 def _dataset_ready(defn: DatasetDefinition, ctx: FetchContext) -> bool:
-    processed = defn.processed_path(ctx)
-    meta = defn.processed_metadata_path(ctx)
-    return processed.exists() and meta.exists() and processed.stat().st_size > 1024
+    # Treat either canonical or legacy processed artifacts as satisfying readiness.
+    # This prevents regressions when we change naming conventions (e.g., waterways
+    # moving from `osm_waterways_*` to source-agnostic `waterways_*`).
+    processed_candidates: List[Path] = [defn.processed_path(ctx)]
+    for base in getattr(defn, "legacy_processed_basenames", []) or []:
+        processed_name = f"{base}_epsg{ctx.target_epsg}_processed.{defn.processed_extension}"
+        processed_candidates.append(defn._base_dir(ctx) / "processed" / processed_name)
+
+    for processed in processed_candidates:
+        meta = processed.with_suffix(processed.suffix + ".json")
+        if processed.exists() and meta.exists() and processed.stat().st_size > 1024:
+            return True
+    return False
+
+
+_GDALINFO_STATS_MAX_BYTES = 512 * 1024 * 1024  # 512 MiB
 
 
 def _gdal_info(path: Path) -> Optional[Dict]:
-    result = subprocess.run([GDALINFO_BIN, "-json", "-stats", str(path)], capture_output=True, text=True)
+    """
+    Lightweight GDAL info helper.
+
+    NOTE: `gdalinfo -stats` can be extremely slow for very large rasters (multi‑GB DEM/landcover),
+    and can make fetch jobs look "stuck" during validation/metadata. We only request stats for
+    smaller rasters; for large rasters we prefer fast structural metadata (CRS/extent).
+    """
+    include_stats = False
+    try:
+        include_stats = path.stat().st_size <= _GDALINFO_STATS_MAX_BYTES
+    except OSError:
+        include_stats = False
+
+    cmd = [GDALINFO_BIN, "-json"]
+    if include_stats:
+        cmd.append("-stats")
+    cmd.append(str(path))
+
+    result = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0:
         return None
     try:
@@ -2847,7 +4088,9 @@ def _gdal_info(path: Path) -> Optional[Dict]:
 
 
 def _ogr_info(path: Path) -> Optional[Dict]:
-    result = subprocess.run([OGRINFO_BIN, "-al", "-so", "-q", "-json", str(path)], capture_output=True, text=True)
+    # IMPORTANT: Do NOT use -q with -json here.
+    # `ogrinfo -q -json` omits geometryFields (extent/CRS) which we need for protocol-compliant metadata.
+    result = subprocess.run([OGRINFO_BIN, "-al", "-so", "-json", str(path)], capture_output=True, text=True)
     if result.returncode != 0:
         return None
     try:
@@ -2868,6 +4111,7 @@ def _generate_processed_metadata(
     raw_meta: Path,
     processed_path: Path,
     metadata_overrides: Optional[Dict[str, object]] = None,
+    processed_meta_path: Optional[Path] = None,
 ) -> None:
     base_meta: Dict[str, Any] = {
         "dataset_name": f"{defn.label} (Processed)",
@@ -2938,35 +4182,29 @@ def _generate_processed_metadata(
             if stats:
                 base_meta["statistics"] = stats
         else:
-            layers = info.get("layers") or []
-            if layers:
-                layer = layers[0]
-                extent = layer.get("extent")
-                if extent:
-                    base_meta["extent"] = {
-                        "minx": extent["xmin"],
-                        "maxx": extent["xmax"],
-                        "miny": extent["ymin"],
-                        "maxy": extent["ymax"],
-                        "crs": layer.get("srs", f"EPSG:{ctx.target_epsg}"),
-                    }
-                    base_meta["bbox_wgs84"] = {
-                        "west": extent["xmin"],
-                        "east": extent["xmax"],
-                        "south": extent["ymin"],
-                        "north": extent["ymax"],
-                        "crs": layer.get("srs", f"EPSG:{ctx.target_epsg}"),
-                    }
-                base_meta["feature_count"] = layer.get("featureCount")
+            # For vectors, prefer OGR-based extent/count extraction; ogrinfo JSON output is inconsistent across GDAL versions.
+            pass
     if defn.dataset_type == "vector":
-        if not base_meta.get("extent"):
+        extent_native = _vector_extent_dict(processed_path)
+        if extent_native:
+            base_meta["extent"] = extent_native
+        elif not base_meta.get("extent"):
             base_meta["extent"] = _bbox_dict_from_tuple(ctx.bbox)
-        if not base_meta.get("bbox_wgs84"):
+
+        bbox = _vector_bbox_wgs84(processed_path)
+        if bbox:
+            base_meta["bbox_wgs84"] = bbox
+        elif not base_meta.get("bbox_wgs84"):
             base_meta["bbox_wgs84"] = _bbox_wgs84_from_tuple(ctx.bbox)
-        if base_meta.get("feature_count") is None:
+
+        fc = _vector_feature_count_ogr(processed_path)
+        if fc is not None:
+            base_meta["feature_count"] = fc
+        elif base_meta.get("feature_count") is None:
             base_meta["feature_count"] = 0
 
-    _write_json(defn.processed_metadata_path(ctx), base_meta)
+    out_meta_path = processed_meta_path or defn.processed_metadata_path(ctx)
+    _write_json(out_meta_path, base_meta)
 
 
 def _generate_raw_metadata(
@@ -3018,9 +4256,15 @@ def _generate_raw_metadata(
     info = _gdal_info(raw_path) if defn.dataset_type == "raster" else _ogr_info(raw_path)
     if info:
         payload["metadata"] = info
-        epsg = _extract_epsg_from_info(info)
-        if epsg:
-            payload["raw_crs"] = epsg
+        if defn.dataset_type == "raster":
+            epsg = _extract_epsg_from_info(info)
+            if epsg:
+                payload["raw_crs"] = epsg
+        else:
+            # For vectors, prefer inspecting the layer SRS directly (ogrinfo JSON may not contain EPSG IDs).
+            v_epsg = _vector_epsg(raw_path)
+            if v_epsg:
+                payload["raw_crs"] = v_epsg
 
         if defn.dataset_type == "raster":
             extent = _extent_from_gdal_info(info)
@@ -3054,26 +4298,23 @@ def _generate_raw_metadata(
                         "maxy": extent.get("ymax"),
                         "crs": target_layer.get("srs", "EPSG:4326"),
                     }
-                    payload["bbox_wgs84"] = {
-                        "west": extent.get("xmin"),
-                        "south": extent.get("ymin"),
-                        "east": extent.get("xmax"),
-                        "north": extent.get("ymax"),
-                        "crs": target_layer.get("srs", "EPSG:4326"),
-                    }
                 payload["feature_count"] = target_layer.get("featureCount")
             if "feature_count" not in payload:
                 payload["feature_count"] = 0
 
     if defn.dataset_type == "vector":
         if not payload.get("raw_crs"):
-            payload["raw_crs"] = "EPSG:4326"
+            v_epsg = _vector_epsg(raw_path)
+            payload["raw_crs"] = v_epsg or "unknown"
         if not payload.get("extent"):
-            payload["extent"] = _bbox_dict_from_tuple(ctx.bbox)
+            extent_native = _vector_extent_dict(raw_path)
+            payload["extent"] = extent_native or _bbox_dict_from_tuple(ctx.bbox)
         if not payload.get("bbox_wgs84"):
-            payload["bbox_wgs84"] = _bbox_wgs84_from_tuple(ctx.bbox)
+            bbox = _vector_bbox_wgs84(raw_path)
+            payload["bbox_wgs84"] = bbox or _bbox_wgs84_from_tuple(ctx.bbox)
         if payload.get("feature_count") is None:
-            payload["feature_count"] = 0
+            fc = _vector_feature_count_ogr(raw_path)
+            payload["feature_count"] = fc if fc is not None else 0
 
     checksum = _compute_file_sha256(raw_path)
     if checksum:
@@ -3082,10 +4323,16 @@ def _generate_raw_metadata(
     _write_json(raw_meta_path, payload)
 
 
-def _process_raster(defn: DatasetDefinition, ctx: FetchContext, raw_path: Path, job: DatasetJobState) -> None:
-    processed_path = defn.processed_path(ctx)
+def _process_raster(
+    defn: DatasetDefinition,
+    ctx: FetchContext,
+    raw_path: Path,
+    job: DatasetJobState,
+    output_path: Optional[Path] = None,
+) -> None:
+    processed_path = output_path or defn.processed_path(ctx)
     processed_path.parent.mkdir(parents=True, exist_ok=True)
-    tmp_path = processed_path.with_suffix(".tmp.tif")
+    tmp_path = processed_path.with_name(f"{processed_path.stem}.tmp{processed_path.suffix}")
     if tmp_path.exists():
         tmp_path.unlink()
     cmd = [
@@ -3101,6 +4348,8 @@ def _process_raster(defn: DatasetDefinition, ctx: FetchContext, raw_path: Path, 
         "COMPRESS=LZW",
         "-co",
         "TILED=YES",
+        "-co",
+        "BIGTIFF=IF_SAFER",
         "-wo",
         "NUM_THREADS=ALL_CPUS",
         "-multi",
@@ -3112,17 +4361,21 @@ def _process_raster(defn: DatasetDefinition, ctx: FetchContext, raw_path: Path, 
     if defn.nodata is not None:
         cmd.extend(["-dstnodata", str(defn.nodata)])
     _run_command(cmd, ctx.project_path, job, ctx, f"{defn.label} reprojection")
-    if processed_path.exists():
-        processed_path.unlink()
     tmp_path.replace(processed_path)
 
 
-def _process_vector(defn: DatasetDefinition, ctx: FetchContext, raw_path: Path, job: DatasetJobState) -> None:
+def _process_vector(
+    defn: DatasetDefinition,
+    ctx: FetchContext,
+    raw_path: Path,
+    job: DatasetJobState,
+    output_path: Optional[Path] = None,
+) -> None:
     """
     Process vector data: reproject, clip to AOI, and enrich with computed fields.
     Preserves ALL original attributes from any source while adding standardized computed fields.
     """
-    processed_path = defn.processed_path(ctx)
+    processed_path = output_path or defn.processed_path(ctx)
     processed_path.parent.mkdir(parents=True, exist_ok=True)
     tmp_path = processed_path.with_suffix(".tmp.gpkg")
     if tmp_path.exists():
@@ -3153,8 +4406,6 @@ def _process_vector(defn: DatasetDefinition, ctx: FetchContext, raw_path: Path, 
         _log_to_job(job, ctx, f"Enriching {defn.label} with computed attributes...")
         _enrich_vector_attributes(defn.key, tmp_path, job, ctx)
     
-    if processed_path.exists():
-        processed_path.unlink()
     tmp_path.replace(processed_path)
 
 
@@ -3574,18 +4825,48 @@ def _execute_dataset(defn: DatasetDefinition, ctx: FetchContext, job: DatasetJob
     if override:
         _log_to_job(job, ctx, f"Applying override '{override}' for {defn.label}")
 
-    # Now get paths with override for dynamic filename
-    raw_path = defn.raw_path(ctx, override)
-    raw_meta = defn.raw_metadata_path(ctx, override)
-    raw_path.parent.mkdir(parents=True, exist_ok=True)
-    if raw_path.exists():
-        raw_path.unlink()
-    if raw_meta.exists():
-        raw_meta.unlink()
-    processed_path = defn.processed_path(ctx)
-    processed_path.parent.mkdir(parents=True, exist_ok=True)
-    if processed_path.exists():
-        processed_path.unlink()
+    # Compute FINAL paths (canonical locations in the project tree)
+    final_raw_path = defn.raw_path(ctx, override)
+    final_raw_meta = defn.raw_metadata_path(ctx, override)
+    final_processed_path = defn.processed_path(ctx, override)
+    final_processed_meta = defn.processed_metadata_path(ctx, override)
+
+    final_raw_path.parent.mkdir(parents=True, exist_ok=True)
+    final_processed_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Non-destructive staging:
+    # Write new artifacts into a staging directory first, then atomically swap into place
+    # after successful fetch+process+validation+metadata generation.
+    staging_dir = ctx.project_path / "data" / ".staging" / job.id / defn.key
+    staging_dir.mkdir(parents=True, exist_ok=True)
+
+    raw_path = staging_dir / final_raw_path.name
+    raw_meta = staging_dir / final_raw_meta.name
+    processed_path = staging_dir / final_processed_path.name
+    processed_meta = staging_dir / final_processed_meta.name
+
+    # Clean any stale staging artifacts for this dataset.
+    #
+    # NOTE: For DEM we allow resuming from an existing raw mosaic / processed output in the
+    # same staging dir (e.g., if a previous run failed during validation/metadata/publish).
+    if defn.key == "dem":
+        stale_paths: List[Path] = [raw_meta, processed_meta]
+        # Delete empty artifacts only (safe resume)
+        for p in (raw_path, processed_path):
+            try:
+                if p.exists() and p.stat().st_size == 0:
+                    stale_paths.insert(0, p)
+            except OSError:
+                stale_paths.insert(0, p)
+    else:
+        stale_paths = [raw_path, raw_meta, processed_path, processed_meta]
+
+    for path in stale_paths:
+        if path.exists():
+            try:
+                path.unlink()
+            except OSError:
+                pass
 
     _update_stage(job, category, "prefetch_scan", "succeeded", "Paths configured")
 
@@ -3636,7 +4917,24 @@ def _execute_dataset(defn: DatasetDefinition, ctx: FetchContext, job: DatasetJob
         _log_to_job(job, ctx, f"Using native pipeline for {defn.label}")
 
         try:
-            if defn.key in OSM_OVERPASS_FILTERS:
+            # Canada-first authoritative sources (open/free)
+            if defn.key == "pipelines" and ctx.iso3 == "CAN" and not _override_requests_osm(override_text):
+                fetch_cmd, fetch_info = _cer_pipelines_fetch(ctx, raw_path, job)
+            elif defn.key == "waterways" and ctx.iso3 == "CAN" and not _override_requests_osm(override_text):
+                fetch_cmd, fetch_info = _nhn_waterways_fetch(ctx, raw_path, job)
+            elif defn.key == "protected_areas":
+                if ctx.iso3 != "CAN":
+                    raise RuntimeError("protected_areas fetch is currently implemented for Canada (CPCAD) only.")
+                fetch_cmd, fetch_info = _cpcad_protected_areas_fetch(ctx, raw_path, job)
+            elif defn.key == "indigenous_lands":
+                if ctx.iso3 != "CAN":
+                    raise RuntimeError("indigenous_lands fetch is currently implemented for Canada (CLSS) only.")
+                fetch_cmd, fetch_info = _can_indigenous_lands_fetch(ctx, raw_path, job)
+            # OSM (global) — prefer compiled ZEUS tools where available
+            elif defn.key in ("roads", "railways", "powerlines", "waterways"):
+                fetch_cmd, fetch_info = _zeus_osm_fetch(defn.key, ctx, raw_path, job)
+            elif defn.key == "pipelines":
+                # No ZEUS osm_pipelines_fetch tool exists today; keep Overpass fallback (explicitly lower confidence).
                 fetch_cmd, fetch_info = _osm_overpass_fetch(defn.key, ctx, raw_path, job)
             elif defn.key == "dem" and _is_3dep_override(override_text):
                 # Use direct OpenTopography/TNM API fetch for 3DEP 1m requests
@@ -3689,9 +4987,13 @@ def _execute_dataset(defn: DatasetDefinition, ctx: FetchContext, job: DatasetJob
             # ========== STAGE: process ==========
             _update_stage(job, category, "process", "running", "Geoprocessing data")
             if defn.dataset_type == "raster":
-                _process_raster(defn, ctx, raw_path, job)
+                # DEM can be huge; support resuming if a valid processed raster is already present.
+                if defn.key == "dem" and processed_path.exists() and processed_path.stat().st_size > 1024:
+                    _log_to_job(job, ctx, f"Processed DEM already present; skipping reprojection: {processed_path}")
+                else:
+                    _process_raster(defn, ctx, raw_path, job, output_path=processed_path)
             else:
-                _process_vector(defn, ctx, raw_path, job)
+                _process_vector(defn, ctx, raw_path, job, output_path=processed_path)
             _update_stage(job, category, "process", "succeeded", "Geoprocessing complete")
 
         except RuntimeError:
@@ -3701,43 +5003,121 @@ def _execute_dataset(defn: DatasetDefinition, ctx: FetchContext, job: DatasetJob
             raise
 
     # ========== STAGE: validation ==========
-    _update_stage(job, category, "validation", "running", "Validating raw data")
+    _update_stage(job, category, "validation", "running", "Validating raw + processed data (protocol checks)")
 
-    # Verify raw file exists
-    if not raw_path.exists() or raw_path.stat().st_size == 0:
-        _update_stage(job, category, "validation", "failed", "Raw dataset missing or empty")
-        raise RuntimeError("Raw dataset missing or empty after fetch")
+    validation_errors: List[str] = []
+    validation_warnings: List[str] = []
+
+    # ---- Raw validation (integrity + coverage sanity) ----
+    if defn.dataset_type == "raster":
+        status, errors, warnings = _validate_raster_file(raw_path, ctx, require_covers_aoi_bbox=True)
+    else:
+        require_nonempty = defn.key in ("roads", "railways", "powerlines", "waterways")
+        status, errors, warnings = _validate_vector_file(raw_path, ctx, require_nonempty=require_nonempty)
+    validation_errors.extend(errors)
+    validation_warnings.extend(warnings)
+
+    if errors:
+        _update_stage(job, category, "validation", "failed", "; ".join(errors[:2]))
+        raise RuntimeError(f"Raw validation failed: {'; '.join(errors)}")
 
     # If agent completed but processed file is missing/empty, run processing as fallback
     if not processed_path.exists() or processed_path.stat().st_size == 0:
         _log_to_job(job, ctx, f"Processed file missing after agent completion, running native processing for {defn.label}")
         _update_stage(job, category, "process", "running", "Running native geoprocessing as fallback")
         if defn.dataset_type == "raster":
-            _process_raster(defn, ctx, raw_path, job)
+            _process_raster(defn, ctx, raw_path, job, output_path=processed_path)
         else:
-            _process_vector(defn, ctx, raw_path, job)
+            _process_vector(defn, ctx, raw_path, job, output_path=processed_path)
         _update_stage(job, category, "process", "succeeded", "Native geoprocessing complete")
 
-    # Final validation
-    if not processed_path.exists() or processed_path.stat().st_size == 0:
-        _update_stage(job, category, "validation", "failed", "Processed dataset missing or empty")
-        raise RuntimeError("Processed dataset missing or empty after processing")
+    # ---- Processed validation (target CRS + integrity + AOI clip sanity) ----
+    if defn.dataset_type == "raster":
+        p_status, p_errors, p_warnings = _validate_raster_file(
+            processed_path,
+            ctx,
+            expect_epsg=f"EPSG:{ctx.target_epsg}",
+            require_within_aoi_bbox=True,
+        )
+    else:
+        require_nonempty = defn.key in ("roads", "railways", "powerlines", "waterways")
+        p_status, p_errors, p_warnings = _validate_vector_file(
+            processed_path,
+            ctx,
+            expect_epsg=f"EPSG:{ctx.target_epsg}",
+            require_nonempty=require_nonempty,
+        )
+    validation_errors.extend(p_errors)
+    validation_warnings.extend(p_warnings)
 
-    _update_stage(job, category, "validation", "succeeded", "Data integrity verified")
+    if p_errors:
+        _update_stage(job, category, "validation", "failed", "; ".join(p_errors[:2]))
+        raise RuntimeError(f"Processed validation failed: {'; '.join(p_errors)}")
+
+    # Record warnings in logs but do not fail the job
+    for warning in validation_warnings:
+        _log_to_job(job, ctx, f"Validation warning: {warning}")
+
+    validation_status = "passed_with_warnings" if validation_warnings else "passed"
+    if validation_status == "passed_with_warnings":
+        _update_stage(job, category, "validation", "succeeded", f"Passed with {len(validation_warnings)} warning(s)")
+    else:
+        _update_stage(job, category, "validation", "succeeded", "Passed")
 
     # ========== STAGE: raw_metadata ==========
     _update_stage(job, category, "raw_metadata", "running", "Extracting raw metadata")
     metadata_context = _build_metadata_context(defn, ctx, override, fetch_info)
+    # Protocol-required validation fields in metadata
+    metadata_context["validation_status"] = validation_status
+    metadata_context["validation_errors"] = validation_errors
+    if validation_warnings:
+        metadata_context["validation_warnings"] = validation_warnings
     _generate_raw_metadata(defn, ctx, raw_path, raw_meta, fetch_cmd, metadata_context)
     _update_stage(job, category, "raw_metadata", "succeeded", "Raw metadata generated")
 
     # ========== STAGE: processed_metadata ==========
     _update_stage(job, category, "processed_metadata", "running", "Indexing processed data")
-    _generate_processed_metadata(defn, ctx, raw_path, raw_meta, processed_path, metadata_context)
+    _generate_processed_metadata(defn, ctx, raw_path, raw_meta, processed_path, metadata_context, processed_meta_path=processed_meta)
     _update_stage(job, category, "processed_metadata", "succeeded", "Metadata indexed")
 
     # ========== STAGE: layer_publish ==========
     _update_stage(job, category, "layer_publish", "running", "Publishing to map layer")
+
+    # Commit staged artifacts to canonical locations (atomic replace)
+    def _safe_replace(src: Path, dst: Path) -> None:
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        src.replace(dst)
+
+    _safe_replace(raw_path, final_raw_path)
+    _safe_replace(raw_meta, final_raw_meta)
+    _safe_replace(processed_path, final_processed_path)
+    _safe_replace(processed_meta, final_processed_meta)
+
+    # Best-effort: rewrite embedded path fields in metadata to reference canonical paths.
+    try:
+        raw_payload = json.loads(final_raw_meta.read_text(encoding="utf-8"))
+        if isinstance(raw_payload, dict):
+            raw_payload["raw_path"] = str(final_raw_path)
+            _write_json(final_raw_meta, raw_payload)
+    except Exception:  # noqa: BLE001
+        pass
+
+    try:
+        proc_payload = json.loads(final_processed_meta.read_text(encoding="utf-8"))
+        if isinstance(proc_payload, dict):
+            proc_payload["processed_path"] = str(final_processed_path)
+            proc_payload["raw_path"] = str(final_raw_path)
+            proc_payload["raw_metadata_file"] = str(final_raw_meta)
+            _write_json(final_processed_meta, proc_payload)
+    except Exception:  # noqa: BLE001
+        pass
+
+    # Cleanup staging directory (best-effort)
+    try:
+        shutil.rmtree(staging_dir, ignore_errors=True)
+    except Exception:  # noqa: BLE001
+        pass
+
     # NOTE: Symlinks are deprecated - the Layer Manager now reads directly from /processed folders
     _update_stage(job, category, "layer_publish", "succeeded", "Layer available in map")
 
@@ -3869,25 +5249,45 @@ def _job_thread(job_id: str) -> None:
 
 
 def _start_job(project: str, categories: List[str], force: bool, overrides: Optional[Dict[str, str]] = None) -> DatasetJobState:
-    with JOB_LOCK:
-        if project in PROJECT_ACTIVE_JOBS:
-            existing = PROJECT_ACTIVE_JOBS[project]
-            raise HTTPException(
-                status_code=409,
-                detail=f"A dataset fetch job ({existing}) is already running for project '{project}'.",
-            )
-
     cleaned_overrides: Dict[str, str] = {}
     if overrides:
         for key, value in overrides.items():
             if key in categories and value:
                 cleaned_overrides[key] = value
 
-    job_id = uuid.uuid4().hex
-    job = DatasetJobState(id=job_id, project=project, categories=categories, force=force, overrides=cleaned_overrides)
-    with JOB_LOCK:
+    if not JOB_LOCK.acquire(timeout=JOB_LOCK_TIMEOUT_S):
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "Dataset fetch pipeline is busy or unresponsive (job lock timeout). "
+                "Restart the backend server and try again."
+            ),
+        )
+    try:
+        if project in PROJECT_ACTIVE_JOBS:
+            existing = PROJECT_ACTIVE_JOBS[project]
+            existing_job = JOB_REGISTRY.get(existing)
+            # Self-heal stale "active job" entries:
+            # - If the referenced job is missing (e.g., registry reset / inconsistent state)
+            # - If the referenced job is already terminal (succeeded/failed/partial)
+            # then clear the active marker and allow a new job to start.
+            if existing_job is None or getattr(existing_job, "status", None) in ("succeeded", "failed", "partial"):
+                PROJECT_ACTIVE_JOBS.pop(project, None)
+            else:
+                raise HTTPException(
+                    status_code=409,
+                    detail=f"A dataset fetch job ({existing}) is already running for project '{project}'.",
+                )
+
+        job_id = uuid.uuid4().hex
+        job = DatasetJobState(id=job_id, project=project, categories=categories, force=force, overrides=cleaned_overrides)
         JOB_REGISTRY[job.id] = job
         PROJECT_ACTIVE_JOBS[project] = job.id
+    finally:
+        try:
+            JOB_LOCK.release()
+        except RuntimeError:
+            pass
 
     thread = threading.Thread(target=_job_thread, args=(job.id,), daemon=True)
     thread.start()
@@ -3987,6 +5387,19 @@ class DatasetJobResponse(BaseModel):
     overrides: Optional[Dict[str, str]] = None
 
 
+class ActiveDatasetJobInfo(BaseModel):
+    """Minimal active-job state keyed by project (used by frontend sidebar poll)."""
+
+    job_id: str
+    status: Literal["pending", "running", "succeeded", "failed", "partial"]
+    progress: float
+    current_category: Optional[str]
+
+
+class ActiveDatasetJobsResponse(BaseModel):
+    active_jobs: Dict[str, ActiveDatasetJobInfo]
+
+
 # ---------------------------------------------------------------------------
 # API endpoints
 # ---------------------------------------------------------------------------
@@ -3998,10 +5411,29 @@ def get_dataset_status(project: str) -> DatasetStatusResponse:
     ctx = _load_project_context(project)
     statuses: List[DatasetCategoryStatus] = []
     for key, defn in DATASET_DEFINITIONS.items():
-        raw_path = defn.raw_path(ctx)
-        processed_path = defn.processed_path(ctx)
-        meta_path = defn.processed_metadata_path(ctx)
-        present = processed_path.exists() and meta_path.exists()
+        # Resolve raw path (prefer canonical, but surface legacy if that's what exists on disk)
+        raw_candidates: List[Path] = [defn.raw_path(ctx)]
+        for legacy_raw in getattr(defn, "legacy_raw_filenames", []) or []:
+            raw_candidates.append(defn._base_dir(ctx) / "raw" / legacy_raw)
+        raw_existing = next((p for p in raw_candidates if p.exists()), None)
+
+        # Resolve processed path + sidecar (prefer canonical, but support legacy naming)
+        processed_candidates: List[Path] = [defn.processed_path(ctx)]
+        for base in getattr(defn, "legacy_processed_basenames", []) or []:
+            processed_name = f"{base}_epsg{ctx.target_epsg}_processed.{defn.processed_extension}"
+            processed_candidates.append(defn._base_dir(ctx) / "processed" / processed_name)
+        processed_existing = None
+        meta_existing = None
+        for p in processed_candidates:
+            m = p.with_suffix(p.suffix + ".json")
+            if p.exists() and m.exists():
+                processed_existing = p
+                meta_existing = m
+                break
+
+        processed_path = processed_existing or defn.processed_path(ctx)
+        meta_path = meta_existing or defn.processed_metadata_path(ctx)
+        present = processed_existing is not None and meta_existing is not None
         last_modified: Optional[str] = None
         if present:
             try:
@@ -4016,9 +5448,9 @@ def get_dataset_status(project: str) -> DatasetStatusResponse:
                 dataset_type=defn.dataset_type,
                 required=defn.required,
                 present=present,
-                raw_path=str(raw_path) if raw_path.exists() else None,
-                processed_path=str(processed_path) if processed_path.exists() else None,
-                metadata_path=str(meta_path) if meta_path.exists() else None,
+                raw_path=str(raw_existing) if raw_existing else None,
+                processed_path=str(processed_path) if present else None,
+                metadata_path=str(meta_path) if present else None,
                 last_modified=last_modified,
                 description=defn.description,
             )
@@ -4033,7 +5465,12 @@ def get_dataset_status(project: str) -> DatasetStatusResponse:
 
 
 @router.post("/projects/{project}/dataset-fetch", response_model=DatasetFetchJobResponse)
-def trigger_dataset_fetch(project: str, request: DatasetFetchRequest) -> DatasetFetchJobResponse:
+def trigger_dataset_fetch(
+    project: str,
+    request: DatasetFetchRequest,
+    actor: Dict[str, Any] = Depends(require_auth),
+    db: Session = Depends(get_db),
+) -> DatasetFetchJobResponse:
     _ensure_command_available(ZEUS_BIN)
     if not request.categories:
         raise HTTPException(status_code=400, detail="At least one dataset category must be specified.")
@@ -4048,7 +5485,47 @@ def trigger_dataset_fetch(project: str, request: DatasetFetchRequest) -> Dataset
             deduped.append(cat)
 
     job = _start_job(project, deduped, request.force, request.overrides)
+
+    write_audit_event(
+        db,
+        project_name=project,
+        actor=actor,
+        event_type="dataset_fetch.start",
+        payload={
+            "job_id": job.id,
+            "categories": deduped,
+            "force": bool(request.force),
+            "overrides": request.overrides or {},
+        },
+        required=True,
+    )
+
     return DatasetFetchJobResponse(job_id=job.id)
+
+
+@router.get("/dataset-jobs/active", response_model=ActiveDatasetJobsResponse)
+def get_active_dataset_jobs() -> ActiveDatasetJobsResponse:
+    """
+    Return currently active dataset fetch jobs keyed by project.
+
+    This is a lightweight endpoint used by the frontend to reflect backgrounded jobs and
+    to avoid stale UI state after navigation/reload.
+    """
+    active: Dict[str, ActiveDatasetJobInfo] = {}
+    with JOB_LOCK:
+        # Self-heal any stale active markers while we're here.
+        for project, job_id in list(PROJECT_ACTIVE_JOBS.items()):
+            job = JOB_REGISTRY.get(job_id)
+            if job is None or getattr(job, "status", None) in ("succeeded", "failed", "partial"):
+                PROJECT_ACTIVE_JOBS.pop(project, None)
+                continue
+            active[project] = ActiveDatasetJobInfo(
+                job_id=job.id,
+                status=job.status,
+                progress=float(job.progress or 0.0),
+                current_category=job.current_category,
+            )
+    return ActiveDatasetJobsResponse(active_jobs=active)
 
 
 @router.get("/dataset-jobs/{job_id}")
@@ -4142,7 +5619,12 @@ async def stream_dataset_job(job_id: str):
 
 
 @router.delete("/dataset-jobs/{job_id}", status_code=202)
-def cancel_dataset_job(job_id: str, cleanup: bool = True):
+def cancel_dataset_job(
+    job_id: str,
+    cleanup: bool = True,
+    actor: Dict[str, Any] = Depends(require_auth),
+    db: Session = Depends(get_db),
+):
     """
     Cancel a running dataset fetch job.
 
@@ -4150,40 +5632,65 @@ def cancel_dataset_job(job_id: str, cleanup: bool = True):
         job_id: The job ID to cancel
         cleanup: If True, attempts to delete incomplete/partial downloads
     """
+    project: Optional[str] = None
+    categories_to_cleanup: List[str] = []
+    noop = False
+    terminal = False
+
     with JOB_LOCK:
         job = JOB_REGISTRY.get(job_id)
         if not job:
             raise HTTPException(status_code=404, detail=f"Job '{job_id}' not found.")
-        if job.status in ("succeeded", "failed"):
-            return Response(status_code=204)
-        job.cancel_requested = True
-        job.error = job.error or "Cancelled by user"
-        job.status = "failed"  # Mark as failed immediately
-        job.completed_at = _utc_now()
-        job.updated_at = job.completed_at
-
-        # Store cleanup info before releasing lock
         project = job.project
-        categories_to_cleanup = []
-        if cleanup:
-            for category, state in job.category_states.items():
-                status = state.get("status")
-                if status in ("running", "queued", None):
-                    state["status"] = "cancelled"
-                    state["message"] = "Cancelled by user"
-                    state["completed_at"] = _utc_iso()
-                    categories_to_cleanup.append(category)
-                    # Also mark stages as cancelled
-                    stages = state.get("stages")
-                    if stages:
-                        for stage_state in stages.values():
-                            if stage_state.get("status") in ("running", "queued", None):
-                                stage_state["status"] = "cancelled"
-                                stage_state["message"] = "Cancelled by user"
-                                stage_state["completed_at"] = _utc_iso()
+        if job.status in ("succeeded", "failed"):
+            noop = True
+            terminal = True
+        else:
+            job.cancel_requested = True
+            job.error = job.error or "Cancelled by user"
+            job.status = "failed"  # Mark as failed immediately
+            job.completed_at = _utc_now()
+            job.updated_at = job.completed_at
 
-        # CRITICAL: Remove from active jobs so new jobs can start
-        PROJECT_ACTIVE_JOBS.pop(project, None)
+            # Store cleanup info before releasing lock
+            if cleanup:
+                for category, state in job.category_states.items():
+                    status = state.get("status")
+                    if status in ("running", "queued", None):
+                        state["status"] = "cancelled"
+                        state["message"] = "Cancelled by user"
+                        state["completed_at"] = _utc_iso()
+                        categories_to_cleanup.append(category)
+                        # Also mark stages as cancelled
+                        stages = state.get("stages")
+                        if stages:
+                            for stage_state in stages.values():
+                                if stage_state.get("status") in ("running", "queued", None):
+                                    stage_state["status"] = "cancelled"
+                                    stage_state["message"] = "Cancelled by user"
+                                    stage_state["completed_at"] = _utc_iso()
+
+            # CRITICAL: Remove from active jobs so new jobs can start
+            PROJECT_ACTIVE_JOBS.pop(project, None)
+
+    # Audit after releasing lock (DB I/O)
+    if project:
+        write_audit_event(
+            db,
+            project_name=project,
+            actor=actor,
+            event_type="dataset_fetch.cancel",
+            payload={
+                "job_id": job_id,
+                "cleanup": bool(cleanup),
+                "categories_to_cleanup": categories_to_cleanup,
+                "noop": bool(noop),
+            },
+            required=True,
+        )
+
+    if terminal:
+        return Response(status_code=204)
 
     # Cleanup incomplete downloads outside of lock
     if cleanup and categories_to_cleanup:

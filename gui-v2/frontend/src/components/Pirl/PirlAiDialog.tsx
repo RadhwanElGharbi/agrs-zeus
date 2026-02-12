@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useProject } from '@/lib/context/ProjectContext'
-import { listPirlOutputs, type PirlOutput, fetchPipelineSpecs, type PipelineSpecs, listPirlJobs, type PirlJob, type PirlJobCreateResponse } from '@/lib/api/dataClient'
+import { listPirlOutputs, type PirlOutput, fetchPipelineSpecs, updatePipelineSpecs, type PipelineSpecs, listPirlJobs, type PirlJob, type PirlJobCreateResponse } from '@/lib/api/dataClient'
 import {
   X, Brain, Settings2, DollarSign, Activity,
   ChevronRight, Play, RotateCcw, Save, Box,
@@ -323,6 +323,8 @@ export function PirlAiDialog({ open, onClose }: PirlAiDialogProps) {
   const [hydraulics, setHydraulics] = useState<HydraulicsData>(defaultHydraulics)
   const [costMatrix, setCostMatrix] = useState<CostMatrixData>(defaultCostMatrix)
   const [constraints, setConstraints] = useState<ConstraintsData>(defaultConstraints)
+  const pipelineAutoSaveSkipFirst = useRef(true)
+  const pipelineAutoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // 3D Viewer mode
   const [viewMode, setViewMode] = useState<ViewMode>('pipe')
@@ -379,11 +381,16 @@ export function PirlAiDialog({ open, onClose }: PirlAiDialogProps) {
               // Legacy/detailed format (Ravenna-Chieti style)
               outerDiameter = specs.diameter_mm
               wallThickness = specs.wall_thickness_mm ?? specs.thickness_mm ?? wallThickness
+              if (wallThickness === defaultHydraulics.mechanical.wallThickness && specs.inner_diameter_mm !== undefined) {
+                wallThickness = (specs.diameter_mm - specs.inner_diameter_mm) / 2
+              }
             } else if (specs.outer_diameter !== undefined) {
-              // New project format (meters, convert to mm)
-              outerDiameter = specs.outer_diameter * 1000
+              // New project format: base units depend on measurement_system (SI=m, Imperial=in)
+              const ms = (specs.measurement_system || '').toString().toLowerCase()
+              const factor = ms.startsWith('imp') ? 25.4 : 1000
+              outerDiameter = specs.outer_diameter * factor
               if (specs.inner_diameter !== undefined) {
-                wallThickness = (specs.outer_diameter - specs.inner_diameter) * 1000 / 2
+                wallThickness = (specs.outer_diameter - specs.inner_diameter) * factor / 2
               }
             }
 
@@ -445,6 +452,43 @@ export function PirlAiDialog({ open, onClose }: PirlAiDialogProps) {
     }
   }, [open, currentProject, loadJobs])
 
+  // Auto-save pipeline diameter/thickness edits back to pipeline_specs.json
+  useEffect(() => {
+    if (!open || !currentProject) return
+    if (!pipelineSpecs) return
+
+    // Don't auto-save immediately on initial load -> avoids unnecessary writes
+    if (pipelineAutoSaveSkipFirst.current) {
+      pipelineAutoSaveSkipFirst.current = false
+      return
+    }
+
+    const odMm = hydraulics.mechanical.outerDiameter
+    const wtMm = hydraulics.mechanical.wallThickness
+    if (!Number.isFinite(odMm) || !Number.isFinite(wtMm) || odMm <= 0 || wtMm <= 0) return
+    if (odMm <= 2 * wtMm) return
+
+    if (pipelineAutoSaveTimer.current) clearTimeout(pipelineAutoSaveTimer.current)
+    pipelineAutoSaveTimer.current = setTimeout(() => {
+      updatePipelineSpecs(currentProject, {
+        diameter_mm: odMm,
+        wall_thickness_mm: wtMm,
+      })
+        .then(updated => setPipelineSpecs(updated))
+        .catch(err => console.error('Failed to auto-save pipeline specs:', err))
+    }, 900)
+
+    return () => {
+      if (pipelineAutoSaveTimer.current) clearTimeout(pipelineAutoSaveTimer.current)
+    }
+  }, [
+    open,
+    currentProject,
+    pipelineSpecs,
+    hydraulics.mechanical.outerDiameter,
+    hydraulics.mechanical.wallThickness,
+  ])
+
   // Refresh jobs periodically when dialog is open
   useEffect(() => {
     if (!open || !currentProject) return
@@ -482,11 +526,12 @@ export function PirlAiDialog({ open, onClose }: PirlAiDialogProps) {
       }
 
       const apiBase = getApiBase()
+      const token = localStorage.getItem('agrs_token')
+      const headers: HeadersInit = { 'Content-Type': 'application/json' }
+      if (token) headers['Authorization'] = `Bearer ${token}`
       const response = await fetch(`${apiBase}/pirl/${currentProject}/requests`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify(formData),
       })
 

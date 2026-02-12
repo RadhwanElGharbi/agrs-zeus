@@ -12,7 +12,8 @@ import {
   previewAlignmentSheets,
   downloadAlignmentSheetsPDF,
   type AlignmentSheetPreset,
-  type AlignmentSheetPreviewResponse
+  type AlignmentSheetPreviewResponse,
+  type AlignmentSheetBaseMapMode
 } from '@/lib/api/dataClient'
 
 export interface LoadedRouteSummary {
@@ -72,6 +73,9 @@ export function RoutingRoutesPanel({
   const [alignmentError, setAlignmentError] = useState<string | null>(null)
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false)
   const [isLoadingPreview, setIsLoadingPreview] = useState(false)
+  const [showAlignmentAdvanced, setShowAlignmentAdvanced] = useState(false)
+  const [alignmentTemplate, setAlignmentTemplate] = useState<'auto' | 'feed_plan_profile_v1' | 'enbridge_monitoring_v0'>('auto')
+  const [alignmentBaseMap, setAlignmentBaseMap] = useState<'auto' | AlignmentSheetBaseMapMode>('auto')
 
   const formatRouteName = (routeId: string) => {
     // Keep stable: strip extension for display only.
@@ -147,7 +151,11 @@ export function RoutingRoutesPanel({
         const preview = await previewAlignmentSheets(
           currentProject,
           alignmentSheetRoute.replace('.geojson', ''),
-          alignmentPreset
+          alignmentPreset,
+          {
+            template_id: alignmentTemplate === 'auto' ? null : alignmentTemplate,
+            base_map: alignmentBaseMap === 'auto' ? null : alignmentBaseMap
+          }
         )
         setAlignmentPreview(preview)
       } catch (err) {
@@ -158,7 +166,7 @@ export function RoutingRoutesPanel({
     }
 
     fetchPreview()
-  }, [alignmentSheetRoute, alignmentPreset, currentProject])
+  }, [alignmentSheetRoute, alignmentPreset, alignmentTemplate, alignmentBaseMap, currentProject])
 
   const handleGeneratePDF = async () => {
     if (!alignmentSheetRoute || !currentProject) return
@@ -169,7 +177,12 @@ export function RoutingRoutesPanel({
       await downloadAlignmentSheetsPDF(
         currentProject,
         alignmentSheetRoute.replace('.geojson', ''),
-        alignmentPreset
+        alignmentPreset,
+        {
+          template_id: alignmentTemplate === 'auto' ? null : alignmentTemplate,
+          base_map: alignmentBaseMap === 'auto' ? null : alignmentBaseMap,
+          persist: true
+        }
       )
       setAlignmentSheetRoute(null)
     } catch (err) {
@@ -496,6 +509,68 @@ export function RoutingRoutesPanel({
                 </div>
               </div>
 
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setShowAlignmentAdvanced(v => !v)}
+                  className="text-[10px] uppercase text-white/50 hover:text-white/70 font-bold tracking-wider"
+                >
+                  {showAlignmentAdvanced ? 'Hide advanced options' : 'Show advanced options'}
+                </button>
+
+                {showAlignmentAdvanced && (
+                  <div className="mt-2 space-y-3">
+                    <div>
+                      <label className="text-[10px] uppercase text-white/40 font-bold tracking-wider mb-1.5 block">Template</label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {([
+                          { key: 'auto', label: 'auto' },
+                          { key: 'feed_plan_profile_v1', label: 'feed' },
+                          { key: 'enbridge_monitoring_v0', label: 'monitor' },
+                        ] as const).map((t) => (
+                          <button
+                            key={t.key}
+                            onClick={() => setAlignmentTemplate(t.key)}
+                            className={cn(
+                              "px-3 py-2 rounded border text-[10px] font-bold uppercase tracking-wider transition-colors",
+                              alignmentTemplate === t.key
+                                ? "bg-amber-500/20 border-amber-500/40 text-amber-300"
+                                : "bg-white/5 border-white/10 text-white/50 hover:bg-amber-500/10 hover:border-amber-500/20 hover:text-white"
+                            )}
+                          >
+                            {t.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] uppercase text-white/40 font-bold tracking-wider mb-1.5 block">Base map</label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {([
+                          { key: 'auto', label: 'auto' },
+                          { key: 'vector', label: 'vector' },
+                          { key: 'imagery', label: 'imagery' },
+                        ] as const).map((m) => (
+                          <button
+                            key={m.key}
+                            onClick={() => setAlignmentBaseMap(m.key as any)}
+                            className={cn(
+                              "px-3 py-2 rounded border text-[10px] font-bold uppercase tracking-wider transition-colors",
+                              alignmentBaseMap === m.key
+                                ? "bg-amber-500/20 border-amber-500/40 text-amber-300"
+                                : "bg-white/5 border-white/10 text-white/50 hover:bg-amber-500/10 hover:border-amber-500/20 hover:text-white"
+                            )}
+                          >
+                            {m.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <div className="p-3 bg-white/5 border border-white/10 rounded">
                 {isLoadingPreview ? (
                   <div className="flex items-center justify-center gap-2 text-[11px] text-white/50">
@@ -504,10 +579,24 @@ export function RoutingRoutesPanel({
                   </div>
                 ) : alignmentPreview ? (
                   <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-[11px]">
+                    {alignmentPreview.template_id && (
+                      <>
+                        <div className="text-white/40">Template</div>
+                        <div className="text-white font-mono text-right">{alignmentPreview.template_id}</div>
+                      </>
+                    )}
+                    {alignmentPreview.base_map && (
+                      <>
+                        <div className="text-white/40">Base map</div>
+                        <div className="text-white font-mono text-right">{alignmentPreview.base_map}</div>
+                      </>
+                    )}
                     <div className="text-white/40">Length</div>
                     <div className="text-white font-mono text-right">{(alignmentPreview.total_length_m / 1000).toFixed(1)} km</div>
                     <div className="text-white/40">Sheets</div>
                     <div className="text-white font-mono text-amber-400 text-right">{alignmentPreview.sheet_count} sheets</div>
+                    <div className="text-white/40">Sheet length</div>
+                    <div className="text-white font-mono text-right">{alignmentPreview.sheet_length_m.toFixed(0)} m</div>
                     <div className="text-white/40">H Scale</div>
                     <div className="text-white font-mono text-right">1:{alignmentPreview.h_scale}</div>
                     <div className="text-white/40">V Scale</div>

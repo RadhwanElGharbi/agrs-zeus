@@ -11,6 +11,7 @@ import {
   fetchVectorData,
   fetchNearestVectorFeatures,
   getTileUrl,
+  getVectorTileUrl,
   getTerrainTileUrl,
   getAoiFileUrl,
   fetchPIRLRouteCrossings,
@@ -64,9 +65,11 @@ import { AttributeTable } from './AttributeTable'
 import { PIRLAttributeTable } from './PIRLAttributeTable'
 import { StyleEditor } from './StyleEditor'
 import { ProjectDatasetsDialog } from './ProjectDatasetsDialog'
+import { DatasetDigitalTwinDialog } from './DatasetDigitalTwinDialog'
 import { Compass } from './Compass'
+import { GoToCoordinatesBar } from './GoToCoordinatesBar'
 import { ExplanationPanel, DecisionsPanel } from '@/components/Analysis'
-import { analyzeSegments, getSegmentDecisions, getAssessmentMapColor, type ExplainResponse, type AssessmentLevel, type SegmentDecisions } from '@/lib/api/agenticClient'
+import { analyzeSegments, getRouteDecisions, getSegmentDecisions, getAssessmentMapColor, type ExplainResponse, type AssessmentLevel, type SegmentDecisions } from '@/lib/api/agenticClient'
 import { useMapView, type OperatorGeometryKind } from '@/lib/context/MapViewContext'
 import { PirlRoutesManagerPanel } from './PirlRoutesManagerPanel'
 import { RouteCrossingsManagerPanel } from './RouteCrossingsManagerPanel'
@@ -87,9 +90,86 @@ const CREATOR_LAYER_LINE_ID = 'creator-line'
 const CREATOR_LAYER_POINT_ID = 'creator-points'
 const CREATOR_MANAGED_LAYER_ID = 'creator-annotations'
 
+// Sortie "where" preview overlay (shown while editing sorties)
+const SORTIE_PREVIEW_SOURCE_ID = 'sortie-preview'
+const SORTIE_PREVIEW_LAYER_FILL_ID = 'sortie-preview-fill'
+const SORTIE_PREVIEW_LAYER_LINE_ID = 'sortie-preview-line'
+const SORTIE_PREVIEW_LAYER_POINT_ID = 'sortie-preview-point'
+
 function svgCursor(svg: string, hotspotX: number, hotspotY: number, fallback: string): string {
   const encoded = encodeURIComponent(svg)
   return `url("data:image/svg+xml;charset=utf-8,${encoded}") ${hotspotX} ${hotspotY}, ${fallback}`
+}
+
+function geometryToFeatureCollection(geometry: GeoJSON.Geometry | null): GeoJSON.FeatureCollection {
+  const empty: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] }
+  if (!geometry || typeof geometry !== 'object') return empty
+
+  const features: GeoJSON.Feature[] = []
+
+  const pushGeometry = (g: any) => {
+    if (!g || typeof g !== 'object' || typeof g.type !== 'string') return
+
+    const type = String(g.type)
+    if (type === 'GeometryCollection') {
+      const geometries = Array.isArray(g.geometries) ? (g.geometries as any[]) : []
+      geometries.forEach(pushGeometry)
+      return
+    }
+
+    if (type === 'MultiPoint') {
+      const coords = Array.isArray(g.coordinates) ? (g.coordinates as any[]) : []
+      coords.forEach((pt) => {
+        if (!Array.isArray(pt) || pt.length < 2) return
+        features.push({
+          type: 'Feature',
+          id: `sortie-preview-${features.length}`,
+          properties: {},
+          geometry: { type: 'Point', coordinates: pt } as any
+        })
+      })
+      return
+    }
+
+    if (type === 'MultiLineString') {
+      const coords = Array.isArray(g.coordinates) ? (g.coordinates as any[]) : []
+      coords.forEach((line) => {
+        if (!Array.isArray(line) || line.length < 2) return
+        features.push({
+          type: 'Feature',
+          id: `sortie-preview-${features.length}`,
+          properties: {},
+          geometry: { type: 'LineString', coordinates: line } as any
+        })
+      })
+      return
+    }
+
+    if (type === 'MultiPolygon') {
+      const coords = Array.isArray(g.coordinates) ? (g.coordinates as any[]) : []
+      coords.forEach((poly) => {
+        if (!Array.isArray(poly) || poly.length < 1) return
+        features.push({
+          type: 'Feature',
+          id: `sortie-preview-${features.length}`,
+          properties: {},
+          geometry: { type: 'Polygon', coordinates: poly } as any
+        })
+      })
+      return
+    }
+
+    // Assume it's already a valid single-geometry GeoJSON object.
+    features.push({
+      type: 'Feature',
+      id: `sortie-preview-${features.length}`,
+      properties: {},
+      geometry: g as GeoJSON.Geometry
+    })
+  }
+
+  pushGeometry(geometry as any)
+  return { type: 'FeatureCollection', features }
 }
 
 // Distinct cursors for Operator "Create POI" vs "Create AOI"
@@ -190,6 +270,11 @@ type CreatorGeometryEditState = {
   y: number
 } | null
 
+type CreatorThreadEntryDetailsState = {
+  entryId: string
+  record: any
+} | null
+
 const CATEGORY_FIELD_DEFS: Record<
   CreatorCategory,
   { key: string; label: string; placeholder: string }[]
@@ -222,9 +307,16 @@ const CATEGORY_FIELD_DEFS: Record<
 
 export function MapViewer() {
   const { currentProject, datasets, isProjectLoading, hasNewDatasets, refreshProjectData, dismissNewDatasets } = useProject()
-  const { mapMode, setMapMode, registerGisActions, registerOperatorActions, registerRoutingActions, setOperatorUiState, operatorDialogs } = useMapView()
+  const { mapMode, setMapMode, registerGisActions, registerOperatorActions, registerRoutingActions, setOperatorUiState, operatorDialogs, sortiePreviewGeometry } =
+    useMapView()
   const mapContainerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
+  const goToMarkerRef = useRef<any | null>(null)
+  const goToMarkerTimeoutsRef = useRef<{ fade: ReturnType<typeof setTimeout> | null; remove: ReturnType<typeof setTimeout> | null }>({
+    fade: null,
+    remove: null
+  })
+  const goToMarkerRequestIdRef = useRef(0)
   const creatorPopoverRef = useRef<HTMLDivElement | null>(null)
   const creatorPopoverDragRef = useRef<{
     pointerId: number
@@ -289,6 +381,8 @@ export function MapViewer() {
   const [styleOverrides, setStyleOverrides] = useState<Record<string, LayerStyleOptions>>({})
   const [cursorPosition, setCursorPosition] = useState<{ lng: number; lat: number } | null>(null)
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; lat: number; lng: number } | null>(null)
+  const [goToCoordinatesOpen, setGoToCoordinatesOpen] = useState(false)
+  const [goToCoordinatesSeed, setGoToCoordinatesSeed] = useState<{ lng: number; lat: number } | null>(null)
   const [identifyPopup, setIdentifyPopup] = useState<IdentifyPopupState | null>(null)
   const [cursorElevation, setCursorElevation] = useState<CursorElevationState>({ value: null, status: 'idle' })
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' } | null>(null)
@@ -309,6 +403,7 @@ export function MapViewer() {
   const [creatorGeometryConfirm, setCreatorGeometryConfirm] = useState<CreatorGeometryConfirmState | null>(null)
   const [creatorGeometryEdit, setCreatorGeometryEdit] = useState<CreatorGeometryEditState>(null)
   const [selectedCreatorEntryId, setSelectedCreatorEntryId] = useState<string | null>(null)
+  const [creatorThreadEntryDetails, setCreatorThreadEntryDetails] = useState<CreatorThreadEntryDetailsState>(null)
   const [creatorEntryUi, setCreatorEntryUi] = useState<Record<string, { visible: boolean; opacity: number; order: number }>>({})
   const [creatorManagerCollapsed, setCreatorManagerCollapsed] = useState(false)
   const [creatorDatasetQuery, setCreatorDatasetQuery] = useState('')
@@ -340,6 +435,9 @@ export function MapViewer() {
   const [showRoutesDialog, setShowRoutesDialog] = useState(false)
   const [loadedPirlRoutes, setLoadedPirlRoutes] = useState<{ routeId: string; visible: boolean; segmentCount: number }[]>([])
   const [routeCrossingsByRouteId, setRouteCrossingsByRouteId] = useState<Record<string, RouteCrossingRecord[]>>({})
+  // Keep the actual GeoJSON objects around so we can update per-segment styling flags (e.g., violations)
+  // without changing the underlying route geometry files.
+  const loadedRouteGeojsonByRouteIdRef = useRef<Record<string, GeoJSON.FeatureCollection>>({})
   const [hiddenCrossingCategories, setHiddenCrossingCategories] = useState<Record<string, boolean>>({})
   const [hiddenCrossingKeys, setHiddenCrossingKeys] = useState<Record<string, boolean>>({})
   const [crossingsManagerOpen, setCrossingsManagerOpen] = useState(false)
@@ -400,6 +498,7 @@ export function MapViewer() {
   const [pirlTableRouteId, setPirlTableRouteId] = useState<string | null>(null)
   const [pirlTableDocked, setPirlTableDocked] = useState(false)
   const [datasetsDialogOpen, setDatasetsDialogOpen] = useState(false)
+  const [datasetDigitalTwinOpen, setDatasetDigitalTwinOpen] = useState(false)
   const [datasetsDialogDocked, setDatasetsDialogDocked] = useState(false)
   const [creatorEditorDocked, setCreatorEditorDocked] = useState(false)
 
@@ -507,11 +606,24 @@ export function MapViewer() {
 
   const loadNearestDatasetFeatures = useCallback(async () => {
     if (!currentProject || !creatorEditor) return
-    const datasetName = datasetFeatureDataset.trim()
-    if (!datasetName) return
+    const vectorNames = creatorEditor.datasets.filter((d) => d.type === 'vector').map((d) => d.name)
+    const datasetName = datasetFeatureDataset.trim() || (vectorNames.length > 0 ? String(vectorNames[0]) : '')
+    if (!datasetName) {
+      setDatasetFeatureError('Select a vector dataset first.')
+      return
+    }
+    // If we had to fall back, keep state in sync with what we're querying.
+    if (datasetName !== datasetFeatureDataset) {
+      setDatasetFeatureDataset(datasetName)
+    }
+    if (!creatorEditor.geometryWgs84) {
+      setDatasetFeatureError('Entry geometry is missing. Draw an AOI/POI geometry first.')
+      return
+    }
     const loadId = ++datasetFeatureLoadIdRef.current
     setDatasetFeatureLoading(true)
     setDatasetFeatureError(null)
+    setDatasetFeatureInspect(null)
     try {
       const res = await fetchNearestVectorFeatures(currentProject, datasetName, creatorEditor.geometryWgs84, 50)
       if (datasetFeatureLoadIdRef.current !== loadId) return
@@ -581,6 +693,7 @@ export function MapViewer() {
       setDatasetFeatureDataset(vectorNames[0])
       setDatasetFeatureCandidates(null)
       setDatasetFeatureInspect(null)
+      setDatasetFeatureError(null)
     }
   }, [creatorEditor, datasetFeatureDataset])
   const demAvailable = Boolean(currentProject && demLayerName)
@@ -811,7 +924,10 @@ export function MapViewer() {
         type: 'raster',
         tiles: ['https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
         tileSize: 256,
-        maxzoom: 23,
+        // Esri World Imagery can return "Map Data not available" placeholder tiles above the
+        // highest populated zoom level in some regions. Setting maxzoom makes MapLibre overzoom
+        // (scale) the last available tiles instead of requesting missing ones.
+        maxzoom: 17,
         attribution: 'Esri, Maxar, Earthstar Geographics'
       })
     }
@@ -822,7 +938,8 @@ export function MapViewer() {
           'https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}'
         ],
         tileSize: 256,
-        maxzoom: 23,
+        // Keep label requests aligned with imagery overzoom behavior.
+        maxzoom: 17,
         attribution: 'Esri'
       })
     }
@@ -1706,6 +1823,87 @@ export function MapViewer() {
     []
   )
 
+  const ensureSortiePreviewLayers = useCallback((featureCollection: GeoJSON.FeatureCollection) => {
+    const map = mapRef.current
+    if (!map) return
+
+    const existing = map.getSource(SORTIE_PREVIEW_SOURCE_ID) as any
+    if (existing?.setData) {
+      existing.setData(featureCollection as any)
+    } else {
+      map.addSource(SORTIE_PREVIEW_SOURCE_ID, {
+        type: 'geojson',
+        data: featureCollection as any
+      })
+    }
+
+    const ensureLayer = (id: string, layer: any) => {
+      if (!map.getLayer(id)) {
+        map.addLayer(layer)
+      }
+    }
+
+    // Polygon/area preview
+    ensureLayer(SORTIE_PREVIEW_LAYER_FILL_ID, {
+      id: SORTIE_PREVIEW_LAYER_FILL_ID,
+      type: 'fill',
+      source: SORTIE_PREVIEW_SOURCE_ID,
+      filter: ['in', '$type', 'Polygon', 'MultiPolygon'],
+      paint: {
+        'fill-color': '#10b981',
+        'fill-opacity': 0.18,
+        'fill-outline-color': '#10b981'
+      }
+    })
+
+    // Line (polygons + line strings)
+    ensureLayer(SORTIE_PREVIEW_LAYER_LINE_ID, {
+      id: SORTIE_PREVIEW_LAYER_LINE_ID,
+      type: 'line',
+      source: SORTIE_PREVIEW_SOURCE_ID,
+      filter: ['in', '$type', 'Polygon', 'MultiPolygon', 'LineString', 'MultiLineString'],
+      paint: {
+        'line-color': '#10b981',
+        'line-width': 3,
+        'line-opacity': 0.95
+      }
+    })
+
+    // Point preview
+    ensureLayer(SORTIE_PREVIEW_LAYER_POINT_ID, {
+      id: SORTIE_PREVIEW_LAYER_POINT_ID,
+      type: 'circle',
+      source: SORTIE_PREVIEW_SOURCE_ID,
+      filter: ['in', '$type', 'Point', 'MultiPoint'],
+      paint: {
+        'circle-radius': 7,
+        'circle-color': '#10b981',
+        'circle-stroke-width': 2,
+        'circle-stroke-color': '#000000',
+        'circle-opacity': 0.95
+      }
+    })
+
+    // Keep it above other content; order matters (fill -> line -> point).
+    ;[SORTIE_PREVIEW_LAYER_FILL_ID, SORTIE_PREVIEW_LAYER_LINE_ID, SORTIE_PREVIEW_LAYER_POINT_ID].forEach((layerId) => {
+      if (map.getLayer(layerId)) {
+        map.moveLayer(layerId)
+      }
+    })
+  }, [])
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || !mapLoaded) return
+
+    const hasSource = Boolean(map.getSource(SORTIE_PREVIEW_SOURCE_ID))
+    const shouldShow = Boolean(sortiePreviewGeometry)
+    if (!shouldShow && !hasSource) return
+
+    const fc = shouldShow ? geometryToFeatureCollection(sortiePreviewGeometry) : ({ type: 'FeatureCollection', features: [] } as any)
+    ensureSortiePreviewLayers(fc)
+  }, [ensureSortiePreviewLayers, mapLoaded, mapMode, sortiePreviewGeometry])
+
   const refreshCreatorLayer = useCallback(async () => {
     if (!currentProject) return
     try {
@@ -1942,6 +2140,18 @@ export function MapViewer() {
     if (!bounds) return
     map.fitBounds(bounds, { padding: 80, duration: 800 })
   }, [creatorFeatureById])
+
+  const handleZoomToGeoJSON = useCallback((geojson: GeoJSON.Geometry | GeoJSON.Feature | GeoJSON.FeatureCollection) => {
+    const map = mapRef.current
+    if (!map || !geojson) return
+    const bounds = getGeoJSONBounds(geojson as any)
+    if (!bounds) return
+    map.fitBounds(bounds as any, {
+      padding: 80,
+      duration: 800,
+      maxZoom: Math.min(map.getMaxZoom(), 18)
+    })
+  }, [])
 
   const ensureCreatorDraw = useCallback(() => {
     const map = mapRef.current
@@ -2243,14 +2453,17 @@ export function MapViewer() {
     registerOperatorActions({
       startTool: (tool) => startCreatorTool(tool),
       cancel: cancelCreatorTool,
-      captureGeometry: captureOperatorGeometry
+      captureGeometry: captureOperatorGeometry,
+      zoomToCreatorEntry: handleZoomToCreatorEntry,
+      zoomToGeoJSON: handleZoomToGeoJSON
     })
-  }, [cancelCreatorTool, captureOperatorGeometry, registerOperatorActions, startCreatorTool])
+  }, [cancelCreatorTool, captureOperatorGeometry, handleZoomToCreatorEntry, handleZoomToGeoJSON, registerOperatorActions, startCreatorTool])
 
   // Register GIS actions so the global Header can open dataset tooling.
   useEffect(() => {
     registerGisActions({
-      openDatasetIndex: () => setDatasetsDialogOpen(true)
+      openDatasetIndex: () => setDatasetsDialogOpen(true),
+      openDatasetDigitalTwin: () => setDatasetDigitalTwinOpen(true)
     })
   }, [registerGisActions])
 
@@ -2342,6 +2555,32 @@ export function MapViewer() {
       }
     }
 
+    // Keep Sortie preview overlay above managed layers (but still below crossings icons).
+    try {
+      if (map.getLayer(SORTIE_PREVIEW_LAYER_FILL_ID)) map.moveLayer(SORTIE_PREVIEW_LAYER_FILL_ID)
+      if (map.getLayer(SORTIE_PREVIEW_LAYER_LINE_ID)) map.moveLayer(SORTIE_PREVIEW_LAYER_LINE_ID)
+      if (map.getLayer(SORTIE_PREVIEW_LAYER_POINT_ID)) map.moveLayer(SORTIE_PREVIEW_LAYER_POINT_ID)
+    } catch {
+      // ignore
+    }
+
+    // Ensure MapboxDraw layers stay visible (layer ordering can bury them under managed layers).
+    try {
+      const style = map.getStyle()
+      const drawLayerIds =
+        style?.layers
+          ?.map(l => String((l as any)?.id ?? ''))
+          .filter(id => id.startsWith('gl-draw-') || id.startsWith('mapbox-gl-draw-')) ?? []
+      // Move in style order to preserve relative draw layer ordering.
+      for (const drawLayerId of drawLayerIds) {
+        if (drawLayerId && map.getLayer(drawLayerId)) {
+          map.moveLayer(drawLayerId)
+        }
+      }
+    } catch {
+      // ignore
+    }
+
     // Keep Route Crossings overlays above everything else (icons must not be buried by layer reordering).
     try {
       if (map.getLayer(ROUTE_CROSSINGS_LAYER_SHADOW_ID)) {
@@ -2423,13 +2662,17 @@ export function MapViewer() {
       if (!projectName) return null
       const expectedLoadId = options?.loadId
 
-      const geojson = await fetchVectorData(projectName, dataset.name)
+      // Large vectors (e.g., NHN waterways) cannot be loaded as full GeoJSON in MapLibre.
+      // Use MVT vector tiles for performance + stability.
+      const meta: any = (dataset as any)?.metadata || {}
+      const fileSizeBytes = typeof meta?.file_size_bytes === 'number' ? Number(meta.file_size_bytes) : null
+      const useVectorTiles = !isAoi && fileSizeBytes !== null && fileSizeBytes > 50 * 1024 * 1024
+
+      const sourceId = `vector-${dataset.name}`
 
       // If a newer project layer load has started since this request began, ignore.
       if (expectedLoadId !== undefined && projectLayersLoadIdRef.current !== expectedLoadId) return null
       if (currentProjectRef.current !== projectName) return null
-
-      const sourceId = `vector-${dataset.name}`
 
       const removeLayerSafely = (layerId: string) => {
         if (!map.getLayer(layerId)) return
@@ -2473,15 +2716,78 @@ export function MapViewer() {
       if (expectedLoadId !== undefined && projectLayersLoadIdRef.current !== expectedLoadId) return null
       if (currentProjectRef.current !== projectName) return null
 
+      const layerIds: string[] = []
+      const color = isAoi ? '#2563eb' : colorForLayer(dataset.name)
+
+      // Fast path: MVT tiles for huge vectors
+      if (useVectorTiles) {
+        map.addSource(sourceId, {
+          type: 'vector',
+          tiles: [getVectorTileUrl(projectName, dataset.name)],
+          minzoom: 0,
+          maxzoom: 11
+        } as any)
+        dynamicSourceIdsRef.current.push(sourceId)
+
+        const lineLayerId = `${sourceId}-line`
+        map.addLayer({
+          id: lineLayerId,
+          type: 'line',
+          source: sourceId,
+          // Must match backend tileset layer name (we set it to the requested dataset name).
+          'source-layer': dataset.name,
+          paint: {
+            'line-color': color,
+            'line-width': 1.8,
+            'line-opacity': 0.9
+          }
+        } as any)
+        layerIds.push(lineLayerId)
+        dynamicLayerIdsRef.current.push(...layerIds)
+
+        const bbox = meta?.bbox_wgs84
+        const bounds =
+          bbox &&
+          typeof bbox.west === 'number' &&
+          typeof bbox.south === 'number' &&
+          typeof bbox.east === 'number' &&
+          typeof bbox.north === 'number'
+            ? ([[[bbox.west, bbox.south], [bbox.east, bbox.north]]] as any)[0]
+            : null
+
+        const featureCount = typeof meta?.feature_count === 'number' ? Number(meta.feature_count) : undefined
+
+        const vectorDetail: VectorDetail = {
+          properties: [],
+          sample: [],
+          rows: [],
+          features: []
+        }
+
+        return {
+          sourceId,
+          layerIds,
+          geometryType: 'line',
+          bounds,
+          vectorDetail,
+          featureCount
+        }
+      }
+
+      // Default: load full GeoJSON for small vectors
+      const geojson = await fetchVectorData(projectName, dataset.name)
+
+      // If a newer project layer load has started since this request began, ignore.
+      if (expectedLoadId !== undefined && projectLayersLoadIdRef.current !== expectedLoadId) return null
+      if (currentProjectRef.current !== projectName) return null
+
       map.addSource(sourceId, {
         type: 'geojson',
         data: geojson as any
       })
       dynamicSourceIdsRef.current.push(sourceId)
 
-      const layerIds: string[] = []
       const geometryType = inferGeometryType(geojson)
-      const color = isAoi ? '#2563eb' : colorForLayer(dataset.name)
       const bounds = getGeoJSONBounds(geojson)
 
       if (geometryType === 'polygon' || geometryType === 'mixed') {
@@ -3289,6 +3595,136 @@ export function MapViewer() {
     }
   }
 
+  const handleGoToCoordinates = useCallback((lng: number, lat: number) => {
+    const map = mapRef.current
+    if (!map) return
+
+    const targetZoom = Math.max(map.getZoom(), 16)
+
+    goToMarkerRequestIdRef.current += 1
+    const requestId = goToMarkerRequestIdRef.current
+
+    const clearExistingMarker = () => {
+      const timeouts = goToMarkerTimeoutsRef.current
+      if (timeouts.fade) {
+        clearTimeout(timeouts.fade)
+        timeouts.fade = null
+      }
+      if (timeouts.remove) {
+        clearTimeout(timeouts.remove)
+        timeouts.remove = null
+      }
+
+      if (goToMarkerRef.current) {
+        try {
+          goToMarkerRef.current.remove()
+        } catch {
+          // no-op
+        }
+        goToMarkerRef.current = null
+      }
+    }
+
+    // If a previous GOTO marker exists, clear it immediately.
+    clearExistingMarker()
+
+    // Some environments can make `flyTo` resolve immediately (e.g. reduced motion).
+    // Register the completion handler BEFORE calling flyTo, and keep a timeout fallback.
+    let dropped = false
+    let fallback: ReturnType<typeof setTimeout> | null = null
+
+    const dropMarker = () => {
+      if (dropped) return
+      dropped = true
+
+      if (fallback) {
+        clearTimeout(fallback)
+        fallback = null
+      }
+      map.off('moveend', onMoveEnd)
+
+      if (goToMarkerRequestIdRef.current !== requestId) return
+
+      void (async () => {
+        try {
+          const maplibreModule = await import('maplibre-gl')
+          if (goToMarkerRequestIdRef.current !== requestId) return
+
+          const el = document.createElement('div')
+          el.style.position = 'absolute'
+          el.style.width = '26px'
+          el.style.height = '26px'
+          el.style.borderRadius = '9999px'
+          el.style.boxSizing = 'border-box'
+          el.style.border = '2px solid rgba(255,255,255,0.85)'
+          el.style.background = 'rgba(0,0,0,0.25)'
+          el.style.boxShadow = '0 0 22px rgba(0,0,0,0.65), inset 0 0 0 2px hsl(var(--primary))'
+          el.style.opacity = '1'
+          el.style.pointerEvents = 'none'
+          el.style.zIndex = '999'
+
+          const dot = document.createElement('div')
+          dot.style.position = 'absolute'
+          dot.style.left = '50%'
+          dot.style.top = '50%'
+          dot.style.width = '6px'
+          dot.style.height = '6px'
+          dot.style.borderRadius = '9999px'
+          dot.style.transform = 'translate(-50%, -50%)'
+          dot.style.background = 'rgba(255,255,255,0.9)'
+          dot.style.boxShadow = '0 0 10px rgba(0,0,0,0.55)'
+          el.appendChild(dot)
+
+          // Ensure we don't keep an older marker around if multiple completions fired.
+          clearExistingMarker()
+
+          const marker = new maplibreModule.Marker({ element: el, anchor: 'center' }).setLngLat([lng, lat]).addTo(map)
+          goToMarkerRef.current = marker
+
+          // Fade out and remove within 10 seconds.
+          goToMarkerTimeoutsRef.current.fade = setTimeout(() => {
+            el.style.transition = 'opacity 9000ms ease-out'
+            requestAnimationFrame(() => {
+              el.style.opacity = '0'
+            })
+          }, 1000)
+
+          goToMarkerTimeoutsRef.current.remove = setTimeout(() => {
+            try {
+              marker.remove()
+            } catch {
+              // no-op
+            }
+            if (goToMarkerRef.current === marker) goToMarkerRef.current = null
+            goToMarkerTimeoutsRef.current.fade = null
+            goToMarkerTimeoutsRef.current.remove = null
+          }, 10000)
+        } catch (e) {
+          console.error('Failed to render GOTO marker:', e)
+        }
+      })()
+    }
+
+    const onMoveEnd = () => {
+      dropMarker()
+    }
+
+    map.on('moveend', onMoveEnd)
+
+    map.flyTo({
+      center: [lng, lat],
+      zoom: targetZoom,
+      duration: 1200,
+      essential: true
+    })
+    setToast({ message: 'Zoomed to Coordinates', type: 'info' })
+
+    // Fallback in case we don't get a moveend (or it already fired).
+    fallback = setTimeout(() => {
+      dropMarker()
+    }, 1400)
+  }, [])
+
   const handleRefreshAll = () => {
     imageryFailedRef.current = false
     setFallbackOpacity(BASEMAP_FALLBACK_DEFAULT_OPACITY)
@@ -3526,6 +3962,41 @@ export function MapViewer() {
     }
     if (fitBounds) {
       const bounds = featureBounds(feature)
+      if (bounds) {
+        map.fitBounds(bounds as any, { padding: 60, duration: 350, maxZoom: Math.min(map.getMaxZoom(), 18) })
+      }
+    }
+  }, [ensureHighlightLayers])
+
+  const showGeojsonHighlight = useCallback((geojson: any, fitBounds: boolean = true) => {
+    const map = mapRef.current
+    if (!map || !geojson) return
+    ensureHighlightLayers()
+    // Keep highlight above all other layers.
+    // Order matters: fill -> line -> point so points render on top.
+    highlightLayerIds.current.forEach((layerId) => {
+      if (map.getLayer(layerId)) {
+        map.moveLayer(layerId)
+      }
+    })
+
+    let fc: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] }
+    if (geojson?.type === 'FeatureCollection' && Array.isArray(geojson.features)) {
+      fc = geojson as GeoJSON.FeatureCollection
+    } else if (geojson?.type === 'Feature' && geojson?.geometry) {
+      fc = { type: 'FeatureCollection', features: [geojson as GeoJSON.Feature] }
+    } else if (geojson?.type) {
+      // Assume Geometry
+      fc = geometryToFeatureCollection(geojson as GeoJSON.Geometry)
+    }
+
+    const source = map.getSource(highlightSourceId.current) as any
+    if (source?.setData) {
+      source.setData(fc as any)
+    }
+
+    if (fitBounds) {
+      const bounds = getGeoJSONBounds(fc as any)
       if (bounds) {
         map.fitBounds(bounds as any, { padding: 60, duration: 350, maxZoom: Math.min(map.getMaxZoom(), 18) })
       }
@@ -4205,16 +4676,50 @@ export function MapViewer() {
     // Add source
     map.addSource(sourceId, {
       type: 'geojson',
-      data: geojson as any
+      data: geojson as any,
+      // Important: keep routes visible when zoomed far out.
+      // MapLibre's GeoJSON source is internally tiled + simplified; with highly segmented routes,
+      // aggressive simplification at low zoom can drop tiny segments entirely (routes appear to "vanish"
+      // around zoom ~6). Disabling simplification ensures the geometry continues to render at any zoom.
+      tolerance: 0
     })
 
+    // Keep a reference so we can later inject per-segment flags (e.g., constraint violations)
+    // and update the MapLibre source without mutating route files on disk.
+    loadedRouteGeojsonByRouteIdRef.current[routeId] = geojson
+
     // Add line layer for segments
+    // Render violating segments in red while keeping the rest of the route purple.
+    //
+    // "Violations" are derived from per-segment properties embedded in the route GeoJSON.
+    // We support both:
+    // - `constraint_violation` (injected from decisions sidecar, best signal)
+    // - fallback heuristics from existing segment properties (slope_percent / landcover)
+    //
+    // This does not alter route geometry and should not affect other behaviors.
+    const violatingSegmentColorExpr = [
+      'case',
+      [
+        'any',
+        // Preferred: explicit per-segment violation flag (populated asynchronously from decisions sidecar)
+        ['==', ['get', 'constraint_violation'], true],
+        // Slope violation (pipeline_specs max_slope_percent for this project is 20)
+        ['>', ['to-number', ['coalesce', ['get', 'slope_percent'], 0]], 20],
+        // Built-up violation (ESA WorldCover class 50)
+        ['==', ['to-number', ['coalesce', ['get', 'land_cover_class'], 0]], 50],
+        // Some datasets encode as name instead of numeric class
+        ['==', ['get', 'land_cover_name'], 'built_up']
+      ],
+      '#ef4444', // red
+      '#a855f7'  // purple
+    ] as any
+
     map.addLayer({
       id: lineLayerId,
       type: 'line',
       source: sourceId,
       paint: {
-        'line-color': '#a855f7',
+        'line-color': violatingSegmentColorExpr,
         'line-width': 4,
         'line-opacity': 0.9
       }
@@ -4262,6 +4767,64 @@ export function MapViewer() {
         })
         .catch((err) => {
           console.warn(`Failed to fetch crossings for route ${routeId}`, err)
+        })
+
+      // Fetch full route decisions (segment-level compliance) and mark violating segments for red styling.
+      // The agentic framework uses route IDs without the .geojson suffix.
+      const decisionsRouteId = routeId.endsWith('.geojson') ? routeId.slice(0, -'.geojson'.length) : routeId
+      getRouteDecisions(decisionsRouteId, projectName)
+        .then((decisions) => {
+          const segs = (decisions as any)?.segment_decisions
+          if (!Array.isArray(segs) || segs.length === 0) return
+
+          // Build set of segment_ids that are non-compliant in any category.
+          const violating = new Set<string>()
+          for (const s of segs) {
+            if (!s || typeof s !== 'object') continue
+            const sid = (s as any).segment_id
+            if (sid === null || sid === undefined) continue
+            const blocks = ['slope', 'land_cover', 'soil', 'seismic', 'crossings', 'construction']
+            let bad = false
+            for (const key of blocks) {
+              const v = (s as any)[key]
+              if (v && typeof v === 'object' && (v as any).compliant === false) {
+                bad = true
+                break
+              }
+            }
+            if (bad) violating.add(String(sid))
+          }
+
+          if (violating.size === 0) return
+          if (currentProjectRef.current !== projectName) return
+
+          // Update the in-memory GeoJSON used by the map source.
+          const currentGeo = loadedRouteGeojsonByRouteIdRef.current[routeId]
+          if (!currentGeo || !Array.isArray((currentGeo as any).features)) return
+
+          let changed = false
+          for (const feat of (currentGeo as any).features) {
+            if (!feat || typeof feat !== 'object') continue
+            const props = (feat.properties && typeof feat.properties === 'object') ? feat.properties : {}
+            const rawSid =
+              props.segment_id ?? props.segmentId ?? props.SEGMENT_ID ?? props.id ?? feat.id ?? null
+            if (rawSid === null || rawSid === undefined) continue
+            const isBad = violating.has(String(rawSid))
+            if (props.constraint_violation !== isBad) {
+              props.constraint_violation = isBad
+              feat.properties = props
+              changed = true
+            }
+          }
+
+          if (!changed) return
+          const src = map.getSource(sourceId) as any
+          if (src && typeof src.setData === 'function') {
+            src.setData(currentGeo as any)
+          }
+        })
+        .catch((err) => {
+          console.warn(`Failed to fetch decisions for route ${routeId}`, err)
         })
     }
 
@@ -4337,10 +4900,18 @@ export function MapViewer() {
       return next
     })
 
+    // Remove stored GeoJSON reference for this route
+    try {
+      delete loadedRouteGeojsonByRouteIdRef.current[routeId]
+    } catch {
+      // ignore
+    }
+
     setToast({ message: `Route "${routeId}" removed`, type: 'info' })
   }, [])
 
-  // Route Crossings overlay (floating markers): show crossings for loaded + visible routes in Routing Mode.
+  // Route Crossings overlay (floating markers): show crossings for loaded + visible routes in all modes
+  // (GIS, Operator, Routing). Interaction (click-to-open details) can still be mode-gated elsewhere.
   useEffect(() => {
     if (!mapReady || !mapRef.current) return
     const map = mapRef.current
@@ -4478,9 +5049,8 @@ export function MapViewer() {
       // ignore
     }
 
-    // Keep crossings available in Operator Mode as well so operators can annotate around crossings
-    // without having to switch modes (visibility + filters still apply).
-    const desired = mapMode === 'routing' || mapMode === 'operator' ? 'visible' : 'none'
+    // Crossings markers should be visible in all modes.
+    const desired: 'visible' | 'none' = 'visible'
     if (map.getLayer(ROUTE_CROSSINGS_LAYER_SHADOW_ID)) {
       map.setLayoutProperty(ROUTE_CROSSINGS_LAYER_SHADOW_ID, 'visibility', desired)
     }
@@ -4490,11 +5060,6 @@ export function MapViewer() {
 
     const src = map.getSource(ROUTE_CROSSINGS_SOURCE_ID) as any
     if (!src || typeof src.setData !== 'function') return
-
-    if (desired === 'none') {
-      src.setData(empty as any)
-      return
-    }
 
     const visibleRouteIds = new Set(loadedPirlRoutes.filter(r => r.visible).map(r => r.routeId))
     const features: any[] = []
@@ -5060,6 +5625,14 @@ export function MapViewer() {
         />
       )}
 
+      {currentProject && mapMode === 'gis' && (
+        <DatasetDigitalTwinDialog
+          open={datasetDigitalTwinOpen}
+          onClose={() => setDatasetDigitalTwinOpen(false)}
+          projectName={currentProject}
+        />
+      )}
+
       {currentProject && mapMode === 'gis' && fullTableLayer && fullTableDetails && (
         <AttributeTable
           layer={fullTableLayer}
@@ -5234,6 +5807,13 @@ export function MapViewer() {
             </div>
         </div>
       </div>
+
+      <GoToCoordinatesBar
+        open={goToCoordinatesOpen}
+        seed={goToCoordinatesSeed}
+        onClose={() => setGoToCoordinatesOpen(false)}
+        onGoTo={handleGoToCoordinates}
+      />
 
       {/* New Datasets Available Notification */}
       {hasNewDatasets && (
@@ -5457,7 +6037,7 @@ export function MapViewer() {
               'relative bg-[#0a0a0a]/95 border border-white/10 shadow-[0_0_50px_-10px_rgba(0,0,0,0.8)] flex flex-col pointer-events-auto overflow-hidden font-mono',
               creatorEditorDocked
                 ? 'w-full rounded-none border-x-0 border-b-0'
-                : 'w-[900px] max-w-[95vw] max-h-[90vh] rounded-sm'
+                : 'w-[900px] max-w-[95vw] h-[95vh] max-h-[95vh] rounded-sm'
             )}
             style={
               creatorEditorDocked
@@ -6069,7 +6649,8 @@ export function MapViewer() {
                                       </label>
                                       <div className="flex items-center gap-2 shrink-0">
                                         <span className="text-[9px] font-mono text-white/40 whitespace-nowrap">
-                                          {cand.within_aoi ? 'in' : 'out'} · {Math.round(cand.distance_m)}m
+                                          {creatorEditor.entryType === 'AOI' ? `${cand.within_aoi ? 'in' : 'out'} · ` : ''}
+                                          {Math.round(cand.distance_m)}m
                                         </span>
                                         <button
                                           type="button"
@@ -6334,6 +6915,73 @@ export function MapViewer() {
                       )}
                     </div>
 
+                    {/* Linked Dataset Features (read-only) */}
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="text-[10px] font-mono text-white/40 uppercase tracking-widest">Linked Features</div>
+                        {(() => {
+                          const linked = Array.isArray(creatorEditor.datasetFeatures) ? creatorEditor.datasetFeatures : []
+                          const feats = linked
+                            .map((df: any) => df?.feature)
+                            .filter((f: any) => f && typeof f === 'object' && f.type === 'Feature' && f.geometry)
+                          if (feats.length === 0) return null
+                          const fc = { type: 'FeatureCollection', features: feats }
+                          return (
+                            <button
+                              type="button"
+                              onClick={() => showGeojsonHighlight(fc)}
+                              className="text-[10px] font-mono text-amber-300 hover:text-amber-200 underline underline-offset-2"
+                              title="Zoom to all linked dataset features"
+                            >
+                              Zoom all
+                            </button>
+                          )
+                        })()}
+                      </div>
+
+                      {(() => {
+                        const linked = Array.isArray(creatorEditor.datasetFeatures) ? creatorEditor.datasetFeatures : []
+                        if (linked.length === 0) {
+                          return <div className="text-xs font-mono text-white/50">No linked dataset features.</div>
+                        }
+                        return (
+                          <div className="max-h-[140px] overflow-auto border border-white/10 rounded-sm bg-black/40">
+                            <div className="p-2 space-y-1.5">
+                              {linked.slice(0, 12).map((df: any, i: number) => {
+                                const dataset = String(df?.dataset ?? '')
+                                const feature = df?.feature
+                                const featureId = feature?.id ? String(feature.id) : `feature-${i + 1}`
+                                const label = dataset ? `${dataset} · ${featureId}` : featureId
+                                const canZoom = Boolean(feature && typeof feature === 'object' && feature.type === 'Feature' && feature.geometry)
+                                return (
+                                  <div key={`${dataset}:${featureId}:${i}`} className="flex items-center justify-between gap-2">
+                                    <div className="text-[10px] font-mono text-white/80 truncate" title={label}>
+                                      {label}
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => canZoom && showGeojsonHighlight(feature)}
+                                      disabled={!canZoom}
+                                      className={cn(
+                                        'text-[10px] font-mono underline underline-offset-2',
+                                        canZoom ? 'text-white/50 hover:text-white' : 'text-white/20 cursor-not-allowed'
+                                      )}
+                                      title={canZoom ? 'Zoom to this feature' : 'No geometry available'}
+                                    >
+                                      Zoom
+                                    </button>
+                                  </div>
+                                )
+                              })}
+                              {linked.length > 12 && (
+                                <div className="text-[10px] font-mono text-white/30">Showing 12 / {linked.length}.</div>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })()}
+                    </div>
+
                     {/* Thread (append-only) */}
                     <div className="space-y-1">
                       <div className="text-[10px] font-mono text-white/40 uppercase tracking-widest">Thread</div>
@@ -6343,7 +6991,7 @@ export function MapViewer() {
                           Loading thread…
                         </div>
                       ) : Array.isArray(creatorEditor.changelog) && creatorEditor.changelog.length > 0 ? (
-                        <div className="max-h-[220px] overflow-auto border border-white/10 rounded-sm bg-black/40">
+                        <div className="max-h-[360px] overflow-auto border border-white/10 rounded-sm bg-black/40">
                           <div className="p-2 space-y-2">
                             {creatorEditor.changelog.slice(-25).map((rec: any, idx: number) => {
                               const action = String(rec?.action ?? 'event')
@@ -6431,7 +7079,17 @@ export function MapViewer() {
                                       <span className="text-white/30">·</span>{' '}
                                       <span className="uppercase tracking-widest">{action}</span>
                                     </div>
-                                    <div className="shrink-0">{ts || '—'}</div>
+                                    <div className="shrink-0 flex items-center gap-2">
+                                      <button
+                                        type="button"
+                                        onClick={() => setCreatorThreadEntryDetails({ entryId: creatorEditor.entryId!, record: rec })}
+                                        className="text-[10px] font-mono text-amber-300 hover:text-amber-200 underline underline-offset-2"
+                                        title="Open details"
+                                      >
+                                        Details
+                                      </button>
+                                      <div className="shrink-0">{ts || '—'}</div>
+                                    </div>
                                   </div>
 
                                   {sortieCode && (
@@ -6519,7 +7177,7 @@ export function MapViewer() {
                     {/* All Files (read-only) */}
                     <div className="space-y-1">
                       <div className="text-[10px] font-mono text-white/40 uppercase tracking-widest">All Files</div>
-                      <div className="max-h-[140px] overflow-auto border border-white/10 rounded-sm">
+                      <div className="max-h-[200px] overflow-auto border border-white/10 rounded-sm">
                         {creatorEditor.existingAttachments.length === 0 ? (
                           <div className="px-3 py-2 text-xs font-mono text-white/50">No files attached.</div>
                         ) : (
@@ -6542,12 +7200,21 @@ export function MapViewer() {
 
                     {/* Actions */}
                     <div className="flex items-center justify-between gap-2 pt-2 border-t border-white/10">
-                      <button
-                        onClick={handleStartCreatorGeometryEdit}
-                        className="px-3 py-2 text-[10px] font-mono uppercase tracking-widest border border-white/15 text-white/70 hover:text-white hover:border-white/30 hover:bg-white/5 rounded-sm"
-                      >
-                        Edit Geometry
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={handleStartCreatorGeometryEdit}
+                          className="px-3 py-2 text-[10px] font-mono uppercase tracking-widest border border-white/15 text-white/70 hover:text-white hover:border-white/30 hover:bg-white/5 rounded-sm"
+                        >
+                          Edit Geometry
+                        </button>
+                        <button
+                          onClick={() => showGeojsonHighlight(creatorEditor.geometryWgs84)}
+                          className="px-3 py-2 text-[10px] font-mono uppercase tracking-widest border border-white/15 text-white/70 hover:text-white hover:border-white/30 hover:bg-white/5 rounded-sm"
+                          title="Zoom to this AOI/POI geometry"
+                        >
+                          Zoom
+                        </button>
+                      </div>
                       <button
                         onClick={() =>
                           setCreatorEditor((prev) =>
@@ -6556,7 +7223,7 @@ export function MapViewer() {
                         }
                         className="px-3 py-2 text-[10px] font-mono uppercase tracking-widest bg-amber-500 text-black rounded-sm hover:bg-amber-400"
                       >
-                        New Entry
+                        Add Comment / Files
                       </button>
                     </div>
                   </>
@@ -7041,7 +7708,8 @@ export function MapViewer() {
                                           </label>
                                           <div className="flex items-center gap-2 shrink-0">
                                             <span className="text-[9px] font-mono text-white/40 whitespace-nowrap">
-                                              {cand.within_aoi ? 'in' : 'out'} · {Math.round(cand.distance_m)}m
+                                              {creatorEditor.entryType === 'AOI' ? `${cand.within_aoi ? 'in' : 'out'} · ` : ''}
+                                              {Math.round(cand.distance_m)}m
                                             </span>
                                             <button
                                               type="button"
@@ -7325,6 +7993,330 @@ export function MapViewer() {
         </div>
       )}
 
+      {/* Thread entry details dialog (formatted) */}
+      {currentProject && mapMode === 'operator' && creatorEditor && creatorThreadEntryDetails && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 animate-fade-in">
+          <div
+            className="absolute inset-0 bg-black/85 backdrop-blur-md"
+            onClick={() => setCreatorThreadEntryDetails(null)}
+          >
+            <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
+          </div>
+
+          {(() => {
+            const rec: any = creatorThreadEntryDetails.record ?? {}
+            const action = String(rec?.action ?? 'event')
+            const ts = String(rec?.timestamp ?? '')
+            const actor = rec?.actor && typeof rec.actor === 'object' ? rec.actor : {}
+            const actorLabel = String(actor?.name || actor?.username || 'unknown')
+            const changes = rec?.changes && typeof rec.changes === 'object' ? rec.changes : {}
+            const fields = Array.isArray(changes?.fields) ? changes.fields : []
+            const commentChange = fields.find((f: any) => f?.field === 'comment')
+            const message = typeof commentChange?.to === 'string' ? String(commentChange.to) : ''
+            const added = Array.isArray(changes?.attachments_added) ? changes.attachments_added : []
+            const removed = Array.isArray(changes?.attachments_removed) ? changes.attachments_removed : []
+
+            const datasetFeatures = Array.isArray(rec?.dataset_features) ? (rec.dataset_features as any[]) : []
+            const datasetFeatureGeojsonFeatures = datasetFeatures
+              .map((df: any) => df?.feature)
+              .filter((f: any) => f && typeof f === 'object' && f.type === 'Feature' && f.geometry)
+            const datasetFeaturesFc =
+              datasetFeatureGeojsonFeatures.length > 0
+                ? ({ type: 'FeatureCollection', features: datasetFeatureGeojsonFeatures } as any)
+                : null
+
+            const badge =
+              action === 'delete'
+                ? 'bg-red-500/10 border-red-500/30 text-red-400'
+                : action === 'update'
+                  ? 'bg-amber-500/10 border-amber-500/30 text-amber-200'
+                  : action === 'create'
+                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200'
+                    : 'bg-white/5 border-white/10 text-white/60'
+
+            const geometry = changes?.geometry
+            const geometryAfter = geometry?.after ?? null
+            const geometryBefore = geometry?.before ?? null
+
+            const sortie = rec?.sortie && typeof rec.sortie === 'object' ? rec.sortie : null
+            const survey = rec?.survey && typeof rec.survey === 'object' ? rec.survey : null
+
+            const safeStr = (v: any) => (v === null || v === undefined ? '' : String(v))
+            const renderValue = (v: any) => {
+              if (v === null || v === undefined || v === '') return <span className="text-white/30">—</span>
+              if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') {
+                return <span className="text-white/80 font-mono break-all">{String(v)}</span>
+              }
+              try {
+                return <span className="text-white/80 font-mono break-all">{JSON.stringify(v)}</span>
+              } catch {
+                return <span className="text-white/80 font-mono break-all">{String(v)}</span>
+              }
+            }
+
+            const FieldRow = ({ label, value }: { label: string; value: React.ReactNode }) => (
+              <div className="grid grid-cols-3 gap-3 text-[10px]">
+                <div className="text-white/50 uppercase tracking-wider">{label}</div>
+                <div className="col-span-2">{value}</div>
+              </div>
+            )
+
+            const entryId = String(rec?.entry_id ?? creatorEditor.entryId ?? '')
+
+            return (
+              <div
+                className="relative w-[980px] max-w-[96vw] max-h-[92vh] rounded-sm bg-[#0a0a0a]/95 border border-white/10 shadow-[0_0_60px_-10px_rgba(0,0,0,0.85)] flex flex-col overflow-hidden pointer-events-auto font-mono"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-amber-500/40 to-transparent" />
+
+                <header className="px-6 py-4 border-b border-white/10 flex items-start justify-between bg-black/20 shrink-0">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 text-[10px] text-white/40 uppercase tracking-[0.2em]">
+                      <span>Operator</span>
+                      <span className="text-white/20">|</span>
+                      <span className="text-white/50 truncate">{currentProject}</span>
+                    </div>
+                    <div className="mt-2 flex items-center gap-2 min-w-0">
+                      <span className={cn('px-2 py-0.5 text-[9px] uppercase tracking-wider border rounded-sm', badge)}>
+                        {action.toUpperCase()}
+                      </span>
+                      <div className="text-sm font-bold text-white truncate">Thread Entry Details</div>
+                    </div>
+                    <div className="mt-2 text-[10px] text-white/40 font-mono flex flex-wrap gap-x-3 gap-y-1">
+                      <span>
+                        Actor: <span className="text-white/70">{actorLabel}</span>
+                      </span>
+                      <span className="text-white/20">|</span>
+                      <span>
+                        Time: <span className="text-white/70">{ts || '—'}</span>
+                      </span>
+                      {entryId ? (
+                        <>
+                          <span className="text-white/20">|</span>
+                          <span>
+                            Entry ID: <span className="text-white/70">{entryId}</span>
+                          </span>
+                        </>
+                      ) : null}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => showGeojsonHighlight(creatorEditor.geometryWgs84)}
+                      className="px-3 py-2 text-[10px] font-mono uppercase tracking-widest border border-white/15 text-white/70 hover:text-white hover:border-white/30 hover:bg-white/5 rounded-sm"
+                      title="Zoom to current entry geometry"
+                    >
+                      Zoom entry
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => datasetFeaturesFc && showGeojsonHighlight(datasetFeaturesFc)}
+                      disabled={!datasetFeaturesFc}
+                      className={cn(
+                        'px-3 py-2 text-[10px] font-mono uppercase tracking-widest border rounded-sm',
+                        datasetFeaturesFc
+                          ? 'border-amber-500/30 text-amber-200/80 hover:bg-amber-500/10 hover:text-amber-200'
+                          : 'border-white/10 text-white/25 cursor-not-allowed'
+                      )}
+                      title={datasetFeaturesFc ? 'Zoom to linked dataset features' : 'No linked dataset features in this thread entry'}
+                    >
+                      Zoom features
+                    </button>
+                    <button
+                      onClick={() => setCreatorThreadEntryDetails(null)}
+                      className="p-2 hover:bg-white/5 border border-transparent hover:border-white/10 rounded-sm text-white/50 hover:text-white transition-all"
+                      title="Close"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                </header>
+
+                <div className="flex-1 overflow-y-auto p-6 space-y-5 bg-[linear-gradient(to_right,#ffffff02_1px,transparent_1px),linear-gradient(to_bottom,#ffffff02_1px,transparent_1px)] bg-[size:20px_20px]">
+                  {/* Message */}
+                  <div className="border border-white/10 bg-black/30 rounded-sm p-4 space-y-2">
+                    <div className="text-[10px] text-white/40 uppercase tracking-[0.2em]">Message</div>
+                    <div className="text-sm text-white/85 whitespace-pre-wrap font-sans leading-relaxed">
+                      {message?.trim() ? message : <span className="text-white/40">No comment text in this entry.</span>}
+                    </div>
+                  </div>
+
+                  {/* Actor */}
+                  <div className="border border-white/10 bg-black/30 rounded-sm p-4 space-y-2">
+                    <div className="text-[10px] text-white/40 uppercase tracking-[0.2em]">Actor</div>
+                    <div className="space-y-2">
+                      <FieldRow label="Username" value={renderValue(actor?.username)} />
+                      <FieldRow label="Name" value={renderValue(actor?.name)} />
+                      <FieldRow label="Role" value={renderValue(actor?.role)} />
+                      <FieldRow label="Company" value={renderValue(actor?.company)} />
+                      <FieldRow label="Organization" value={renderValue(actor?.organization)} />
+                      <FieldRow label="Department" value={renderValue(actor?.department)} />
+                    </div>
+                  </div>
+
+                  {/* Sortie / Survey */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="border border-white/10 bg-black/30 rounded-sm p-4 space-y-2">
+                      <div className="text-[10px] text-white/40 uppercase tracking-[0.2em]">Sortie</div>
+                      {sortie ? (
+                        <div className="space-y-2">
+                          <FieldRow label="Code" value={renderValue((sortie as any).code)} />
+                          <FieldRow label="Name" value={renderValue((sortie as any).name)} />
+                          <FieldRow label="ID" value={renderValue((sortie as any).id)} />
+                        </div>
+                      ) : (
+                        <div className="text-xs text-white/40">—</div>
+                      )}
+                    </div>
+
+                    <div className="border border-white/10 bg-black/30 rounded-sm p-4 space-y-2">
+                      <div className="text-[10px] text-white/40 uppercase tracking-[0.2em]">Survey</div>
+                      {survey ? (
+                        <div className="space-y-2">
+                          {Object.entries(survey as any).map(([k, v]) => (
+                            <FieldRow key={k} label={k} value={renderValue(v)} />
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-xs text-white/40">—</div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Linked dataset features */}
+                  <div className="border border-white/10 bg-black/30 rounded-sm p-4 space-y-2">
+                    <div className="text-[10px] text-white/40 uppercase tracking-[0.2em]">Linked Dataset Features</div>
+                    {datasetFeatures.length === 0 ? (
+                      <div className="text-xs text-white/40">No dataset features linked in this thread entry.</div>
+                    ) : (
+                      <div className="space-y-2">
+                        {datasetFeatures.slice(0, 20).map((df: any, i: number) => {
+                          const dataset = safeStr(df?.dataset)
+                          const feature = df?.feature
+                          const featureId = feature?.id ? safeStr(feature.id) : `feature-${i + 1}`
+                          const canZoom = Boolean(feature && typeof feature === 'object' && feature.type === 'Feature' && feature.geometry)
+                          return (
+                            <div key={`${dataset}:${featureId}:${i}`} className="border border-white/10 bg-black/40 rounded-sm p-3">
+                              <div className="flex items-center justify-between gap-3">
+                                <div className="min-w-0">
+                                  <div className="text-[10px] text-white/40 font-mono">
+                                    Dataset: <span className="text-white/70">{dataset || '—'}</span>
+                                  </div>
+                                  <div className="text-xs text-white/80 font-mono truncate" title={featureId}>
+                                    Feature: {featureId}
+                                  </div>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => canZoom && showGeojsonHighlight(feature)}
+                                  disabled={!canZoom}
+                                  className={cn(
+                                    'px-3 py-1.5 text-[10px] font-mono uppercase tracking-widest border rounded-sm',
+                                    canZoom
+                                      ? 'border-white/15 text-white/70 hover:text-white hover:border-white/30 hover:bg-white/5'
+                                      : 'border-white/10 text-white/25 cursor-not-allowed'
+                                  )}
+                                  title={canZoom ? 'Zoom to this feature' : 'No geometry available'}
+                                >
+                                  Zoom
+                                </button>
+                              </div>
+                              <div className="mt-2 grid grid-cols-3 gap-3 text-[10px] font-mono text-white/50">
+                                <div>
+                                  Rank: <span className="text-white/70">{renderValue(df?.rank)}</span>
+                                </div>
+                                <div>
+                                  Within AOI: <span className="text-white/70">{renderValue(df?.within_aoi)}</span>
+                                </div>
+                                <div>
+                                  Distance (m): <span className="text-white/70">{renderValue(df?.distance_m)}</span>
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        })}
+                        {datasetFeatures.length > 20 && (
+                          <div className="text-[10px] text-white/30 font-mono">Showing 20 / {datasetFeatures.length}.</div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Attachments */}
+                  <div className="border border-white/10 bg-black/30 rounded-sm p-4 space-y-2">
+                    <div className="text-[10px] text-white/40 uppercase tracking-[0.2em]">Files</div>
+                    <FieldRow label="Added" value={renderValue(added)} />
+                    <FieldRow label="Removed" value={renderValue(removed)} />
+                    {added.length > 0 && entryId && (
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        {added.map((fname: any) => {
+                          const filename = safeStr(fname)
+                          if (!filename) return null
+                          return (
+                            <a
+                              key={filename}
+                              href={getCreatorAttachmentUrl(currentProject, entryId, filename)}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-[10px] font-mono text-amber-300 hover:text-amber-200 underline underline-offset-2 break-all"
+                              title={filename}
+                            >
+                              {filename}
+                            </a>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Field changes */}
+                  <div className="border border-white/10 bg-black/30 rounded-sm p-4 space-y-2">
+                    <div className="text-[10px] text-white/40 uppercase tracking-[0.2em]">Changes</div>
+                    {fields.length === 0 ? (
+                      <div className="text-xs text-white/40">No field changes recorded.</div>
+                    ) : (
+                      <div className="space-y-2">
+                        {fields.map((f: any, i: number) => (
+                          <div key={`${safeStr(f?.field)}:${i}`} className="border border-white/10 bg-black/40 rounded-sm p-3">
+                            <FieldRow label="Field" value={renderValue(f?.field)} />
+                            <FieldRow label="From" value={renderValue(Object.prototype.hasOwnProperty.call(f ?? {}, 'from') ? f?.from : null)} />
+                            <FieldRow label="To" value={renderValue(Object.prototype.hasOwnProperty.call(f ?? {}, 'to') ? f?.to : null)} />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Geometry summary (if present) */}
+                  {geometry ? (
+                    <div className="border border-white/10 bg-black/30 rounded-sm p-4 space-y-2">
+                      <div className="text-[10px] text-white/40 uppercase tracking-[0.2em]">Geometry Summary</div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <div className="text-[10px] text-white/40 uppercase tracking-widest">Before</div>
+                          <FieldRow label="Type" value={renderValue(geometryBefore?.type)} />
+                          <FieldRow label="Vertex Count" value={renderValue(geometryBefore?.vertex_count)} />
+                          <FieldRow label="BBox" value={renderValue(geometryBefore?.bbox)} />
+                        </div>
+                        <div className="space-y-2">
+                          <div className="text-[10px] text-white/40 uppercase tracking-widest">After</div>
+                          <FieldRow label="Type" value={renderValue(geometryAfter?.type)} />
+                          <FieldRow label="Vertex Count" value={renderValue(geometryAfter?.vertex_count)} />
+                          <FieldRow label="BBox" value={renderValue(geometryAfter?.bbox)} />
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            )
+          })()}
+        </div>
+      )}
+
       {contextMenu && (
         <div 
           ref={contextMenuRef}
@@ -7465,6 +8457,17 @@ export function MapViewer() {
             className="w-full text-left px-3 py-2 text-xs font-mono text-white/80 hover:bg-primary/20 hover:text-white hover:border-l-2 hover:border-primary transition-all flex items-center gap-2 group border-l-2 border-transparent"
           >
             <span className="uppercase tracking-wide group-hover:translate-x-1 transition-transform">Copy Coordinates</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setGoToCoordinatesSeed({ lng: contextMenu.lng, lat: contextMenu.lat })
+              setGoToCoordinatesOpen(true)
+              setContextMenu(null)
+            }}
+            className="w-full text-left px-3 py-2 text-xs font-mono text-white/80 hover:bg-primary/20 hover:text-white hover:border-l-2 hover:border-primary transition-all flex items-center gap-2 group border-l-2 border-transparent"
+          >
+            <span className="uppercase tracking-wide group-hover:translate-x-1 transition-transform">GOTO Coordinates</span>
           </button>
 
           <button

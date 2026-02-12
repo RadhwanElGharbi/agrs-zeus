@@ -126,17 +126,14 @@ export type DatasetCategory =
   | 'dem'
   | 'landcover'
   | 'soil'
-  | 'geotechnical'
-  | 'seismic'
-  | 'landslides'
-  | 'geology'
-  | 'boreholes'
   | 'roads'
   | 'railways'
   | 'powerlines'
   | 'waterways'
-  | 'hydrology'
+  | 'geohazard'
   | 'pipelines'
+  | 'protected_areas'
+  | 'indigenous_lands'
 
 export interface DatasetCategoryStatus {
   category: DatasetCategory;
@@ -325,6 +322,8 @@ export interface AlignmentSheetPreviewResponse {
   project: string
   route: string
   preset: string
+  template_id?: string
+  base_map?: string
   total_length_m: number
   sheet_count: number
   sheet_length_m: number
@@ -339,6 +338,14 @@ export interface AlignmentSheetPreviewResponse {
   organization?: string | null
   country?: string | null
   crs_epsg?: number | null
+}
+
+export type AlignmentSheetBaseMapMode = 'vector' | 'imagery'
+
+export interface AlignmentSheetsOptions {
+  template_id?: string | null
+  base_map?: AlignmentSheetBaseMapMode | null
+  persist?: boolean | null
 }
 
 // ============================================================================
@@ -432,7 +439,7 @@ export async function fetchActiveDatasetJobs(): Promise<ActiveDatasetJobsRespons
  */
 export async function fetchVectorData(project: string, layer: string): Promise<GeoJSON> {
   const base = await getApiBaseAsync()
-  const response = await fetch(`${base}/data/${project}/vectors/${layer}`);
+  const response = await fetch(`${base}/data/${encodeURIComponent(project)}/vectors/${encodeURIComponent(layer)}`);
   
   if (!response.ok) {
     throw new Error(`Failed to fetch vector layer ${layer}: ${response.statusText}`);
@@ -448,7 +455,7 @@ export async function fetchNearestVectorFeatures(
   limit: number = 50
 ): Promise<NearestVectorFeaturesResponse> {
   const base = await getApiBaseAsync()
-  const response = await fetch(`${base}/data/${project}/vectors/${layer}/nearest`, {
+  const response = await fetch(`${base}/data/${encodeURIComponent(project)}/vectors/${encodeURIComponent(layer)}/nearest`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ target_geometry: targetGeometry, limit })
@@ -507,13 +514,16 @@ export async function fetchPIRLRoute(project: string, routeName: string): Promis
 export async function previewAlignmentSheets(
   project: string,
   route: string,
-  preset: AlignmentSheetPreset = 'standard'
+  preset: AlignmentSheetPreset = 'standard',
+  options?: AlignmentSheetsOptions
 ): Promise<AlignmentSheetPreviewResponse> {
   const base = await getApiBaseAsync()
   const url = new URL(
     `${base}/alignment-sheets/preview/${encodeURIComponent(project)}/${encodeURIComponent(route)}`
   )
   url.searchParams.set('preset', preset)
+  if (options?.template_id) url.searchParams.set('template_id', options.template_id)
+  if (options?.base_map) url.searchParams.set('base_map', options.base_map)
 
   const response = await fetch(url.toString())
   if (!response.ok) {
@@ -530,13 +540,24 @@ export async function previewAlignmentSheets(
 export async function downloadAlignmentSheetsPDF(
   project: string,
   route: string,
-  preset: AlignmentSheetPreset = 'standard'
+  preset: AlignmentSheetPreset = 'standard',
+  options?: AlignmentSheetsOptions
 ): Promise<void> {
   const base = await getApiBaseAsync()
+  const token = localStorage.getItem('agrs_token')
+  const headers: HeadersInit = { 'Content-Type': 'application/json' }
+  if (token) headers['Authorization'] = `Bearer ${token}`
   const response = await fetch(`${base}/alignment-sheets/generate`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ project, route, preset }),
+    headers,
+    body: JSON.stringify({
+      project,
+      route,
+      preset,
+      ...(options?.template_id ? { template_id: options.template_id } : {}),
+      ...(options?.base_map ? { base_map: options.base_map } : {}),
+      ...(options?.persist !== null && options?.persist !== undefined ? { persist: options.persist } : {}),
+    }),
   })
 
   if (!response.ok) {
@@ -684,7 +705,11 @@ export async function fetchPIRLRouteCrossings(
   const url = new URL(`${base}/pirl/${encodeURIComponent(project)}/routes/${encodePath(routeName)}/crossings`)
   url.searchParams.set('compute_if_missing', computeIfMissing ? 'true' : 'false')
 
-  const response = await fetch(url.toString())
+  const token = localStorage.getItem('agrs_token')
+  const headers: HeadersInit = {}
+  if (token) headers['Authorization'] = `Bearer ${token}`
+
+  const response = await fetch(url.toString(), { headers })
   if (!response.ok) {
     const message = await response.text().catch(() => '')
     throw new Error(message || `Failed to fetch route crossings for ${routeName}: ${response.statusText}`)
@@ -699,8 +724,12 @@ export async function fetchPIRLRouteCrossings(
 export async function computePIRLRouteCrossings(project: string, routeName: string): Promise<RouteCrossingsResponse> {
   const base = await getApiBaseAsync()
   const encodePath = (value: string) => value.split('/').map(encodeURIComponent).join('/')
+  const token = localStorage.getItem('agrs_token')
+  const headers: HeadersInit = {}
+  if (token) headers['Authorization'] = `Bearer ${token}`
   const response = await fetch(`${base}/pirl/${encodeURIComponent(project)}/routes/${encodePath(routeName)}/crossings/compute`, {
-    method: 'POST'
+    method: 'POST',
+    headers
   })
   if (!response.ok) {
     const message = await response.text().catch(() => '')
@@ -799,9 +828,12 @@ export async function updateProjectCRS(project: string, epsg: number, name: stri
     throw new Error('Project name is required to update CRS');
   }
   const base = await getApiBaseAsync();
+  const token = localStorage.getItem('agrs_token')
+  const headers: HeadersInit = { 'Content-Type': 'application/json' }
+  if (token) headers['Authorization'] = `Bearer ${token}`
   const response = await fetch(`${base}/projects/${project}/crs`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     body: JSON.stringify({ epsg, name })
   });
   if (!response.ok) {
@@ -846,15 +878,42 @@ export async function startDatasetFetch(
     headers['Authorization'] = `Bearer ${token}`
   }
 
-  const response = await fetch(`${base}/projects/${project}/dataset-fetch`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(payload)
-  });
-  if (!response.ok) {
-    throw new Error(`Failed to start dataset fetch: ${response.statusText}`);
+  const controller = typeof AbortController !== 'undefined' ? new AbortController() : null
+  const timeoutMs = 20000
+  const timeout = controller ? setTimeout(() => controller.abort(), timeoutMs) : null
+
+  try {
+    const response = await fetch(`${base}/projects/${project}/dataset-fetch`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(payload),
+      ...(controller ? { signal: controller.signal } : {})
+    })
+    if (!response.ok) {
+      const message = await response.text()
+      let detail = message
+      try {
+        const parsed = JSON.parse(message)
+        if (parsed && typeof parsed === 'object' && typeof (parsed as any).detail === 'string') {
+          detail = String((parsed as any).detail)
+        }
+      } catch {
+        // ignore (non-JSON)
+      }
+      throw new Error(detail || `Failed to start dataset fetch: ${response.statusText}`)
+    }
+    return response.json()
+  } catch (err) {
+    // If the backend is deadlocked/busy, the request can hang forever without a client timeout.
+    if (err && typeof err === 'object' && (err as any).name === 'AbortError') {
+      throw new Error(
+        `Dataset fetch request timed out after ${Math.round(timeoutMs / 1000)}s. The backend may be stuck—restart the backend server and try again.`
+      )
+    }
+    throw err
+  } finally {
+    if (timeout) clearTimeout(timeout)
   }
-  return response.json();
 }
 
 // ============================================================================
@@ -1709,7 +1768,10 @@ export function subscribeToDatasetJob(
 
 export async function cancelDatasetJob(jobId: string): Promise<void> {
   const base = await getApiBaseAsync();
-  const response = await fetch(`${base}/dataset-jobs/${jobId}`, { method: 'DELETE' });
+  const token = localStorage.getItem('agrs_token')
+  const headers: HeadersInit = {}
+  if (token) headers['Authorization'] = `Bearer ${token}`
+  const response = await fetch(`${base}/dataset-jobs/${jobId}`, { method: 'DELETE', headers });
   if (!response.ok) {
     throw new Error(`Failed to cancel dataset job ${jobId}: ${response.statusText}`);
   }
@@ -1720,6 +1782,13 @@ export async function cancelDatasetJob(jobId: string): Promise<void> {
  */
 export function getTileUrl(project: string, layer: string): string {
   return `${getApiBaseSync()}/tiles/${project}/${layer}/{z}/{x}/{y}.png`;
+}
+
+/**
+ * Get vector tile (MVT) URL for a vector layer
+ */
+export function getVectorTileUrl(project: string, layer: string): string {
+  return `${getApiBaseSync()}/vector-tiles/${encodeURIComponent(project)}/${encodeURIComponent(layer)}/{z}/{x}/{y}.pbf`
 }
 
 /**
@@ -1886,6 +1955,34 @@ export async function fetchPipelineSpecs(projectName: string): Promise<PipelineS
     throw new Error(`Failed to fetch pipeline specs: ${response.statusText}`);
   }
   return response.json();
+}
+
+export async function updatePipelineSpecs(
+  projectName: string,
+  specs: Partial<PipelineSpecs>
+): Promise<PipelineSpecs> {
+  const base = await getApiBaseAsync()
+  const token = typeof window !== 'undefined' ? localStorage.getItem('agrs_token') : null
+  const headers: HeadersInit = { 'Content-Type': 'application/json' }
+  if (token) headers['Authorization'] = `Bearer ${token}`
+
+  const response = await fetch(`${base}/projects/${projectName}/pipeline-specs`, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify(specs),
+  })
+  if (!response.ok) {
+    let detail = ''
+    try {
+      const contentType = response.headers.get('content-type') || ''
+      if (contentType.includes('application/json')) {
+        const json = await response.json()
+        detail = json?.detail ? ` - ${json.detail}` : ''
+      }
+    } catch (_) {}
+    throw new Error(`Failed to update pipeline specs: ${response.status} ${response.statusText}${detail}`)
+  }
+  return response.json()
 }
 
 // ============================================================================

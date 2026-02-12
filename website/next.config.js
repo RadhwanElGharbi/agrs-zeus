@@ -11,10 +11,8 @@ const nextConfig = {
     if (process.env.NODE_ENV !== 'development') return []
     const zeusOrigin = process.env.ZEUS_DEV_ORIGIN || 'http://localhost:3001'
     return [
-      // ZEUS now runs at the root of its own origin (no /zeus basePath).
-      // Keep /zeus/* as a local-dev convenience to mimic the legacy prod URL.
-      { source: '/zeus', destination: `${zeusOrigin}/` },
-      { source: '/zeus/:path*', destination: `${zeusOrigin}/:path*` },
+      { source: '/zeus', destination: `${zeusOrigin}/zeus` },
+      { source: '/zeus/:path*', destination: `${zeusOrigin}/zeus/:path*` },
     ]
   },
 }

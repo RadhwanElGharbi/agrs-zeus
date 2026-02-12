@@ -21,6 +21,7 @@
     "leaflet": "^1.9.4",
     "lucide-react": "^0.316.0",
     "maplibre-gl": "^4.7.1",
+    "mgrs": "^2.1.0",
     "next": "^14.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -29,7 +30,8 @@
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
     "tailwind-merge": "^2.2.1",
-    "three": "^0.181.2"
+    "three": "^0.181.2",
+    "utm": "^1.1.1"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.19",
@@ -38,6 +40,7 @@
     "@types/react": "^18.2.48",
     "@types/react-dom": "^18.2.18",
     "@types/three": "^0.182.0",
+    "@types/utm": "^1.1.4",
     "autoprefixer": "^10.4.17",
     "concurrently": "^8.2.2",
     "electron": "^28.2.0",

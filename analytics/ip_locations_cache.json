@@ -1,15 +1,15 @@
 {
   "198.84.184.6": {
-    "city": "Kitchener",
+    "city": "Waterloo",
     "region": "Ontario",
     "country": "Canada",
     "country_code": "CA",
-    "lat": 43.4595,
-    "lng": -80.485,
+    "lat": 43.4668,
+    "lng": -80.5164,
     "isp": "TekSavvy Solutions, Inc.",
     "org": "TekSavvy Solutions Inc.",
     "is_private": false,
-    "cached_at": "2025-12-21T20:54:58.435329+00:00"
+    "cached_at": "2026-02-09T01:48:25.655052+00:00"
   },
   "91.75.9.213": {
     "city": "Dubai",
@@ -36,16 +36,16 @@
     "cached_at": "2025-12-14T00:00:29.586842+00:00"
   },
   "162.212.233.34": {
-    "city": "Schomberg",
+    "city": "Concord",
     "region": "Ontario",
     "country": "Canada",
     "country_code": "CA",
-    "lat": 44.0063,
-    "lng": -79.682,
+    "lat": 43.7987,
+    "lng": -79.4816,
     "isp": "Rogers Cable Communications Inc.",
     "org": "Rogers Telecom Inc.",
     "is_private": false,
-    "cached_at": "2025-12-21T20:54:57.886143+00:00"
+    "cached_at": "2026-02-09T01:48:25.585137+00:00"
   },
   "192.0.202.217": {
     "city": "Kitchener",
@@ -298,5 +298,17 @@
     "org": "Cloudwifi",
     "is_private": false,
     "cached_at": "2025-12-21T20:54:57.773625+00:00"
+  },
+  "99.250.249.9": {
+    "city": "Kitchener",
+    "region": "Ontario",
+    "country": "Canada",
+    "country_code": "CA",
+    "lat": 43.4325,
+    "lng": -80.4997,
+    "isp": "Rogers Communications Canada Inc.",
+    "org": "Rogers Cable Inc. WDSTCK1",
+    "is_private": false,
+    "cached_at": "2026-02-09T01:48:25.375871+00:00"
   }
 }

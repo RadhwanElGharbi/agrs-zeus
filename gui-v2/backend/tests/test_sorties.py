@@ -41,12 +41,42 @@ class TestSortiesApi(unittest.TestCase):
 
         Base.metadata.create_all(bind=get_engine())
 
+        # Create a DB user for audit_event FK + actor attribution
+        from api.db import get_sessionmaker
+        from api.db_models import User
+        from api.security import hash_password
+
+        SessionLocal = get_sessionmaker()
+        with SessionLocal() as db:
+            email = f"sorties_test_{uuid4().hex[:8]}@example.com"
+            user = User(
+                email=email,
+                serial_number=f"UT-SORTIES-{uuid4().hex[:8]}",
+                full_name="Sorties Test User",
+                role="admin",
+                organization="AGRS Global",
+                password_hash=hash_password("unit-test-password"),
+                is_active=True,
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+            cls._actor_payload = {
+                "id": str(user.id),
+                "email": user.email,
+                "serial_number": user.serial_number,
+                "username": "admin",
+                "name": "AGRS Admin",
+                "role": "admin",
+                "company": "AGRS Global",
+            }
+
     @classmethod
     def tearDownClass(cls) -> None:
         shutil.rmtree(cls.project_dir, ignore_errors=True)
 
     def _actor(self) -> dict:
-        return {"username": "admin", "name": "AGRS Admin", "role": "admin", "company": "AGRS Global"}
+        return dict(getattr(self, "_actor_payload", {}) or {})
 
     def test_create_list_get_and_uniqueness(self) -> None:
         from fastapi import HTTPException
@@ -109,6 +139,18 @@ class TestSortiesApi(unittest.TestCase):
             self.assertEqual(archived.get("code"), "SRT-UNIT-001")
             doc3 = json.loads(entry_path.read_text(encoding="utf-8"))
             self.assertEqual(doc3.get("status"), "archived")
+
+            # Audit events should exist (project-scoped)
+            from sqlalchemy import select
+            from api.db_models import AuditEvent
+            from api.projects_db import upsert_project_row
+
+            db_project = upsert_project_row(db, self.project_name)
+            events = db.execute(select(AuditEvent).where(AuditEvent.project_id == db_project.id)).scalars().all()
+            event_types = {e.event_type for e in events}
+            self.assertIn("sortie.create", event_types)
+            self.assertIn("sortie.update", event_types)
+            self.assertIn("sortie.archive", event_types)
 
 
 if __name__ == "__main__":

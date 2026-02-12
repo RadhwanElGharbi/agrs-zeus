@@ -390,6 +390,9 @@ export function ProjectManagementView({ onSupplierSearch, suppliersUpdated }: Pr
         type: 'raster',
         tiles: ['https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
         tileSize: 256,
+        // Avoid Esri "Map Data not available" placeholder tiles by overzooming the last available
+        // tiles instead of requesting missing higher-zoom tiles.
+        maxzoom: 17,
         attribution: 'Esri, Maxar, Earthstar Geographics'
       })
     }
@@ -400,6 +403,7 @@ export function ProjectManagementView({ onSupplierSearch, suppliersUpdated }: Pr
           'https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}'
         ],
         tileSize: 256,
+        maxzoom: 17,
         attribution: 'Esri'
       })
     }
@@ -408,6 +412,8 @@ export function ProjectManagementView({ onSupplierSearch, suppliersUpdated }: Pr
         type: 'raster',
         tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
         tileSize: 256,
+        // OSM tile servers are typically limited to z<=19; allow zooming further by overzooming.
+        maxzoom: 19,
         attribution: '© OpenStreetMap contributors'
       })
     }

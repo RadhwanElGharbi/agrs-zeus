@@ -49,7 +49,7 @@ type DatasetCoverageDialogProps = {
 type FetchState = 'idle' | 'loading' | 'ready' | 'error'
 type JobBanner = { kind: 'success' | 'error'; message: string } | null
 
-const DATASET_ORDER: DatasetCategory[] = [
+const MAIN_DATASET_ORDER: DatasetCategory[] = [
   'dem',
   'landcover',
   'soil',
@@ -61,6 +61,12 @@ const DATASET_ORDER: DatasetCategory[] = [
   'pipelines'
 ]
 
+// Optional / non-core dataset categories (still fetchable; just grouped separately in the UI).
+const AUXILIARY_DATASET_ORDER: DatasetCategory[] = ['protected_areas', 'indigenous_lands']
+
+// Keep a stable display order in the UI.
+const DATASET_ORDER: DatasetCategory[] = [...MAIN_DATASET_ORDER, ...AUXILIARY_DATASET_ORDER]
+
 const CATEGORY_LABELS: Record<DatasetCategory, string> = {
   dem: 'Digital Elevation Model (DEM)',
   landcover: 'Landcover (10m)',
@@ -70,7 +76,9 @@ const CATEGORY_LABELS: Record<DatasetCategory, string> = {
   railways: 'Rail Network',
   powerlines: 'Power Transmission',
   waterways: 'Waterways / Hydrology',
-  pipelines: 'Existing Pipelines'
+  pipelines: 'Existing Pipelines',
+  protected_areas: 'Protected Areas',
+  indigenous_lands: 'Indigenous Lands'
 }
 
 const CATEGORY_TYPES: Record<DatasetCategory, 'raster' | 'vector'> = {
@@ -82,7 +90,9 @@ const CATEGORY_TYPES: Record<DatasetCategory, 'raster' | 'vector'> = {
   railways: 'vector',
   powerlines: 'vector',
   waterways: 'vector',
-  pipelines: 'vector'
+  pipelines: 'vector',
+  protected_areas: 'vector',
+  indigenous_lands: 'vector'
 }
 
 const CATEGORY_KEYWORDS: Record<DatasetCategory, string[]> = {
@@ -94,10 +104,26 @@ const CATEGORY_KEYWORDS: Record<DatasetCategory, string[]> = {
   railways: ['rail', 'railway', 'train'],
   powerlines: ['power', 'transmission', 'grid', 'powerline'],
   waterways: ['waterway', 'river', 'hydro', 'hydrosheds'],
-  pipelines: ['pipeline', 'gas pipeline', 'scigrid']
+  pipelines: ['pipeline', 'gas pipeline', 'scigrid'],
+  protected_areas: ['protected', 'conserved', 'park', 'reserve', 'cpcad', 'wdpa'],
+  indigenous_lands: [
+    'indigenous',
+    'aboriginal',
+    'first nations',
+    'inuit',
+    'metis',
+    'treaty',
+    'reserve',
+    'clss',
+    'land claim'
+  ]
 }
 
 const FALLBACK_PROTOCOL = '/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md'
+
+function isAuxiliaryCategory(category: DatasetCategory): boolean {
+  return !MAIN_DATASET_ORDER.includes(category)
+}
 
 function getDefaultSourceLabel(category: DatasetCategory, iso3?: string | null): string | null {
   switch (category) {
@@ -119,6 +145,10 @@ function getDefaultSourceLabel(category: DatasetCategory, iso3?: string | null):
       return 'OSM Waterways'
     case 'pipelines':
       return 'OSM Pipelines'
+    case 'protected_areas':
+      return iso3 === 'CAN' ? 'Canadian Protected and Conserved Areas Database (CPCAD)' : null
+    case 'indigenous_lands':
+      return iso3 === 'CAN' ? 'NRCan CLSS Aboriginal Lands of Canada Legislative Boundaries' : null
     default:
       return null
   }
@@ -316,10 +346,11 @@ function findProjectDatasetMatch(
   return best && best.score > 0 ? best.info : undefined
 }
 
-function scoreDatasetMatch(dataset: DatasetInfo, keywords: string[]): number {
+function scoreDatasetMatch(dataset: DatasetInfo, keywords?: string[] | null): number {
   const haystack = `${dataset.name} ${dataset.path}`.toLowerCase()
   let score = 0
-  for (const keyword of keywords) {
+  const list = Array.isArray(keywords) ? keywords : []
+  for (const keyword of list) {
     if (haystack.includes(keyword)) {
       score += keyword === 'tinitaly' ? 20 : 10
     }
@@ -328,6 +359,433 @@ function scoreDatasetMatch(dataset: DatasetInfo, keywords: string[]): number {
     score += 2
   }
   return score
+}
+
+type CategorySourcePickerDialogProps = {
+  open: boolean
+  category: DatasetCategory | null
+  value: string | null
+  defaultSource: string | null
+  entries: DatasetCoverageEntry[]
+  disabled?: boolean
+  onClose: () => void
+  onSelect: (datasetName: string) => void
+  onClear: () => void
+}
+
+function formatTemporalSpan(entry: DatasetCoverageEntry): string {
+  const start = (entry.temporal_start || '').trim()
+  const end = (entry.temporal_end || '').trim()
+  if (start && end) {
+    return start === end ? start : `${start} → ${end}`
+  }
+  return start || end || '-'
+}
+
+function CategorySourcePickerDialog({
+  open,
+  category,
+  value,
+  defaultSource,
+  entries,
+  disabled,
+  onClose,
+  onSelect,
+  onClear
+}: CategorySourcePickerDialogProps) {
+  const [isClosing, setIsClosing] = useState(false)
+  const [query, setQuery] = useState('')
+  const [detailEntry, setDetailEntry] = useState<DatasetCoverageEntry | null>(null)
+  const inputRef = useRef<HTMLInputElement | null>(null)
+
+  useEffect(() => {
+    if (!open) return
+    setIsClosing(false)
+    setQuery('')
+    setDetailEntry(null)
+  }, [open])
+
+  const handleClose = () => {
+    setIsClosing(true)
+    setTimeout(() => {
+      setIsClosing(false)
+      onClose()
+    }, 150)
+  }
+
+  useEffect(() => {
+    if (!open) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') handleClose()
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [open])
+
+  useEffect(() => {
+    if (!open) return
+    const t = window.setTimeout(() => inputRef.current?.focus(), 0)
+    return () => window.clearTimeout(t)
+  }, [open])
+
+  const filteredEntries = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    if (!q) return entries
+    return entries.filter((entry) => {
+      const text = [
+        entry.dataset,
+        entry.source,
+        entry.data_type,
+        entry.access,
+        entry.coverage,
+        entry.temporal_start,
+        entry.temporal_end,
+        entry.frequency
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+      return text.includes(q)
+    })
+  }, [entries, query])
+
+  const selectedKey = (value || '').trim().toLowerCase()
+  const recommendedKey = (defaultSource || '').trim().toLowerCase()
+
+  const sectionedEntries = useMemo(() => {
+    const normalizeKey = (entry: DatasetCoverageEntry) => (entry.dataset || '').trim().toLowerCase()
+    const rank = (entry: DatasetCoverageEntry) => {
+      const key = normalizeKey(entry)
+      if (selectedKey && key === selectedKey) return 0
+      if (recommendedKey && key === recommendedKey) return 1
+      return 2
+    }
+    const byName = (a: DatasetCoverageEntry, b: DatasetCoverageEntry) =>
+      (a.dataset || '').toLowerCase().localeCompare((b.dataset || '').toLowerCase())
+    const sort = (list: DatasetCoverageEntry[]) => {
+      const out = [...list]
+      out.sort((a, b) => {
+        const ra = rank(a)
+        const rb = rank(b)
+        if (ra !== rb) return ra - rb
+        return byName(a, b)
+      })
+      return out
+    }
+
+    const local = filteredEntries.filter((entry) => !entry.applies_globally)
+    const global = filteredEntries.filter((entry) => entry.applies_globally)
+    return {
+      local: sort(local),
+      global: sort(global)
+    }
+  }, [filteredEntries, recommendedKey, selectedKey])
+
+  if (!open || !category) return null
+
+  const title = CATEGORY_LABELS[category] ?? category
+  const selectionSummary = value
+    ? `Pinned: ${value}`
+    : defaultSource
+      ? `AUTO (DEFAULT): ${defaultSource}`
+      : 'AUTO (DEFAULT)'
+
+  const renderSection = (
+    sectionTitle: string,
+    subtitle: string,
+    sectionEntries: DatasetCoverageEntry[],
+    scope: 'AOI' | 'GLOBAL'
+  ) => {
+    if (sectionEntries.length === 0) return null
+    return (
+      <section className="space-y-3">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <div className="text-[10px] font-bold text-white uppercase tracking-wider">{sectionTitle}</div>
+            <div className="text-[10px] font-mono text-white/40">{subtitle}</div>
+          </div>
+          <div className="text-[9px] font-mono text-white/40">{sectionEntries.length} options</div>
+        </div>
+
+        <div className="space-y-3">
+          {sectionEntries.map((entry, i) => {
+            const entryKey = (entry.dataset || '').trim().toLowerCase()
+            const isSelected = entryKey === selectedKey && !!selectedKey
+            const isRecommended = entryKey === recommendedKey && !!recommendedKey
+
+            return (
+              <div
+                key={`${entry.dataset}-${i}`}
+                className={cn(
+                  "p-4 border rounded-sm transition-all",
+                  "bg-black/20 border-white/10 hover:bg-white/[0.02] hover:border-white/20",
+                  isSelected && "border-primary/50 bg-primary/[0.05] shadow-[0_0_0_1px_rgba(var(--primary),0.18)]",
+                  !isSelected && isRecommended && "border-primary/25 bg-primary/[0.02]"
+                )}
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <button
+                      type="button"
+                      onClick={() => setDetailEntry(entry)}
+                      className="text-left group min-w-0"
+                      title="View full metadata"
+                    >
+                      <div className="flex items-center flex-wrap gap-2">
+                        <span className="text-sm font-bold text-white group-hover:text-primary transition-colors truncate">
+                          {entry.dataset}
+                        </span>
+                        {isRecommended && (
+                          <span className="text-[9px] font-mono px-2 py-0.5 bg-primary/10 border border-primary/30 text-primary rounded-sm uppercase tracking-wider">
+                            Recommended
+                          </span>
+                        )}
+                        <span
+                          className={cn(
+                            "text-[9px] font-mono px-2 py-0.5 border rounded-sm uppercase tracking-wider",
+                            scope === 'AOI'
+                              ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+                              : "bg-white/5 border-white/10 text-white/50"
+                          )}
+                        >
+                          {scope}
+                        </span>
+                        {isSelected && (
+                          <span className="inline-flex items-center gap-1 text-[9px] font-mono px-2 py-0.5 bg-primary/15 border border-primary/40 text-primary rounded-sm uppercase tracking-wider">
+                            <CheckCircle2 className="w-3 h-3" />
+                            Selected
+                          </span>
+                        )}
+                      </div>
+                      {entry.source && (
+                        <div className="text-[11px] text-white/50 font-mono mt-1 truncate">{entry.source}</div>
+                      )}
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    {entry.url ? (
+                      <a
+                        href={entry.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-3 py-2 border border-white/20 rounded-sm hover:bg-white/10 hover:border-white/40 transition-all text-white/60 hover:text-white text-[10px] font-mono uppercase tracking-wider"
+                        title={`Open ${entry.dataset} documentation`}
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                        Link
+                      </a>
+                    ) : (
+                      <span
+                        className="inline-flex items-center gap-1 px-3 py-2 border border-white/10 rounded-sm text-white/20 cursor-not-allowed text-[10px] font-mono uppercase tracking-wider"
+                        title="Documentation link not available"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                        Link
+                      </span>
+                    )}
+
+                    <button
+                      type="button"
+                      disabled={disabled || isSelected}
+                      onClick={() => {
+                        onSelect(entry.dataset)
+                        handleClose()
+                      }}
+                      className={cn(
+                        "px-4 py-2 border rounded-sm transition-all text-[10px] font-mono uppercase tracking-wider",
+                        disabled
+                          ? "border-white/10 text-white/20 bg-black/30 cursor-not-allowed"
+                          : isSelected
+                            ? "border-primary/40 text-primary/70 bg-primary/10 cursor-default"
+                            : "border-primary/40 bg-primary text-black hover:bg-primary/90"
+                      )}
+                      title={isSelected ? 'Already selected' : 'Pin this dataset for the category'}
+                    >
+                      {isSelected ? 'SELECTED' : 'PIN'}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="mt-4 grid grid-cols-2 gap-3">
+                  <div className="p-3 bg-white/[0.02] border border-white/5 rounded-sm">
+                    <div className="text-[9px] font-mono text-white/40 uppercase tracking-wider mb-1">Type</div>
+                    <div className="text-[11px] font-mono text-white/80">{entry.data_type || '-'}</div>
+                  </div>
+                  <div className="p-3 bg-white/[0.02] border border-white/5 rounded-sm">
+                    <div className="text-[9px] font-mono text-white/40 uppercase tracking-wider mb-1">Access</div>
+                    <div className="text-[11px] font-mono text-white/80">{entry.access || '-'}</div>
+                  </div>
+                  <div className="p-3 bg-white/[0.02] border border-white/5 rounded-sm col-span-2">
+                    <div className="text-[9px] font-mono text-white/40 uppercase tracking-wider mb-1">Coverage / Resolution</div>
+                    <div className="text-[11px] font-mono text-white/80">{entry.coverage || '-'}</div>
+                  </div>
+                  <div className="p-3 bg-white/[0.02] border border-white/5 rounded-sm">
+                    <div className="text-[9px] font-mono text-white/40 uppercase tracking-wider mb-1">Temporal Span</div>
+                    <div className="text-[11px] font-mono text-white/80">{formatTemporalSpan(entry)}</div>
+                  </div>
+                  <div className="p-3 bg-white/[0.02] border border-white/5 rounded-sm">
+                    <div className="text-[9px] font-mono text-white/40 uppercase tracking-wider mb-1">Update Frequency</div>
+                    <div className="text-[11px] font-mono text-white/80">{entry.frequency || '-'}</div>
+                  </div>
+                </div>
+
+                <div className="mt-3 pt-3 border-t border-white/10 flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={() => setDetailEntry(entry)}
+                    className="text-[10px] font-mono uppercase tracking-wider text-white/50 hover:text-primary transition-colors"
+                  >
+                    View full metadata
+                  </button>
+                  <div className="text-[9px] font-mono text-white/30 uppercase tracking-wider">Pin closes dialog</div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </section>
+    )
+  }
+
+  return createPortal(
+    <>
+      <div
+        className={cn(
+          "fixed inset-0 bg-black/70 backdrop-blur-sm z-[150]",
+          isClosing ? "animate-fade-out" : "animate-fade-in"
+        )}
+        onClick={handleClose}
+      />
+      <div className="fixed inset-0 z-[151] flex items-center justify-center p-4 pointer-events-none">
+        <div
+          className={cn(
+            "relative w-[1050px] max-w-[95vw] max-h-[85vh] bg-[#0a0a0a]/95 border border-white/10 rounded-sm shadow-[0_0_50px_-10px_rgba(0,0,0,0.8)] flex flex-col pointer-events-auto overflow-hidden",
+            isClosing ? "animate-fade-out" : "animate-fade-in"
+          )}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <header className="px-5 py-4 border-b border-white/10 flex items-start justify-between bg-black/20 shrink-0">
+            <div className="min-w-0 pr-4">
+              <div className="flex items-center gap-2 text-[9px] text-white/40 uppercase tracking-[0.2em] font-mono mb-1">
+                <Database className="w-3 h-3" />
+                <span>Dataset Source Picker</span>
+              </div>
+              <h3 className="text-base font-bold text-white uppercase tracking-wide font-mono truncate">{title}</h3>
+              <div className="text-[11px] text-white/50 font-mono mt-1 truncate">{selectionSummary}</div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                disabled={disabled || !value}
+                onClick={() => {
+                  onClear()
+                  handleClose()
+                }}
+                className={cn(
+                  "px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider border rounded-sm transition-all",
+                  disabled || !value
+                    ? "bg-black/40 border-white/10 text-white/20 cursor-not-allowed"
+                    : "bg-black border-white/20 text-white/60 hover:text-white hover:border-white/40 hover:bg-white/[0.03]"
+                )}
+                title="Clear override (use AUTO/default selection)"
+              >
+                Use Auto
+              </button>
+              <button
+                type="button"
+                onClick={handleClose}
+                className="p-1.5 hover:bg-white/5 border border-transparent hover:border-white/10 rounded-sm text-white/50 hover:text-white transition-all"
+                title="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </header>
+
+          {/* Search */}
+          <div className="px-5 py-3 border-b border-white/10 bg-black/10 shrink-0">
+            <div className="flex items-center gap-3">
+              <div className="relative flex-1 min-w-[240px]">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30" />
+                <input
+                  ref={inputRef}
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search datasets (name, source, type, access, temporal span...)"
+                  className="w-full bg-black/50 border border-white/10 rounded-sm pl-8 pr-8 py-2 text-[10px] font-mono text-white placeholder:text-white/30 focus:border-primary/50 focus:ring-0 outline-none transition-colors"
+                />
+                {query && (
+                  <button
+                    type="button"
+                    onClick={() => setQuery('')}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60"
+                    title="Clear"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+              <span className="text-[9px] font-mono text-white/40 shrink-0">
+                {filteredEntries.length === entries.length ? `${entries.length} options` : `${filteredEntries.length} / ${entries.length}`}
+              </span>
+            </div>
+          </div>
+
+          {/* Entries */}
+          <div className="flex-1 overflow-y-auto">
+            {entries.length === 0 ? (
+              <div className="p-6 text-[10px] font-mono text-white/30 text-center uppercase tracking-widest">
+                No catalogue entries were found for this category.
+              </div>
+            ) : filteredEntries.length === 0 ? (
+              <div className="p-6 text-[10px] font-mono text-white/30 text-center uppercase tracking-widest">
+                No datasets match &quot;{query}&quot;
+              </div>
+            ) : (
+              <div className="p-5 space-y-8">
+                {renderSection(
+                  'AOI-Aligned Datasets',
+                  'Higher relevance for the current AOI/country catalogue.',
+                  sectionedEntries.local,
+                  'AOI'
+                )}
+                {renderSection(
+                  'Baseline Global Datasets',
+                  'Global catalogue fallbacks applicable to this AOI.',
+                  sectionedEntries.global,
+                  'GLOBAL'
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Footer */}
+          <footer className="px-5 py-3 border-t border-white/10 flex items-center justify-between bg-black/20 shrink-0">
+            <div className="text-[10px] font-mono text-white/40">
+              Picks are sent as an override string to ZEUS and logged in dataset metadata.
+            </div>
+            <div className="flex items-center gap-2">
+              {defaultSource && (
+                <span className="text-[9px] font-mono px-2 py-1 bg-white/5 border border-white/10 text-white/50 rounded-sm uppercase">
+                  Default: {defaultSource}
+                </span>
+              )}
+            </div>
+          </footer>
+        </div>
+      </div>
+
+      <DatasetDetailDialog
+        entry={detailEntry}
+        open={detailEntry !== null}
+        onClose={() => setDetailEntry(null)}
+        onUseDataset={(entry) => onSelect(entry.dataset)}
+      />
+    </>,
+    document.body
+  )
 }
 
 export function DatasetCoverageDialog({ open, onClose, onRunInBackground }: DatasetCoverageDialogProps) {
@@ -351,6 +809,7 @@ export function DatasetCoverageDialog({ open, onClose, onRunInBackground }: Data
   const [progressDialogOpen, setProgressDialogOpen] = useState(false)
   const [jobBanner, setJobBanner] = useState<JobBanner>(null)
   const [categoryOverrides, setCategoryOverrides] = useState<Partial<Record<DatasetCategory, string | null>>>({})
+  const [sourcePickerCategory, setSourcePickerCategory] = useState<DatasetCategory | null>(null)
   
   const [mounted, setMounted] = useState(false)
   const [isClosing, setIsClosing] = useState(false)
@@ -366,6 +825,7 @@ export function DatasetCoverageDialog({ open, onClose, onRunInBackground }: Data
   }, [open])
 
   const handleClose = () => {
+    setSourcePickerCategory(null)
     setIsClosing(true)
     setTimeout(() => {
       onClose()
@@ -514,10 +974,23 @@ export function DatasetCoverageDialog({ open, onClose, onRunInBackground }: Data
     })
   }, [datasetStatus])
 
-  const missingCategories = useMemo(
-    () => datasetList.filter((entry) => !entry.present).map((entry) => entry.category as DatasetCategory),
-    [datasetList]
-  )
+  const datasetGroups = useMemo(() => {
+    const main: typeof datasetList = []
+    const auxiliary: typeof datasetList = []
+    for (const entry of datasetList) {
+      const category = entry.category as DatasetCategory
+      if (category && isAuxiliaryCategory(category)) {
+        auxiliary.push(entry)
+      } else {
+        main.push(entry)
+      }
+    }
+    return { main, auxiliary }
+  }, [datasetList])
+
+  const missingMainCategories = useMemo(() => {
+    return datasetGroups.main.filter((entry) => !entry.present).map((entry) => entry.category as DatasetCategory)
+  }, [datasetGroups])
 
   const labelMap = useMemo(() => {
     const map: Record<string, string> = {}
@@ -544,7 +1017,6 @@ export function DatasetCoverageDialog({ open, onClose, onRunInBackground }: Data
 
       DATASET_ORDER.forEach((category) => {
         map[category].sort((a, b) => scoreCoverageEntry(category, b) - scoreCoverageEntry(category, a))
-        map[category] = map[category].slice(0, 10)
       })
     }
 
@@ -574,6 +1046,13 @@ export function DatasetCoverageDialog({ open, onClose, onRunInBackground }: Data
 
   if (!open || !mounted) return null
 
+  const pickerCategory = sourcePickerCategory
+  const pickerEntries = pickerCategory ? (categoryCandidates[pickerCategory] || []) : []
+  const pickerDefaultSource = pickerCategory
+    ? recommendedSources[pickerCategory] || getDefaultSourceLabel(pickerCategory, coverageData?.iso3) || null
+    : null
+  const pickerValue = pickerCategory ? (categoryOverrides[pickerCategory] || null) : null
+
   const handleToggleCategory = (category: DatasetCategory) => {
     setSelectedCategories((prev) => {
       const next = new Set(prev)
@@ -587,7 +1066,7 @@ export function DatasetCoverageDialog({ open, onClose, onRunInBackground }: Data
   }
 
   const handleSelectMissing = () => {
-    setSelectedCategories(new Set(missingCategories))
+    setSelectedCategories(new Set(missingMainCategories))
   }
 
   const handleOverrideChange = (category: DatasetCategory, datasetName: string) => {
@@ -623,7 +1102,7 @@ export function DatasetCoverageDialog({ open, onClose, onRunInBackground }: Data
     })
     setJobBanner({
       kind: 'success',
-      message: `${datasetName} pinned for ${CATEGORY_LABELS[category]}`
+      message: `${datasetName} pinned for ${CATEGORY_LABELS[category] || category}`
     })
   }
 
@@ -633,6 +1112,21 @@ export function DatasetCoverageDialog({ open, onClose, onRunInBackground }: Data
       setJobBanner({ kind: 'error', message: 'Select at least one dataset category to fetch.' })
       return
     }
+
+    // If the backend doesn't actually support some selected categories (common after a frontend
+    // update + stale backend process), fail fast with a clear message.
+    const supported = new Set((datasetStatus?.categories || []).map((c) => String((c as any)?.category ?? '')))
+    const unsupported = Array.from(selectedCategories).filter((c) => supported.size > 0 && !supported.has(c))
+    if (unsupported.length > 0) {
+      setJobBanner({
+        kind: 'error',
+        message: `Backend does not support these dataset categories yet: ${unsupported.join(
+          ', '
+        )}. Restart the ZEUS backend so it loads the updated dataset definitions.`
+      })
+      return
+    }
+
     setJobBanner(null)
 
     const overridesPayload: Partial<Record<DatasetCategory, string>> = {}
@@ -689,10 +1183,10 @@ export function DatasetCoverageDialog({ open, onClose, onRunInBackground }: Data
       <div className="flex items-center gap-4">
           <button
               onClick={handleSelectMissing}
-              disabled={missingCategories.length === 0 || !!jobId}
+              disabled={missingMainCategories.length === 0 || !!jobId}
               className="text-[10px] font-mono uppercase tracking-wider text-white/50 hover:text-primary transition-colors disabled:opacity-30"
           >
-              [Select Missing Categories]
+              [Select Missing Core Categories]
           </button>
           <label className="flex items-center gap-2 cursor-pointer group">
               <input
@@ -842,26 +1336,22 @@ export function DatasetCoverageDialog({ open, onClose, onRunInBackground }: Data
             {readinessState === 'ready' && datasetList.length > 0 && (
               <>
                 <div className="space-y-3">
-                  {datasetList.map((entry) => {
+                  {(() => {
+                    const out: JSX.Element[] = []
+
+                    for (const entry of datasetList) {
                       const category = entry.category as DatasetCategory
                       const isSelected = selectedCategories.has(category)
                       const overrideValue = categoryOverrides[category] || null
-                      const defaultSource = recommendedSources[category] || getDefaultSourceLabel(category, coverageData?.iso3) || null
-                      
-                      // Options logic
-                      const candidates = categoryCandidates[category] || []
-                      const optionNames = candidates
-                        .map((candidate) => candidate.dataset || candidate.source || '')
-                        .filter((name): name is string => Boolean(name))
-                      const uniqueOptions = Array.from(new Set(optionNames))
-                      const filteredOptions = uniqueOptions.filter((name) => name !== defaultSource)
-                      if (overrideValue && overrideValue !== defaultSource && !filteredOptions.includes(overrideValue)) {
-                        filteredOptions.unshift(overrideValue)
-                      }
+                      const defaultSource =
+                        recommendedSources[category] || getDefaultSourceLabel(category, coverageData?.iso3) || null
+                      const catalogEntries = categoryCandidates[category] || []
 
-                    return (
+                      const title = CATEGORY_LABELS[category] || entry.label || String(entry.category)
+
+                      out.push(
                         <div
-                        key={entry.category}
+                          key={entry.category}
                           className={cn(
                             "group relative flex gap-4 p-4 border rounded-sm transition-all duration-200 hover:bg-white/[0.02]",
                             entry.present ? "border-emerald-500/20 bg-emerald-500/[0.02]" : "border-white/10 bg-black/20",
@@ -870,87 +1360,93 @@ export function DatasetCoverageDialog({ open, onClose, onRunInBackground }: Data
                         >
                           {/* Selection Toggle */}
                           <div className="pt-1">
-                             <button
-                                onClick={() => handleToggleCategory(category)}
-                          disabled={!!jobId || readinessLoading}
-                                className={cn(
-                                    "w-5 h-5 border rounded-sm flex items-center justify-center transition-all",
-                                    isSelected 
-                                        ? "bg-primary border-primary text-black" 
-                                        : "border-white/20 hover:border-white/40 bg-black/40"
-                                )}
-                             >
-                                {isSelected && <CheckCircle2 className="w-3.5 h-3.5" />}
-                             </button>
+                            <button
+                              onClick={() => handleToggleCategory(category)}
+                              disabled={!!jobId || readinessLoading}
+                              className={cn(
+                                "w-5 h-5 border rounded-sm flex items-center justify-center transition-all",
+                                isSelected ? "bg-primary border-primary text-black" : "border-white/20 hover:border-white/40 bg-black/40"
+                              )}
+                            >
+                              {isSelected && <CheckCircle2 className="w-3.5 h-3.5" />}
+                            </button>
                           </div>
 
                           <div className="flex-1 space-y-2">
                             <div className="flex flex-wrap items-center justify-between gap-2">
-                                <div className="flex items-center gap-3">
-                                    <span className="font-bold text-sm text-white uppercase tracking-wide">{CATEGORY_LABELS[category]}</span>
-                                    <span className="text-[9px] font-mono text-white/30 border border-white/10 px-1.5 py-0.5 rounded-sm">
-                              {entry.dataset_type.toUpperCase()}
-                            </span>
-                          </div>
-                                <div className={cn(
-                                    "text-[9px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-wider border",
-                                    entry.present 
-                                        ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-500" 
-                                        : "bg-amber-500/10 border-amber-500/30 text-amber-500"
-                                )}>
-                                    {entry.present ? 'AVAILABLE' : 'MISSING'}
-                                </div>
+                              <div className="flex items-center gap-3">
+                                <span className="font-bold text-sm text-white uppercase tracking-wide">{title}</span>
+                                <span className="text-[9px] font-mono text-white/30 border border-white/10 px-1.5 py-0.5 rounded-sm">
+                                  {entry.dataset_type.toUpperCase()}
+                                </span>
+                              </div>
+                              <div
+                                className={cn(
+                                  "text-[9px] font-bold px-2 py-0.5 rounded-sm uppercase tracking-wider border",
+                                  entry.present
+                                    ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-500"
+                                    : "bg-amber-500/10 border-amber-500/30 text-amber-500"
+                                )}
+                              >
+                                {entry.present ? 'AVAILABLE' : 'MISSING'}
+                              </div>
                             </div>
 
                             <div className="flex flex-wrap items-center gap-4 text-xs">
-                                <div className="flex-1 min-w-[200px]">
-                                    {defaultSource ? (
-                                        <div className="flex flex-col">
-                                            <span className="text-[9px] text-white/40 font-mono uppercase">Recommendation</span>
-                                            <span className="text-white/80">{defaultSource}</span>
-                                        </div>
-                                    ) : (
-                                        <span className="text-white/40 italic">No recommendation</span>
-                                    )}
-                                </div>
-                                
-                                {/* Source Override Selector */}
-                                {(Boolean(defaultSource) || filteredOptions.length > 0) && (
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-[9px] text-white/40 font-mono uppercase">Source Override</span>
-                                        <select
-                                            className="bg-black border border-white/20 rounded-sm px-2 py-1 text-[10px] text-white focus:border-primary focus:ring-0 outline-none min-w-[150px]"
-                                            value={overrideValue || ''}
-                                            disabled={!!jobId}
-                                            onChange={(event) => handleOverrideChange(category, event.target.value)}
-                                        >
-                                            <option value="">{defaultSource ? 'Auto' : 'Select Source'}</option>
-                                            {defaultSource && (
-                                                <option value={defaultSource}>{defaultSource} (Recommended)</option>
-                                            )}
-                                            {filteredOptions.map((option, idx) => (
-                                                <option key={`${category}-${option || idx}`} value={option}>{option}</option>
-                                            ))}
-                                        </select>
-                                    </div>
+                              <div className="flex-1 min-w-[200px]">
+                                {defaultSource ? (
+                                  <div className="flex flex-col">
+                                    <span className="text-[9px] text-white/40 font-mono uppercase">Recommendation</span>
+                                    <span className="text-white/80">{defaultSource}</span>
+                                  </div>
+                                ) : (
+                                  <span className="text-white/40 italic">No recommendation</span>
                                 )}
+                              </div>
+
+                              {/* Source Override Selector */}
+                              {(Boolean(defaultSource) || catalogEntries.length > 0) && (
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[9px] text-white/40 font-mono uppercase">Source Override</span>
+                                  <button
+                                    type="button"
+                                    disabled={!!jobId}
+                                    onClick={() => setSourcePickerCategory(category)}
+                                    className={cn(
+                                      "min-w-[150px] px-2 py-1 text-[10px] font-mono text-white border rounded-sm flex items-center justify-between gap-2",
+                                      !!jobId
+                                        ? "bg-black/40 border-white/10 text-white/30 cursor-not-allowed"
+                                        : "bg-black border-white/20 hover:border-white/40 focus:border-primary focus:outline-none"
+                                    )}
+                                    title={overrideValue || (defaultSource ? `AUTO (DEFAULT): ${defaultSource}` : 'Select Source')}
+                                  >
+                                    <span className="truncate">
+                                      {overrideValue ? overrideValue : defaultSource ? 'AUTO (DEFAULT)' : 'SELECT SOURCE'}
+                                    </span>
+                                    <Search className="w-3 h-3 shrink-0 text-white/40" />
+                                  </button>
+                                </div>
+                              )}
                             </div>
 
                             {/* Path / Info */}
                             <div className="pt-2 border-t border-white/5 flex items-center justify-between">
-                                <div className="font-mono text-[10px] text-white/40 truncate max-w-[400px]">
-                                    {entry.processed_path || 'No processed artifact'}
+                              <div className="font-mono text-[10px] text-white/40 truncate max-w-[400px]">
+                                {entry.processed_path || 'No processed artifact'}
+                              </div>
+                              {entry.last_modified && (
+                                <div className="font-mono text-[10px] text-white/30">
+                                  {new Date(entry.last_modified).toLocaleDateString()}
                                 </div>
-                            {entry.last_modified && (
-                                    <div className="font-mono text-[10px] text-white/30">
-                                        {new Date(entry.last_modified).toLocaleDateString()}
-                                    </div>
-                            )}
+                              )}
                             </div>
                           </div>
                         </div>
-                    )
-                  })}
+                      )
+                    }
+
+                    return out
+                  })()}
                 </div>
               </>
             )}
@@ -995,6 +1491,23 @@ export function DatasetCoverageDialog({ open, onClose, onRunInBackground }: Data
       </div>
       </>
     )}
+    <CategorySourcePickerDialog
+      open={!progressDialogOpen && pickerCategory !== null}
+      category={pickerCategory}
+      value={pickerValue}
+      defaultSource={pickerDefaultSource}
+      entries={pickerEntries}
+      disabled={!!jobId}
+      onClose={() => setSourcePickerCategory(null)}
+      onClear={() => {
+        if (!pickerCategory) return
+        handleOverrideChange(pickerCategory, '')
+      }}
+      onSelect={(datasetName) => {
+        if (!pickerCategory) return
+        handleOverrideChange(pickerCategory, datasetName)
+      }}
+    />
     <DatasetFetchProgressDialog
         jobId={jobId}
         open={progressDialogOpen && Boolean(jobId)}

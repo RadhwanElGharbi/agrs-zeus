@@ -8,6 +8,7 @@ import re
 import math
 import subprocess
 import json
+import sys
 import shutil
 import tempfile
 import uuid
@@ -42,6 +43,7 @@ from .project_utils import (
     PROJECTS_ROOT,
 )
 from .auth import get_current_user, require_auth
+from .audit import write_audit_event
 from .db import get_db
 from .db_models import Project, ProjectMembership, User
 from .projects_db import upsert_project_row
@@ -57,6 +59,7 @@ def require_superadmin(user: Dict[str, Any] = Depends(require_auth)) -> Dict[str
 
 RESEARCH_ROOT = Path("/opt/agrs/docs/Research")
 ISO_CODES_CSV = RESEARCH_ROOT / "iso_countries.csv"
+COUNTRY_COVERAGE_LONG_CSV = RESEARCH_ROOT / "COUNTRY_COVERAGE_LONG.csv"
 COUNTRY_DATASETS_DIR = RESEARCH_ROOT / "Country Coverage" / "Country Datasets"
 DATASET_FETCH_PROTOCOL = "/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md"
 DATASET_COVERAGE_CATALOG_CSV = Path(
@@ -80,8 +83,9 @@ GADM_DIR = BOUNDARIES_ROOT / "gadm41"
 
 GEOD = Geod(ellps="WGS84")
 
-# Maximum AOI area limit in square kilometers
-MAX_AOI_AREA_KM2 = 300
+# Maximum AOI area limit in square kilometers.
+# Set to None for unlimited (default).
+MAX_AOI_AREA_KM2 = None
 
 # Copernicus DEM EEA-10 coverage is commonly defined for the EEA member/cooperating
 # country set (often referred to as "EEA-39"). We use this to avoid showing EEA-10
@@ -1453,7 +1457,7 @@ class AddProjectMemberRequest(BaseModel):
 async def add_project_member(
     project_name: str,
     payload: AddProjectMemberRequest,
-    _: Dict[str, Any] = Depends(require_superadmin),
+    actor: Dict[str, Any] = Depends(require_superadmin),
     db: Session = Depends(get_db),
 ):
     """
@@ -1489,6 +1493,19 @@ async def add_project_member(
         if payload.membership_role is not None:
             membership.membership_role = payload.membership_role or None
         db.commit()
+
+    write_audit_event(
+        db,
+        project_name=project_name,
+        actor=actor,
+        event_type="project.member.add",
+        payload={
+            "member_user_id": str(user_row.id),
+            "member_email": user_row.email,
+            "membership_role": payload.membership_role or None,
+        },
+        required=True,
+    )
 
     return {"success": True}
 
@@ -1652,7 +1669,229 @@ async def get_pipeline_specs(project_name: str):
     if not specs:
         raise HTTPException(status_code=500, detail=f"Failed to load pipeline specs for '{project_name}'")
 
+    # Backwards/forwards compatibility: always expose derived metric fields used by
+    # multiple UI/eng modules (e.g., alignment sheets expects diameter_mm).
+    if isinstance(specs, dict):
+        specs = _enrich_pipeline_specs_with_mm(specs)
+
     return specs
+
+
+def _normalize_measurement_system(value: Any) -> Optional[str]:
+    if value is None:
+        return None
+    s = str(value).strip().lower()
+    if s in {"si", "metric"}:
+        return "SI"
+    if s in {"imperial", "imp", "us", "uscs"}:
+        return "Imperial"
+    # Preserve canonical formatting if already correct-ish
+    if s.startswith("imp"):
+        return "Imperial"
+    return None
+
+
+def _enrich_pipeline_specs_with_mm(specs: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Ensure the pipeline specs include mm-based diameter fields even when the
+    project uses the "new" base-unit format:
+      - SI: inner/outer are in meters
+      - Imperial: inner/outer are in inches
+
+    Adds/normalizes:
+      - diameter_mm (outer diameter in mm)
+      - inner_diameter_mm
+      - wall_thickness_mm (and thickness_mm)
+    """
+    out: Dict[str, Any] = dict(specs)
+
+    ms = _normalize_measurement_system(out.get("measurement_system"))
+    # Default to SI if not specified
+    if ms is None:
+        ms = "SI"
+        out.setdefault("measurement_system", "SI")
+
+    inch_to_mm = 25.4
+
+    def _as_float(v: Any) -> Optional[float]:
+        try:
+            if v is None:
+                return None
+            return float(v)
+        except Exception:
+            return None
+
+    outer_mm = _as_float(out.get("diameter_mm"))
+    inner_mm = _as_float(out.get("inner_diameter_mm"))
+
+    outer_base = _as_float(out.get("outer_diameter"))
+    inner_base = _as_float(out.get("inner_diameter"))
+
+    # Derive outer/inner mm from base units when missing
+    if outer_mm is None and outer_base is not None:
+        outer_mm = outer_base * (1000.0 if ms == "SI" else inch_to_mm)
+    if inner_mm is None and inner_base is not None:
+        inner_mm = inner_base * (1000.0 if ms == "SI" else inch_to_mm)
+
+    # Wall thickness: accept either key; otherwise derive from diameters
+    wall_mm = _as_float(out.get("wall_thickness_mm"))
+    if wall_mm is None:
+        wall_mm = _as_float(out.get("thickness_mm"))
+    if wall_mm is None and outer_mm is not None and inner_mm is not None:
+        wall_mm = (outer_mm - inner_mm) / 2.0
+
+    # If inner missing but wall present, derive
+    if inner_mm is None and outer_mm is not None and wall_mm is not None:
+        inner_mm = outer_mm - 2.0 * wall_mm
+
+    # Write back derived values (best-effort; don't break callers if incomplete)
+    if outer_mm is not None:
+        out["diameter_mm"] = float(outer_mm)
+    if inner_mm is not None:
+        out["inner_diameter_mm"] = float(inner_mm)
+    if wall_mm is not None:
+        out["wall_thickness_mm"] = float(wall_mm)
+        out["thickness_mm"] = float(wall_mm)
+
+    return out
+
+
+class PipelineSpecsUpdate(BaseModel):
+    """
+    Update payload for pipeline_specs.json.
+
+    Supports either:
+    - base-unit updates (outer_diameter/inner_diameter + measurement_system), or
+    - metric updates (diameter_mm + wall_thickness_mm) as used by the PIRL AI dialog.
+    """
+
+    model_config = {"extra": "allow"}
+
+    product: Optional[str] = None
+    measurement_system: Optional[str] = None
+
+    # Base unit values (SI: meters, Imperial: inches)
+    inner_diameter: Optional[float] = None
+    outer_diameter: Optional[float] = None
+
+    # Derived / metric values
+    diameter_mm: Optional[float] = None
+    inner_diameter_mm: Optional[float] = None
+    wall_thickness_mm: Optional[float] = None
+    thickness_mm: Optional[float] = None
+
+
+@router.put("/projects/{project_name}/pipeline-specs")
+async def update_pipeline_specs(
+    project_name: str,
+    payload: PipelineSpecsUpdate,
+    actor: Dict[str, Any] = Depends(require_auth),
+    db: Session = Depends(get_db),
+):
+    """
+    Persist updates to pipeline_specs.json (used by PIRL AI dialog + alignment sheets).
+    """
+    project_path = resolve_project_path(project_name)
+    if not project_path or not project_path.exists():
+        raise HTTPException(status_code=404, detail=f"Project '{project_name}' not found")
+
+    specs_file = project_path / "pipeline_specs.json"
+    existing = load_json_file(specs_file) if specs_file.exists() else {}
+    if not isinstance(existing, dict):
+        existing = {}
+
+    ms = _normalize_measurement_system(payload.measurement_system) or _normalize_measurement_system(existing.get("measurement_system"))
+    if ms is None:
+        # Fall back to project metadata if present
+        meta = load_json_file(project_path / "project_metadata.json") or {}
+        ms = _normalize_measurement_system(meta.get("measurement_system")) or "SI"
+
+    inch_to_mm = 25.4
+
+    def _as_float(v: Any) -> Optional[float]:
+        try:
+            if v is None:
+                return None
+            return float(v)
+        except Exception:
+            return None
+
+    # 1) Prefer metric payloads from UI (diameter_mm + wall_thickness_mm)
+    outer_mm = _as_float(payload.diameter_mm)
+    inner_mm = _as_float(payload.inner_diameter_mm)
+    wall_mm = _as_float(payload.wall_thickness_mm) or _as_float(payload.thickness_mm)
+
+    # 2) Fallback to base-unit payloads (outer_diameter/inner_diameter)
+    if outer_mm is None and payload.outer_diameter is not None:
+        outer_mm = float(payload.outer_diameter) * (1000.0 if ms == "SI" else inch_to_mm)
+    if inner_mm is None and payload.inner_diameter is not None:
+        inner_mm = float(payload.inner_diameter) * (1000.0 if ms == "SI" else inch_to_mm)
+
+    # If wall missing but we have inner+outer, compute it
+    if wall_mm is None and outer_mm is not None and inner_mm is not None:
+        wall_mm = (outer_mm - inner_mm) / 2.0
+
+    # If inner missing but we have wall+outer, compute it
+    if inner_mm is None and outer_mm is not None and wall_mm is not None:
+        inner_mm = outer_mm - 2.0 * wall_mm
+
+    if outer_mm is None or inner_mm is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Must provide either (diameter_mm + wall_thickness_mm) or (outer_diameter + inner_diameter).",
+        )
+
+    if outer_mm <= inner_mm:
+        raise HTTPException(status_code=400, detail="Outside diameter must be greater than inside diameter.")
+
+    if wall_mm is None:
+        wall_mm = (outer_mm - inner_mm) / 2.0
+
+    if wall_mm <= 0:
+        raise HTTPException(status_code=400, detail="Computed wall thickness must be positive.")
+
+    # Convert back to base units for storage consistency
+    if ms == "SI":
+        outer_base = outer_mm / 1000.0
+        inner_base = inner_mm / 1000.0
+    else:
+        outer_base = outer_mm / inch_to_mm
+        inner_base = inner_mm / inch_to_mm
+
+    updated: Dict[str, Any] = dict(existing)
+    if payload.product is not None:
+        updated["product"] = payload.product
+    updated["measurement_system"] = ms
+    updated["outer_diameter"] = float(outer_base)
+    updated["inner_diameter"] = float(inner_base)
+    updated["diameter_mm"] = float(outer_mm)
+    updated["inner_diameter_mm"] = float(inner_mm)
+    updated["wall_thickness_mm"] = float(wall_mm)
+    updated["thickness_mm"] = float(wall_mm)
+
+    # Persist
+    _write_json(specs_file, updated)
+
+    # Project-scoped audit event
+    try:
+        write_audit_event(
+            db,
+            project_name=project_name,
+            actor=actor,
+            event_type="project.pipeline_specs.update",
+            payload={
+                "measurement_system": ms,
+                "outer_diameter": updated.get("outer_diameter"),
+                "inner_diameter": updated.get("inner_diameter"),
+                "diameter_mm": updated.get("diameter_mm"),
+                "wall_thickness_mm": updated.get("wall_thickness_mm"),
+            },
+            required=False,
+        )
+    except Exception:
+        pass
+
+    return _enrich_pipeline_specs_with_mm(updated)
 
 
 def _build_display_name_from_metadata(metadata: dict, fallback_name: str) -> str:
@@ -2062,14 +2301,67 @@ def _infer_project_iso3(project_path: Path) -> Optional[str]:
 
 
 @lru_cache()
-def _load_country_coverage_rows():
-    if not DATASET_COVERAGE_CATALOG_CSV.exists():
+def _load_country_coverage_rows_cached(catalog_path: str, mtime: float) -> List[Dict[str, str]]:
+    """
+    Cached loader for dataset coverage catalog rows.
+
+    Cache key includes `mtime` so updates to the CSV are picked up without a backend restart.
+    """
+    _ = mtime  # part of cache key
+    path = Path(catalog_path)
+    if not path.exists():
         return []
-    rows = []
-    with DATASET_COVERAGE_CATALOG_CSV.open("r", encoding="utf-8") as f:
+    rows: List[Dict[str, str]] = []
+    with path.open("r", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         rows.extend(reader)
     return rows
+
+
+def _try_build_dataset_coverage_catalog() -> None:
+    """
+    Best-effort: generate WORLD_DATASET_CATALOGUE.csv if it's missing.
+
+    This keeps the Dataset Manager usable in fresh checkouts/minimal deployments where
+    the consolidated catalogue hasn't been pre-generated yet.
+    """
+    if DATASET_COVERAGE_CATALOG_CSV.exists():
+        return
+
+    scripts_root = Path(__file__).resolve().parent.parent / "scripts"
+    builder = scripts_root / "build_dataset_coverage_catalog.py"
+    if not builder.exists():
+        return
+
+    try:
+        subprocess.run(
+            [sys.executable, str(builder)],
+            capture_output=True,
+            text=True,
+            timeout=90,
+            check=False,
+        )
+    except Exception:
+        # Best-effort only. The API will fall back to COUNTRY_COVERAGE_LONG.csv.
+        return
+
+
+def _load_country_coverage_rows() -> List[Dict[str, str]]:
+    """
+    Load dataset coverage catalog rows.
+
+    Prefer the consolidated catalogue (WORLD_DATASET_CATALOGUE.csv). If it's missing (fresh
+    checkout / minimal deployment), fall back to the raw research table
+    (COUNTRY_COVERAGE_LONG.csv) so country-specific datasets like TINITALY still surface.
+    """
+    if not DATASET_COVERAGE_CATALOG_CSV.exists():
+        _try_build_dataset_coverage_catalog()
+    catalog = DATASET_COVERAGE_CATALOG_CSV if DATASET_COVERAGE_CATALOG_CSV.exists() else COUNTRY_COVERAGE_LONG_CSV
+    try:
+        mtime = catalog.stat().st_mtime
+    except OSError:
+        mtime = -1.0
+    return _load_country_coverage_rows_cached(str(catalog), float(mtime))
 
 
 @lru_cache()
@@ -2819,7 +3111,8 @@ async def get_project_regulations(project_name: str):
 )
 async def refresh_project_regulations(
     project_name: str,
-    _actor: Dict[str, Any] = Depends(require_auth),
+    actor: Dict[str, Any] = Depends(require_auth),
+    db: Session = Depends(get_db),
 ):
     """
     Recompute AOI→jurisdiction matching and refresh the compliance matrix snapshot.
@@ -2830,7 +3123,16 @@ async def refresh_project_regulations(
     if not project_path or not project_path.exists():
         raise HTTPException(status_code=404, detail=f"Project '{project_name}' not found.")
 
-    return _compute_regulations_response(project_name, project_path, clear_cache=True)
+    resp = _compute_regulations_response(project_name, project_path, clear_cache=True)
+    write_audit_event(
+        db,
+        project_name=project_name,
+        actor=actor,
+        event_type="regulations.refresh",
+        payload={"snapshot_path": str(_regulations_snapshot_path(project_path).relative_to(project_path))},
+        required=True,
+    )
+    return resp
 
 
 @router.post(
@@ -2840,7 +3142,8 @@ async def refresh_project_regulations(
 async def index_regulation_entry(
     project_name: str,
     entry_id: str,
-    _actor: Dict[str, Any] = Depends(require_auth),
+    actor: Dict[str, Any] = Depends(require_auth),
+    db: Session = Depends(get_db),
 ):
     """
     Index (download) a regulation text into the project `docs/regulatory_docs/` folder so it can be viewed later.
@@ -2889,24 +3192,42 @@ async def index_regulation_entry(
     if dest_path.exists() and dest_path.is_file():
         stat = dest_path.stat()
         media_type = media_type_hint or mimetypes.guess_type(str(dest_path))[0]
-        return RegulationIndexResponse(
+        resp = RegulationIndexResponse(
             stored_path=str(dest_path.relative_to(project_path)),
             filename=filename,
             category=category,
             size_bytes=stat.st_size,
             media_type=media_type,
         )
+        write_audit_event(
+            db,
+            project_name=project_name,
+            actor=actor,
+            event_type="regulations.index",
+            payload={"entry_id": entry_id_norm, "stored_path": resp.stored_path, "category": category, "already_present": True},
+            required=True,
+        )
+        return resp
 
     bytes_written, detected_type = _download_stream_to_file(entry.direct_download_url, dest_path)
     media_type = media_type_hint or detected_type or mimetypes.guess_type(str(dest_path))[0]
 
-    return RegulationIndexResponse(
+    resp = RegulationIndexResponse(
         stored_path=str(dest_path.relative_to(project_path)),
         filename=filename,
         category=category,
         size_bytes=bytes_written or dest_path.stat().st_size,
         media_type=media_type,
     )
+    write_audit_event(
+        db,
+        project_name=project_name,
+        actor=actor,
+        event_type="regulations.index",
+        payload={"entry_id": entry_id_norm, "stored_path": resp.stored_path, "category": category, "already_present": False},
+        required=True,
+    )
+    return resp
 
 
 def _calculate_utm_zone(lon: float, lat: float) -> Tuple[int, str, int]:
@@ -3041,7 +3362,12 @@ async def recommend_project_crs(project_name: str):
 
 
 @router.put("/projects/{project_name}/crs")
-async def update_project_crs(project_name: str, request: UpdateProjectCRSRequest):
+async def update_project_crs(
+    project_name: str,
+    request: UpdateProjectCRSRequest,
+    actor: Dict[str, Any] = Depends(require_auth),
+    db: Session = Depends(get_db),
+):
     """
     Update the CRS for a project. Writes to project_metadata.json.
     """
@@ -3055,6 +3381,9 @@ async def update_project_crs(project_name: str, request: UpdateProjectCRSRequest
     metadata = load_json_file(metadata_file) if metadata_file.exists() else {}
     if not metadata:
         metadata = {"project_name": project_name}
+
+    old_epsg = metadata.get("crs_epsg") or ((metadata.get("crs") or {}).get("epsg") if isinstance(metadata.get("crs"), dict) else None)
+    old_name = metadata.get("crs_name") or ((metadata.get("crs") or {}).get("name") if isinstance(metadata.get("crs"), dict) else None)
     
     # Update CRS fields (use flat format for compatibility)
     metadata["crs_epsg"] = request.epsg
@@ -3073,6 +3402,18 @@ async def update_project_crs(project_name: str, request: UpdateProjectCRSRequest
             json.dump(metadata, f, indent=4)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to update project metadata: {e}")
+
+    write_audit_event(
+        db,
+        project_name=project_name,
+        actor=actor,
+        event_type="project.crs.update",
+        payload={
+            "before": {"epsg": old_epsg, "name": old_name},
+            "after": {"epsg": request.epsg, "name": request.name},
+        },
+        required=True,
+    )
     
     return {"status": "success", "epsg": request.epsg, "name": request.name}
 
@@ -3242,10 +3583,9 @@ async def create_project(
         feature_collection = _prepare_aoi_payload(aoi_file, drawn_geojson, temp_dir)
         area_km2 = _calculate_area_km2(feature_collection)
 
-        # Validate area limit only for drawn AOIs (not uploaded files)
-        # Uploaded files from real projects can be any size
-        # Admin users bypass the area limit
-        if drawn_geojson and area_km2 > MAX_AOI_AREA_KM2 and not is_admin:
+        # Optional area limit only for drawn AOIs (uploaded files can be any size).
+        # Admin users bypass the area limit.
+        if drawn_geojson and MAX_AOI_AREA_KM2 is not None and area_km2 > MAX_AOI_AREA_KM2 and not is_admin:
             raise HTTPException(
                 status_code=400,
                 detail=f"AOI area ({area_km2:.1f} km²) exceeds the maximum allowed limit of {MAX_AOI_AREA_KM2} km². Please draw a smaller area."
@@ -3381,11 +3721,25 @@ async def create_project(
     }
     _write_json(project_dir / "project_metadata.json", metadata)
 
+    # Pipeline specs: store both base units (m or in) and derived metric fields (mm)
+    inch_to_mm = 25.4
+    if measurement_system_normalized == "SI":
+        outer_mm = outer_diameter * 1000.0
+        inner_mm = inner_diameter * 1000.0
+    else:
+        outer_mm = outer_diameter * inch_to_mm
+        inner_mm = inner_diameter * inch_to_mm
+    wall_mm = (outer_mm - inner_mm) / 2.0
+
     pipeline_specs = {
         "product": product,
         "inner_diameter": inner_diameter,
         "outer_diameter": outer_diameter,
         "measurement_system": measurement_system_normalized,
+        "diameter_mm": outer_mm,
+        "inner_diameter_mm": inner_mm,
+        "wall_thickness_mm": wall_mm,
+        "thickness_mm": wall_mm,
     }
     _write_json(project_dir / "pipeline_specs.json", pipeline_specs)
 
@@ -3432,6 +3786,25 @@ async def create_project(
         _compute_regulations_response(sanitized_name, project_dir, clear_cache=False)
     except Exception as exc:
         print(f"Warning: Failed to generate compliance matrix snapshot for {sanitized_name}: {exc}")
+
+    # Project-scoped audit event
+    write_audit_event(
+        db,
+        project_name=sanitized_name,
+        actor=actor,
+        event_type="project.create",
+        payload={
+            "project_id": project_id,
+            "organization": organization,
+            "country": country_name,
+            "iso3": iso3,
+            "measurement_system": measurement_system_normalized,
+            "crs_epsg": epsg,
+            "crs_name": crs_display_name,
+            "aoi_area_km2": area_km2,
+        },
+        required=True,
+    )
 
     return {
         "status": "success",

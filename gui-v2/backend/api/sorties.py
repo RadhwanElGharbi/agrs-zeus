@@ -24,6 +24,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from .auth import require_auth
+from .audit import build_audit_event
 from .db import get_db
 from .db_models import Sortie
 from .project_utils import load_json_file, resolve_project_path
@@ -86,6 +87,30 @@ def _append_jsonl(path: Path, record: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("a", encoding="utf-8") as f:
         f.write(json.dumps(record, ensure_ascii=False) + "\n")
+
+
+def _diff_sortie_documents(before: Optional[dict], after: dict) -> dict:
+    """
+    Build a changelog "changes" payload between two sortie documents.
+    """
+
+    fields: list[dict] = []
+    for key in ("code", "name", "status", "notes"):
+        b = before.get(key) if isinstance(before, dict) else None
+        a = after.get(key) if isinstance(after, dict) else None
+        if b != a:
+            fields.append({"field": key, "from": b, "to": a})
+
+    before_where = before.get("where") if isinstance(before, dict) else None
+    after_where = after.get("where") if isinstance(after, dict) else None
+    b_geom = (before_where or {}).get("geometry_summary_wgs84") if isinstance(before_where, dict) else None
+    a_geom = (after_where or {}).get("geometry_summary_wgs84") if isinstance(after_where, dict) else None
+    geometry = {"before": b_geom, "after": a_geom} if b_geom != a_geom else None
+
+    changes: dict = {"fields": fields}
+    if geometry:
+        changes["geometry"] = geometry
+    return changes
 
 
 def _iter_xy(geom: Any) -> list[tuple[float, float]]:
@@ -374,6 +399,17 @@ def create_sortie(
     entry_path = _sortie_entry_path(project_path, str(sortie.id))
     _write_json_atomic(entry_path, doc)
 
+    # Audit event should commit atomically with DB writes.
+    db.add(
+        build_audit_event(
+            db,
+            project_name=project,
+            actor=actor,
+            event_type="sortie.create",
+            payload={"sortie_id": str(sortie.id), "code": code},
+        )
+    )
+
     try:
         db.commit()
     except Exception as exc:
@@ -389,9 +425,17 @@ def create_sortie(
 
     # Best-effort changelog (do not fail request).
     try:
+        changes = _diff_sortie_documents(None, doc)
         _append_jsonl(
             _sortie_changelog_path(project_path, str(sortie.id)),
-            {"ts": now_iso, "action": "create", "sortie_id": str(sortie.id), "actor": _actor_payload(actor), "document": doc},
+            {
+                "timestamp": now_iso,
+                "action": "create",
+                "sortie_id": str(sortie.id),
+                "actor": _actor_payload(actor),
+                "changes": changes,
+                "document": doc,
+            },
         )
     except Exception:
         pass
@@ -480,6 +524,17 @@ def update_sortie(
         previous_bytes = None
     _write_json_atomic(entry_path, doc)
 
+    # Audit event should commit atomically with DB writes.
+    db.add(
+        build_audit_event(
+            db,
+            project_name=project,
+            actor=actor,
+            event_type="sortie.update",
+            payload={"sortie_id": str(sortie.id), "code": sortie.code},
+        )
+    )
+
     try:
         db.commit()
     except Exception as exc:
@@ -495,9 +550,23 @@ def update_sortie(
 
     db.refresh(sortie)
     try:
+        before_doc = None
+        if previous_bytes:
+            try:
+                before_doc = json.loads(previous_bytes.decode("utf-8"))
+            except Exception:
+                before_doc = None
+        changes = _diff_sortie_documents(before_doc, doc)
         _append_jsonl(
             _sortie_changelog_path(project_path, str(sortie.id)),
-            {"ts": now_iso, "action": "update", "sortie_id": str(sortie.id), "actor": _actor_payload(actor), "document": doc},
+            {
+                "timestamp": now_iso,
+                "action": "update",
+                "sortie_id": str(sortie.id),
+                "actor": _actor_payload(actor),
+                "changes": changes,
+                "document": doc,
+            },
         )
     except Exception:
         pass
@@ -559,6 +628,17 @@ def archive_sortie(
         previous_bytes = None
     _write_json_atomic(entry_path, doc)
 
+    # Audit event should commit atomically with DB writes.
+    db.add(
+        build_audit_event(
+            db,
+            project_name=project,
+            actor=actor,
+            event_type="sortie.archive",
+            payload={"sortie_id": str(sortie.id), "code": sortie.code},
+        )
+    )
+
     try:
         db.commit()
     except Exception as exc:
@@ -574,9 +654,23 @@ def archive_sortie(
 
     db.refresh(sortie)
     try:
+        before_doc = None
+        if previous_bytes:
+            try:
+                before_doc = json.loads(previous_bytes.decode("utf-8"))
+            except Exception:
+                before_doc = None
+        changes = _diff_sortie_documents(before_doc, doc)
         _append_jsonl(
             _sortie_changelog_path(project_path, str(sortie.id)),
-            {"ts": now_iso, "action": "archive", "sortie_id": str(sortie.id), "actor": _actor_payload(actor), "document": doc},
+            {
+                "timestamp": now_iso,
+                "action": "archive",
+                "sortie_id": str(sortie.id),
+                "actor": _actor_payload(actor),
+                "changes": changes,
+                "document": doc,
+            },
         )
     except Exception:
         pass

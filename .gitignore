@@ -129,3 +129,6 @@ gui-v2/backend/tests/reports/
 .claude_credentials
 .claude_credentials.template
 .cursor_credentials
+
+# Large raw data files (exceed GitHub 100MB limit)
+DBs/*/raw/*.geojson

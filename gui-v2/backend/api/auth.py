@@ -14,8 +14,14 @@ from fastapi import APIRouter, HTTPException, Request, Depends, Header
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, Field
 import threading
+from sqlalchemy import select, or_, func
+from sqlalchemy.orm import Session
 
 router = APIRouter(tags=["auth"])
+
+from .db import get_sessionmaker  # noqa: E402
+from .db_models import User  # noqa: E402
+from .security import verify_password, DUMMY_PASSWORD_HASH  # noqa: E402
 
 # ============================================================================
 # Configuration
@@ -99,10 +105,35 @@ def _init_users():
     DEMO_USERS["admin"]["password_hash"] = _hash_password(admin_password)
     DEMO_USERS["rad_admin"]["password_hash"] = _hash_password(rad_admin_password)
 
+    # Backward-compat: allow email-based login identifiers.
+    # Some deployments historically used the RAD admin email as the login username.
+    admin_email = (os.getenv("ADMIN_EMAIL") or os.getenv("INITIAL_ADMIN_EMAIL") or "").strip().lower()
+    rad_admin_email = (os.getenv("RAD_ADMIN_EMAIL") or "radwan@agrsglobal.com").strip().lower()
+
+    if admin_email:
+        DEMO_USERS.setdefault(admin_email, DEMO_USERS["admin"])
+    if rad_admin_email:
+        DEMO_USERS.setdefault(rad_admin_email, DEMO_USERS["rad_admin"])
+
 
 def _generate_token() -> str:
     """Generate a secure session token."""
     return secrets.token_urlsafe(32)
+
+
+def _find_db_user(db: Session, identifier: str) -> Optional[User]:
+    ident = (identifier or "").strip().lower()
+    if not ident:
+        return None
+    # Accept either email or serial_number as login identifier.
+    return db.execute(
+        select(User).where(
+            or_(
+                func.lower(User.email) == ident,
+                func.lower(User.serial_number) == ident,
+            )
+        )
+    ).scalar_one_or_none()
 
 
 def _get_session(token: str) -> Optional[Dict[str, Any]]:
@@ -272,13 +303,21 @@ async def get_current_user(
     if not session:
         return None
 
-    return {
-        "username": session["username"],
-        "name": session["name"],
-        "role": session["role"],
-        "company": session["company"],
-        "session_id": credentials.credentials
+    payload: Dict[str, Any] = {
+        "username": session.get("username"),
+        "name": session.get("name"),
+        "role": session.get("role"),
+        "company": session.get("company"),
+        "session_id": credentials.credentials,
     }
+    # Optional DB identity fields (present for DB-backed sessions)
+    if session.get("id"):
+        payload["id"] = session.get("id")
+    if session.get("email"):
+        payload["email"] = session.get("email")
+    if session.get("serial_number"):
+        payload["serial_number"] = session.get("serial_number")
+    return payload
 
 
 async def require_auth(
@@ -296,13 +335,20 @@ async def require_auth(
     if not session:
         raise HTTPException(status_code=401, detail="Invalid or expired session")
 
-    return {
-        "username": session["username"],
-        "name": session["name"],
-        "role": session["role"],
-        "company": session["company"],
-        "session_id": credentials.credentials
+    payload: Dict[str, Any] = {
+        "username": session.get("username"),
+        "name": session.get("name"),
+        "role": session.get("role"),
+        "company": session.get("company"),
+        "session_id": credentials.credentials,
     }
+    if session.get("id"):
+        payload["id"] = session.get("id")
+    if session.get("email"):
+        payload["email"] = session.get("email")
+    if session.get("serial_number"):
+        payload["serial_number"] = session.get("serial_number")
+    return payload
 
 
 # ============================================================================
@@ -319,7 +365,82 @@ async def login(request: Request, login_req: LoginRequest):
 
     client_info = _get_client_info(request)
 
-    # Check user exists
+    # Prefer DB-backed auth when a matching DB user exists. This makes email login
+    # first-class (not just an alias) and matches the admin/user management tables.
+    SessionLocal = None
+    try:
+        SessionLocal = get_sessionmaker()
+    except Exception:
+        SessionLocal = None
+
+    if SessionLocal is not None:
+        with SessionLocal() as db:
+            db_user = _find_db_user(db, username)
+            # Always run password verification to reduce timing differences.
+            stored_hash = db_user.password_hash if db_user else DUMMY_PASSWORD_HASH
+            ok = verify_password(password, stored_hash)
+
+            if db_user is not None:
+                if not ok:
+                    _log_session_event(
+                        session_id="none",
+                        username=username,
+                        event_type="login_failed",
+                        client_info=client_info,
+                        metadata={"reason": "wrong_password"},
+                    )
+                    raise HTTPException(status_code=401, detail="Invalid credentials")
+
+                if not bool(getattr(db_user, "is_active", True)):
+                    _log_session_event(
+                        session_id="none",
+                        username=username,
+                        event_type="login_failed",
+                        client_info=client_info,
+                        metadata={"reason": "inactive_user"},
+                    )
+                    raise HTTPException(status_code=401, detail="Invalid credentials")
+
+                # Create session (still stored in-memory, but now tied to the DB identity)
+                token = _generate_token()
+                expires_at = datetime.utcnow() + timedelta(hours=SESSION_EXPIRY_HOURS)
+                session = {
+                    "id": str(db_user.id),
+                    "email": db_user.email,
+                    "serial_number": db_user.serial_number,
+                    # Keep legacy keys used by frontend + other endpoints
+                    "username": db_user.email,
+                    "name": db_user.full_name,
+                    "role": (db_user.role or "member"),
+                    "company": (db_user.organization or "AGRS Global"),
+                    "created_at": datetime.utcnow().isoformat(),
+                    "expires_at": expires_at.isoformat(),
+                    "client_info": client_info,
+                }
+                with SESSION_LOCK:
+                    SESSIONS[token] = session
+                _save_sessions()
+
+                _log_session_event(
+                    session_id=token[:16] + "...",
+                    username=session["username"],
+                    event_type="login_success",
+                    client_info=client_info,
+                )
+
+                return LoginResponse(
+                    success=True,
+                    token=token,
+                    user={
+                        "username": session["username"],
+                        "name": session["name"],
+                        "role": session["role"],
+                        "company": session["company"],
+                    },
+                    message=f"Welcome, {session['name']}!",
+                )
+
+    # Fall back to demo users (legacy mode) ONLY when no DB user matches.
     user = DEMO_USERS.get(username)
     if not user:
         _log_session_event(
@@ -327,11 +448,10 @@ async def login(request: Request, login_req: LoginRequest):
             username=username,
             event_type="login_failed",
             client_info=client_info,
-            metadata={"reason": "user_not_found"}
+            metadata={"reason": "user_not_found"},
         )
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    # Verify password
     password_hash = _hash_password(password)
     if password_hash != user["password_hash"]:
         _log_session_event(
@@ -339,11 +459,11 @@ async def login(request: Request, login_req: LoginRequest):
             username=username,
             event_type="login_failed",
             client_info=client_info,
-            metadata={"reason": "wrong_password"}
+            metadata={"reason": "wrong_password"},
         )
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    # Create session
+    # Create session (demo mode)
     token = _generate_token()
     expires_at = datetime.utcnow() + timedelta(hours=SESSION_EXPIRY_HOURS)
 
@@ -354,7 +474,7 @@ async def login(request: Request, login_req: LoginRequest):
         "company": user["company"],
         "created_at": datetime.utcnow().isoformat(),
         "expires_at": expires_at.isoformat(),
-        "client_info": client_info
+        "client_info": client_info,
     }
 
     with SESSION_LOCK:

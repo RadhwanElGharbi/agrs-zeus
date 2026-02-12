@@ -1,0 +1,129 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 5% 98%;
+    --foreground: 0 0% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+    --primary: 0 65% 40%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 5% 96%;
+    --secondary-foreground: 0 0% 10%;
+    --muted: 0 5% 96%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 0 5% 96%;
+    --accent-foreground: 0 0% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 5% 90%;
+    --input: 0 5% 90%;
+    --ring: 0 65% 40%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 0 5% 5%;
+    --foreground: 0 0% 95%;
+    --card: 0 5% 8%;
+    --card-foreground: 0 0% 95%;
+    --popover: 0 5% 8%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 0 65% 45%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 5% 15%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 5% 15%;
+    --muted-foreground: 0 5% 65%;
+    --accent: 0 5% 15%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 5% 20%;
+    --input: 0 5% 20%;
+    --ring: 0 65% 45%;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html, body, #__next {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    cursor: url('/cursor.svg') 4 4, auto;
+  }
+
+  a, button, [role="button"], input, select, textarea {
+    cursor: url('/cursor.svg') 4 4, pointer;
+  }
+}
+
+/* Custom scrollbar for dark theme */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--background));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground));
+}
+
+/* Custom styles for enterprise look */
+.gradient-text {
+  @apply bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent;
+}
+
+.glass-effect {
+  @apply bg-opacity-50 backdrop-blur-md;
+}
+
+/* Shimmer animation for loading progress */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite linear;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+

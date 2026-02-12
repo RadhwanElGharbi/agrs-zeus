@@ -1,6 +1,21 @@
-import React, { useState } from 'react'
-import { Layers, Eye, EyeOff, ArrowUp, ArrowDown, Info, Loader2, Table, Paintbrush, Minimize2, Box, Terminal } from 'lucide-react'
-import { ManagedLayer, VectorDetail, formatMetadata } from '@/lib/map-utils'
+import React, { useMemo, useState } from 'react'
+import {
+  Layers,
+  Eye,
+  EyeOff,
+  ArrowUp,
+  ArrowDown,
+  Info,
+  Loader2,
+  Table,
+  Paintbrush,
+  Minimize2,
+  Box,
+  Terminal,
+  ChevronDown,
+  ChevronRight
+} from 'lucide-react'
+import { AOI_LAYER_HINTS, ManagedLayer, VectorDetail, formatMetadata } from '@/lib/map-utils'
 import { cn } from '@/lib/utils'
 
 interface LayerManagerProps {
@@ -40,6 +55,11 @@ export function LayerManager({
   onCollapsedChange
 }: LayerManagerProps) {
   const [internalCollapsed, setInternalCollapsed] = useState(false)
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({
+    aoi: false,
+    rasters: false,
+    vectors: false
+  })
 
   // Use external control if provided, otherwise use internal state
   const isCollapsed = externalCollapsed !== undefined ? externalCollapsed : internalCollapsed
@@ -56,6 +76,103 @@ export function LayerManager({
   const selectedDetails = selectedLayer ? vectorDetails[selectedLayer.id] : null
   // Sort layers descending by order (Highest order = Top of list = Top of map)
   const orderedLayers = [...layers].sort((a, b) => b.order - a.order)
+
+  const isAoiLayer = (layer: ManagedLayer) => {
+    if (layer.isAoi) return true
+    if (layer.id === 'start-point' || layer.id === 'end-point') return true
+    const nameLower = (layer.name || '').toLowerCase()
+    if (AOI_LAYER_HINTS.some((hint) => nameLower.includes(hint))) return true
+    const path = (layer.path || '').toLowerCase()
+    if (path.includes('/aoi/')) return true
+    return false
+  }
+
+  const grouped = useMemo(() => {
+    const aoi = orderedLayers.filter((l) => isAoiLayer(l))
+    const rasters = orderedLayers.filter((l) => l.type === 'raster')
+    const vectors = orderedLayers.filter((l) => l.type === 'vector' && !isAoiLayer(l))
+    return { aoi, rasters, vectors }
+  }, [orderedLayers])
+
+  const groupMeta = useMemo(() => {
+    const compute = (items: ManagedLayer[]) => {
+      const total = items.length
+      const visible = items.filter((l) => l.visible).length
+      return {
+        total,
+        visible,
+        allVisible: total > 0 && visible === total,
+        allHidden: total > 0 && visible === 0
+      }
+    }
+    return {
+      aoi: compute(grouped.aoi),
+      rasters: compute(grouped.rasters),
+      vectors: compute(grouped.vectors)
+    }
+  }, [grouped])
+
+  const toggleGroupVisibility = (items: ManagedLayer[]) => {
+    if (!items.length) return
+    const targetVisible = items.some((l) => !l.visible)
+    items.forEach((layer) => {
+      if (layer.visible !== targetVisible) {
+        onToggleVisibility(layer.id)
+      }
+    })
+  }
+
+  const renderGroupHeader = (key: 'aoi' | 'rasters' | 'vectors', label: string) => {
+    const meta = groupMeta[key]
+    const collapsed = collapsedGroups[key]
+    const hasLayers = meta.total > 0
+    const eyeTitle = meta.allVisible ? `Hide all ${label}` : `Show all ${label}`
+
+    const groupLayers = key === 'aoi' ? grouped.aoi : key === 'rasters' ? grouped.rasters : grouped.vectors
+
+    return (
+      <div className="flex items-center justify-between px-2 py-1.5 bg-white/[0.02] border border-white/10 rounded-sm">
+        <button
+          type="button"
+          className={cn(
+            "flex items-center gap-2 min-w-0 text-left",
+            hasLayers ? "text-white/70 hover:text-white" : "text-white/30 cursor-not-allowed"
+          )}
+          onClick={() => {
+            if (!hasLayers) return
+            setCollapsedGroups((prev) => ({ ...prev, [key]: !prev[key] }))
+          }}
+          title={hasLayers ? `Toggle ${label} group` : `No ${label} loaded`}
+          disabled={!hasLayers}
+        >
+          <span className="text-white/40">
+            {collapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          </span>
+          <span className="text-[10px] font-bold uppercase tracking-widest truncate">{label}</span>
+          <span className="text-[9px] font-mono text-white/30 shrink-0">
+            {meta.total === 0 ? '0' : `${meta.visible}/${meta.total}`}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          className={cn(
+            "p-1 rounded-sm transition-colors shrink-0",
+            !hasLayers
+              ? "text-white/10 cursor-not-allowed"
+              : meta.allHidden
+                ? "text-white/20 hover:text-white/50 hover:bg-white/5"
+                : "text-emerald-400 bg-emerald-400/10 hover:bg-emerald-400/20"
+          )}
+          onClick={() => hasLayers && toggleGroupVisibility(groupLayers)}
+          title={eyeTitle}
+          disabled={!hasLayers}
+        >
+          {meta.allHidden ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+        </button>
+      </div>
+    )
+  }
 
   const handleDragStart = (e: React.DragEvent, id: string) => {
     setDraggedId(id)
@@ -116,6 +233,146 @@ export function LayerManager({
     )
   }
 
+  const renderLayerRow = (layer: ManagedLayer) => {
+    const isSelected = selectedLayerId === layer.id
+    const isError = layer.status === 'error'
+    const isDragged = draggedId === layer.id
+
+    return (
+      <div
+        key={layer.id}
+        draggable
+        onDragStart={(e) => handleDragStart(e, layer.id)}
+        onDragOver={(e) => handleDragOver(e, layer.id)}
+        onDrop={handleDrop}
+        title={layer.message || layer.name}
+        className={cn(
+          "group relative flex items-center gap-2 p-1.5 border transition-all duration-200 cursor-pointer select-none overflow-visible",
+          isSelected
+            ? "bg-white/[0.08] border-primary/40 shadow-[inset_2px_0_0_rgba(var(--primary),1)]"
+            : "bg-transparent border-transparent hover:bg-white/[0.04] hover:border-white/10",
+          isError && "bg-destructive/5 border-destructive/20",
+          isDragged && "opacity-50"
+        )}
+        onClick={() => onSelectLayer(layer.id)}
+        onDoubleClick={() => onZoomToLayer(layer.id)}
+      >
+        {/* Drop Indicators */}
+        {dropTarget?.id === layer.id && (
+          <div
+            className={cn(
+              "absolute left-0 right-0 h-0.5 bg-primary z-50 shadow-[0_0_8px_rgba(var(--primary),0.8)]",
+              dropTarget.position === 'above' ? "top-0" : "bottom-0"
+            )}
+          />
+        )}
+
+        {/* Scan line overlay for selected item */}
+        {isSelected && (
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.02] to-transparent pointer-events-none" />
+        )}
+
+        {/* Visibility Toggle */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            onToggleVisibility(layer.id)
+          }}
+          className={cn(
+            "p-1 rounded-sm transition-colors shrink-0 z-10",
+            layer.visible
+              ? "text-emerald-400 bg-emerald-400/10 hover:bg-emerald-400/20"
+              : "text-white/20 hover:text-white/40 hover:bg-white/5"
+          )}
+        >
+          {layer.visible ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+        </button>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0 flex flex-col gap-0.5 z-10">
+          <div className="flex items-center justify-between gap-2">
+            <span
+              className={cn(
+                "text-[11px] font-medium truncate tracking-wide",
+                isError ? "text-destructive" : isSelected ? "text-white" : "text-white/70 group-hover:text-white"
+              )}
+            >
+              {layer.name}
+            </span>
+
+            {/* Status Indicator */}
+            {layer.status !== 'ready' ? (
+              <span
+                className={cn(
+                  "text-[9px] uppercase font-bold px-1 rounded-[2px]",
+                  isError ? "bg-destructive/20 text-destructive" : "bg-amber-500/20 text-amber-500"
+                )}
+              >
+                {isError ? "ERR" : "LOAD"}
+              </span>
+            ) : (
+              <div
+                className={cn(
+                  "w-1.5 h-1.5 rounded-sm transition-colors",
+                  layer.visible ? "bg-emerald-500 shadow-[0_0_4px_rgba(16,185,129,0.8)]" : "bg-white/10"
+                )}
+              />
+            )}
+          </div>
+
+          {/* Opacity Bar */}
+          <div className="relative h-1 w-full bg-white/5 rounded-full overflow-hidden">
+            <div
+              className={cn(
+                "absolute top-0 left-0 bottom-0 transition-all duration-300",
+                layer.visible ? "bg-primary" : "bg-white/20"
+              )}
+              style={{ width: `${layer.opacity * 100}%` }}
+            />
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.05}
+              value={layer.opacity}
+              onChange={(e) => onOpacityChange(layer.id, Number(e.target.value))}
+              onClick={(e) => e.stopPropagation()}
+              className="absolute inset-0 w-full opacity-0 cursor-pointer"
+            />
+          </div>
+        </div>
+
+        <span className="text-[9px] w-7 text-right tabular-nums text-white/30 shrink-0 z-10">
+          {Math.round(layer.opacity * 100)}%
+        </span>
+
+        {/* Reorder Controls */}
+        <div className="flex flex-col -space-y-px opacity-0 group-hover:opacity-100 transition-opacity shrink-0 z-10">
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              onMoveLayer(layer.id, 'up')
+            }}
+            className="p-0.5 hover:bg-white/10 rounded-t-sm disabled:opacity-20 text-white/50 hover:text-primary"
+            disabled={orderedLayers[0]?.id === layer.id}
+          >
+            <ArrowUp className="w-2.5 h-2.5" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              onMoveLayer(layer.id, 'down')
+            }}
+            className="p-0.5 hover:bg-white/10 rounded-b-sm disabled:opacity-20 text-white/50 hover:text-primary"
+            disabled={orderedLayers[orderedLayers.length - 1]?.id === layer.id}
+          >
+            <ArrowDown className="w-2.5 h-2.5" />
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="w-[320px] xl:w-[380px] max-h-[calc(100vh-200px)] overflow-hidden font-mono flex flex-col">
       {/* Main Layer List Panel */}
@@ -165,136 +422,28 @@ export function LayerManager({
             className="p-1 space-y-0.5 overflow-y-auto max-h-[200px] xl:max-h-[280px] bg-black/20"
             onMouseLeave={() => setDropTarget(null)}
         >
-          {orderedLayers.map((layer) => {
-            const isSelected = selectedLayerId === layer.id
-            const isError = layer.status === 'error'
-            const isDragged = draggedId === layer.id
-            
-            return (
-            <div
-              key={layer.id}
-              draggable
-              onDragStart={(e) => handleDragStart(e, layer.id)}
-              onDragOver={(e) => handleDragOver(e, layer.id)}
-              onDrop={handleDrop}
-              title={layer.message || layer.name}
-              className={cn(
-                "group relative flex items-center gap-2 p-1.5 border transition-all duration-200 cursor-pointer select-none overflow-visible",
-                isSelected 
-                    ? "bg-white/[0.08] border-primary/40 shadow-[inset_2px_0_0_rgba(var(--primary),1)]" 
-                    : "bg-transparent border-transparent hover:bg-white/[0.04] hover:border-white/10",
-                isError && "bg-destructive/5 border-destructive/20",
-                isDragged && "opacity-50"
+          <div className="space-y-2">
+            <div className="space-y-1.5">
+              {renderGroupHeader('aoi', 'AOI')}
+              {!collapsedGroups.aoi && grouped.aoi.length > 0 && (
+                <div className="space-y-0.5">{grouped.aoi.map((layer) => renderLayerRow(layer))}</div>
               )}
-              onClick={() => onSelectLayer(layer.id)}
-              onDoubleClick={() => onZoomToLayer(layer.id)}
-            >
-              {/* Drop Indicators */}
-              {dropTarget?.id === layer.id && (
-                  <div 
-                    className={cn(
-                        "absolute left-0 right-0 h-0.5 bg-primary z-50 shadow-[0_0_8px_rgba(var(--primary),0.8)]",
-                        dropTarget.position === 'above' ? "top-0" : "bottom-0"
-                    )} 
-                  />
-              )}
-
-              {/* Scan line overlay for selected item */}
-              {isSelected && (
-                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.02] to-transparent pointer-events-none" />
-              )}
-
-              {/* Visibility Toggle */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onToggleVisibility(layer.id)
-                }}
-                className={cn(
-                    "p-1 rounded-sm transition-colors shrink-0 z-10",
-                    layer.visible 
-                        ? "text-emerald-400 bg-emerald-400/10 hover:bg-emerald-400/20" 
-                        : "text-white/20 hover:text-white/40 hover:bg-white/5"
-                )}
-              >
-                {layer.visible ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
-              </button>
-
-              {/* Content */}
-              <div className="flex-1 min-w-0 flex flex-col gap-0.5 z-10">
-                <div className="flex items-center justify-between gap-2">
-                    <span className={cn(
-                        "text-[11px] font-medium truncate tracking-wide",
-                        isError ? "text-destructive" : isSelected ? "text-white" : "text-white/70 group-hover:text-white"
-                    )}>
-                        {layer.name}
-                    </span>
-                    
-                    {/* Status Indicator */}
-                    {layer.status !== 'ready' ? (
-                       <span className={cn(
-                           "text-[9px] uppercase font-bold px-1 rounded-[2px]",
-                           isError ? "bg-destructive/20 text-destructive" : "bg-amber-500/20 text-amber-500"
-                       )}>
-                          {isError ? "ERR" : "LOAD"}
-                       </span>
-                    ) : (
-                        <div className={cn(
-                            "w-1.5 h-1.5 rounded-sm transition-colors",
-                            layer.visible ? "bg-emerald-500 shadow-[0_0_4px_rgba(16,185,129,0.8)]" : "bg-white/10"
-                        )} />
-                    )}
-                </div>
-                
-                {/* Opacity Bar */}
-                <div className="relative h-1 w-full bg-white/5 rounded-full overflow-hidden">
-                    <div 
-                        className={cn("absolute top-0 left-0 bottom-0 transition-all duration-300", layer.visible ? "bg-primary" : "bg-white/20")}
-                        style={{ width: `${layer.opacity * 100}%` }}
-                    />
-                    <input
-                        type="range"
-                        min={0}
-                        max={1}
-                        step={0.05}
-                        value={layer.opacity}
-                        onChange={(e) => onOpacityChange(layer.id, Number(e.target.value))}
-                        onClick={(e) => e.stopPropagation()}
-                        className="absolute inset-0 w-full opacity-0 cursor-pointer"
-                    />
-                </div>
-              </div>
-              
-              <span className="text-[9px] w-7 text-right tabular-nums text-white/30 shrink-0 z-10">
-                  {Math.round(layer.opacity * 100)}%
-              </span>
-
-              {/* Reorder Controls */}
-              <div className="flex flex-col -space-y-px opacity-0 group-hover:opacity-100 transition-opacity shrink-0 z-10">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onMoveLayer(layer.id, 'up')
-                  }}
-                  className="p-0.5 hover:bg-white/10 rounded-t-sm disabled:opacity-20 text-white/50 hover:text-primary"
-                  disabled={orderedLayers[0]?.id === layer.id}
-                >
-                  <ArrowUp className="w-2.5 h-2.5" />
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onMoveLayer(layer.id, 'down')
-                  }}
-                  className="p-0.5 hover:bg-white/10 rounded-b-sm disabled:opacity-20 text-white/50 hover:text-primary"
-                  disabled={orderedLayers[orderedLayers.length - 1]?.id === layer.id}
-                >
-                  <ArrowDown className="w-2.5 h-2.5" />
-                </button>
-              </div>
             </div>
-            )
-          })}
+
+            <div className="space-y-1.5">
+              {renderGroupHeader('rasters', 'RASTERS')}
+              {!collapsedGroups.rasters && grouped.rasters.length > 0 && (
+                <div className="space-y-0.5">{grouped.rasters.map((layer) => renderLayerRow(layer))}</div>
+              )}
+            </div>
+
+            <div className="space-y-1.5">
+              {renderGroupHeader('vectors', 'VECTORS')}
+              {!collapsedGroups.vectors && grouped.vectors.length > 0 && (
+                <div className="space-y-0.5">{grouped.vectors.map((layer) => renderLayerRow(layer))}</div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 

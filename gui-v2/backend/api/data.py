@@ -11,6 +11,8 @@ import os
 import shutil
 import subprocess
 import tempfile
+import time
+import uuid
 from functools import lru_cache
 from pathlib import Path
 from typing import Optional, Tuple
@@ -29,6 +31,8 @@ router = APIRouter()
 # Cache for converted GeoJSON files
 GEOJSON_CACHE = {}
 TILE_CACHE_ROOT = Path(os.getenv("AGRS_TILE_CACHE_DIR", "/opt/agrs/gui-v2/backend/.tile_cache"))
+VECTOR_TILE_MINZOOM = int(os.getenv("AGRS_VECTOR_TILE_MINZOOM", "0"))
+VECTOR_TILE_MAXZOOM = int(os.getenv("AGRS_VECTOR_TILE_MAXZOOM", "11"))
 _terrain_source_env = os.getenv("GLOBAL_TERRAIN_TILE_URL")
 GLOBAL_TERRAIN_TILE_SOURCES = [
     src for src in [
@@ -233,6 +237,99 @@ def precache_tiles(project: str, layer: str, min_zoom: int, max_zoom: int, *, te
                 total_tiles += 1
 
     print(f"[precache] completed for {project}/{layer}: {total_tiles} tiles written to cache.")
+
+
+def _vector_tileset_dir(project: str, layer: str, mtime_ns: int) -> Path:
+    base_dir = TILE_CACHE_ROOT / "vector_mvt" / _safe_segment(project) / _safe_segment(layer)
+    return base_dir / str(int(mtime_ns))
+
+
+def _vector_tile_path(project: str, layer: str, mtime_ns: int, z: int, x: int, y: int) -> Path:
+    tileset_dir = _vector_tileset_dir(project, layer, mtime_ns)
+    return tileset_dir / str(z) / str(x) / f"{y}.pbf"
+
+
+def _ensure_vector_tileset(project: str, layer: str, vector_file: Path, mtime_ns: int) -> Path:
+    """
+    Ensure an on-disk MVT tileset exists for this vector dataset version.
+
+    This is required for very large layers (e.g., NHN waterways) because serving full GeoJSON
+    is not feasible in MapLibre.
+    """
+    tileset_dir = _vector_tileset_dir(project, layer, mtime_ns)
+    sentinel = tileset_dir / ".complete"
+    if sentinel.exists():
+        return tileset_dir
+
+    base_dir = tileset_dir.parent
+    lock_path = base_dir / ".build.lock"
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+
+    import fcntl
+
+    # Cross-process lock so concurrent tile requests don't trigger concurrent builds.
+    with open(lock_path, "w", encoding="utf-8") as lock_handle:
+        start = time.time()
+        while True:
+            try:
+                fcntl.flock(lock_handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                break
+            except BlockingIOError:
+                if time.time() - start > 1800:
+                    raise TimeoutError(f"Timed out waiting for vector tileset build lock: {lock_path}")
+                time.sleep(0.2)
+
+        # Re-check after lock
+        if sentinel.exists():
+            return tileset_dir
+
+        _ensure_cache_root()
+        base_dir.mkdir(parents=True, exist_ok=True)
+
+        # Keep only this version to bound disk usage
+        if base_dir.exists():
+            for child in base_dir.iterdir():
+                if child.is_dir() and child.name != str(int(mtime_ns)):
+                    shutil.rmtree(child, ignore_errors=True)
+
+        if tileset_dir.exists():
+            shutil.rmtree(tileset_dir, ignore_errors=True)
+
+        tmp_out = base_dir / f".building-{uuid.uuid4().hex}"
+        if tmp_out.exists():
+            shutil.rmtree(tmp_out, ignore_errors=True)
+
+        # IMPORTANT: the MVT driver requires the output directory NOT to exist.
+        cmd = [
+            "ogr2ogr",
+            "-f",
+            "MVT",
+            str(tmp_out),
+            str(vector_file),
+            "-dsco",
+            "FORMAT=DIRECTORY",
+            "-lco",
+            f"MINZOOM={VECTOR_TILE_MINZOOM}",
+            "-lco",
+            f"MAXZOOM={VECTOR_TILE_MAXZOOM}",
+            # Make the vector-tile layer name equal to the requested layer key so the frontend can
+            # use it directly as MapLibre's `source-layer`.
+            "-lco",
+            f"NAME={layer}",
+            # Drop Z to avoid MapLibre/GeoJSON tooling edge cases with 3D lines.
+            "-dim",
+            "2",
+        ]
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        if result.returncode != 0:
+            shutil.rmtree(tmp_out, ignore_errors=True)
+            raise RuntimeError(
+                f"ogr2ogr MVT tileset generation failed: {(result.stderr or result.stdout).strip()}"
+            )
+
+        tmp_out.replace(tileset_dir)
+        sentinel.write_text("ok\n", encoding="utf-8")
+        return tileset_dir
 
 
 def mercator_tile_bounds(z: int, x: int, y: int) -> tuple[float, float, float, float]:
@@ -618,9 +715,12 @@ async def get_vector_nearest_features(project: str, layer: str, payload: dict = 
     is_aoi = target_geom.geom_type in {"Polygon", "MultiPolygon"}
     target_centroid_m = target_m.centroid if is_aoi else None
 
-    inside: list[dict] = []
-    outside: list[dict] = []
-    all_candidates: list[dict] = []
+    # We keep a separate tie-break distance for AOI "inside" features so we can present a stable
+    # ordering without misrepresenting distance_m. `distance_m` should always mean distance to the
+    # target geometry (0 for intersecting features).
+    inside: list[tuple[float, float, dict]] = []
+    outside: list[tuple[float, float, dict]] = []
+    all_candidates: list[tuple[float, dict]] = []
 
     for idx, feat in enumerate(features):
         if not isinstance(feat, dict):
@@ -652,30 +752,31 @@ async def get_vector_nearest_features(project: str, layer: str, payload: dict = 
             within_aoi = False
 
         try:
-            if is_aoi:
-                if within_aoi and target_centroid_m is not None:
-                    distance_m = float(geom_m.distance(target_centroid_m))
-                else:
-                    distance_m = float(geom_m.distance(target_m))
-            else:
-                distance_m = float(geom_m.distance(target_m))
+            distance_m = float(geom_m.distance(target_m))
         except Exception:
             continue
 
+        tie_m = distance_m
+        if is_aoi and within_aoi and target_centroid_m is not None:
+            try:
+                tie_m = float(geom_m.distance(target_centroid_m))
+            except Exception:
+                tie_m = distance_m
+
         candidate = {"rank": 0, "within_aoi": within_aoi, "distance_m": distance_m, "feature": feat}
         if is_aoi:
-            (inside if within_aoi else outside).append(candidate)
+            (inside if within_aoi else outside).append((distance_m, tie_m, candidate))
         else:
-            all_candidates.append(candidate)
+            all_candidates.append((distance_m, candidate))
 
     if is_aoi:
-        inside_sorted = sorted(inside, key=lambda c: float(c.get("distance_m", 0.0)))
-        outside_sorted = sorted(outside, key=lambda c: float(c.get("distance_m", 0.0)))
-        picked = inside_sorted[:limit]
+        inside_sorted = sorted(inside, key=lambda t: (float(t[0]), float(t[1])))
+        outside_sorted = sorted(outside, key=lambda t: (float(t[0]), float(t[1])))
+        picked = [t[2] for t in inside_sorted[:limit]]
         if len(picked) < limit:
-            picked.extend(outside_sorted[: (limit - len(picked))])
+            picked.extend([t[2] for t in outside_sorted[: (limit - len(picked))]])
     else:
-        picked = sorted(all_candidates, key=lambda c: float(c.get("distance_m", 0.0)))[:limit]
+        picked = [t[1] for t in sorted(all_candidates, key=lambda t: float(t[0]))[:limit]]
 
     for i, c in enumerate(picked, start=1):
         c["rank"] = i
@@ -1061,7 +1162,7 @@ def _find_raster_file(project_path: Path, layer: str) -> Optional[Path]:
 
 
 @router.get("/tiles/{project}/{layer}/{z}/{x}/{y}.png")
-async def get_raster_tile(project: str, layer: str, z: int, x: int, y: int):
+def get_raster_tile(project: str, layer: str, z: int, x: int, y: int):
     """
     Serve map tiles for raster datasets.
 
@@ -1094,8 +1195,47 @@ async def get_raster_tile(project: str, layer: str, z: int, x: int, y: int):
         raise HTTPException(status_code=500, detail=f"Failed to render raster tile: {exc}")
 
 
+@router.get("/vector-tiles/{project}/{layer}/{z}/{x}/{y}.pbf")
+def get_vector_tile(project: str, layer: str, z: int, x: int, y: int):
+    """
+    Serve Mapbox Vector Tiles (MVT) for a vector dataset.
+
+    This is the preferred path for very large vector layers (e.g., NHN waterways) since loading
+    full GeoJSON into MapLibre is not feasible.
+    """
+    project_path = get_project_path_or_404(project)
+    vector_file = _find_vector_file(project_path, layer)
+
+    if vector_file is None or not vector_file.exists():
+        raise HTTPException(status_code=404, detail=f"Vector layer '{layer}' not found in project '{project}'")
+
+    try:
+        _, mtime_ns = _dataset_mtime(vector_file)
+        # Ensure tileset exists (build-once per dataset version)
+        _ensure_vector_tileset(project, layer, vector_file, mtime_ns)
+
+        tile_path = _vector_tile_path(project, layer, mtime_ns, z, x, y)
+        if not tile_path.exists():
+            # Missing tile (outside dataset bounds or no features in tile)
+            return Response(status_code=204, content=b"")
+
+        with open(tile_path, "rb") as handle:
+            tile_bytes = handle.read()
+
+        # GDAL's MVT driver writes gzip-compressed .pbf by default.
+        return Response(
+            content=tile_bytes,
+            media_type="application/vnd.mapbox-vector-tile",
+            headers={"Content-Encoding": "gzip"},
+        )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Failed to render vector tile: {exc}")
+
+
 @router.get("/terrain/{project}/{layer}/{z}/{x}/{y}.png")
-async def get_terrain_tile(project: str, layer: str, z: int, x: int, y: int):
+def get_terrain_tile(project: str, layer: str, z: int, x: int, y: int):
     """
     Serve terrain tiles encoded as Mapbox Terrain-RGB for DEM layers.
     Looks in data/rasters/processed/ first (canonical), then legacy location.

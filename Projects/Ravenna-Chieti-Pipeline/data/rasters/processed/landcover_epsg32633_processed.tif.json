@@ -1,74 +1,103 @@
 {
-  "dataset_name": "ESA WorldCover 2021 (Processed)",
-  "category": "landcover",
-  "project": "test_project2",
-  "processing_date": "2025-11-26T01:16:49.291329Z",
-  "target_crs": "EPSG:32633",
-  "target_crs_name": "WGS 84 / UTM zone 33N",
-  "data_type": "Raster",
-  "format": "GeoTIFF",
-  "processed_path": "/opt/agrs/Projects/test_project2/data/rasters/processed/landcover_epsg32633_processed.tif",
-  "raw_path": "/opt/agrs/Projects/test_project2/data/rasters/raw/landcover_esa_worldcover_raw.tif",
-  "raw_metadata_file": "/opt/agrs/Projects/test_project2/data/rasters/raw/landcover_esa_worldcover_raw.tif.json",
-  "source_files": [
-    {
-      "filename": "landcover_esa_worldcover_raw.tif",
-      "metadata": "landcover_esa_worldcover_raw.tif.json"
-    }
-  ],
-  "operations_applied": [
-    {
-      "operation": "reproject",
-      "tool": "gdalwarp",
-      "target_epsg": 32633
+    "dataset_name": "ESA WorldCover 2021 (Processed)",
+    "category": "landcover",
+    "project": "test_project2",
+    "processing_date": "2025-11-26T01:16:49.291329Z",
+    "target_crs": "EPSG:32633",
+    "target_crs_name": "WGS 84 / UTM zone 33N",
+    "data_type": "Raster",
+    "format": "GeoTIFF",
+    "processed_path": "/opt/agrs/Projects/test_project2/data/rasters/processed/landcover_epsg32633_processed.tif",
+    "raw_path": "/opt/agrs/Projects/test_project2/data/rasters/raw/landcover_esa_worldcover_raw.tif",
+    "raw_metadata_file": "/opt/agrs/Projects/test_project2/data/rasters/raw/landcover_esa_worldcover_raw.tif.json",
+    "source_files": [
+        {
+            "filename": "landcover_esa_worldcover_raw.tif",
+            "metadata": "landcover_esa_worldcover_raw.tif.json"
+        }
+    ],
+    "operations_applied": [
+        {
+            "operation": "reproject",
+            "tool": "gdalwarp",
+            "target_epsg": 32633
+        },
+        {
+            "operation": "clip",
+            "tool": "AOI cutline",
+            "source": "/opt/agrs/Projects/test_project2/data/vectors/aoi.gpkg"
+        }
+    ],
+    "file_size_bytes": 2263051,
+    "validation_status": "passed",
+    "validation_date": "2025-11-26T01:16:49.291418Z",
+    "protocol_reference": "/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md",
+    "protocol_version": "1.0",
+    "zeus_version": "0.1.0",
+    "notes": "10 m categorical landcover classes (agriculture, forest, urban, etc.).",
+    "source": "ESA WorldCover 2021",
+    "provider": "European Space Agency / VITO",
+    "provider_url": "https://worldcover2021.esa.int/",
+    "coverage_date": "2021",
+    "documentation_url": "https://worldcover2021.esa.int/",
+    "license": "CC BY 4.0",
+    "attribution": "\u00a9 ESA WorldCover, produced by VITO.",
+    "resolution_m": 7.999796286784678,
+    "dimensions": {
+        "width": 4818,
+        "height": 8059
     },
-    {
-      "operation": "clip",
-      "tool": "AOI cutline",
-      "source": "/opt/agrs/Projects/test_project2/data/vectors/aoi.gpkg"
-    }
-  ],
-  "file_size_bytes": 2263051,
-  "validation_status": "passed",
-  "validation_date": "2025-11-26T01:16:49.291418Z",
-  "protocol_reference": "/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md",
-  "protocol_version": "1.0",
-  "zeus_version": "0.1.0",
-  "notes": "10 m categorical landcover classes (agriculture, forest, urban, etc.).",
-  "source": "ESA WorldCover 2021",
-  "provider": "European Space Agency / VITO",
-  "provider_url": "https://worldcover2021.esa.int/",
-  "coverage_date": "2021",
-  "documentation_url": "https://worldcover2021.esa.int/",
-  "license": "CC BY 4.0",
-  "attribution": "\u00a9 ESA WorldCover, produced by VITO.",
-  "resolution_m": {
-    "x": 7.9994616414167785,
-    "y": 8.000130932152578
-  },
-  "dimensions": {
-    "width": 4818,
-    "height": 8059
-  },
-  "extent": {
-    "minx": 374835.242,
-    "miny": 4745835.441,
-    "maxx": 413376.649,
-    "maxy": 4810308.496,
-    "crs": "EPSG:4326"
-  },
-  "bbox_wgs84": {
-    "west": 13.4534437,
-    "south": 42.8548576,
-    "east": 13.9396512,
-    "north": 43.4406676,
-    "crs": "EPSG:4326"
-  },
-  "statistics": {
-    "min": 10.0,
-    "max": 90.0,
-    "mean": 38.697801639848,
-    "stddev": 21.547372556957,
-    "valid_percent": 60.72
-  }
+    "extent": {
+        "minx": 374835.242,
+        "miny": 4745835.441,
+        "maxx": 413376.649,
+        "maxy": 4810308.496,
+        "crs": "EPSG:32633"
+    },
+    "bbox_wgs84": {
+        "west": 13.4534437,
+        "south": 42.8548576,
+        "east": 13.9396512,
+        "north": 43.4406676,
+        "crs": "EPSG:4326"
+    },
+    "statistics": {
+        "min": 10.0,
+        "max": 90.0,
+        "mean": 38.698,
+        "stddev": 21.547,
+        "valid_percent": 60.72
+    },
+    "probed_crs": "EPSG:32633",
+    "driver": "GTiff",
+    "driver_long_name": "GeoTIFF",
+    "geotransform": [
+        374835.2424330473,
+        7.9994616414167785,
+        0.0,
+        4810308.495988535,
+        0.0,
+        -8.000130932152578
+    ],
+    "cell_size": {
+        "x": 7.9994616414167785,
+        "y": 8.000130932152578
+    },
+    "band_count": 1,
+    "nodata_value": 0.0,
+    "pixel_data_type": "Byte",
+    "pixel_depth_bits": 8,
+    "uncompressed_size_bytes": 38828262,
+    "pixel_type": "integer",
+    "block_size": {
+        "x": 256,
+        "y": 256
+    },
+    "color_interpretation": "Palette",
+    "has_colormap": true,
+    "compression": "LZW",
+    "interleave": "BAND",
+    "cell_size_units": "metre",
+    "resolution_x_m": 7.9994616414167785,
+    "resolution_y_m": 8.000130932152578
 }

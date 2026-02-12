@@ -49,7 +49,7 @@ export function DatasetFetchProgressDialog({ jobId, open, onClose, onJobFinished
   const [isClosing, setIsClosing] = useState(false)
   const completionHandled = useRef(false)
 
-  const isComplete = job?.status === 'succeeded' || job?.status === 'failed'
+  const isComplete = job?.status === 'succeeded' || job?.status === 'failed' || job?.status === 'partial'
 
   useEffect(() => {
     setMounted(true)
@@ -74,7 +74,10 @@ export function DatasetFetchProgressDialog({ jobId, open, onClose, onJobFinished
       jobId,
       (payload) => {
         setJob(payload)
-        if (!completionHandled.current && (payload.status === 'succeeded' || payload.status === 'failed')) {
+        if (
+          !completionHandled.current &&
+          (payload.status === 'succeeded' || payload.status === 'failed' || payload.status === 'partial')
+        ) {
           completionHandled.current = true
           onJobFinished?.(payload)
         }

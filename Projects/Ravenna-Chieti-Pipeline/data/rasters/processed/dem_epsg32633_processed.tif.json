@@ -1,74 +1,103 @@
 {
-  "dataset_name": "Global DEM 30m (Auto) (Processed)",
-  "category": "dem",
-  "project": "test_project2",
-  "processing_date": "2025-11-26T07:56:34.157306Z",
-  "target_crs": "EPSG:32633",
-  "target_crs_name": "WGS 84 / UTM zone 33N",
-  "data_type": "Raster",
-  "format": "GeoTIFF",
-  "processed_path": "/opt/agrs/Projects/test_project2/data/rasters/processed/dem_epsg32633_processed.tif",
-  "raw_path": "/opt/agrs/Projects/test_project2/data/rasters/raw/dem_global_30m_raw.tif",
-  "raw_metadata_file": "/opt/agrs/Projects/test_project2/data/rasters/raw/dem_global_30m_raw.tif.json",
-  "source_files": [
-    {
-      "filename": "dem_global_30m_raw.tif",
-      "metadata": "dem_global_30m_raw.tif.json"
-    }
-  ],
-  "operations_applied": [
-    {
-      "operation": "reproject",
-      "tool": "gdalwarp",
-      "target_epsg": 32633
+    "dataset_name": "Global DEM 30m (Auto) (Processed)",
+    "category": "dem",
+    "project": "test_project2",
+    "processing_date": "2025-11-26T07:56:34.157306Z",
+    "target_crs": "EPSG:32633",
+    "target_crs_name": "WGS 84 / UTM zone 33N",
+    "data_type": "Raster",
+    "format": "GeoTIFF",
+    "processed_path": "/opt/agrs/Projects/test_project2/data/rasters/processed/dem_epsg32633_processed.tif",
+    "raw_path": "/opt/agrs/Projects/test_project2/data/rasters/raw/dem_global_30m_raw.tif",
+    "raw_metadata_file": "/opt/agrs/Projects/test_project2/data/rasters/raw/dem_global_30m_raw.tif.json",
+    "source_files": [
+        {
+            "filename": "dem_global_30m_raw.tif",
+            "metadata": "dem_global_30m_raw.tif.json"
+        }
+    ],
+    "operations_applied": [
+        {
+            "operation": "reproject",
+            "tool": "gdalwarp",
+            "target_epsg": 32633
+        },
+        {
+            "operation": "clip",
+            "tool": "AOI cutline",
+            "source": "/opt/agrs/Projects/test_project2/data/vectors/aoi.gpkg"
+        }
+    ],
+    "file_size_bytes": 7964518,
+    "validation_status": "passed",
+    "validation_date": "2025-11-26T07:56:34.157365Z",
+    "protocol_reference": "/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md",
+    "protocol_version": "1.0",
+    "zeus_version": "0.1.0",
+    "notes": "Core elevation surface used for slope, hydraulics and terrain costs.",
+    "source": "Copernicus DEM / NASA SRTM (auto-selected)",
+    "provider": "ESA & NASA",
+    "provider_url": "https://spacedata.copernicus.eu/collections/copernicus-digital-elevation-model",
+    "coverage_date": "2021",
+    "documentation_url": "https://spacedata.copernicus.eu/collections/copernicus-digital-elevation-model",
+    "license": "Copernicus Data License / NASA SRTM Terms",
+    "attribution": "Contains Copernicus DEM and NASA SRTM data.",
+    "resolution_m": 26.668023975564637,
+    "dimensions": {
+        "width": 1445,
+        "height": 2418
     },
-    {
-      "operation": "clip",
-      "tool": "AOI cutline",
-      "source": "/opt/agrs/Projects/test_project2/data/vectors/aoi.gpkg"
-    }
-  ],
-  "file_size_bytes": 7964518,
-  "validation_status": "passed",
-  "validation_date": "2025-11-26T07:56:34.157365Z",
-  "protocol_reference": "/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md",
-  "protocol_version": "1.0",
-  "zeus_version": "0.1.0",
-  "notes": "Core elevation surface used for slope, hydraulics and terrain costs.",
-  "source": "Copernicus DEM / NASA SRTM (auto-selected)",
-  "provider": "ESA & NASA",
-  "provider_url": "https://spacedata.copernicus.eu/collections/copernicus-digital-elevation-model",
-  "coverage_date": "2021",
-  "documentation_url": "https://spacedata.copernicus.eu/collections/copernicus-digital-elevation-model",
-  "license": "Copernicus Data License / NASA SRTM Terms",
-  "attribution": "Contains Copernicus DEM and NASA SRTM data.",
-  "resolution_m": {
-    "x": 26.67225341754051,
-    "y": 26.66379453358876
-  },
-  "dimensions": {
-    "width": 1445,
-    "height": 2418
-  },
-  "extent": {
-    "minx": 374835.242,
-    "miny": 4745835.441,
-    "maxx": 413376.649,
-    "maxy": 4810308.496,
-    "crs": "EPSG:4326"
-  },
-  "bbox_wgs84": {
-    "west": 13.4534437,
-    "south": 42.8548576,
-    "east": 13.9396512,
-    "north": 43.4406676,
-    "crs": "EPSG:4326"
-  },
-  "statistics": {
-    "min": -1.1697140932083,
-    "max": 563.57995605469,
-    "mean": 121.21172691014,
-    "stddev": 97.532390355693,
-    "valid_percent": 60.72
-  }
+    "extent": {
+        "minx": 374835.242,
+        "miny": 4745835.441,
+        "maxx": 413376.649,
+        "maxy": 4810308.496,
+        "crs": "EPSG:32633"
+    },
+    "bbox_wgs84": {
+        "west": 13.4534437,
+        "south": 42.8548576,
+        "east": 13.9396512,
+        "north": 43.4406676,
+        "crs": "EPSG:4326"
+    },
+    "statistics": {
+        "min": -1.17,
+        "max": 563.58,
+        "mean": 121.212,
+        "stddev": 97.532,
+        "valid_percent": 60.72
+    },
+    "probed_crs": "EPSG:32633",
+    "driver": "GTiff",
+    "driver_long_name": "GeoTIFF",
+    "geotransform": [
+        374835.2424330473,
+        26.67225341754051,
+        0.0,
+        4810308.495988535,
+        0.0,
+        -26.66379453358876
+    ],
+    "cell_size": {
+        "x": 26.67225341754051,
+        "y": 26.66379453358876
+    },
+    "band_count": 1,
+    "nodata_value": -9999.0,
+    "pixel_data_type": "Float32",
+    "pixel_depth_bits": 32,
+    "uncompressed_size_bytes": 13976040,
+    "pixel_type": "floating_point",
+    "block_size": {
+        "x": 256,
+        "y": 256
+    },
+    "color_interpretation": "Gray",
+    "has_colormap": false,
+    "compression": "LZW",
+    "interleave": "BAND",
+    "cell_size_units": "metre",
+    "resolution_x_m": 26.67225341754051,
+    "resolution_y_m": 26.66379453358876
 }

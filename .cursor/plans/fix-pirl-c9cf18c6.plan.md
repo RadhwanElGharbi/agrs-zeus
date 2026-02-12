@@ -1,4 +1,45 @@
-<!-- c9cf18c6-7049-4323-988d-1fefbbae0cb0 a4f05dc2-784a-480e-afa7-52c8ad9e3863 -->
+---
+name: Enhanced Crossing Logic Implementation
+overview: ""
+todos:
+  - id: 214b4fe4-ca60-4372-a839-c4ea2effcc67
+    content: Expand State struct from 21D to 27D by adding crossing context features (nearest_crossing_dist, width, type, before/after distances, cardinal_alignment)
+    status: pending
+  - id: 58a5bd19-86b9-482a-94b6-6cff0023e7e4
+    content: Expand Action struct from 2D to 3D by adding crossing_decision field (0=normal, 1=cross, 2=request_contour, 3=avoid)
+    status: pending
+  - id: dacbf66f-526e-4f25-bee4-5eac87d23af9
+    content: Modify GISDataManager to store vector datasets for attribute queries and implement get_nearest_crossing_features method
+    status: pending
+  - id: d8a65320-1dc7-4380-a5fe-19a57acf8cdf
+    content: Implement calculate_road_width method with lane count parsing and highway type inference logic
+    status: pending
+  - id: 517e2a04-3756-4a90-a80d-dea755340921
+    content: Implement calculate_waterway_width method with width_m field parsing and dam/weir uncrossability detection
+    status: pending
+  - id: 3327672b-4eac-4990-b128-b10134a5da8f
+    content: Replace fixed crossing costs with dynamic calculation based on feature width and type
+    status: pending
+  - id: 2fda9f21-755a-4afc-ab40-6406e0a81c36
+    content: Implement contouring waypoint generation and adherence bonus system in PipelineEnvironment
+    status: pending
+  - id: 718067d8-dbf0-4841-bd7a-db807b6405e5
+    content: Update PipelineEnvironment step logic to populate crossing context in state and handle crossing decisions
+    status: pending
+  - id: 00efe406-ff54-49a5-95dd-7389670b1f0b
+    content: Create test_crossing_logic.cpp with unit tests for width parsing, cost calculation, and feature queries
+    status: pending
+  - id: cb6a2ed8-cbf6-4dcf-8eaf-7daa23c17979
+    content: Create test_crossing_integration.cpp with integration tests for crossing decision flow and contouring behavior
+    status: pending
+  - id: 20ce4d9c-3ce5-4211-a59a-6611759e01bd
+    content: Update pirl_native_env.py observation_space to shape=(27,) and action_space to shape=(3,)
+    status: pending
+  - id: 221e504a-50ce-48c0-9709-03cab110d216
+    content: Recompile C++ core, run all tests, and validate no breaking changes
+    status: pending
+---
+
 # Enhanced Crossing Logic Implementation
 
 ## Current State Analysis
@@ -288,18 +329,3 @@ double GISDataManager::calculate_waterway_width(const CrossingFeature& feature) 
 5. Contouring provides smooth routing along clearance buffers
 6. All tests pass, validating logic correctness
 7. GeoJSON outputs show realistic crossing behavior
-
-### To-dos
-
-- [ ] Expand State struct from 21D to 27D by adding crossing context features (nearest_crossing_dist, width, type, before/after distances, cardinal_alignment)
-- [ ] Expand Action struct from 2D to 3D by adding crossing_decision field (0=normal, 1=cross, 2=request_contour, 3=avoid)
-- [ ] Modify GISDataManager to store vector datasets for attribute queries and implement get_nearest_crossing_features method
-- [ ] Implement calculate_road_width method with lane count parsing and highway type inference logic
-- [ ] Implement calculate_waterway_width method with width_m field parsing and dam/weir uncrossability detection
-- [ ] Replace fixed crossing costs with dynamic calculation based on feature width and type
-- [ ] Implement contouring waypoint generation and adherence bonus system in PipelineEnvironment
-- [ ] Update PipelineEnvironment step logic to populate crossing context in state and handle crossing decisions
-- [ ] Create test_crossing_logic.cpp with unit tests for width parsing, cost calculation, and feature queries
-- [ ] Create test_crossing_integration.cpp with integration tests for crossing decision flow and contouring behavior
-- [ ] Update pirl_native_env.py observation_space to shape=(27,) and action_space to shape=(3,)
-- [ ] Recompile C++ core, run all tests, and validate no breaking changes

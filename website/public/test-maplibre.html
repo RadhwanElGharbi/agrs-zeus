@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>MapLibre Direct Test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+    <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: monospace; background: #000; color: #0f0; }
+        #map { position: absolute; top: 200px; left: 0; right: 0; bottom: 0; }
+        #log { position: absolute; top: 0; left: 0; right: 0; height: 200px; 
+               background: #111; padding: 10px; overflow-y: auto; font-size: 12px; }
+        .error { color: #f00; font-weight: bold; }
+        .success { color: #0f0; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div id="log"></div>
+    <div id="map"></div>
+    
+    <script>
+        const log = document.getElementById('log');
+        function addLog(msg, isError = false) {
+            const line = document.createElement('div');
+            line.className = isError ? 'error' : 'success';
+            line.textContent = new Date().toLocaleTimeString() + ': ' + msg;
+            log.appendChild(line);
+            console.log(msg);
+        }
+
+        addLog('=== MAPLIBRE DIRECT TEST START ===');
+        addLog('MapLibre GL loaded: ' + (typeof maplibregl !== 'undefined'));
+        addLog('MapLibre version: ' + (maplibregl ? maplibregl.version : 'N/A'));
+        
+        try {
+            addLog('Creating map instance...');
+            const map = new maplibregl.Map({
+                container: 'map',
+                style: {
+                    version: 8,
+                    sources: {
+                        'osm': {
+                            type: 'raster',
+                            tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                            tileSize: 256
+                        }
+                    },
+                    layers: [{
+                        id: 'osm',
+                        type: 'raster',
+                        source: 'osm'
+                    }]
+                },
+                center: [-98.5, 39.8],
+                zoom: 4
+            });
+            
+            addLog('Map instance created!');
+            
+            map.on('load', () => {
+                addLog('✓✓✓ MAP LOADED SUCCESSFULLY ✓✓✓');
+                addLog('Map center: ' + JSON.stringify(map.getCenter()));
+                addLog('Map zoom: ' + map.getZoom());
+            });
+            
+            map.on('error', (e) => {
+                addLog('MAP ERROR: ' + JSON.stringify(e.error), true);
+            });
+            
+            map.on('data', (e) => {
+                addLog('Data event: ' + e.dataType);
+            });
+            
+            setTimeout(() => {
+                addLog('Canvas: ' + (map.getCanvas() ? 'EXISTS' : 'NULL'), !map.getCanvas());
+                addLog('Container: ' + (map.getContainer() ? 'EXISTS' : 'NULL'), !map.getContainer());
+            }, 1000);
+            
+        } catch (err) {
+            addLog('EXCEPTION: ' + err.message, true);
+            addLog('Stack: ' + err.stack, true);
+        }
+    </script>
+</body>
+</html>
+
+
+
+
+

@@ -339,6 +339,18 @@ export function Header({ devMode, onDevModeChange, activeView, onSupplierSearch 
                     <Layers className="w-3.5 h-3.5" />
                     Manage
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsDatasetsDropdownOpen(false)
+                      gis.openDatasetDigitalTwin()
+                    }}
+                    className="flex items-center gap-2 w-full px-3 py-2 text-left text-xs font-medium text-white/70 hover:text-white hover:bg-primary/10 border border-transparent border-t border-white/10 transition-all"
+                    title="Experimental: Dataset Digital Twin (stacked layer model)"
+                  >
+                    <Cpu className="w-3.5 h-3.5 text-primary/80" />
+                    Digital Twin
+                  </button>
                 </div>
               )}
             </div>

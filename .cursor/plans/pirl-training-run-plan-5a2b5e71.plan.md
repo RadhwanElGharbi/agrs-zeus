@@ -1,4 +1,24 @@
-<!-- 5a2b5e71-ff7d-4546-9bc5-70554ea7fdb1 060fc43c-7681-4e61-920e-c69b356c362b -->
+---
+name: PIRL Training Run Plan for test_project2
+overview: ""
+todos:
+  - id: d592ef0c-3a4f-41d0-b551-206be3ef76c6
+    content: Run data validation script to verify CRS consistency, value ranges, and layer completeness for all rasters and vectors
+    status: pending
+  - id: 3f4398ad-9e8b-4757-ad86-f7e2d6462254
+    content: Test single environment instantiation, state space dimensions, GIS queries, and hydraulics calculations
+    status: pending
+  - id: e16239ec-b743-4b12-9723-8371ed883713
+    content: Verify pipeline_specs.json, pirl_training_config.yaml, and pirl_parameters_default.json are consistent and correct
+    status: pending
+  - id: 5e1870bf-b806-4c05-9347-2a4c41845751
+    content: Execute 10k timestep test run to verify training loop, model checkpointing, and basic functionality
+    status: pending
+  - id: 9ec87f99-e623-4e3b-840c-a5fa4c06a83e
+    content: "Run post-training validation: route generation, trajectory analysis, constraint compliance checks, and export results"
+    status: pending
+---
+
 # PIRL Training Run Plan for test_project2
 
 ## Project Overview
@@ -1022,11 +1042,3 @@ python3 ../test_project/train_pirl_direct.py \
 **Status:** Ready for execution with trained model available
 
 **Last Updated:** November 11, 2025
-
-### To-dos
-
-- [ ] Run data validation script to verify CRS consistency, value ranges, and layer completeness for all rasters and vectors
-- [ ] Test single environment instantiation, state space dimensions, GIS queries, and hydraulics calculations
-- [ ] Verify pipeline_specs.json, pirl_training_config.yaml, and pirl_parameters_default.json are consistent and correct
-- [ ] Execute 10k timestep test run to verify training loop, model checkpointing, and basic functionality
-- [ ] Run post-training validation: route generation, trajectory analysis, constraint compliance checks, and export results

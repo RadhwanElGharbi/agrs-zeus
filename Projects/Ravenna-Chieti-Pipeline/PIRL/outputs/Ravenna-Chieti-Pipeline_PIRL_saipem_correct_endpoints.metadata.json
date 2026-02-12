@@ -302,5 +302,3385 @@
       "powerline": 150000
     },
     "regional_multiplier": 1.2
+  },
+  "crossings_detailed": {
+    "version": 1,
+    "generated_at": "2026-01-19T13:22:45.650600Z",
+    "categories_used": [
+      "pipelines",
+      "powerlines",
+      "railways",
+      "roads",
+      "waterways"
+    ],
+    "datasets_used": [
+      {
+        "category": "pipelines",
+        "layer": "pipelines_OpenStreetMap-Pipelines-Extract_EPSG32633_processed"
+      },
+      {
+        "category": "powerlines",
+        "layer": "powerlines_OpenStreetMap-Power-Network-Extract_EPSG32633_processed"
+      },
+      {
+        "category": "powerlines",
+        "layer": "powerlines_OpenStreetMap-Power-Network-Extract_EPSG32633_processed"
+      },
+      {
+        "category": "railways",
+        "layer": "railways_OpenStreetMap-Railways-Extract_EPSG32633_processed"
+      },
+      {
+        "category": "roads",
+        "layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed"
+      },
+      {
+        "category": "waterways",
+        "layer": "waterways_OpenStreetMap-Waterways-Extract_EPSG32633_processed"
+      }
+    ],
+    "crossings": [
+      {
+        "id": "d73a7389707a1505",
+        "category": "pipelines",
+        "dataset_layer": "pipelines_OpenStreetMap-Pipelines-Extract_EPSG32633_processed",
+        "feature_id": "1448088231",
+        "point": [
+          13.734549572213789,
+          43.19289819156471
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.734549572213789,
+            43.19289819156471,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": "1448088231",
+          "name": "Metanodotto Ravenna - Chieti",
+          "highway": null,
+          "waterway": null,
+          "aerialway": null,
+          "barrier": null,
+          "man_made": "pipeline",
+          "railway": null,
+          "z_order": -20,
+          "other_tags": "\"check_date\"=>\"2025-11-07\",\"diameter\"=>\"650\",\"layer\"=>\"-2\",\"location\"=>\"underground\",\"operator\"=>\"SNAM S.p.A.\",\"operator:wikidata\"=>\"Q583247\",\"operator:wikipedia\"=>\"Snam\",\"ref\"=>\"IT_SRG_RN_26\",\"substance\"=>\"gas\""
+        },
+        "derived": {}
+      },
+      {
+        "id": "5b2eeccc9c04f932",
+        "category": "pipelines",
+        "dataset_layer": "pipelines_OpenStreetMap-Pipelines-Extract_EPSG32633_processed",
+        "feature_id": "1448088231",
+        "point": [
+          13.734890998314864,
+          43.18906783946711
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.734890998314864,
+            43.18906783946711,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": "1448088231",
+          "name": "Metanodotto Ravenna - Chieti",
+          "highway": null,
+          "waterway": null,
+          "aerialway": null,
+          "barrier": null,
+          "man_made": "pipeline",
+          "railway": null,
+          "z_order": -20,
+          "other_tags": "\"check_date\"=>\"2025-11-07\",\"diameter\"=>\"650\",\"layer\"=>\"-2\",\"location\"=>\"underground\",\"operator\"=>\"SNAM S.p.A.\",\"operator:wikidata\"=>\"Q583247\",\"operator:wikipedia\"=>\"Snam\",\"ref\"=>\"IT_SRG_RN_26\",\"substance\"=>\"gas\""
+        },
+        "derived": {}
+      },
+      {
+        "id": "2a76bdea737eeed4",
+        "category": "pipelines",
+        "dataset_layer": "pipelines_OpenStreetMap-Pipelines-Extract_EPSG32633_processed",
+        "feature_id": "1448083785",
+        "point": [
+          13.576021231617382,
+          43.35819094199905
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.576021231617382,
+            43.35819094199905,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": "1448083785",
+          "name": "Metanodotto Ravenna - Chieti",
+          "highway": null,
+          "waterway": null,
+          "aerialway": null,
+          "barrier": null,
+          "man_made": "pipeline",
+          "railway": null,
+          "z_order": -20,
+          "other_tags": "\"check_date\"=>\"2025-11-07\",\"diameter\"=>\"650\",\"layer\"=>\"-2\",\"location\"=>\"underground\",\"operator\"=>\"SNAM S.p.A.\",\"operator:wikidata\"=>\"Q583247\",\"operator:wikipedia\"=>\"Snam\",\"ref\"=>\"IT_SRG_RN_26\",\"substance\"=>\"gas\""
+        },
+        "derived": {}
+      },
+      {
+        "id": "e4d10bf9cc8bb5f2",
+        "category": "pipelines",
+        "dataset_layer": "pipelines_OpenStreetMap-Pipelines-Extract_EPSG32633_processed",
+        "feature_id": "1448083785",
+        "point": [
+          13.5742763236653,
+          43.35864036486759
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.5742763236653,
+            43.35864036486759,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": "1448083785",
+          "name": "Metanodotto Ravenna - Chieti",
+          "highway": null,
+          "waterway": null,
+          "aerialway": null,
+          "barrier": null,
+          "man_made": "pipeline",
+          "railway": null,
+          "z_order": -20,
+          "other_tags": "\"check_date\"=>\"2025-11-07\",\"diameter\"=>\"650\",\"layer\"=>\"-2\",\"location\"=>\"underground\",\"operator\"=>\"SNAM S.p.A.\",\"operator:wikidata\"=>\"Q583247\",\"operator:wikipedia\"=>\"Snam\",\"ref\"=>\"IT_SRG_RN_26\",\"substance\"=>\"gas\""
+        },
+        "derived": {}
+      },
+      {
+        "id": "fbce05624c4c1188",
+        "category": "pipelines",
+        "dataset_layer": "pipelines_OpenStreetMap-Pipelines-Extract_EPSG32633_processed",
+        "feature_id": "1448083785",
+        "point": [
+          13.569525988421866,
+          43.35899260701149
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.569525988421866,
+            43.35899260701149,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": "1448083785",
+          "name": "Metanodotto Ravenna - Chieti",
+          "highway": null,
+          "waterway": null,
+          "aerialway": null,
+          "barrier": null,
+          "man_made": "pipeline",
+          "railway": null,
+          "z_order": -20,
+          "other_tags": "\"check_date\"=>\"2025-11-07\",\"diameter\"=>\"650\",\"layer\"=>\"-2\",\"location\"=>\"underground\",\"operator\"=>\"SNAM S.p.A.\",\"operator:wikidata\"=>\"Q583247\",\"operator:wikipedia\"=>\"Snam\",\"ref\"=>\"IT_SRG_RN_26\",\"substance\"=>\"gas\""
+        },
+        "derived": {}
+      },
+      {
+        "id": "c1ac8cb5a0d88e46",
+        "category": "pipelines",
+        "dataset_layer": "pipelines_OpenStreetMap-Pipelines-Extract_EPSG32633_processed",
+        "feature_id": "1448083785",
+        "point": [
+          13.580275514180233,
+          43.35566382628999
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.580275514180233,
+            43.35566382628999,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": "1448083785",
+          "name": "Metanodotto Ravenna - Chieti",
+          "highway": null,
+          "waterway": null,
+          "aerialway": null,
+          "barrier": null,
+          "man_made": "pipeline",
+          "railway": null,
+          "z_order": -20,
+          "other_tags": "\"check_date\"=>\"2025-11-07\",\"diameter\"=>\"650\",\"layer\"=>\"-2\",\"location\"=>\"underground\",\"operator\"=>\"SNAM S.p.A.\",\"operator:wikidata\"=>\"Q583247\",\"operator:wikipedia\"=>\"Snam\",\"ref\"=>\"IT_SRG_RN_26\",\"substance\"=>\"gas\""
+        },
+        "derived": {}
+      },
+      {
+        "id": "8592e9d1f0d6dc29",
+        "category": "pipelines",
+        "dataset_layer": "pipelines_OpenStreetMap-Pipelines-Extract_EPSG32633_processed",
+        "feature_id": "1448083785",
+        "point": [
+          13.600446538085572,
+          43.34545120097666
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.600446538085572,
+            43.34545120097666,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": "1448083785",
+          "name": "Metanodotto Ravenna - Chieti",
+          "highway": null,
+          "waterway": null,
+          "aerialway": null,
+          "barrier": null,
+          "man_made": "pipeline",
+          "railway": null,
+          "z_order": -20,
+          "other_tags": "\"check_date\"=>\"2025-11-07\",\"diameter\"=>\"650\",\"layer\"=>\"-2\",\"location\"=>\"underground\",\"operator\"=>\"SNAM S.p.A.\",\"operator:wikidata\"=>\"Q583247\",\"operator:wikipedia\"=>\"Snam\",\"ref\"=>\"IT_SRG_RN_26\",\"substance\"=>\"gas\""
+        },
+        "derived": {}
+      },
+      {
+        "id": "b750a46c5eb18565",
+        "category": "pipelines",
+        "dataset_layer": "pipelines_OpenStreetMap-Pipelines-Extract_EPSG32633_processed",
+        "feature_id": "1448083785",
+        "point": [
+          13.601501817063127,
+          43.33846123208607
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.601501817063127,
+            43.33846123208607,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": "1448083785",
+          "name": "Metanodotto Ravenna - Chieti",
+          "highway": null,
+          "waterway": null,
+          "aerialway": null,
+          "barrier": null,
+          "man_made": "pipeline",
+          "railway": null,
+          "z_order": -20,
+          "other_tags": "\"check_date\"=>\"2025-11-07\",\"diameter\"=>\"650\",\"layer\"=>\"-2\",\"location\"=>\"underground\",\"operator\"=>\"SNAM S.p.A.\",\"operator:wikidata\"=>\"Q583247\",\"operator:wikipedia\"=>\"Snam\",\"ref\"=>\"IT_SRG_RN_26\",\"substance\"=>\"gas\""
+        },
+        "derived": {}
+      },
+      {
+        "id": "dff3ba8816fd7171",
+        "category": "pipelines",
+        "dataset_layer": "pipelines_OpenStreetMap-Pipelines-Extract_EPSG32633_processed",
+        "feature_id": "1448083785",
+        "point": [
+          13.587064404021456,
+          43.35347376696831
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.587064404021456,
+            43.35347376696831,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": "1448083785",
+          "name": "Metanodotto Ravenna - Chieti",
+          "highway": null,
+          "waterway": null,
+          "aerialway": null,
+          "barrier": null,
+          "man_made": "pipeline",
+          "railway": null,
+          "z_order": -20,
+          "other_tags": "\"check_date\"=>\"2025-11-07\",\"diameter\"=>\"650\",\"layer\"=>\"-2\",\"location\"=>\"underground\",\"operator\"=>\"SNAM S.p.A.\",\"operator:wikidata\"=>\"Q583247\",\"operator:wikipedia\"=>\"Snam\",\"ref\"=>\"IT_SRG_RN_26\",\"substance\"=>\"gas\""
+        },
+        "derived": {}
+      },
+      {
+        "id": "8871408783ff28b9",
+        "category": "pipelines",
+        "dataset_layer": "pipelines_OpenStreetMap-Pipelines-Extract_EPSG32633_processed",
+        "feature_id": "1448083785",
+        "point": [
+          13.60301947157665,
+          43.335843217861665
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.60301947157665,
+            43.335843217861665,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": "1448083785",
+          "name": "Metanodotto Ravenna - Chieti",
+          "highway": null,
+          "waterway": null,
+          "aerialway": null,
+          "barrier": null,
+          "man_made": "pipeline",
+          "railway": null,
+          "z_order": -20,
+          "other_tags": "\"check_date\"=>\"2025-11-07\",\"diameter\"=>\"650\",\"layer\"=>\"-2\",\"location\"=>\"underground\",\"operator\"=>\"SNAM S.p.A.\",\"operator:wikidata\"=>\"Q583247\",\"operator:wikipedia\"=>\"Snam\",\"ref\"=>\"IT_SRG_RN_26\",\"substance\"=>\"gas\""
+        },
+        "derived": {}
+      },
+      {
+        "id": "e4d05b35c358c2a9",
+        "category": "pipelines",
+        "dataset_layer": "pipelines_OpenStreetMap-Pipelines-Extract_EPSG32633_processed",
+        "feature_id": "1448083785",
+        "point": [
+          13.603224368092333,
+          43.33509185406413
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.603224368092333,
+            43.33509185406413,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": "1448083785",
+          "name": "Metanodotto Ravenna - Chieti",
+          "highway": null,
+          "waterway": null,
+          "aerialway": null,
+          "barrier": null,
+          "man_made": "pipeline",
+          "railway": null,
+          "z_order": -20,
+          "other_tags": "\"check_date\"=>\"2025-11-07\",\"diameter\"=>\"650\",\"layer\"=>\"-2\",\"location\"=>\"underground\",\"operator\"=>\"SNAM S.p.A.\",\"operator:wikidata\"=>\"Q583247\",\"operator:wikipedia\"=>\"Snam\",\"ref\"=>\"IT_SRG_RN_26\",\"substance\"=>\"gas\""
+        },
+        "derived": {}
+      },
+      {
+        "id": "4209cfca3095305a",
+        "category": "pipelines",
+        "dataset_layer": "pipelines_OpenStreetMap-Pipelines-Extract_EPSG32633_processed",
+        "feature_id": "159482810",
+        "point": [
+          13.558254111131486,
+          43.365283691470175
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.558254111131486,
+            43.365283691470175,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": "159482810",
+          "name": "Metanodotto Ravenna - Chieti",
+          "highway": null,
+          "waterway": null,
+          "aerialway": null,
+          "barrier": null,
+          "man_made": "pipeline",
+          "railway": null,
+          "z_order": 20,
+          "other_tags": "\"bridge\"=>\"yes\",\"check_date\"=>\"2025-11-07\",\"diameter\"=>\"650\",\"layer\"=>\"1\",\"location\"=>\"bridge\",\"operator\"=>\"SNAM S.p.A.\",\"operator:wikidata\"=>\"Q583247\",\"operator:wikipedia\"=>\"Snam\",\"ref\"=>\"IT_SRG_RN_26\",\"substance\"=>\"gas\""
+        },
+        "derived": {}
+      },
+      {
+        "id": "de10a11849c2b2ca",
+        "category": "pipelines",
+        "dataset_layer": "pipelines_OpenStreetMap-Pipelines-Extract_EPSG32633_processed",
+        "feature_id": "1448085212",
+        "point": [
+          13.551824049531216,
+          43.36868206422424
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.551824049531216,
+            43.36868206422424,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": "1448085212",
+          "name": "Metanodotto Ravenna - Chieti",
+          "highway": null,
+          "waterway": null,
+          "aerialway": null,
+          "barrier": null,
+          "man_made": "pipeline",
+          "railway": null,
+          "z_order": -10,
+          "other_tags": "\"check_date\"=>\"2025-11-07\",\"diameter\"=>\"650\",\"layer\"=>\"-1\",\"location\"=>\"underground\",\"operator\"=>\"SNAM S.p.A.\",\"operator:wikidata\"=>\"Q583247\",\"operator:wikipedia\"=>\"Snam\",\"ref\"=>\"IT_SRG_RN_26\",\"substance\"=>\"gas\""
+        },
+        "derived": {}
+      },
+      {
+        "id": "db03fe97463d08e2",
+        "category": "pipelines",
+        "dataset_layer": "pipelines_OpenStreetMap-Pipelines-Extract_EPSG32633_processed",
+        "feature_id": "1448085212",
+        "point": [
+          13.549615988434827,
+          43.36900903466494
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.549615988434827,
+            43.36900903466494,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": "1448085212",
+          "name": "Metanodotto Ravenna - Chieti",
+          "highway": null,
+          "waterway": null,
+          "aerialway": null,
+          "barrier": null,
+          "man_made": "pipeline",
+          "railway": null,
+          "z_order": -10,
+          "other_tags": "\"check_date\"=>\"2025-11-07\",\"diameter\"=>\"650\",\"layer\"=>\"-1\",\"location\"=>\"underground\",\"operator\"=>\"SNAM S.p.A.\",\"operator:wikidata\"=>\"Q583247\",\"operator:wikipedia\"=>\"Snam\",\"ref\"=>\"IT_SRG_RN_26\",\"substance\"=>\"gas\""
+        },
+        "derived": {}
+      },
+      {
+        "id": "778f0e11cdb6949e",
+        "category": "pipelines",
+        "dataset_layer": "pipelines_OpenStreetMap-Pipelines-Extract_EPSG32633_processed",
+        "feature_id": "1448085212",
+        "point": [
+          13.545088851863268,
+          43.370997481552635
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.545088851863268,
+            43.370997481552635,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": "1448085212",
+          "name": "Metanodotto Ravenna - Chieti",
+          "highway": null,
+          "waterway": null,
+          "aerialway": null,
+          "barrier": null,
+          "man_made": "pipeline",
+          "railway": null,
+          "z_order": -10,
+          "other_tags": "\"check_date\"=>\"2025-11-07\",\"diameter\"=>\"650\",\"layer\"=>\"-1\",\"location\"=>\"underground\",\"operator\"=>\"SNAM S.p.A.\",\"operator:wikidata\"=>\"Q583247\",\"operator:wikipedia\"=>\"Snam\",\"ref\"=>\"IT_SRG_RN_26\",\"substance\"=>\"gas\""
+        },
+        "derived": {}
+      },
+      {
+        "id": "a1d86d88fe6bdc48",
+        "category": "pipelines",
+        "dataset_layer": "pipelines_OpenStreetMap-Pipelines-Extract_EPSG32633_processed",
+        "feature_id": "1448085212",
+        "point": [
+          13.556277816741574,
+          43.36667608350685
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.556277816741574,
+            43.36667608350685,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": "1448085212",
+          "name": "Metanodotto Ravenna - Chieti",
+          "highway": null,
+          "waterway": null,
+          "aerialway": null,
+          "barrier": null,
+          "man_made": "pipeline",
+          "railway": null,
+          "z_order": -10,
+          "other_tags": "\"check_date\"=>\"2025-11-07\",\"diameter\"=>\"650\",\"layer\"=>\"-1\",\"location\"=>\"underground\",\"operator\"=>\"SNAM S.p.A.\",\"operator:wikidata\"=>\"Q583247\",\"operator:wikipedia\"=>\"Snam\",\"ref\"=>\"IT_SRG_RN_26\",\"substance\"=>\"gas\""
+        },
+        "derived": {}
+      },
+      {
+        "id": "0e310e471db449f9",
+        "category": "pipelines",
+        "dataset_layer": "pipelines_OpenStreetMap-Pipelines-Extract_EPSG32633_processed",
+        "feature_id": "1448085212",
+        "point": [
+          13.536544014016421,
+          43.3739673611701
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.536544014016421,
+            43.3739673611701,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": "1448085212",
+          "name": "Metanodotto Ravenna - Chieti",
+          "highway": null,
+          "waterway": null,
+          "aerialway": null,
+          "barrier": null,
+          "man_made": "pipeline",
+          "railway": null,
+          "z_order": -10,
+          "other_tags": "\"check_date\"=>\"2025-11-07\",\"diameter\"=>\"650\",\"layer\"=>\"-1\",\"location\"=>\"underground\",\"operator\"=>\"SNAM S.p.A.\",\"operator:wikidata\"=>\"Q583247\",\"operator:wikipedia\"=>\"Snam\",\"ref\"=>\"IT_SRG_RN_26\",\"substance\"=>\"gas\""
+        },
+        "derived": {}
+      },
+      {
+        "id": "81bab254be81dd04",
+        "category": "powerlines",
+        "dataset_layer": "powerlines_OpenStreetMap-Power-Network-Extract_EPSG32633_processed",
+        "feature_id": "123243586",
+        "point": [
+          13.640202292993694,
+          43.27485771937385
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.640202292993694,
+            43.27485771937385,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 123243586,
+          "name": "Monte San Giusto-Civitanova Marche",
+          "power": "line",
+          "voltage": "132000",
+          "voltage_v": 132000,
+          "voltage_kv": 132.0,
+          "voltage_class": "high",
+          "cables": "3",
+          "operator": "",
+          "frequency": "",
+          "ref": "23.739",
+          "crossing_cost": "high",
+          "location": ""
+        },
+        "derived": {
+          "voltage": 132000.0
+        }
+      },
+      {
+        "id": "3144028b49b22914",
+        "category": "powerlines",
+        "dataset_layer": "powerlines_OpenStreetMap-Power-Network-Extract_EPSG32633_processed",
+        "feature_id": "159482811",
+        "point": [
+          13.598674793912869,
+          43.346929913708536
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.598674793912869,
+            43.346929913708536,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 159482811,
+          "name": "",
+          "power": "line",
+          "voltage": "",
+          "voltage_v": null,
+          "voltage_kv": null,
+          "voltage_class": "",
+          "cables": "",
+          "operator": "",
+          "frequency": "",
+          "ref": "",
+          "crossing_cost": "",
+          "location": ""
+        },
+        "derived": {}
+      },
+      {
+        "id": "499c885750833f1f",
+        "category": "powerlines",
+        "dataset_layer": "powerlines_OpenStreetMap-Power-Network-Extract_EPSG32633_processed",
+        "feature_id": "215038209",
+        "point": [
+          13.577421728197358,
+          43.35767582380503
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.577421728197358,
+            43.35767582380503,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 215038209,
+          "name": "",
+          "power": "minor_line",
+          "voltage": "20000",
+          "voltage_v": 20000,
+          "voltage_kv": 20.0,
+          "voltage_class": "medium",
+          "cables": "3",
+          "operator": "",
+          "frequency": "",
+          "ref": "",
+          "crossing_cost": "medium",
+          "location": ""
+        },
+        "derived": {
+          "voltage": 20000.0
+        }
+      },
+      {
+        "id": "3b0cd71a40a6bc58",
+        "category": "powerlines",
+        "dataset_layer": "powerlines_OpenStreetMap-Power-Network-Extract_EPSG32633_processed",
+        "feature_id": "159474569",
+        "point": [
+          13.566455931513145,
+          43.3607034565213
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.566455931513145,
+            43.3607034565213,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 159474569,
+          "name": "",
+          "power": "minor_line",
+          "voltage": "50000",
+          "voltage_v": 50000,
+          "voltage_kv": 50.0,
+          "voltage_class": "high",
+          "cables": "3",
+          "operator": "",
+          "frequency": "",
+          "ref": "",
+          "crossing_cost": "high",
+          "location": ""
+        },
+        "derived": {
+          "voltage": 50000.0
+        }
+      },
+      {
+        "id": "0eefe7e22d7cd858",
+        "category": "powerlines",
+        "dataset_layer": "powerlines_OpenStreetMap-Power-Network-Extract_EPSG32633_processed",
+        "feature_id": "214382828",
+        "point": [
+          13.568629961725735,
+          43.35962413647425
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.568629961725735,
+            43.35962413647425,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 214382828,
+          "name": "",
+          "power": "minor_line",
+          "voltage": "",
+          "voltage_v": null,
+          "voltage_kv": null,
+          "voltage_class": "",
+          "cables": "",
+          "operator": "",
+          "frequency": "",
+          "ref": "",
+          "crossing_cost": "",
+          "location": ""
+        },
+        "derived": {}
+      },
+      {
+        "id": "60fefc5d94257622",
+        "category": "railways",
+        "dataset_layer": "railways_OpenStreetMap-Railways-Extract_EPSG32633_processed",
+        "feature_id": "338993797",
+        "point": [
+          13.627065533014258,
+          43.286505977064984
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.627065533014258,
+            43.286505977064984,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": "338993797",
+          "name": "Ferrovia Civitanova Marche – Fabriano",
+          "highway": null,
+          "waterway": null,
+          "aerialway": null,
+          "barrier": null,
+          "man_made": null,
+          "railway": "rail",
+          "z_order": 5,
+          "other_tags": "\"axle_load\"=>\"20\",\"construction:electrified\"=>\"contact_line\",\"construction:frequency\"=>\"0\",\"construction:railway:etcs\"=>\"2\",\"construction:voltage\"=>\"3000\",\"electrified\"=>\"no\",\"gauge\"=>\"1435\",\"loading_gauge\"=>\"FS\",\"maxspeed\"=>\"115\",\"metre_load\"=>\"7.2\",\"operator\"=>\"RFI\",\"passenger_lines\"=>\"1\",\"railway:block_section\"=>\"axle_counter\",\"railway:preferred_direction\"=>\"both\",\"railway:scmt\"=>\"yes\",\"railway:track_class\"=>\"C3L\",\"ref\"=>\"105\",\"usage\"=>\"branch\"",
+          "electrified": null,
+          "voltage": null,
+          "gauge": null,
+          "maxspeed": null,
+          "operator": null,
+          "usage": null,
+          "frequency": null,
+          "ref_tag": null,
+          "service": null,
+          "tunnel": null,
+          "bridge": null
+        },
+        "derived": {
+          "railway": "rail",
+          "width_m": 5.74
+        }
+      },
+      {
+        "id": "36930b32b190aee8",
+        "category": "roads",
+        "dataset_layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed",
+        "feature_id": "23267276",
+        "point": [
+          13.670124995216122,
+          43.23100093041784
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.670124995216122,
+            43.23100093041784,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 23267276,
+          "name": "Via Cerretino",
+          "highway": "unclassified",
+          "ref": "",
+          "surface": "unpaved",
+          "lanes": "",
+          "maxspeed": "",
+          "oneway": "",
+          "bridge": null,
+          "tunnel": null,
+          "layer": null,
+          "access": null,
+          "foot": null,
+          "bicycle": null,
+          "motor_vehicle": null,
+          "lit": null,
+          "smoothness": null,
+          "tracktype": null,
+          "width": null
+        },
+        "derived": {
+          "highway": "unclassified",
+          "width_m": 7.0
+        }
+      },
+      {
+        "id": "c010661a5d87af2e",
+        "category": "roads",
+        "dataset_layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed",
+        "feature_id": "23730958",
+        "point": [
+          13.669529805789603,
+          43.23670934454526
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.669529805789603,
+            43.23670934454526,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 23730958,
+          "name": "Strada Provinciale 27 Elpidiense",
+          "highway": "secondary",
+          "ref": "SP27",
+          "surface": "asphalt",
+          "lanes": "",
+          "maxspeed": "",
+          "oneway": "",
+          "bridge": null,
+          "tunnel": null,
+          "layer": null,
+          "access": null,
+          "foot": null,
+          "bicycle": null,
+          "motor_vehicle": null,
+          "lit": null,
+          "smoothness": null,
+          "tracktype": null,
+          "width": null
+        },
+        "derived": {
+          "highway": "secondary",
+          "width_m": 7.0
+        }
+      },
+      {
+        "id": "55889a59fb14358d",
+        "category": "roads",
+        "dataset_layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed",
+        "feature_id": "157199304",
+        "point": [
+          13.669491916672666,
+          43.244684061121106
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.669491916672666,
+            43.244684061121106,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 157199304,
+          "name": "Strada Provinciale 219 Ete Morto",
+          "highway": "primary",
+          "ref": "SP219",
+          "surface": "asphalt",
+          "lanes": "",
+          "maxspeed": "90",
+          "oneway": "",
+          "bridge": null,
+          "tunnel": null,
+          "layer": null,
+          "access": null,
+          "foot": null,
+          "bicycle": null,
+          "motor_vehicle": null,
+          "lit": null,
+          "smoothness": null,
+          "tracktype": null,
+          "width": null
+        },
+        "derived": {
+          "highway": "primary",
+          "width_m": 10.5
+        }
+      },
+      {
+        "id": "b736de70f736a323",
+        "category": "roads",
+        "dataset_layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed",
+        "feature_id": "23525386",
+        "point": [
+          13.668952479175656,
+          43.24813411858041
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.668952479175656,
+            43.24813411858041,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 23525386,
+          "name": "Strada Rio Maggio",
+          "highway": "unclassified",
+          "ref": "",
+          "surface": "unpaved",
+          "lanes": "",
+          "maxspeed": "",
+          "oneway": "",
+          "bridge": null,
+          "tunnel": null,
+          "layer": null,
+          "access": null,
+          "foot": null,
+          "bicycle": null,
+          "motor_vehicle": null,
+          "lit": null,
+          "smoothness": null,
+          "tracktype": null,
+          "width": null
+        },
+        "derived": {
+          "highway": "unclassified",
+          "width_m": 7.0
+        }
+      },
+      {
+        "id": "f664924b40bd7059",
+        "category": "roads",
+        "dataset_layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed",
+        "feature_id": "119789373",
+        "point": [
+          13.658166980983166,
+          43.260513937834084
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.658166980983166,
+            43.260513937834084,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 119789373,
+          "name": "",
+          "highway": "unclassified",
+          "ref": "",
+          "surface": "",
+          "lanes": "",
+          "maxspeed": "",
+          "oneway": "",
+          "bridge": null,
+          "tunnel": null,
+          "layer": null,
+          "access": null,
+          "foot": null,
+          "bicycle": null,
+          "motor_vehicle": null,
+          "lit": null,
+          "smoothness": null,
+          "tracktype": null,
+          "width": null
+        },
+        "derived": {
+          "highway": "unclassified",
+          "width_m": 7.0
+        }
+      },
+      {
+        "id": "320b59db377fc260",
+        "category": "roads",
+        "dataset_layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed",
+        "feature_id": "119789418",
+        "point": [
+          13.651702260323681,
+          43.26625235913121
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.651702260323681,
+            43.26625235913121,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 119789418,
+          "name": "Strada Provinciale 94 Veregrense",
+          "highway": "secondary",
+          "ref": "SP94",
+          "surface": "asphalt",
+          "lanes": "",
+          "maxspeed": "",
+          "oneway": "",
+          "bridge": null,
+          "tunnel": null,
+          "layer": null,
+          "access": null,
+          "foot": null,
+          "bicycle": null,
+          "motor_vehicle": null,
+          "lit": null,
+          "smoothness": null,
+          "tracktype": null,
+          "width": null
+        },
+        "derived": {
+          "highway": "secondary",
+          "width_m": 7.0
+        }
+      },
+      {
+        "id": "ede8bbd33a8c5fe8",
+        "category": "roads",
+        "dataset_layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed",
+        "feature_id": "119789410",
+        "point": [
+          13.654541711922127,
+          43.26400751046188
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.654541711922127,
+            43.26400751046188,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 119789410,
+          "name": "",
+          "highway": "track",
+          "ref": "",
+          "surface": "",
+          "lanes": "",
+          "maxspeed": "",
+          "oneway": "",
+          "bridge": null,
+          "tunnel": null,
+          "layer": null,
+          "access": null,
+          "foot": null,
+          "bicycle": null,
+          "motor_vehicle": null,
+          "lit": null,
+          "smoothness": null,
+          "tracktype": null,
+          "width": null
+        },
+        "derived": {
+          "highway": "track",
+          "width_m": 3.5
+        }
+      },
+      {
+        "id": "feb7dfc7f4afc0e9",
+        "category": "roads",
+        "dataset_layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed",
+        "feature_id": "119789387",
+        "point": [
+          13.649126681809074,
+          43.26809208478771
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.649126681809074,
+            43.26809208478771,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 119789387,
+          "name": "",
+          "highway": "unclassified",
+          "ref": "",
+          "surface": "",
+          "lanes": "",
+          "maxspeed": "",
+          "oneway": "",
+          "bridge": null,
+          "tunnel": null,
+          "layer": null,
+          "access": null,
+          "foot": null,
+          "bicycle": null,
+          "motor_vehicle": null,
+          "lit": null,
+          "smoothness": null,
+          "tracktype": null,
+          "width": null
+        },
+        "derived": {
+          "highway": "unclassified",
+          "width_m": 7.0
+        }
+      },
+      {
+        "id": "9af2a124b13267f5",
+        "category": "roads",
+        "dataset_layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed",
+        "feature_id": "283791020",
+        "point": [
+          13.646801074830716,
+          43.2699551883393
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.646801074830716,
+            43.2699551883393,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 283791020,
+          "name": "Contrada San Tommaso",
+          "highway": "tertiary",
+          "ref": "SP150",
+          "surface": "asphalt",
+          "lanes": "",
+          "maxspeed": "",
+          "oneway": "",
+          "bridge": null,
+          "tunnel": null,
+          "layer": null,
+          "access": null,
+          "foot": null,
+          "bicycle": null,
+          "motor_vehicle": null,
+          "lit": null,
+          "smoothness": null,
+          "tracktype": null,
+          "width": null
+        },
+        "derived": {
+          "highway": "tertiary",
+          "width_m": 10.5
+        }
+      },
+      {
+        "id": "24318d1675361716",
+        "category": "roads",
+        "dataset_layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed",
+        "feature_id": "111773390",
+        "point": [
+          13.643450809327383,
+          43.2725606949015
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.643450809327383,
+            43.2725606949015,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 111773390,
+          "name": "",
+          "highway": "track",
+          "ref": "",
+          "surface": "ground",
+          "lanes": "",
+          "maxspeed": "",
+          "oneway": "",
+          "bridge": null,
+          "tunnel": null,
+          "layer": null,
+          "access": null,
+          "foot": null,
+          "bicycle": null,
+          "motor_vehicle": null,
+          "lit": null,
+          "smoothness": null,
+          "tracktype": null,
+          "width": null
+        },
+        "derived": {
+          "highway": "track",
+          "width_m": 3.5
+        }
+      },
+      {
+        "id": "92e8e9a0a937c666",
+        "category": "roads",
+        "dataset_layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed",
+        "feature_id": "105080580",
+        "point": [
+          13.639306117580666,
+          43.275491287004364
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.639306117580666,
+            43.275491287004364,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 105080580,
+          "name": "Strada Statale 77 della Val di Chienti",
+          "highway": "trunk",
+          "ref": "SS77",
+          "surface": "asphalt",
+          "lanes": "2",
+          "maxspeed": "110",
+          "oneway": "yes",
+          "bridge": null,
+          "tunnel": null,
+          "layer": null,
+          "access": null,
+          "foot": null,
+          "bicycle": null,
+          "motor_vehicle": null,
+          "lit": "no",
+          "smoothness": null,
+          "tracktype": null,
+          "width": null
+        },
+        "derived": {
+          "lanes": 2,
+          "width_m": 7.0
+        }
+      },
+      {
+        "id": "f5c90ec99b5a88cc",
+        "category": "roads",
+        "dataset_layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed",
+        "feature_id": "111858404",
+        "point": [
+          13.639208478176766,
+          43.275560342716865
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.639208478176766,
+            43.275560342716865,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 111858404,
+          "name": "Strada Statale 77 della Val di Chienti",
+          "highway": "trunk",
+          "ref": "SS77",
+          "surface": "asphalt",
+          "lanes": "2",
+          "maxspeed": "110",
+          "oneway": "yes",
+          "bridge": null,
+          "tunnel": null,
+          "layer": null,
+          "access": null,
+          "foot": null,
+          "bicycle": null,
+          "motor_vehicle": null,
+          "lit": "no",
+          "smoothness": null,
+          "tracktype": null,
+          "width": null
+        },
+        "derived": {
+          "lanes": 2,
+          "width_m": 7.0
+        }
+      },
+      {
+        "id": "992718984a61d9a1",
+        "category": "roads",
+        "dataset_layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed",
+        "feature_id": "553225360",
+        "point": [
+          13.637379068767961,
+          43.27685378424757
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.637379068767961,
+            43.27685378424757,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 553225360,
+          "name": "",
+          "highway": "unclassified",
+          "ref": "",
+          "surface": "",
+          "lanes": "",
+          "maxspeed": "",
+          "oneway": "",
+          "bridge": null,
+          "tunnel": null,
+          "layer": null,
+          "access": null,
+          "foot": null,
+          "bicycle": null,
+          "motor_vehicle": null,
+          "lit": null,
+          "smoothness": null,
+          "tracktype": null,
+          "width": null
+        },
+        "derived": {
+          "highway": "unclassified",
+          "width_m": 7.0
+        }
+      },
+      {
+        "id": "ca38274e80dfe73e",
+        "category": "roads",
+        "dataset_layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed",
+        "feature_id": "1120772695",
+        "point": [
+          13.635154479776448,
+          43.27889895349287
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.635154479776448,
+            43.27889895349287,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 1120772695,
+          "name": "Via Abbadia",
+          "highway": "track",
+          "ref": "",
+          "surface": "",
+          "lanes": "",
+          "maxspeed": "50",
+          "oneway": "",
+          "bridge": null,
+          "tunnel": null,
+          "layer": null,
+          "access": null,
+          "foot": null,
+          "bicycle": null,
+          "motor_vehicle": null,
+          "lit": null,
+          "smoothness": null,
+          "tracktype": null,
+          "width": null
+        },
+        "derived": {
+          "highway": "track",
+          "width_m": 3.5
+        }
+      },
+      {
+        "id": "a32e28ff9ba9441d",
+        "category": "roads",
+        "dataset_layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed",
+        "feature_id": "30925116",
+        "point": [
+          13.63268440732522,
+          43.28084351969847
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.63268440732522,
+            43.28084351969847,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 30925116,
+          "name": "Località Piane di Chienti",
+          "highway": "unclassified",
+          "ref": "",
+          "surface": "asphalt",
+          "lanes": "",
+          "maxspeed": "50",
+          "oneway": "",
+          "bridge": null,
+          "tunnel": null,
+          "layer": null,
+          "access": null,
+          "foot": null,
+          "bicycle": null,
+          "motor_vehicle": null,
+          "lit": null,
+          "smoothness": null,
+          "tracktype": null,
+          "width": null
+        },
+        "derived": {
+          "highway": "unclassified",
+          "width_m": 7.0
+        }
+      },
+      {
+        "id": "4602600f054b247d",
+        "category": "roads",
+        "dataset_layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed",
+        "feature_id": "1320730474",
+        "point": [
+          13.631400404758683,
+          43.28180292086085
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.631400404758683,
+            43.28180292086085,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 1320730474,
+          "name": "Via Roma",
+          "highway": "secondary",
+          "ref": "SR485",
+          "surface": "asphalt",
+          "lanes": "",
+          "maxspeed": "",
+          "oneway": "",
+          "bridge": null,
+          "tunnel": null,
+          "layer": null,
+          "access": null,
+          "foot": null,
+          "bicycle": null,
+          "motor_vehicle": null,
+          "lit": null,
+          "smoothness": null,
+          "tracktype": null,
+          "width": null
+        },
+        "derived": {
+          "highway": "secondary",
+          "width_m": 7.0
+        }
+      },
+      {
+        "id": "24cd23b0804dcc44",
+        "category": "roads",
+        "dataset_layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed",
+        "feature_id": "157199297",
+        "point": [
+          13.624331921515829,
+          43.2891259650082
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.624331921515829,
+            43.2891259650082,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 157199297,
+          "name": "Località Selve",
+          "highway": "unclassified",
+          "ref": "",
+          "surface": "",
+          "lanes": "",
+          "maxspeed": "",
+          "oneway": "",
+          "bridge": null,
+          "tunnel": null,
+          "layer": null,
+          "access": null,
+          "foot": null,
+          "bicycle": null,
+          "motor_vehicle": null,
+          "lit": null,
+          "smoothness": null,
+          "tracktype": null,
+          "width": null
+        },
+        "derived": {
+          "highway": "unclassified",
+          "width_m": 7.0
+        }
+      },
+      {
+        "id": "c0fbc9ee66cdcf12",
+        "category": "roads",
+        "dataset_layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed",
+        "feature_id": "157199322",
+        "point": [
+          13.622919145291299,
+          43.2934543516225
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.622919145291299,
+            43.2934543516225,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 157199322,
+          "name": "",
+          "highway": "track",
+          "ref": "",
+          "surface": "",
+          "lanes": "",
+          "maxspeed": "",
+          "oneway": "",
+          "bridge": null,
+          "tunnel": null,
+          "layer": null,
+          "access": null,
+          "foot": null,
+          "bicycle": null,
+          "motor_vehicle": null,
+          "lit": null,
+          "smoothness": null,
+          "tracktype": "grade4",
+          "width": null
+        },
+        "derived": {
+          "highway": "track",
+          "width_m": 3.5
+        }
+      },
+      {
+        "id": "9c2b6c96b6ba3c25",
+        "category": "roads",
+        "dataset_layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed",
+        "feature_id": "30981910",
+        "point": [
+          13.620766716494195,
+          43.30347508596647
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.620766716494195,
+            43.30347508596647,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 30981910,
+          "name": "Località Selve",
+          "highway": "tertiary",
+          "ref": "",
+          "surface": "",
+          "lanes": "",
+          "maxspeed": "",
+          "oneway": "",
+          "bridge": null,
+          "tunnel": null,
+          "layer": null,
+          "access": null,
+          "foot": null,
+          "bicycle": null,
+          "motor_vehicle": null,
+          "lit": null,
+          "smoothness": null,
+          "tracktype": null,
+          "width": null
+        },
+        "derived": {
+          "highway": "tertiary",
+          "width_m": 10.5
+        }
+      },
+      {
+        "id": "18a3da6cfdb6df22",
+        "category": "roads",
+        "dataset_layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed",
+        "feature_id": "31142624",
+        "point": [
+          13.608894819403915,
+          43.32413957290282
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.608894819403915,
+            43.32413957290282,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 31142624,
+          "name": "Via Giuseppe Verdi",
+          "highway": "secondary",
+          "ref": "SP10",
+          "surface": "",
+          "lanes": "",
+          "maxspeed": "50",
+          "oneway": "",
+          "bridge": null,
+          "tunnel": null,
+          "layer": null,
+          "access": null,
+          "foot": null,
+          "bicycle": null,
+          "motor_vehicle": null,
+          "lit": null,
+          "smoothness": null,
+          "tracktype": null,
+          "width": null
+        },
+        "derived": {
+          "highway": "secondary",
+          "width_m": 7.0
+        }
+      },
+      {
+        "id": "193e67bd49d7004e",
+        "category": "roads",
+        "dataset_layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed",
+        "feature_id": "641347400",
+        "point": [
+          13.59785910753183,
+          43.34774883416421
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.59785910753183,
+            43.34774883416421,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 641347400,
+          "name": "Strada Provinciale 101 Potentina",
+          "highway": "secondary",
+          "ref": "SP101",
+          "surface": "asphalt",
+          "lanes": "",
+          "maxspeed": "",
+          "oneway": "",
+          "bridge": null,
+          "tunnel": null,
+          "layer": null,
+          "access": null,
+          "foot": null,
+          "bicycle": null,
+          "motor_vehicle": null,
+          "lit": null,
+          "smoothness": null,
+          "tracktype": null,
+          "width": null
+        },
+        "derived": {
+          "highway": "secondary",
+          "width_m": 7.0
+        }
+      },
+      {
+        "id": "5ca387a6fc1e4557",
+        "category": "roads",
+        "dataset_layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed",
+        "feature_id": "611117078",
+        "point": [
+          13.585696374217104,
+          43.35422048054381
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.585696374217104,
+            43.35422048054381,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 611117078,
+          "name": "Contrada Grugnoleto",
+          "highway": "unclassified",
+          "ref": "",
+          "surface": "",
+          "lanes": "",
+          "maxspeed": "",
+          "oneway": "",
+          "bridge": null,
+          "tunnel": null,
+          "layer": null,
+          "access": null,
+          "foot": null,
+          "bicycle": null,
+          "motor_vehicle": null,
+          "lit": null,
+          "smoothness": null,
+          "tracktype": null,
+          "width": null
+        },
+        "derived": {
+          "highway": "unclassified",
+          "width_m": 7.0
+        }
+      },
+      {
+        "id": "895d2876726c07ae",
+        "category": "roads",
+        "dataset_layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed",
+        "feature_id": "316596722",
+        "point": [
+          13.577932070080461,
+          43.3573160480304
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.577932070080461,
+            43.3573160480304,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 316596722,
+          "name": "Via Enrico Fermi",
+          "highway": "secondary",
+          "ref": "SP21",
+          "surface": "",
+          "lanes": "2",
+          "maxspeed": "50",
+          "oneway": "",
+          "bridge": null,
+          "tunnel": null,
+          "layer": null,
+          "access": null,
+          "foot": null,
+          "bicycle": null,
+          "motor_vehicle": null,
+          "lit": null,
+          "smoothness": null,
+          "tracktype": null,
+          "width": null
+        },
+        "derived": {
+          "lanes": 2,
+          "width_m": 7.0
+        }
+      },
+      {
+        "id": "d41c800a889fe7a9",
+        "category": "roads",
+        "dataset_layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed",
+        "feature_id": "1339817272",
+        "point": [
+          13.57745766794142,
+          43.35765047870315
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.57745766794142,
+            43.35765047870315,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 1339817272,
+          "name": "Contrada Fosso Bacile",
+          "highway": "unclassified",
+          "ref": "",
+          "surface": "asphalt",
+          "lanes": "",
+          "maxspeed": "",
+          "oneway": "no",
+          "bridge": "yes",
+          "tunnel": null,
+          "layer": "1",
+          "access": null,
+          "foot": null,
+          "bicycle": null,
+          "motor_vehicle": null,
+          "lit": null,
+          "smoothness": null,
+          "tracktype": null,
+          "width": null
+        },
+        "derived": {
+          "highway": "unclassified",
+          "width_m": 7.0
+        }
+      },
+      {
+        "id": "e062ac99523c2743",
+        "category": "roads",
+        "dataset_layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed",
+        "feature_id": "564157632",
+        "point": [
+          13.577371994969887,
+          43.35771089622276
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.577371994969887,
+            43.35771089622276,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 564157632,
+          "name": "Contrada Fosso Bacile",
+          "highway": "service",
+          "ref": "",
+          "surface": "",
+          "lanes": "",
+          "maxspeed": "",
+          "oneway": "",
+          "bridge": null,
+          "tunnel": null,
+          "layer": null,
+          "access": null,
+          "foot": null,
+          "bicycle": null,
+          "motor_vehicle": null,
+          "lit": null,
+          "smoothness": null,
+          "tracktype": null,
+          "width": null
+        },
+        "derived": {
+          "highway": "service",
+          "width_m": 7.0
+        }
+      },
+      {
+        "id": "62925430b6aa4d95",
+        "category": "roads",
+        "dataset_layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed",
+        "feature_id": "137657589",
+        "point": [
+          13.572116498338518,
+          43.35861341534832
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.572116498338518,
+            43.35861341534832,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 137657589,
+          "name": "Contrada Molino",
+          "highway": "unclassified",
+          "ref": "",
+          "surface": "asphalt",
+          "lanes": "",
+          "maxspeed": "",
+          "oneway": "",
+          "bridge": null,
+          "tunnel": null,
+          "layer": null,
+          "access": null,
+          "foot": null,
+          "bicycle": null,
+          "motor_vehicle": null,
+          "lit": null,
+          "smoothness": null,
+          "tracktype": null,
+          "width": null
+        },
+        "derived": {
+          "highway": "unclassified",
+          "width_m": 7.0
+        }
+      },
+      {
+        "id": "5807bed5c05111f6",
+        "category": "roads",
+        "dataset_layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed",
+        "feature_id": "210536920",
+        "point": [
+          13.55360806857325,
+          43.36855685729403
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.55360806857325,
+            43.36855685729403,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 210536920,
+          "name": "Via Giovanni Guareschi",
+          "highway": "tertiary",
+          "ref": "SP151",
+          "surface": "asphalt",
+          "lanes": "",
+          "maxspeed": "",
+          "oneway": "",
+          "bridge": null,
+          "tunnel": null,
+          "layer": null,
+          "access": null,
+          "foot": null,
+          "bicycle": null,
+          "motor_vehicle": null,
+          "lit": null,
+          "smoothness": null,
+          "tracktype": null,
+          "width": null
+        },
+        "derived": {
+          "highway": "tertiary",
+          "width_m": 10.5
+        }
+      },
+      {
+        "id": "3ee84692ca930afe",
+        "category": "roads",
+        "dataset_layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed",
+        "feature_id": "130079663",
+        "point": [
+          13.547952317487653,
+          43.37018082512748
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.547952317487653,
+            43.37018082512748,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 130079663,
+          "name": "Strada Statale 571 Helvia Recina",
+          "highway": "primary",
+          "ref": "SS571",
+          "surface": "asphalt",
+          "lanes": "2",
+          "maxspeed": "70",
+          "oneway": "",
+          "bridge": null,
+          "tunnel": null,
+          "layer": null,
+          "access": null,
+          "foot": null,
+          "bicycle": null,
+          "motor_vehicle": null,
+          "lit": null,
+          "smoothness": null,
+          "tracktype": null,
+          "width": null
+        },
+        "derived": {
+          "lanes": 2,
+          "width_m": 7.0
+        }
+      },
+      {
+        "id": "135228a6f96d8a06",
+        "category": "roads",
+        "dataset_layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed",
+        "feature_id": "215626444",
+        "point": [
+          13.5464627239115,
+          43.37099397045853
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.5464627239115,
+            43.37099397045853,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 215626444,
+          "name": "",
+          "highway": "track",
+          "ref": "",
+          "surface": "ground",
+          "lanes": "",
+          "maxspeed": "",
+          "oneway": "",
+          "bridge": null,
+          "tunnel": null,
+          "layer": null,
+          "access": null,
+          "foot": null,
+          "bicycle": null,
+          "motor_vehicle": null,
+          "lit": null,
+          "smoothness": null,
+          "tracktype": "grade4",
+          "width": null
+        },
+        "derived": {
+          "highway": "track",
+          "width_m": 3.5
+        }
+      },
+      {
+        "id": "22d44d20f0453a7b",
+        "category": "roads",
+        "dataset_layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed",
+        "feature_id": "306028549",
+        "point": [
+          13.541938070911893,
+          43.37205674344218
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.541938070911893,
+            43.37205674344218,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 306028549,
+          "name": "",
+          "highway": "track",
+          "ref": "",
+          "surface": "",
+          "lanes": "",
+          "maxspeed": "",
+          "oneway": "",
+          "bridge": null,
+          "tunnel": null,
+          "layer": null,
+          "access": null,
+          "foot": null,
+          "bicycle": null,
+          "motor_vehicle": null,
+          "lit": null,
+          "smoothness": null,
+          "tracktype": null,
+          "width": null
+        },
+        "derived": {
+          "highway": "track",
+          "width_m": 3.5
+        }
+      },
+      {
+        "id": "482135300549beaf",
+        "category": "roads",
+        "dataset_layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed",
+        "feature_id": "211885675",
+        "point": [
+          13.532537430349493,
+          43.37539877260348
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.532537430349493,
+            43.37539877260348,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 211885675,
+          "name": "",
+          "highway": "service",
+          "ref": "",
+          "surface": "gravel",
+          "lanes": "",
+          "maxspeed": "",
+          "oneway": "no",
+          "bridge": null,
+          "tunnel": null,
+          "layer": null,
+          "access": null,
+          "foot": null,
+          "bicycle": null,
+          "motor_vehicle": null,
+          "lit": null,
+          "smoothness": null,
+          "tracktype": null,
+          "width": null
+        },
+        "derived": {
+          "highway": "service",
+          "width_m": 7.0
+        }
+      },
+      {
+        "id": "c1f23198b7163d54",
+        "category": "roads",
+        "dataset_layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed",
+        "feature_id": "130068885",
+        "point": [
+          13.529115730106087,
+          43.37683759732583
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.529115730106087,
+            43.37683759732583,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 130068885,
+          "name": "Strada Regionale 77 della Val di Chienti",
+          "highway": "secondary",
+          "ref": "SR77",
+          "surface": "asphalt",
+          "lanes": "2",
+          "maxspeed": "",
+          "oneway": "",
+          "bridge": null,
+          "tunnel": null,
+          "layer": null,
+          "access": null,
+          "foot": null,
+          "bicycle": null,
+          "motor_vehicle": null,
+          "lit": null,
+          "smoothness": null,
+          "tracktype": null,
+          "width": null
+        },
+        "derived": {
+          "lanes": 2,
+          "width_m": 7.0
+        }
+      },
+      {
+        "id": "72c255960c0d1ca1",
+        "category": "roads",
+        "dataset_layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed",
+        "feature_id": "564087127",
+        "point": [
+          13.520861195448726,
+          43.38288327722438
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.520861195448726,
+            43.38288327722438,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 564087127,
+          "name": "",
+          "highway": "service",
+          "ref": "",
+          "surface": "",
+          "lanes": "",
+          "maxspeed": "",
+          "oneway": "",
+          "bridge": null,
+          "tunnel": null,
+          "layer": null,
+          "access": null,
+          "foot": null,
+          "bicycle": null,
+          "motor_vehicle": null,
+          "lit": null,
+          "smoothness": null,
+          "tracktype": null,
+          "width": null
+        },
+        "derived": {
+          "highway": "service",
+          "width_m": 7.0
+        }
+      },
+      {
+        "id": "9398df6d71ff91b4",
+        "category": "roads",
+        "dataset_layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed",
+        "feature_id": "562342845",
+        "point": [
+          13.521451075870702,
+          43.382468114151976
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.521451075870702,
+            43.382468114151976,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 562342845,
+          "name": "",
+          "highway": "unclassified",
+          "ref": "",
+          "surface": "asphalt",
+          "lanes": "",
+          "maxspeed": "",
+          "oneway": "",
+          "bridge": null,
+          "tunnel": null,
+          "layer": null,
+          "access": null,
+          "foot": null,
+          "bicycle": null,
+          "motor_vehicle": null,
+          "lit": null,
+          "smoothness": null,
+          "tracktype": null,
+          "width": null
+        },
+        "derived": {
+          "highway": "unclassified",
+          "width_m": 7.0
+        }
+      },
+      {
+        "id": "afa7cf64b96df9ae",
+        "category": "roads",
+        "dataset_layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed",
+        "feature_id": "1448156520",
+        "point": [
+          13.515194384671517,
+          43.3873424677982
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.515194384671517,
+            43.3873424677982,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 1448156520,
+          "name": "Via Arduino Marconi",
+          "highway": "residential",
+          "ref": "",
+          "surface": "asphalt",
+          "lanes": "",
+          "maxspeed": "",
+          "oneway": "",
+          "bridge": null,
+          "tunnel": null,
+          "layer": null,
+          "access": null,
+          "foot": null,
+          "bicycle": null,
+          "motor_vehicle": null,
+          "lit": null,
+          "smoothness": null,
+          "tracktype": null,
+          "width": null
+        },
+        "derived": {
+          "highway": "residential",
+          "width_m": 7.0
+        }
+      },
+      {
+        "id": "e8c6cd358a1ca07d",
+        "category": "roads",
+        "dataset_layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed",
+        "feature_id": "1448156524",
+        "point": [
+          13.513774146238765,
+          43.38881344731661
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.513774146238765,
+            43.38881344731661,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 1448156524,
+          "name": "",
+          "highway": "service",
+          "ref": "",
+          "surface": "",
+          "lanes": "",
+          "maxspeed": "",
+          "oneway": "",
+          "bridge": null,
+          "tunnel": null,
+          "layer": null,
+          "access": "private",
+          "foot": null,
+          "bicycle": null,
+          "motor_vehicle": null,
+          "lit": null,
+          "smoothness": null,
+          "tracktype": null,
+          "width": null
+        },
+        "derived": {
+          "highway": "service",
+          "width_m": 7.0
+        }
+      },
+      {
+        "id": "aaa15a712f0322d0",
+        "category": "roads",
+        "dataset_layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed",
+        "feature_id": "23289682",
+        "point": [
+          13.731392076807106,
+          43.19703090461612
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.731392076807106,
+            43.19703090461612,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 23289682,
+          "name": "Via Colle Vissiano",
+          "highway": "unclassified",
+          "ref": "",
+          "surface": "asphalt",
+          "lanes": "",
+          "maxspeed": "50",
+          "oneway": "",
+          "bridge": null,
+          "tunnel": null,
+          "layer": null,
+          "access": null,
+          "foot": null,
+          "bicycle": null,
+          "motor_vehicle": null,
+          "lit": null,
+          "smoothness": null,
+          "tracktype": null,
+          "width": null
+        },
+        "derived": {
+          "highway": "unclassified",
+          "width_m": 7.0
+        }
+      },
+      {
+        "id": "ccfac12e29b6f990",
+        "category": "roads",
+        "dataset_layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed",
+        "feature_id": "136788653",
+        "point": [
+          13.71388824972612,
+          43.206845573235505
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.71388824972612,
+            43.206845573235505,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 136788653,
+          "name": "Strada Provinciale 28 Faleriense",
+          "highway": "secondary",
+          "ref": "SP28",
+          "surface": "asphalt",
+          "lanes": "",
+          "maxspeed": "50",
+          "oneway": "",
+          "bridge": null,
+          "tunnel": null,
+          "layer": null,
+          "access": null,
+          "foot": null,
+          "bicycle": null,
+          "motor_vehicle": null,
+          "lit": null,
+          "smoothness": null,
+          "tracktype": null,
+          "width": null
+        },
+        "derived": {
+          "highway": "secondary",
+          "width_m": 7.0
+        }
+      },
+      {
+        "id": "8c71a5504999ae50",
+        "category": "roads",
+        "dataset_layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed",
+        "feature_id": "23512312",
+        "point": [
+          13.72294100090549,
+          43.20121475601546
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.72294100090549,
+            43.20121475601546,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 23512312,
+          "name": "Strada Provinciale 204 Lungotenna",
+          "highway": "secondary",
+          "ref": "SP204",
+          "surface": "",
+          "lanes": "",
+          "maxspeed": "",
+          "oneway": "",
+          "bridge": null,
+          "tunnel": null,
+          "layer": null,
+          "access": null,
+          "foot": null,
+          "bicycle": null,
+          "motor_vehicle": null,
+          "lit": null,
+          "smoothness": null,
+          "tracktype": null,
+          "width": null
+        },
+        "derived": {
+          "highway": "secondary",
+          "width_m": 7.0
+        }
+      },
+      {
+        "id": "074cd06801de774c",
+        "category": "roads",
+        "dataset_layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed",
+        "feature_id": "23254551",
+        "point": [
+          13.71653126558165,
+          43.20497127507658
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.71653126558165,
+            43.20497127507658,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 23254551,
+          "name": "",
+          "highway": "unclassified",
+          "ref": "",
+          "surface": "",
+          "lanes": "",
+          "maxspeed": "",
+          "oneway": "",
+          "bridge": null,
+          "tunnel": null,
+          "layer": null,
+          "access": null,
+          "foot": null,
+          "bicycle": null,
+          "motor_vehicle": null,
+          "lit": null,
+          "smoothness": null,
+          "tracktype": null,
+          "width": null
+        },
+        "derived": {
+          "highway": "unclassified",
+          "width_m": 7.0
+        }
+      },
+      {
+        "id": "9585b2074df740a0",
+        "category": "roads",
+        "dataset_layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed",
+        "feature_id": "991007183",
+        "point": [
+          13.733466828370053,
+          43.19485586996827
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.733466828370053,
+            43.19485586996827,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 991007183,
+          "name": "",
+          "highway": "service",
+          "ref": "",
+          "surface": "gravel",
+          "lanes": "",
+          "maxspeed": "",
+          "oneway": "",
+          "bridge": null,
+          "tunnel": null,
+          "layer": null,
+          "access": null,
+          "foot": null,
+          "bicycle": null,
+          "motor_vehicle": null,
+          "lit": null,
+          "smoothness": null,
+          "tracktype": null,
+          "width": null
+        },
+        "derived": {
+          "highway": "service",
+          "width_m": 7.0
+        }
+      },
+      {
+        "id": "05cd6ac5090ef853",
+        "category": "roads",
+        "dataset_layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed",
+        "feature_id": "23525834",
+        "point": [
+          13.684527468474066,
+          43.226689478078804
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.684527468474066,
+            43.226689478078804,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 23525834,
+          "name": "Via Celeste",
+          "highway": "secondary",
+          "ref": "SP62",
+          "surface": "asphalt",
+          "lanes": "",
+          "maxspeed": "",
+          "oneway": "",
+          "bridge": null,
+          "tunnel": null,
+          "layer": null,
+          "access": null,
+          "foot": null,
+          "bicycle": null,
+          "motor_vehicle": null,
+          "lit": null,
+          "smoothness": null,
+          "tracktype": null,
+          "width": null
+        },
+        "derived": {
+          "highway": "secondary",
+          "width_m": 7.0
+        }
+      },
+      {
+        "id": "78f051e6f1dc3020",
+        "category": "roads",
+        "dataset_layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed",
+        "feature_id": "23395943",
+        "point": [
+          13.686410287050727,
+          43.22490292438812
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.686410287050727,
+            43.22490292438812,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 23395943,
+          "name": "",
+          "highway": "unclassified",
+          "ref": "",
+          "surface": "",
+          "lanes": "",
+          "maxspeed": "",
+          "oneway": "",
+          "bridge": null,
+          "tunnel": null,
+          "layer": null,
+          "access": null,
+          "foot": null,
+          "bicycle": null,
+          "motor_vehicle": null,
+          "lit": null,
+          "smoothness": null,
+          "tracktype": null,
+          "width": null
+        },
+        "derived": {
+          "highway": "unclassified",
+          "width_m": 7.0
+        }
+      },
+      {
+        "id": "5169a6ab4310125a",
+        "category": "roads",
+        "dataset_layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed",
+        "feature_id": "23525670",
+        "point": [
+          13.683980800421267,
+          43.22709672901954
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.683980800421267,
+            43.22709672901954,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 23525670,
+          "name": "Via Rubicone",
+          "highway": "unclassified",
+          "ref": "",
+          "surface": "",
+          "lanes": "",
+          "maxspeed": "",
+          "oneway": "",
+          "bridge": null,
+          "tunnel": null,
+          "layer": null,
+          "access": null,
+          "foot": null,
+          "bicycle": null,
+          "motor_vehicle": null,
+          "lit": null,
+          "smoothness": null,
+          "tracktype": null,
+          "width": null
+        },
+        "derived": {
+          "highway": "unclassified",
+          "width_m": 7.0
+        }
+      },
+      {
+        "id": "556c04583aa534ce",
+        "category": "roads",
+        "dataset_layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed",
+        "feature_id": "504418983",
+        "point": [
+          13.710744705313731,
+          43.2090745726632
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.710744705313731,
+            43.2090745726632,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 504418983,
+          "name": "",
+          "highway": "unclassified",
+          "ref": "",
+          "surface": "",
+          "lanes": "",
+          "maxspeed": "",
+          "oneway": "",
+          "bridge": null,
+          "tunnel": null,
+          "layer": null,
+          "access": null,
+          "foot": null,
+          "bicycle": null,
+          "motor_vehicle": null,
+          "lit": null,
+          "smoothness": null,
+          "tracktype": null,
+          "width": null
+        },
+        "derived": {
+          "highway": "unclassified",
+          "width_m": 7.0
+        }
+      },
+      {
+        "id": "f6148795988e3c72",
+        "category": "roads",
+        "dataset_layer": "roads_OpenStreetMap-Roads-Extract_EPSG32633_processed",
+        "feature_id": "1102723896",
+        "point": [
+          13.707110178627788,
+          43.20944030263748
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.707110178627788,
+            43.20944030263748,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": 1102723896,
+          "name": "Strada Provinciale 77 Santa Caterina",
+          "highway": "secondary",
+          "ref": "SP77",
+          "surface": "asphalt",
+          "lanes": "",
+          "maxspeed": "",
+          "oneway": "",
+          "bridge": null,
+          "tunnel": null,
+          "layer": null,
+          "access": null,
+          "foot": null,
+          "bicycle": null,
+          "motor_vehicle": null,
+          "lit": null,
+          "smoothness": null,
+          "tracktype": null,
+          "width": null
+        },
+        "derived": {
+          "highway": "secondary",
+          "width_m": 7.0
+        }
+      },
+      {
+        "id": "170c60534ee64d4a",
+        "category": "waterways",
+        "dataset_layer": "waterways_OpenStreetMap-Waterways-Extract_EPSG32633_processed",
+        "feature_id": "23015996",
+        "point": [
+          13.722288902306772,
+          43.201447537397655
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.722288902306772,
+            43.201447537397655,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": "23015996",
+          "name": "Tenna",
+          "highway": null,
+          "waterway": "stream",
+          "aerialway": null,
+          "barrier": null,
+          "man_made": null,
+          "railway": null,
+          "z_order": 0,
+          "other_tags": "\"boat\"=>\"no\",\"intermittent\"=>\"no\"",
+          "width": null,
+          "depth": null,
+          "intermittent": null,
+          "boat": null,
+          "tunnel": null,
+          "bridge": null,
+          "layer": null
+        },
+        "derived": {
+          "waterway": "stream",
+          "width_m": 5.0
+        }
+      },
+      {
+        "id": "72d87090dbdf3cf5",
+        "category": "waterways",
+        "dataset_layer": "waterways_OpenStreetMap-Waterways-Extract_EPSG32633_processed",
+        "feature_id": "23245965",
+        "point": [
+          13.669883950441132,
+          43.23552884273541
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.669883950441132,
+            43.23552884273541,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": "23245965",
+          "name": "Ete morto",
+          "highway": null,
+          "waterway": "stream",
+          "aerialway": null,
+          "barrier": null,
+          "man_made": null,
+          "railway": null,
+          "z_order": 0,
+          "other_tags": "\"boat\"=>\"no\",\"wikidata\"=>\"Q3733654\",\"wikipedia\"=>\"it:Ete Morto\"",
+          "width": null,
+          "depth": null,
+          "intermittent": null,
+          "boat": null,
+          "tunnel": null,
+          "bridge": null,
+          "layer": null
+        },
+        "derived": {
+          "waterway": "stream",
+          "width_m": 5.0
+        }
+      },
+      {
+        "id": "bc9904fbc4ffb43d",
+        "category": "waterways",
+        "dataset_layer": "waterways_OpenStreetMap-Waterways-Extract_EPSG32633_processed",
+        "feature_id": "1342448627",
+        "point": [
+          13.63596173910887,
+          43.27785572419039
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.63596173910887,
+            43.27785572419039,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": "1342448627",
+          "name": null,
+          "highway": null,
+          "waterway": "ditch",
+          "aerialway": null,
+          "barrier": null,
+          "man_made": null,
+          "railway": null,
+          "z_order": 0,
+          "other_tags": null,
+          "width": null,
+          "depth": null,
+          "intermittent": null,
+          "boat": null,
+          "tunnel": null,
+          "bridge": null,
+          "layer": null
+        },
+        "derived": {
+          "waterway": "ditch",
+          "width_m": 10.0
+        }
+      },
+      {
+        "id": "2150b8aae37c2549",
+        "category": "waterways",
+        "dataset_layer": "waterways_OpenStreetMap-Waterways-Extract_EPSG32633_processed",
+        "feature_id": "1342389269",
+        "point": [
+          13.631402176669514,
+          43.281723886034065
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.631402176669514,
+            43.281723886034065,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": "1342389269",
+          "name": "Fosso Cunicchio",
+          "highway": null,
+          "waterway": "ditch",
+          "aerialway": null,
+          "barrier": null,
+          "man_made": null,
+          "railway": null,
+          "z_order": 0,
+          "other_tags": "\"intermittent\"=>\"no\"",
+          "width": null,
+          "depth": null,
+          "intermittent": null,
+          "boat": null,
+          "tunnel": null,
+          "bridge": null,
+          "layer": null
+        },
+        "derived": {
+          "waterway": "ditch",
+          "width_m": 10.0
+        }
+      },
+      {
+        "id": "720cefa6491b6e8f",
+        "category": "waterways",
+        "dataset_layer": "waterways_OpenStreetMap-Waterways-Extract_EPSG32633_processed",
+        "feature_id": "1345167359",
+        "point": [
+          13.663920256408087,
+          43.25289013841072
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.663920256408087,
+            43.25289013841072,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": "1345167359",
+          "name": "Rio Maggio",
+          "highway": null,
+          "waterway": "stream",
+          "aerialway": null,
+          "barrier": null,
+          "man_made": null,
+          "railway": null,
+          "z_order": 0,
+          "other_tags": "\"boat\"=>\"no\"",
+          "width": null,
+          "depth": null,
+          "intermittent": null,
+          "boat": null,
+          "tunnel": null,
+          "bridge": null,
+          "layer": null
+        },
+        "derived": {
+          "waterway": "stream",
+          "width_m": 5.0
+        }
+      },
+      {
+        "id": "b1e8b7f79b137ef8",
+        "category": "waterways",
+        "dataset_layer": "waterways_OpenStreetMap-Waterways-Extract_EPSG32633_processed",
+        "feature_id": "1340043725",
+        "point": [
+          13.64495830837971,
+          43.271258358068955
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.64495830837971,
+            43.271258358068955,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": "1340043725",
+          "name": "Fiume Chienti",
+          "highway": null,
+          "waterway": "river",
+          "aerialway": null,
+          "barrier": null,
+          "man_made": null,
+          "railway": null,
+          "z_order": 0,
+          "other_tags": "\"boat\"=>\"no\",\"intermittent\"=>\"yes\"",
+          "width": null,
+          "depth": null,
+          "intermittent": null,
+          "boat": null,
+          "tunnel": null,
+          "bridge": null,
+          "layer": null
+        },
+        "derived": {
+          "waterway": "river",
+          "width_m": 20.0
+        }
+      },
+      {
+        "id": "9d5b1786cb6ebce3",
+        "category": "waterways",
+        "dataset_layer": "waterways_OpenStreetMap-Waterways-Extract_EPSG32633_processed",
+        "feature_id": "23021050",
+        "point": [
+          13.644939939341436,
+          43.2712713523333
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.644939939341436,
+            43.2712713523333,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": "23021050",
+          "name": "Fiume Chienti",
+          "highway": null,
+          "waterway": "river",
+          "aerialway": null,
+          "barrier": null,
+          "man_made": null,
+          "railway": null,
+          "z_order": 0,
+          "other_tags": "\"boat\"=>\"no\"",
+          "width": null,
+          "depth": null,
+          "intermittent": null,
+          "boat": null,
+          "tunnel": null,
+          "bridge": null,
+          "layer": null
+        },
+        "derived": {
+          "waterway": "river",
+          "width_m": 20.0
+        }
+      },
+      {
+        "id": "a29070eb98f34234",
+        "category": "waterways",
+        "dataset_layer": "waterways_OpenStreetMap-Waterways-Extract_EPSG32633_processed",
+        "feature_id": "1392543982",
+        "point": [
+          13.622898773243328,
+          43.29435703924774
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.622898773243328,
+            43.29435703924774,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": "1392543982",
+          "name": "Fosso Cantagallo",
+          "highway": null,
+          "waterway": "ditch",
+          "aerialway": null,
+          "barrier": null,
+          "man_made": null,
+          "railway": null,
+          "z_order": 0,
+          "other_tags": "\"intermittent\"=>\"yes\"",
+          "width": null,
+          "depth": null,
+          "intermittent": null,
+          "boat": null,
+          "tunnel": null,
+          "bridge": null,
+          "layer": null
+        },
+        "derived": {
+          "waterway": "ditch",
+          "width_m": 10.0
+        }
+      },
+      {
+        "id": "cac86e4c872c034a",
+        "category": "waterways",
+        "dataset_layer": "waterways_OpenStreetMap-Waterways-Extract_EPSG32633_processed",
+        "feature_id": "95534364",
+        "point": [
+          13.566722241764165,
+          43.360706794846664
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.566722241764165,
+            43.360706794846664,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": "95534364",
+          "name": null,
+          "highway": null,
+          "waterway": "canal",
+          "aerialway": null,
+          "barrier": null,
+          "man_made": null,
+          "railway": null,
+          "z_order": 0,
+          "other_tags": null,
+          "width": null,
+          "depth": null,
+          "intermittent": null,
+          "boat": null,
+          "tunnel": null,
+          "bridge": null,
+          "layer": null
+        },
+        "derived": {
+          "waterway": "canal",
+          "width_m": 10.0
+        }
+      },
+      {
+        "id": "57890ccf07ee5aa4",
+        "category": "waterways",
+        "dataset_layer": "waterways_OpenStreetMap-Waterways-Extract_EPSG32633_processed",
+        "feature_id": "307179686",
+        "point": [
+          13.562671130938735,
+          43.36281671938637
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.562671130938735,
+            43.36281671938637,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": "307179686",
+          "name": "Fosso Codardo",
+          "highway": null,
+          "waterway": "drain",
+          "aerialway": null,
+          "barrier": null,
+          "man_made": null,
+          "railway": null,
+          "z_order": 0,
+          "other_tags": null,
+          "width": null,
+          "depth": null,
+          "intermittent": null,
+          "boat": null,
+          "tunnel": null,
+          "bridge": null,
+          "layer": null
+        },
+        "derived": {
+          "waterway": "drain",
+          "width_m": 10.0
+        }
+      },
+      {
+        "id": "00f5239c1c6b458d",
+        "category": "waterways",
+        "dataset_layer": "waterways_OpenStreetMap-Waterways-Extract_EPSG32633_processed",
+        "feature_id": "1339817265",
+        "point": [
+          13.57744525757123,
+          43.357659230632386
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.57744525757123,
+            43.357659230632386,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": "1339817265",
+          "name": null,
+          "highway": null,
+          "waterway": "ditch",
+          "aerialway": null,
+          "barrier": null,
+          "man_made": null,
+          "railway": null,
+          "z_order": 0,
+          "other_tags": "\"intermittent\"=>\"yes\"",
+          "width": null,
+          "depth": null,
+          "intermittent": null,
+          "boat": null,
+          "tunnel": null,
+          "bridge": null,
+          "layer": null
+        },
+        "derived": {
+          "waterway": "ditch",
+          "width_m": 10.0
+        }
+      },
+      {
+        "id": "d173bd20c0dfcc5c",
+        "category": "waterways",
+        "dataset_layer": "waterways_OpenStreetMap-Waterways-Extract_EPSG32633_processed",
+        "feature_id": "210213365",
+        "point": [
+          13.549545025324269,
+          43.36905899777829
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.549545025324269,
+            43.36905899777829,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": "210213365",
+          "name": null,
+          "highway": null,
+          "waterway": "stream",
+          "aerialway": null,
+          "barrier": null,
+          "man_made": null,
+          "railway": null,
+          "z_order": 0,
+          "other_tags": null,
+          "width": null,
+          "depth": null,
+          "intermittent": null,
+          "boat": null,
+          "tunnel": null,
+          "bridge": null,
+          "layer": null
+        },
+        "derived": {
+          "waterway": "stream",
+          "width_m": 5.0
+        }
+      },
+      {
+        "id": "7535134695c5ab1b",
+        "category": "waterways",
+        "dataset_layer": "waterways_OpenStreetMap-Waterways-Extract_EPSG32633_processed",
+        "feature_id": "1351839074",
+        "point": [
+          13.60324514415957,
+          43.33418553228821
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.60324514415957,
+            43.33418553228821,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": "1351839074",
+          "name": "Asola",
+          "highway": null,
+          "waterway": "stream",
+          "aerialway": null,
+          "barrier": null,
+          "man_made": null,
+          "railway": null,
+          "z_order": 0,
+          "other_tags": "\"wikidata\"=>\"Q3625248\",\"wikipedia\"=>\"it:Asola (torrente)\"",
+          "width": null,
+          "depth": null,
+          "intermittent": null,
+          "boat": null,
+          "tunnel": null,
+          "bridge": null,
+          "layer": null
+        },
+        "derived": {
+          "waterway": "stream",
+          "width_m": 5.0
+        }
+      },
+      {
+        "id": "2b62bbb292ab6ccb",
+        "category": "waterways",
+        "dataset_layer": "waterways_OpenStreetMap-Waterways-Extract_EPSG32633_processed",
+        "feature_id": "44300958",
+        "point": [
+          13.558447415658929,
+          43.36514750295296
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.558447415658929,
+            43.36514750295296,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": "44300958",
+          "name": "Fiume Potenza",
+          "highway": null,
+          "waterway": "river",
+          "aerialway": null,
+          "barrier": null,
+          "man_made": null,
+          "railway": null,
+          "z_order": 0,
+          "other_tags": "\"boat\"=>\"no\"",
+          "width": null,
+          "depth": null,
+          "intermittent": null,
+          "boat": null,
+          "tunnel": null,
+          "bridge": null,
+          "layer": null
+        },
+        "derived": {
+          "waterway": "river",
+          "width_m": 20.0
+        }
+      },
+      {
+        "id": "108614ef82964f65",
+        "category": "waterways",
+        "dataset_layer": "waterways_OpenStreetMap-Waterways-Extract_EPSG32633_processed",
+        "feature_id": "130079741",
+        "point": [
+          13.524978409396173,
+          43.379749767556426
+        ],
+        "intersection": {
+          "type": "Point",
+          "coordinates": [
+            13.524978409396173,
+            43.379749767556426,
+            0.0
+          ]
+        },
+        "feature_properties": {
+          "osm_id": "130079741",
+          "name": null,
+          "highway": null,
+          "waterway": "stream",
+          "aerialway": null,
+          "barrier": null,
+          "man_made": null,
+          "railway": null,
+          "z_order": 0,
+          "other_tags": null,
+          "width": null,
+          "depth": null,
+          "intermittent": null,
+          "boat": null,
+          "tunnel": null,
+          "bridge": null,
+          "layer": null
+        },
+        "derived": {
+          "waterway": "stream",
+          "width_m": 5.0
+        }
+      }
+    ]
   }
 }

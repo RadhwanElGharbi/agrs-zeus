@@ -1,74 +1,103 @@
 {
-  "dataset_name": "USGS 3DEP LiDAR DEM 1m (Processed)",
-  "category": "dem",
-  "project": "SF-North",
-  "processing_date": "2025-12-06T17:54:53.158654Z",
-  "target_crs": "EPSG:32610",
-  "target_crs_name": "WGS 84 / UTM zone 10N",
-  "data_type": "Raster",
-  "format": "GeoTIFF",
-  "processed_path": "/opt/agrs/Projects/SF-North/data/rasters/processed/dem_epsg32610_processed.tif",
-  "raw_path": "/opt/agrs/Projects/SF-North/data/rasters/raw/dem_global_30m_raw.tif",
-  "raw_metadata_file": "/opt/agrs/Projects/SF-North/data/rasters/raw/dem_global_30m_raw.tif.json",
-  "source_files": [
-    {
-      "filename": "dem_global_30m_raw.tif",
-      "metadata": "dem_global_30m_raw.tif.json"
-    }
-  ],
-  "operations_applied": [
-    {
-      "operation": "reproject",
-      "tool": "gdalwarp",
-      "target_epsg": 32610
+    "dataset_name": "USGS 3DEP LiDAR DEM 1m (Processed)",
+    "category": "dem",
+    "project": "SF-North",
+    "processing_date": "2025-12-06T17:54:53.158654Z",
+    "target_crs": "EPSG:32610",
+    "target_crs_name": "WGS 84 / UTM zone 10N",
+    "data_type": "Raster",
+    "format": "GeoTIFF",
+    "processed_path": "/opt/agrs/Projects/SF-North/data/rasters/processed/dem_epsg32610_processed.tif",
+    "raw_path": "/opt/agrs/Projects/SF-North/data/rasters/raw/dem_global_30m_raw.tif",
+    "raw_metadata_file": "/opt/agrs/Projects/SF-North/data/rasters/raw/dem_global_30m_raw.tif.json",
+    "source_files": [
+        {
+            "filename": "dem_global_30m_raw.tif",
+            "metadata": "dem_global_30m_raw.tif.json"
+        }
+    ],
+    "operations_applied": [
+        {
+            "operation": "reproject",
+            "tool": "gdalwarp",
+            "target_epsg": 32610
+        },
+        {
+            "operation": "clip",
+            "tool": "AOI cutline",
+            "source": "/opt/agrs/Projects/SF-North/aoi/aoi.geojson"
+        }
+    ],
+    "file_size_bytes": 1168893,
+    "validation_status": "passed",
+    "validation_date": "2025-12-06T17:54:53.158720Z",
+    "protocol_reference": "/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md",
+    "protocol_version": "1.0",
+    "zeus_version": "0.1.0",
+    "notes": "Highest quality national elevation data for the US. LiDAR-derived bare-earth DEM with vertical accuracy typically better than 10cm RMSE.",
+    "source": "USGS 3D Elevation Program (3DEP) LiDAR",
+    "provider": "U.S. Geological Survey",
+    "provider_url": "https://www.usgs.gov/3d-elevation-program",
+    "coverage_date": "Current (continuously updated)",
+    "documentation_url": "https://www.usgs.gov/3d-elevation-program",
+    "license": "Public Domain (US Government Work)",
+    "attribution": "U.S. Geological Survey 3D Elevation Program (3DEP).",
+    "resolution_m": 27.611439897793183,
+    "dimensions": {
+        "width": 671,
+        "height": 569
     },
-    {
-      "operation": "clip",
-      "tool": "AOI cutline",
-      "source": "/opt/agrs/Projects/SF-North/aoi/aoi.geojson"
-    }
-  ],
-  "file_size_bytes": 1168893,
-  "validation_status": "passed",
-  "validation_date": "2025-12-06T17:54:53.158720Z",
-  "protocol_reference": "/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md",
-  "protocol_version": "1.0",
-  "zeus_version": "0.1.0",
-  "notes": "Highest quality national elevation data for the US. LiDAR-derived bare-earth DEM with vertical accuracy typically better than 10cm RMSE.",
-  "source": "USGS 3D Elevation Program (3DEP) LiDAR",
-  "provider": "U.S. Geological Survey",
-  "provider_url": "https://www.usgs.gov/3d-elevation-program",
-  "coverage_date": "Current (continuously updated)",
-  "documentation_url": "https://www.usgs.gov/3d-elevation-program",
-  "license": "Public Domain (US Government Work)",
-  "attribution": "U.S. Geological Survey 3D Elevation Program (3DEP).",
-  "resolution_m": {
-    "x": 27.61906499563645,
-    "y": 27.603814799949912
-  },
-  "dimensions": {
-    "width": 671,
-    "height": 569
-  },
-  "extent": {
-    "minx": 529001.447,
-    "miny": 4188382.628,
-    "maxx": 547533.839,
-    "maxy": 4204089.198,
-    "crs": "EPSG:4326"
-  },
-  "bbox_wgs84": {
-    "west": -122.6703819,
-    "south": 37.8416423,
-    "east": -122.4587213,
-    "north": 37.9839817,
-    "crs": "EPSG:4326"
-  },
-  "statistics": {
-    "min": -2.5809090137482,
-    "max": 784.74719238281,
-    "mean": 150.22162594702,
-    "stddev": 169.84977995806,
-    "valid_percent": 83.7
-  }
+    "extent": {
+        "minx": 529001.447,
+        "miny": 4188382.628,
+        "maxx": 547533.839,
+        "maxy": 4204089.198,
+        "crs": "EPSG:32610"
+    },
+    "bbox_wgs84": {
+        "west": -122.6703819,
+        "south": 37.8416423,
+        "east": -122.4587213,
+        "north": 37.9839817,
+        "crs": "EPSG:4326"
+    },
+    "statistics": {
+        "min": -2.581,
+        "max": 784.747,
+        "mean": 150.222,
+        "stddev": 169.85,
+        "valid_percent": 83.7
+    },
+    "probed_crs": "EPSG:32610",
+    "driver": "GTiff",
+    "driver_long_name": "GeoTIFF",
+    "geotransform": [
+        529001.4465157227,
+        27.61906499563645,
+        0.0,
+        4204089.198247195,
+        0.0,
+        -27.603814799949912
+    ],
+    "cell_size": {
+        "x": 27.61906499563645,
+        "y": 27.603814799949912
+    },
+    "band_count": 1,
+    "nodata_value": -9999.0,
+    "pixel_data_type": "Float32",
+    "pixel_depth_bits": 32,
+    "uncompressed_size_bytes": 1527196,
+    "pixel_type": "floating_point",
+    "block_size": {
+        "x": 256,
+        "y": 256
+    },
+    "color_interpretation": "Gray",
+    "has_colormap": false,
+    "compression": "LZW",
+    "interleave": "BAND",
+    "cell_size_units": "metre",
+    "resolution_x_m": 27.61906499563645,
+    "resolution_y_m": 27.603814799949912
 }

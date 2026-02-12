@@ -13,6 +13,10 @@ import threading
 import sys
 import os
 
+# Use the wrapper so GUI launches have a stable PATH, serialized operations,
+# and a persistent log file for debugging.
+AGRS_CONTROL_CMD = "/opt/agrs/scripts/agrs-control-wrapper.sh"
+
 # --- Modern Dark Theme CSS ---
 CSS = b"""
 /* Global Reset & Base */
@@ -581,36 +585,36 @@ class AGRSControlPanel(Gtk.Window):
                     ctx.add_class("status-stopped")
 
     # --- Actions ---
-    def on_start_all(self, w): self.run_command_stream(["/opt/agrs/scripts/agrs-control.sh", "start"])
-    def on_stop_all(self, w): self.run_command_stream(["/opt/agrs/scripts/agrs-control.sh", "stop"])
-    def on_restart_all(self, w): self.run_command_stream(["/opt/agrs/scripts/agrs-control.sh", "restart"])
+    def on_start_all(self, w): self.run_command_stream([AGRS_CONTROL_CMD, "start"])
+    def on_stop_all(self, w): self.run_command_stream([AGRS_CONTROL_CMD, "stop"])
+    def on_restart_all(self, w): self.run_command_stream([AGRS_CONTROL_CMD, "restart"])
 
-    def on_start_website(self, w): self.run_command_stream(["/opt/agrs/scripts/agrs-control.sh", "start-website"])
-    def on_stop_website(self, w): self.run_command_stream(["/opt/agrs/scripts/agrs-control.sh", "stop-website"])
-    def on_restart_website(self, w): self.run_command_stream(["/opt/agrs/scripts/agrs-control.sh", "restart-website"])
+    def on_start_website(self, w): self.run_command_stream([AGRS_CONTROL_CMD, "start-website"])
+    def on_stop_website(self, w): self.run_command_stream([AGRS_CONTROL_CMD, "stop-website"])
+    def on_restart_website(self, w): self.run_command_stream([AGRS_CONTROL_CMD, "restart-website"])
 
-    def on_start_website_backend(self, w): self.run_command_stream(["/opt/agrs/scripts/agrs-control.sh", "start-website-backend"])
-    def on_stop_website_backend(self, w): self.run_command_stream(["/opt/agrs/scripts/agrs-control.sh", "stop-website-backend"])
-    def on_restart_website_backend(self, w): self.run_command_stream(["/opt/agrs/scripts/agrs-control.sh", "restart-website-backend"])
+    def on_start_website_backend(self, w): self.run_command_stream([AGRS_CONTROL_CMD, "start-website-backend"])
+    def on_stop_website_backend(self, w): self.run_command_stream([AGRS_CONTROL_CMD, "stop-website-backend"])
+    def on_restart_website_backend(self, w): self.run_command_stream([AGRS_CONTROL_CMD, "restart-website-backend"])
 
-    def on_start_zeus_frontend(self, w): self.run_command_stream(["/opt/agrs/scripts/agrs-control.sh", "start-zeus-frontend"])
-    def on_stop_zeus_frontend(self, w): self.run_command_stream(["/opt/agrs/scripts/agrs-control.sh", "stop-zeus-frontend"])
-    def on_restart_zeus_frontend(self, w): self.run_command_stream(["/opt/agrs/scripts/agrs-control.sh", "restart-zeus-frontend"])
+    def on_start_zeus_frontend(self, w): self.run_command_stream([AGRS_CONTROL_CMD, "start-zeus-frontend"])
+    def on_stop_zeus_frontend(self, w): self.run_command_stream([AGRS_CONTROL_CMD, "stop-zeus-frontend"])
+    def on_restart_zeus_frontend(self, w): self.run_command_stream([AGRS_CONTROL_CMD, "restart-zeus-frontend"])
 
-    def on_start_zeus_backend(self, w): self.run_command_stream(["/opt/agrs/scripts/agrs-control.sh", "start-zeus-backend"])
-    def on_stop_zeus_backend(self, w): self.run_command_stream(["/opt/agrs/scripts/agrs-control.sh", "stop-zeus-backend"])
-    def on_restart_zeus_backend(self, w): self.run_command_stream(["/opt/agrs/scripts/agrs-control.sh", "restart-zeus-backend"])
+    def on_start_zeus_backend(self, w): self.run_command_stream([AGRS_CONTROL_CMD, "start-zeus-backend"])
+    def on_stop_zeus_backend(self, w): self.run_command_stream([AGRS_CONTROL_CMD, "stop-zeus-backend"])
+    def on_restart_zeus_backend(self, w): self.run_command_stream([AGRS_CONTROL_CMD, "restart-zeus-backend"])
 
-    def on_start_zeus(self, w): self.run_command_stream(["/opt/agrs/scripts/agrs-control.sh", "start-zeus"])
-    def on_stop_zeus(self, w): self.run_command_stream(["/opt/agrs/scripts/agrs-control.sh", "stop-zeus"])
-    def on_restart_zeus(self, w): self.run_command_stream(["/opt/agrs/scripts/agrs-control.sh", "restart-zeus"])
+    def on_start_zeus(self, w): self.run_command_stream([AGRS_CONTROL_CMD, "start-zeus"])
+    def on_stop_zeus(self, w): self.run_command_stream([AGRS_CONTROL_CMD, "stop-zeus"])
+    def on_restart_zeus(self, w): self.run_command_stream([AGRS_CONTROL_CMD, "restart-zeus"])
 
-    def on_start_backend(self, w): self.run_command_stream(["/opt/agrs/scripts/agrs-control.sh", "start-backend"])
-    def on_stop_backend(self, w): self.run_command_stream(["/opt/agrs/scripts/agrs-control.sh", "stop-backend"])
-    def on_start_frontend(self, w): self.run_command_stream(["/opt/agrs/scripts/agrs-control.sh", "start-frontend"])
-    def on_stop_frontend(self, w): self.run_command_stream(["/opt/agrs/scripts/agrs-control.sh", "stop-frontend"])
-    def on_start_agentic(self, w): self.run_command_stream(["/opt/agrs/scripts/agrs-control.sh", "start-agentic"])
-    def on_stop_agentic(self, w): self.run_command_stream(["/opt/agrs/scripts/agrs-control.sh", "stop-agentic"])
+    def on_start_backend(self, w): self.run_command_stream([AGRS_CONTROL_CMD, "start-backend"])
+    def on_stop_backend(self, w): self.run_command_stream([AGRS_CONTROL_CMD, "stop-backend"])
+    def on_start_frontend(self, w): self.run_command_stream([AGRS_CONTROL_CMD, "start-frontend"])
+    def on_stop_frontend(self, w): self.run_command_stream([AGRS_CONTROL_CMD, "stop-frontend"])
+    def on_start_agentic(self, w): self.run_command_stream([AGRS_CONTROL_CMD, "start-agentic"])
+    def on_stop_agentic(self, w): self.run_command_stream([AGRS_CONTROL_CMD, "stop-agentic"])
 
 if __name__ == "__main__":
     win = AGRSControlPanel()

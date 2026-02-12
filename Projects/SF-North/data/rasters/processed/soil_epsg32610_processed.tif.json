@@ -1,75 +1,104 @@
 {
-  "dataset_name": "SoilGrids v2.0 (SOC 0-5cm) (Processed)",
-  "category": "soil",
-  "project": "SF-North",
-  "processing_date": "2025-12-06T18:00:41.368806Z",
-  "target_crs": "EPSG:32610",
-  "target_crs_name": "WGS 84 / UTM zone 10N",
-  "data_type": "Raster",
-  "format": "GeoTIFF",
-  "processed_path": "/opt/agrs/Projects/SF-North/data/rasters/processed/soil_epsg32610_processed.tif",
-  "raw_path": "/opt/agrs/Projects/SF-North/data/rasters/raw/soil_soilgrids_250m_raw.tif",
-  "raw_metadata_file": "/opt/agrs/Projects/SF-North/data/rasters/raw/soil_soilgrids_250m_raw.tif.json",
-  "source_files": [
-    {
-      "filename": "soil_soilgrids_250m_raw.tif",
-      "metadata": "soil_soilgrids_250m_raw.tif.json"
-    }
-  ],
-  "operations_applied": [
-    {
-      "operation": "reproject",
-      "tool": "gdalwarp",
-      "target_epsg": 32610
+    "dataset_name": "SoilGrids v2.0 (SOC 0-5cm) (Processed)",
+    "category": "soil",
+    "project": "SF-North",
+    "processing_date": "2025-12-06T18:00:41.368806Z",
+    "target_crs": "EPSG:32610",
+    "target_crs_name": "WGS 84 / UTM zone 10N",
+    "data_type": "Raster",
+    "format": "GeoTIFF",
+    "processed_path": "/opt/agrs/Projects/SF-North/data/rasters/processed/soil_epsg32610_processed.tif",
+    "raw_path": "/opt/agrs/Projects/SF-North/data/rasters/raw/soil_soilgrids_250m_raw.tif",
+    "raw_metadata_file": "/opt/agrs/Projects/SF-North/data/rasters/raw/soil_soilgrids_250m_raw.tif.json",
+    "source_files": [
+        {
+            "filename": "soil_soilgrids_250m_raw.tif",
+            "metadata": "soil_soilgrids_250m_raw.tif.json"
+        }
+    ],
+    "operations_applied": [
+        {
+            "operation": "reproject",
+            "tool": "gdalwarp",
+            "target_epsg": 32610
+        },
+        {
+            "operation": "clip",
+            "tool": "AOI cutline",
+            "source": "/opt/agrs/Projects/SF-North/aoi/aoi.geojson"
+        }
+    ],
+    "file_size_bytes": 1308,
+    "validation_status": "passed",
+    "validation_date": "2025-12-06T18:00:41.368833Z",
+    "protocol_reference": "/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md",
+    "protocol_version": "1.0",
+    "zeus_version": "0.1.0",
+    "notes": "ISRIC SoilGrids SOC 0-30 cm layer for corrosion + constructability. Property: SOC at 0-5cm.",
+    "source": "ISRIC SoilGrids v2.0",
+    "provider": "ISRIC - World Soil Information",
+    "provider_url": "https://soilgrids.org/",
+    "coverage_date": "2020",
+    "documentation_url": "https://www.isric.org/explore/soilgrids",
+    "license": "CC BY 4.0",
+    "attribution": "Contains ISRIC SoilGrids data.",
+    "resolution_m": 206.29043818880933,
+    "coverage_depth": "0-5cm",
+    "dimensions": {
+        "width": 90,
+        "height": 76
     },
-    {
-      "operation": "clip",
-      "tool": "AOI cutline",
-      "source": "/opt/agrs/Projects/SF-North/aoi/aoi.geojson"
-    }
-  ],
-  "file_size_bytes": 1308,
-  "validation_status": "passed",
-  "validation_date": "2025-12-06T18:00:41.368833Z",
-  "protocol_reference": "/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md",
-  "protocol_version": "1.0",
-  "zeus_version": "0.1.0",
-  "notes": "ISRIC SoilGrids SOC 0-30 cm layer for corrosion + constructability. Property: SOC at 0-5cm.",
-  "source": "ISRIC SoilGrids v2.0",
-  "provider": "ISRIC - World Soil Information",
-  "provider_url": "https://soilgrids.org/",
-  "coverage_date": "2020",
-  "documentation_url": "https://www.isric.org/explore/soilgrids",
-  "license": "CC BY 4.0",
-  "attribution": "Contains ISRIC SoilGrids data.",
-  "resolution_m": {
-    "x": 205.9154734674673,
-    "y": 206.66540291015133
-  },
-  "coverage_depth": "0-5cm",
-  "dimensions": {
-    "width": 90,
-    "height": 76
-  },
-  "extent": {
-    "minx": 529001.447,
-    "miny": 4188382.628,
-    "maxx": 547533.839,
-    "maxy": 4204089.198,
-    "crs": "EPSG:4326"
-  },
-  "bbox_wgs84": {
-    "west": -122.6703819,
-    "south": 37.8416423,
-    "east": -122.4587213,
-    "north": 37.9839817,
-    "crs": "EPSG:4326"
-  },
-  "statistics": {
-    "min": 4.0,
-    "max": 9.0,
-    "mean": 7.0076216095046,
-    "stddev": 0.29934579542775,
-    "valid_percent": 65.22
-  }
+    "extent": {
+        "minx": 529001.447,
+        "miny": 4188382.628,
+        "maxx": 547533.839,
+        "maxy": 4204089.198,
+        "crs": "EPSG:32610"
+    },
+    "bbox_wgs84": {
+        "west": -122.6703819,
+        "south": 37.8416423,
+        "east": -122.4587213,
+        "north": 37.9839817,
+        "crs": "EPSG:4326"
+    },
+    "statistics": {
+        "min": 4.0,
+        "max": 9.0,
+        "mean": 7.008,
+        "stddev": 0.299,
+        "valid_percent": 65.22
+    },
+    "probed_crs": "EPSG:32610",
+    "driver": "GTiff",
+    "driver_long_name": "GeoTIFF",
+    "geotransform": [
+        529001.4465157227,
+        205.9154734674673,
+        0.0,
+        4204089.198247195,
+        0.0,
+        -206.66540291015133
+    ],
+    "cell_size": {
+        "x": 205.9154734674673,
+        "y": 206.66540291015133
+    },
+    "band_count": 1,
+    "nodata_value": 0.0,
+    "pixel_data_type": "Byte",
+    "pixel_depth_bits": 8,
+    "uncompressed_size_bytes": 6840,
+    "pixel_type": "integer",
+    "block_size": {
+        "x": 256,
+        "y": 256
+    },
+    "color_interpretation": "Gray",
+    "has_colormap": false,
+    "compression": "LZW",
+    "interleave": "BAND",
+    "cell_size_units": "metre",
+    "resolution_x_m": 205.9154734674673,
+    "resolution_y_m": 206.66540291015133
 }

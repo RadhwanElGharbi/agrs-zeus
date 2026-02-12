@@ -9,6 +9,7 @@ This module was previously a stub; ZEUS backend startup imports `router` from he
 
 from __future__ import annotations
 
+import copy
 import json
 import mimetypes
 import os
@@ -25,6 +26,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from .auth import get_current_user, require_auth
+from .audit import write_audit_event
 from .db import get_db
 from .db_models import Sortie
 from .project_utils import load_json_file, resolve_project_path
@@ -42,6 +44,61 @@ router = APIRouter()
 
 def _utc_now_iso() -> str:
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+def _actor_payload(actor: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Store a stable, minimal actor snapshot for thread/audit records.
+    """
+
+    if not isinstance(actor, dict):
+        return {}
+    return {
+        "id": actor.get("id"),
+        "email": actor.get("email"),
+        "serial_number": actor.get("serial_number"),
+        "username": actor.get("username"),
+        "name": actor.get("name"),
+        "full_name": actor.get("full_name"),
+        "role": actor.get("role"),
+        "company": actor.get("company") or actor.get("organization"),
+        "organization": actor.get("organization"),
+        "department": actor.get("department"),
+        "position": actor.get("position"),
+    }
+
+
+def _iter_xy(geom: Any) -> list[tuple[float, float]]:
+    coords = (geom or {}).get("coordinates") if isinstance(geom, dict) else None
+    out: list[tuple[float, float]] = []
+
+    def walk(node: Any) -> None:
+        if (
+            isinstance(node, (list, tuple))
+            and len(node) >= 2
+            and isinstance(node[0], (int, float))
+            and isinstance(node[1], (int, float))
+        ):
+            out.append((float(node[0]), float(node[1])))
+            return
+        if isinstance(node, (list, tuple)):
+            for child in node:
+                walk(child)
+
+    walk(coords)
+    return out
+
+
+def _geometry_summary_wgs84(geom_wgs84: Any) -> Dict[str, Any]:
+    if not isinstance(geom_wgs84, dict) or "type" not in geom_wgs84:
+        return {"type": None, "vertex_count": 0, "bbox": None}
+    pts = _iter_xy(geom_wgs84)
+    if not pts:
+        return {"type": geom_wgs84.get("type"), "vertex_count": 0, "bbox": None}
+    xs = [p[0] for p in pts]
+    ys = [p[1] for p in pts]
+    bbox = {"minx": min(xs), "miny": min(ys), "maxx": max(xs), "maxy": max(ys), "crs": "EPSG:4326"}
+    return {"type": geom_wgs84.get("type"), "vertex_count": len(pts), "bbox": bbox}
 
 
 def _safe_filename(name: str) -> str:
@@ -289,16 +346,44 @@ async def create_creator_entry(
     entry["attachments"] = _attachments_from_uploads(project_path, entry_id, attachments)
     _write_entry(project_path, entry)
 
+    attachments_added = [a.get("filename") for a in (entry.get("attachments") or []) if isinstance(a, dict) and a.get("filename")]
+    changes_fields: List[dict] = []
+    if (entry.get("comment") or "").strip():
+        changes_fields.append({"field": "comment", "from": "", "to": entry.get("comment")})
+
     changelog_record = {
-        "ts": now,
+        "timestamp": now,
         "action": "create",
         "entry_id": entry_id,
-        "user": user or {},
+        "actor": _actor_payload(user or {}),
+        "changes": {
+            "fields": changes_fields,
+            "attachments_added": attachments_added,
+            "attachments_removed": [],
+            "geometry": {"after": _geometry_summary_wgs84(entry.get("geometry_wgs84"))},
+        },
         "sortie": _sortie_dict(db, sortie_id),
         "survey": survey_parsed or {},
         "dataset_features": dataset_features_parsed or [],
     }
     _append_changelog(project_path, entry_id, changelog_record)
+
+    # DB audit event (project-scoped)
+    write_audit_event(
+        db,
+        project_name=project,
+        actor=user or {},
+        event_type="creator.entry.create",
+        payload={
+            "entry_id": entry_id,
+            "entry_type": entry_type,
+            "title": title,
+            "category": category,
+            "attachments_added": attachments_added,
+            "geometry_summary_wgs84": _geometry_summary_wgs84(entry.get("geometry_wgs84")),
+        },
+        required=True,
+    )
     return entry
 
 
@@ -324,6 +409,7 @@ async def update_creator_entry(
         raise HTTPException(status_code=404, detail=f"Project '{project}' not found.")
 
     entry = _load_entry(project_path, entry_id)
+    before_entry = copy.deepcopy(entry)
     if entry.get("status") == "deleted":
         raise HTTPException(status_code=400, detail="Cannot update a deleted entry.")
 
@@ -364,10 +450,12 @@ async def update_creator_entry(
     if sortie_id is not None:
         entry["sortie_id"] = sortie_id.strip() if isinstance(sortie_id, str) and sortie_id.strip() else None
 
+    attachments_removed: List[str] = []
     remove_list = _parse_json_maybe(remove_attachments)
     if isinstance(remove_list, list) and remove_list:
-        _remove_attachments(project_path, entry_id, [str(x) for x in remove_list])
-        entry["attachments"] = [a for a in (entry.get("attachments") or []) if a.get("filename") not in set(remove_list)]
+        attachments_removed = [str(x) for x in remove_list]
+        _remove_attachments(project_path, entry_id, attachments_removed)
+        entry["attachments"] = [a for a in (entry.get("attachments") or []) if a.get("filename") not in set(attachments_removed)]
 
     new_attachments = _attachments_from_uploads(project_path, entry_id, attachments)
     if new_attachments:
@@ -377,16 +465,64 @@ async def update_creator_entry(
     entry["updated_by"] = user or {}
     _write_entry(project_path, entry)
 
+    attachments_added = [a.get("filename") for a in (new_attachments or []) if isinstance(a, dict) and a.get("filename")]
+
+    changes_fields: List[dict] = []
+    for key in ("title", "category", "category_other", "sortie_id", "status"):
+        if before_entry.get(key) != entry.get(key):
+            changes_fields.append({"field": key, "from": before_entry.get(key), "to": entry.get(key)})
+
+    if comment is not None:
+        # Thread semantics: treat an incoming comment as a new post (we store it in `to` for UI rendering).
+        changes_fields.append({"field": "comment", "from": before_entry.get("comment"), "to": comment})
+
+    if datasets_parsed is not None and before_entry.get("datasets") != entry.get("datasets"):
+        changes_fields.append({"field": "datasets", "from": before_entry.get("datasets"), "to": entry.get("datasets")})
+    if isinstance(survey_parsed, dict) and before_entry.get("survey") != entry.get("survey"):
+        changes_fields.append({"field": "survey", "from": before_entry.get("survey"), "to": entry.get("survey")})
+    if isinstance(dataset_features_parsed, list) and before_entry.get("dataset_features") != entry.get("dataset_features"):
+        changes_fields.append(
+            {"field": "dataset_features", "from": before_entry.get("dataset_features"), "to": entry.get("dataset_features")}
+        )
+
+    geom_before = _geometry_summary_wgs84(before_entry.get("geometry_wgs84"))
+    geom_after = _geometry_summary_wgs84(entry.get("geometry_wgs84"))
+    geom_changed = geom_before != geom_after
+
+    changes: Dict[str, Any] = {
+        "fields": changes_fields,
+        "attachments_added": attachments_added,
+        "attachments_removed": attachments_removed,
+    }
+    if geom_changed:
+        changes["geometry"] = {"before": geom_before, "after": geom_after}
+
     changelog_record = {
-        "ts": now,
+        "timestamp": now,
         "action": "update",
         "entry_id": entry_id,
-        "user": user or {},
+        "actor": _actor_payload(user or {}),
+        "changes": changes,
         "sortie": _sortie_dict(db, entry.get("sortie_id")),
         "survey": entry.get("survey") or {},
         "dataset_features": entry.get("dataset_features") or [],
     }
     _append_changelog(project_path, entry_id, changelog_record)
+
+    write_audit_event(
+        db,
+        project_name=project,
+        actor=user or {},
+        event_type="creator.entry.update",
+        payload={
+            "entry_id": entry_id,
+            "changed_fields": [f.get("field") for f in changes_fields if isinstance(f, dict) and f.get("field")],
+            "attachments_added": attachments_added,
+            "attachments_removed": attachments_removed,
+            "geometry_changed": bool(geom_changed),
+        },
+        required=True,
+    )
     return entry
 
 
@@ -396,6 +532,7 @@ async def delete_creator_entry(project: str, entry_id: str, user: Dict[str, Any]
         raise HTTPException(status_code=404, detail=f"Project '{project}' not found.")
 
     entry = _load_entry(project_path, entry_id)
+    before_entry = copy.deepcopy(entry)
     if entry.get("status") == "deleted":
         return entry
 
@@ -407,16 +544,31 @@ async def delete_creator_entry(project: str, entry_id: str, user: Dict[str, Any]
     entry["updated_by"] = user or {}
     _write_entry(project_path, entry)
 
+    changes_fields: List[dict] = []
+    if before_entry.get("status") != entry.get("status"):
+        changes_fields.append({"field": "status", "from": before_entry.get("status"), "to": entry.get("status")})
+    changes_fields.append({"field": "deleted_at", "from": before_entry.get("deleted_at"), "to": now})
+
     changelog_record = {
-        "ts": now,
+        "timestamp": now,
         "action": "delete",
         "entry_id": entry_id,
-        "user": user or {},
+        "actor": _actor_payload(user or {}),
+        "changes": {"fields": changes_fields, "attachments_added": [], "attachments_removed": []},
         "sortie": _sortie_dict(db, entry.get("sortie_id")),
         "survey": entry.get("survey") or {},
         "dataset_features": entry.get("dataset_features") or [],
     }
     _append_changelog(project_path, entry_id, changelog_record)
+
+    write_audit_event(
+        db,
+        project_name=project,
+        actor=user or {},
+        event_type="creator.entry.delete",
+        payload={"entry_id": entry_id},
+        required=True,
+    )
     return entry
 
 

@@ -78,3 +78,16 @@ It is designed to power the GUI **Project Profile → Compliance Matrix** by mat
 
 See `WORLD_REGULATION_CATALOGUE.csv` for example EU EIA entries demonstrating `SourceURL`, `DirectDownloadURL`, and `RelatedEntryIDs`.
 
+
+
+
+
+
+
+
+
+
+
+
+
+

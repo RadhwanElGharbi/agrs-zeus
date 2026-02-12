@@ -6,15 +6,39 @@ Main application entry point
 import os
 from pathlib import Path
 
-# Load .env file if present
-env_file = Path(__file__).parent / ".env"
-if env_file.exists():
-    with open(env_file) as f:
-        for line in f:
-            line = line.strip()
-            if line and not line.startswith("#") and "=" in line:
-                key, _, value = line.partition("=")
-                os.environ.setdefault(key.strip(), value.strip())
+def _load_env_file(path: Path) -> None:
+    """
+    Lightweight .env loader (keeps deps minimal and avoids override surprises).
+
+    - Supports lines like: KEY=value
+    - Supports lines like: export KEY=value
+    - Strips surrounding single/double quotes from values
+    - Uses setdefault() so process env / service manager env wins
+    """
+
+    if not path.exists():
+        return
+    with path.open("r", encoding="utf-8") as f:
+        for raw in f:
+            line = raw.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            if line.startswith("export "):
+                line = line[len("export ") :].lstrip()
+            key, _, value = line.partition("=")
+            key = key.strip()
+            value = value.strip()
+            if len(value) >= 2 and value[0] == value[-1] and value[0] in ("'", '"'):
+                value = value[1:-1]
+            if key:
+                os.environ.setdefault(key, value)
+
+
+# Load environment files if present.
+# We load `.env` (local/dev) and also `.env.production` to pick up prod-only keys
+# like ADMIN_PASSWORD, without overriding anything already provided by the OS.
+_load_env_file(Path(__file__).parent / ".env")
+_load_env_file(Path(__file__).parent / ".env.production")
 
 import uvicorn
 from fastapi import FastAPI
@@ -32,10 +56,15 @@ from api.analytics import router as analytics_router
 from api.agentic import router as agentic_router
 from api.creator import router as creator_router
 from api.engineering.pressure_design import router as engineering_router
-from api.audit_routes import router as audit_router
 from api.sorties import router as sorties_router
 from api.users import router as users_router, bootstrap_initial_admin, bootstrap_rad_admin
 from api.db import get_engine, get_sessionmaker
+
+# Optional: audit routes (may not be present in some deployments)
+try:
+    from api.audit_routes import router as audit_router  # type: ignore
+except ModuleNotFoundError:
+    audit_router = None
 
 # Deployment / security toggles
 # - API docs (Swagger/ReDoc/OpenAPI) should not be exposed in remote/prod deployments.
@@ -101,7 +130,8 @@ app.include_router(suppliers_router, prefix="/api")
 app.include_router(auth_router, prefix="/api")
 app.include_router(users_router, prefix="/api")
 app.include_router(analytics_router, prefix="/api")
-app.include_router(audit_router, prefix="/api")
+if audit_router is not None:
+    app.include_router(audit_router, prefix="/api")
 app.include_router(agentic_router, prefix="/api")
 app.include_router(creator_router, prefix="/api")
 app.include_router(engineering_router, prefix="/api")

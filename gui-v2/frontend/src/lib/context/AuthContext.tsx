@@ -3,11 +3,28 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
 import { API_BASE_URL } from '@/lib/api-client'
 
-interface User {
+export interface User {
+  // Primary identity fields (always expected)
   username: string
-  name: string
-  role: string
-  company: string
+  name?: string | null
+  role?: string | null
+  company?: string | null
+
+  // Extended profile fields (may be present depending on backend payload)
+  id?: string
+  email?: string | null
+  full_name?: string | null
+  organization?: string | null
+  position?: string | null
+  department?: string | null
+  station?: string | null
+  work_phone?: string | null
+  serial_number?: string | null
+  access_level?: string | null
+  is_active?: boolean
+  profile_image_url?: string | null
+  created_at?: string | null
+  updated_at?: string | null
 }
 
 interface AuthContextType {
@@ -17,6 +34,7 @@ interface AuthContextType {
   isLoading: boolean
   login: (username: string, password: string) => Promise<{ success: boolean; message: string }>
   logout: () => Promise<void>
+  refresh: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -50,10 +68,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setToken(tokenToVerify)
       } else {
         localStorage.removeItem('agrs_token')
+        setUser(null)
+        setToken(null)
       }
     } catch (error) {
       console.error('Token verification failed:', error)
       localStorage.removeItem('agrs_token')
+      setUser(null)
+      setToken(null)
     } finally {
       setIsLoading(false)
     }
@@ -104,6 +126,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [token])
 
+  const refresh = useCallback(async () => {
+    const stored = localStorage.getItem('agrs_token')
+    if (!stored) {
+      setUser(null)
+      setToken(null)
+      return
+    }
+    await verifyToken(stored)
+  }, [])
+
   return (
     <AuthContext.Provider
       value={{
@@ -112,7 +144,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated: !!user,
         isLoading,
         login,
-        logout
+        logout,
+        refresh
       }}
     >
       {children}

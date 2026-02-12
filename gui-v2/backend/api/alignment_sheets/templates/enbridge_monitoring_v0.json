@@ -1,0 +1,44 @@
+{
+  "template_id": "enbridge_monitoring_v0",
+  "kind": "monitoring",
+  "defaults": {
+    "page_size": "A3",
+    "orientation": "landscape",
+    "base_map": "imagery"
+  },
+  "presets": {
+    "detail": {
+      "sheet_length_m": 1000,
+      "h_scale": 2000,
+      "v_scale": 200,
+      "station_interval_m": 50
+    },
+    "standard": {
+      "sheet_length_m": 2000,
+      "h_scale": 5000,
+      "v_scale": 500,
+      "station_interval_m": 100
+    },
+    "overview": {
+      "sheet_length_m": 5000,
+      "h_scale": 10000,
+      "v_scale": 1000,
+      "station_interval_m": 200
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

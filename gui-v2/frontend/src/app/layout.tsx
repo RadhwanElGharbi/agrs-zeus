@@ -4,6 +4,7 @@ import './globals.css'
 import { ProjectProvider } from '@/lib/context/ProjectContext'
 import { AuthProvider } from '@/lib/context/AuthContext'
 import { OnboardingProvider } from '@/lib/context/OnboardingContext'
+import { MapViewProvider } from '@/lib/context/MapViewContext'
 import { AuthGuard } from '@/components/auth/AuthGuard'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
@@ -26,7 +27,7 @@ export default function RootLayout({
           <AuthGuard>
             <ProjectProvider>
               <OnboardingProvider>
-                {children}
+                <MapViewProvider>{children}</MapViewProvider>
               </OnboardingProvider>
             </ProjectProvider>
           </AuthGuard>

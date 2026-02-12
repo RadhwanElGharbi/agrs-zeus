@@ -13,11 +13,15 @@ import re
 from pathlib import Path
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
 
 from .project_utils import resolve_project_path, load_json_file
+from .audit import write_audit_event
+from .auth import get_current_user, require_auth
+from .db import get_db
 
 try:
     from pyproj import Transformer
@@ -376,6 +380,124 @@ def load_sidecar_metadata(geojson_file: Path) -> Optional[Dict[str, Any]]:
             print(f"Error reading sidecar {sidecar_path}: {e}")
     return None
 
+def load_sidecar_metadata_summary(geojson_file: Path) -> Optional[Dict[str, Any]]:
+    """
+    Load a *small* summary from a route .metadata.json sidecar without parsing huge payloads.
+
+    Why:
+    - Our Ravenna-style metadata includes `crossings_detailed.crossings` which can be hundreds+
+      of records and makes the JSON sidecar large.
+    - The routes list endpoint (`GET /pirl/{project}/routes`) only needs a few summary fields.
+
+    How:
+    - Read the file line-by-line, stop once we reach `"crossings_detailed"` (which appears
+      after the summary sections in our pretty-printed JSON).
+    - Extract only the small set of keys the list endpoint needs using a shallow state machine.
+    """
+    sidecar_path = geojson_file.with_suffix(".metadata.json")
+    if not sidecar_path.exists():
+        return None
+
+    wanted: Dict[str, Any] = {}
+
+    section: Optional[str] = None
+    section_depth: Optional[int] = None
+    depth = 0
+
+    def _try_parse_value(line: str) -> Optional[Any]:
+        # Expect: "key": <json_value>,
+        if ":" not in line:
+            return None
+        _, raw = line.split(":", 1)
+        raw = raw.strip()
+        if raw.endswith(","):
+            raw = raw[:-1].rstrip()
+        try:
+            return json.loads(raw)
+        except Exception:
+            return None
+
+    try:
+        with open(sidecar_path, "r", encoding="utf-8") as f:
+            for line in f:
+                # Stop before heavy payload.
+                if '"crossings_detailed"' in line:
+                    break
+
+                # Track very rough nesting depth for section exit.
+                depth += line.count("{") - line.count("}")
+
+                if section is not None and section_depth is not None and depth < section_depth:
+                    section = None
+                    section_depth = None
+
+                # Enter sections we care about.
+                if '"generation_method"' in line and "{" in line:
+                    section = "generation_method"
+                    section_depth = depth
+                    continue
+                if '"constraint_compliance"' in line and "{" in line:
+                    section = "constraint_compliance"
+                    section_depth = depth
+                    continue
+                if '"cost_breakdown"' in line and "{" in line:
+                    section = "cost_breakdown"
+                    section_depth = depth
+                    continue
+                if '"route_info"' in line and "{" in line:
+                    section = "route_info"
+                    section_depth = depth
+                    continue
+
+                # Extract summary keys within those sections.
+                if section == "generation_method":
+                    if '"method"' in line and "generation_method" not in wanted:
+                        val = _try_parse_value(line)
+                        if isinstance(val, str):
+                            wanted["generation_method_method"] = val
+                    if '"is_real_route"' in line and "generation_method_is_real_route" not in wanted:
+                        val = _try_parse_value(line)
+                        if isinstance(val, bool):
+                            wanted["generation_method_is_real_route"] = val
+
+                elif section == "constraint_compliance":
+                    if '"overall_compliant"' in line and "constraint_overall_compliant" not in wanted:
+                        val = _try_parse_value(line)
+                        if isinstance(val, bool):
+                            wanted["constraint_overall_compliant"] = val
+
+                elif section == "cost_breakdown":
+                    if '"total"' in line and "cost_total" not in wanted:
+                        val = _try_parse_value(line)
+                        if isinstance(val, (int, float)):
+                            wanted["cost_total"] = float(val)
+                    if '"cost_per_km"' in line and "cost_per_km" not in wanted:
+                        val = _try_parse_value(line)
+                        if isinstance(val, (int, float)):
+                            wanted["cost_per_km"] = float(val)
+
+                elif section == "route_info":
+                    if '"length_m"' in line and "route_length_m" not in wanted:
+                        val = _try_parse_value(line)
+                        if isinstance(val, (int, float)):
+                            wanted["route_length_m"] = float(val)
+
+                # Early exit once we have everything the list endpoint uses.
+                if (
+                    "generation_method_method" in wanted
+                    and "constraint_overall_compliant" in wanted
+                    and "cost_total" in wanted
+                    and "cost_per_km" in wanted
+                    and "route_length_m" in wanted
+                ):
+                    # We can stop reading early; don't wait for crossings_detailed marker.
+                    break
+
+        return wanted
+    except Exception as e:
+        print(f"Error reading sidecar summary {sidecar_path}: {e}")
+        return None
+
 
 @router.get("/pirl/{project}/routes", response_model=List[RouteMetadata])
 async def list_routes(project: str):
@@ -404,31 +526,25 @@ async def list_routes(project: str):
             continue
 
         try:
-            with open(geojson_file, 'r', encoding='utf-8') as f:
-                geojson_data = json.load(f)
+            # For large routes, loading full GeoJSON can be very slow (multi-thousand segments).
+            # Prefer sidecar-based summary when available.
+            metadata: Dict[str, Any] = {"filename": geojson_file.name}
 
-            metadata = extract_route_metadata(geojson_data)
-            metadata['filename'] = geojson_file.name
-
-            # Check for enhanced metadata sidecar
-            sidecar_data = load_sidecar_metadata(geojson_file)
-            if sidecar_data:
-                metadata['has_metadata_sidecar'] = True
-
-                # Extract key info from sidecar
-                gen_method = sidecar_data.get('generation_method', {})
-                metadata['generation_method'] = gen_method.get('method', 'Unknown')
-                metadata['is_real_route'] = gen_method.get('is_real_route', False)
-
-                compliance = sidecar_data.get('constraint_compliance', {})
-                metadata['constraint_compliant'] = compliance.get('overall_compliant')
-
-                cost_breakdown = sidecar_data.get('cost_breakdown', {})
-                metadata['total_cost_usd'] = cost_breakdown.get('total')
-                metadata['cost_per_km'] = cost_breakdown.get('cost_per_km')
-
-                route_info = sidecar_data.get('route_info', {})
-                metadata['total_length_m'] = route_info.get('length_m')
+            sidecar_summary = load_sidecar_metadata_summary(geojson_file)
+            if sidecar_summary:
+                metadata["has_metadata_sidecar"] = True
+                metadata["generation_method"] = sidecar_summary.get("generation_method_method", "Unknown")
+                metadata["is_real_route"] = sidecar_summary.get("generation_method_is_real_route", False)
+                metadata["constraint_compliant"] = sidecar_summary.get("constraint_overall_compliant")
+                metadata["total_cost_usd"] = sidecar_summary.get("cost_total")
+                metadata["cost_per_km"] = sidecar_summary.get("cost_per_km")
+                metadata["total_length_m"] = sidecar_summary.get("route_length_m")
+            else:
+                # Fall back: small/legacy routes might not have sidecars.
+                with open(geojson_file, 'r', encoding='utf-8') as f:
+                    geojson_data = json.load(f)
+                metadata.update(extract_route_metadata(geojson_data))
+                metadata['filename'] = geojson_file.name
 
             routes.append(RouteMetadata(**metadata))
         except Exception as e:
@@ -596,6 +712,29 @@ def _list_crossing_vector_layers(project_path: Path, allow_categories: set[str])
         )
 
     layers.sort(key=lambda x: (x.get("category", ""), str(x.get("display_name", "")).lower()))
+
+    # Prefer authoritative Canadian NHN waterways over OSM when both exist.
+    # This keeps crossings consistent (and avoids double-counting) for large Canadian projects.
+    try:
+        waterways = [l for l in layers if l.get("category") == "waterways"]
+        if waterways:
+            def _stem(p: str) -> str:
+                try:
+                    return Path(p).stem.lower()
+                except Exception:
+                    return str(p).lower()
+
+            has_authoritative = any(_stem(l.get("file_path", "")).startswith("waterways_epsg") for l in waterways)
+            if has_authoritative:
+                layers = [
+                    l
+                    for l in layers
+                    if not (l.get("category") == "waterways" and _stem(l.get("file_path", "")).startswith("osm_waterways"))
+                ]
+                layers.sort(key=lambda x: (x.get("category", ""), str(x.get("display_name", "")).lower()))
+    except Exception:
+        pass
+
     return layers
 
 
@@ -681,6 +820,13 @@ def _derive_crossing_attributes(category: str, props: dict) -> dict:
     """Best-effort derivations (width, lanes, etc.) from common OSM-style attributes."""
     derived: dict = {}
 
+    # Common name derivation (works for OSM + many authoritative datasets like NHN).
+    name = _first(props, ["name", "NAME", "NAME_1", "NAME_2", "ref", "REF"])
+    if isinstance(name, str):
+        name = name.strip()
+        if name:
+            derived["name"] = name
+
     if category == "roads":
         lanes = _parse_int(_first(props, ["lanes", "LANES", "lanes:forward", "lanes:backward"]))
         highway = _first(props, ["highway", "HIGHWAY", "road_type", "type"])
@@ -708,11 +854,15 @@ def _derive_crossing_attributes(category: str, props: dict) -> dict:
     elif category in {"waterways", "hydrology"}:
         waterway = _first(props, ["waterway", "WATERWAY", "type", "water_type"])
         width = _parse_float(_first(props, ["width_m", "width", "Width", "width:meters"]))
-        if isinstance(waterway, str):
-            derived["waterway"] = waterway
-            w = waterway.lower()
-            if w in {"dam", "weir"}:
-                derived["uncrossable"] = True
+        if waterway is not None:
+            if isinstance(waterway, str):
+                derived["waterway"] = waterway
+                w = waterway.lower()
+                if w in {"dam", "weir"}:
+                    derived["uncrossable"] = True
+            elif isinstance(waterway, (int, float)):
+                # NHN commonly encodes TYPE as an integer code.
+                derived["waterway"] = f"TYPE {int(waterway)}"
         if width is not None and width > 0:
             derived["width_m"] = width
         else:
@@ -774,6 +924,7 @@ def _compute_route_crossings(
         from shapely.geometry import shape as shp_shape
         from shapely.geometry import mapping as shp_mapping
         from shapely.ops import unary_union
+        from shapely.ops import transform as shp_transform
         from shapely.prepared import prep as shp_prep
         from shapely.strtree import STRtree
         from numbers import Integral
@@ -831,6 +982,214 @@ def _compute_route_crossings(
 
     crossings: list[dict] = []
     seen: set[str] = set()
+
+    # ---------------------------------------------------------------------
+    # Fiona fast-path (no ogr2ogr -> GeoJSON conversion)
+    #
+    # Motivation:
+    # - Large authoritative Canadian datasets (e.g., NHN waterways) can include non-UTF8 attribute
+    #   bytes; converting to GeoJSON and then `json.load(..., encoding='utf-8')` can fail.
+    # - Converting the full GPKG to GeoJSON is also expensive and unnecessary for crossings.
+    #
+    # Strategy:
+    # - Compute intersections in the project CRS (GPKGs are stored in project CRS).
+    # - Reproject marker points + intersection geometry to EPSG:4326 for MapLibre.
+    # ---------------------------------------------------------------------
+    try:
+        import fiona  # type: ignore
+        from pyproj import Transformer  # type: ignore
+    except Exception:
+        fiona = None  # type: ignore
+        Transformer = None  # type: ignore
+
+    project_epsg = get_project_crs(project_path)
+    if fiona is not None and HAS_PYPROJ and project_epsg and project_epsg != 4326:
+        # Determine if the route is already projected (not lon/lat).
+        route_is_projected = abs(minx) > 180 or abs(miny) > 90 or abs(maxx) > 180 or abs(maxy) > 90
+
+        to_proj = Transformer.from_crs("EPSG:4326", f"EPSG:{project_epsg}", always_xy=True)
+        to_wgs = Transformer.from_crs(f"EPSG:{project_epsg}", "EPSG:4326", always_xy=True)
+
+        def _to_proj_xy(x, y, z=None):
+            return to_proj.transform(x, y)
+
+        def _to_wgs_xy(x, y, z=None):
+            return to_wgs.transform(x, y)
+
+        route_geom_proj = route_geom if route_is_projected else shp_transform(_to_proj_xy, route_geom)
+        route_prepared_proj = shp_prep(route_geom_proj)
+        minx_p, miny_p, maxx_p, maxy_p = route_geom_proj.bounds
+
+        def _json_sanitize(v):
+            if v is None or isinstance(v, (str, int, float, bool)):
+                return v
+            if isinstance(v, list):
+                return [_json_sanitize(x) for x in v]
+            if isinstance(v, dict):
+                return {str(k): _json_sanitize(x) for k, x in v.items()}
+            try:
+                return str(v)
+            except Exception:
+                return None
+
+        def iter_points_from_geometry(g):
+            if g is None:
+                return
+            try:
+                if g.is_empty:
+                    return
+            except Exception:
+                return
+            gt = getattr(g, "geom_type", None)
+            if gt == "Point":
+                yield g
+                return
+            if gt == "MultiPoint":
+                for p in getattr(g, "geoms", []) or []:
+                    if getattr(p, "geom_type", None) == "Point" and not p.is_empty:
+                        yield p
+                return
+            if gt in {"LineString", "LinearRing"}:
+                try:
+                    b = g.boundary
+                except Exception:
+                    return
+                yield from iter_points_from_geometry(b)
+                return
+            if gt == "MultiLineString":
+                for ls in getattr(g, "geoms", []) or []:
+                    try:
+                        b = ls.boundary
+                    except Exception:
+                        continue
+                    yield from iter_points_from_geometry(b)
+                return
+            if gt in {"Polygon", "MultiPolygon"}:
+                try:
+                    b = g.boundary
+                except Exception:
+                    return
+                yield from iter_points_from_geometry(b)
+                return
+            if gt == "GeometryCollection":
+                for part in getattr(g, "geoms", []) or []:
+                    yield from iter_points_from_geometry(part)
+                return
+
+        def add_record(category: str, dataset_layer: str, feature_id: str, props: dict, derived: dict, inter_geom, marker_x: float, marker_y: float):
+            try:
+                lon, lat = to_wgs.transform(marker_x, marker_y)
+                inter_wgs = shp_transform(_to_wgs_xy, inter_geom)
+                inter_geo = shp_mapping(inter_wgs)
+            except Exception:
+                return
+            key = f"{category}|{dataset_layer}|{feature_id}|{round(lon,6)}|{round(lat,6)}|{inter_geo.get('type')}"
+            if key in seen:
+                return
+            seen.add(key)
+            crossing_id = hashlib.md5(key.encode("utf-8")).hexdigest()[:16]
+            crossings.append(
+                {
+                    "id": crossing_id,
+                    "category": category,
+                    "dataset_layer": dataset_layer,
+                    "feature_id": feature_id,
+                    "point": [float(lon), float(lat)],
+                    "intersection": inter_geo,
+                    "feature_properties": _json_sanitize(props),
+                    "derived": derived,
+                }
+            )
+
+        for layer in layers:
+            category = str(layer.get("category") or "")
+            dataset_layer = str(layer.get("display_name") or "")
+            file_path = layer.get("file_path")
+            if not category or not dataset_layer or not file_path:
+                continue
+
+            gpkg_path = Path(str(file_path))
+            try:
+                layer_names = list(fiona.listlayers(gpkg_path))
+            except Exception:
+                layer_names = [None]
+
+            for gpkg_layer in (layer_names or [None]):
+                try:
+                    src = fiona.open(gpkg_path, layer=gpkg_layer) if gpkg_layer else fiona.open(gpkg_path)
+                except Exception:
+                    continue
+
+                with src:
+                    try:
+                        itr = src.filter(bbox=(minx_p, miny_p, maxx_p, maxy_p))
+                    except Exception:
+                        itr = src
+
+                    for idx, feat in enumerate(itr):
+                        geom_obj = feat.get("geometry")
+                        if not geom_obj:
+                            continue
+                        try:
+                            geom = shp_shape(geom_obj)
+                        except Exception:
+                            continue
+                        if geom.is_empty:
+                            continue
+                        try:
+                            if not route_prepared_proj.intersects(geom):
+                                continue
+                        except Exception:
+                            continue
+
+                        try:
+                            inter = route_geom_proj.intersection(geom)
+                        except Exception:
+                            continue
+                        if inter.is_empty:
+                            continue
+
+                        props = feat.get("properties") if isinstance(feat.get("properties"), dict) else {}
+                        feature_dict = {"id": feat.get("id"), "properties": props}
+                        feature_id = _feature_id_for_crossing(feature_dict, dataset_layer, idx)
+                        derived = _derive_crossing_attributes(category, props)
+
+                        # Derive exact marker points:
+                        marker_points = []
+                        try:
+                            if inter.geom_type in {"Point", "MultiPoint"}:
+                                marker_points = list(iter_points_from_geometry(inter))
+                            elif geom.geom_type in {"Polygon", "MultiPolygon"}:
+                                try:
+                                    boundary_inter = route_geom_proj.intersection(geom.boundary)
+                                except Exception:
+                                    boundary_inter = None
+                                marker_points = list(iter_points_from_geometry(boundary_inter))
+                            if not marker_points:
+                                marker_points = list(iter_points_from_geometry(inter))
+                            if not marker_points:
+                                try:
+                                    rp = inter.representative_point()
+                                    if rp and not rp.is_empty:
+                                        marker_points = [rp]
+                                except Exception:
+                                    marker_points = []
+                        except Exception:
+                            marker_points = []
+
+                        for p in marker_points:
+                            try:
+                                add_record(category, dataset_layer, feature_id, props, derived, inter, float(p.x), float(p.y))
+                            except Exception:
+                                continue
+
+        return {
+            "version": 1,
+            "generated_at": datetime.utcnow().isoformat() + "Z",
+            "categories_used": sorted({d["category"] for d in datasets_used}),
+            "datasets_used": datasets_used,
+            "crossings": crossings,
+        }
 
     # Use the existing vector loader (cached + reprojected to EPSG:4326)
     from .data import _load_vector_geojson  # local import to avoid heavy module import at startup
@@ -1046,7 +1405,14 @@ def _write_json(path: Path, data: dict) -> None:
 
 
 @router.get("/pirl/{project}/routes/{route_name:path}/crossings")
-async def get_route_crossings(project: str, route_name: str, compute_if_missing: bool = True, force: bool = False):
+async def get_route_crossings(
+    project: str,
+    route_name: str,
+    compute_if_missing: bool = True,
+    force: bool = False,
+    actor: Optional[Dict[str, Any]] = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     """
     Get (and optionally compute) detailed crossings for a route.
 
@@ -1083,6 +1449,10 @@ async def get_route_crossings(project: str, route_name: str, compute_if_missing:
             }
         )
 
+    # Computing crossings writes to disk (route sidecar) — require an authenticated actor for auditability.
+    if not actor:
+        raise HTTPException(status_code=401, detail="Authentication required to compute route crossings.")
+
     # Load route GeoJSON (and transform to WGS84 if needed)
     try:
         with open(route_file, "r", encoding="utf-8") as f:
@@ -1117,6 +1487,19 @@ async def get_route_crossings(project: str, route_name: str, compute_if_missing:
     sidecar["crossings_detailed"] = crossings_block
     _write_json(sidecar_path, sidecar)
 
+    write_audit_event(
+        db,
+        project_name=project,
+        actor=actor,
+        event_type="pirl.crossings.compute",
+        payload={
+            "route": route_name,
+            "force": bool(force),
+            "categories_used": crossings_block.get("categories_used") if isinstance(crossings_block, dict) else None,
+        },
+        required=True,
+    )
+
     return JSONResponse(
         content={
             "project": project,
@@ -1128,9 +1511,14 @@ async def get_route_crossings(project: str, route_name: str, compute_if_missing:
 
 
 @router.post("/pirl/{project}/routes/{route_name:path}/crossings/compute")
-async def compute_route_crossings(project: str, route_name: str):
+async def compute_route_crossings(
+    project: str,
+    route_name: str,
+    actor: Dict[str, Any] = Depends(require_auth),
+    db: Session = Depends(get_db),
+):
     """Force recomputation of detailed crossings and persist to sidecar."""
-    return await get_route_crossings(project, route_name, compute_if_missing=True, force=True)
+    return await get_route_crossings(project, route_name, compute_if_missing=True, force=True, actor=actor, db=db)
 
 
 @router.get("/pirl/{project}/routes/{route_name:path}")
@@ -1290,7 +1678,12 @@ def write_cost_matrix_csv(cost_matrix: CostMatrixData, csv_path: Path) -> None:
 
 
 @router.post("/pirl/{project}/requests")
-async def save_pirl_request(project: str, request_data: PirlRequestData):
+async def save_pirl_request(
+    project: str,
+    request_data: PirlRequestData,
+    actor: Dict[str, Any] = Depends(require_auth),
+    db: Session = Depends(get_db),
+):
     """
     Save a PIRL configuration request and create a job entry.
 
@@ -1377,6 +1770,19 @@ async def save_pirl_request(project: str, request_data: PirlRequestData):
         print(f"[PIRL] Saved request configuration to {json_path}")
         print(f"[PIRL] Saved cost matrix CSV to {csv_path}")
         print(f"[PIRL] Job status file at {status_path}")
+
+        write_audit_event(
+            db,
+            project_name=project,
+            actor=actor,
+            event_type="pirl.job.create",
+            payload={
+                "job_id": job_id,
+                "active_profile": getattr(getattr(request_data, "objectives", None), "activeProfile", None),
+                "directory": str(jobs_dir),
+            },
+            required=True,
+        )
 
         return JSONResponse(
             status_code=201,

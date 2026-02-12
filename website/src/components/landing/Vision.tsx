@@ -26,8 +26,8 @@ export const Vision = () => {
               </span>
             </div>
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-serif text-white mb-8 leading-[0.95] tracking-tight">
-              Building the <br />
-              <span className="text-white/50">world of tomorrow</span>
+              Constructing the <br />
+              <span className="text-white/50">Built World</span>
             </h2>
             <p className="text-lg text-gray-400 leading-relaxed max-w-xl mb-12">
               Infrastructure development is broken and fragmented by manual workflows, disconnected data, and regulatory bottlenecks.

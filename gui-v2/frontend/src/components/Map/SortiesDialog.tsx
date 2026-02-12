@@ -143,8 +143,42 @@ function defaultEditor(): SortieEditorState {
   }
 }
 
+const GEOJSON_GEOMETRY_TYPES = new Set([
+  'Point',
+  'LineString',
+  'Polygon',
+  'MultiPoint',
+  'MultiLineString',
+  'MultiPolygon',
+  'GeometryCollection'
+])
+
+function coerceGeoJsonGeometry(value: any): GeoJSON.Geometry | null {
+  if (!value || typeof value !== 'object') return null
+  const type = typeof (value as any).type === 'string' ? String((value as any).type) : ''
+
+  if (GEOJSON_GEOMETRY_TYPES.has(type)) {
+    return value as GeoJSON.Geometry
+  }
+
+  if (type === 'Feature' && (value as any).geometry && typeof (value as any).geometry === 'object') {
+    const g = (value as any).geometry
+    const gt = typeof g.type === 'string' ? String(g.type) : ''
+    if (GEOJSON_GEOMETRY_TYPES.has(gt)) return g as GeoJSON.Geometry
+  }
+
+  if (type === 'FeatureCollection' && Array.isArray((value as any).features)) {
+    const geometries = (value as any).features
+      .map((f: any) => f?.geometry)
+      .filter((g: any) => g && typeof g === 'object' && GEOJSON_GEOMETRY_TYPES.has(String(g.type ?? '')))
+    if (geometries.length === 1) return geometries[0] as GeoJSON.Geometry
+  }
+
+  return null
+}
+
 export function SortiesDialog({ open, onClose, projectName, initialView = 'index' }: SortiesDialogProps) {
-  const { operator } = useMapView()
+  const { operator, setSortiePreviewGeometry } = useMapView()
   const [isClosing, setIsClosing] = useState(false)
   const [view, setView] = useState<'index' | 'editor'>('index')
   const [editorDocked, setEditorDocked] = useState(false)
@@ -166,6 +200,7 @@ export function SortiesDialog({ open, onClose, projectName, initialView = 'index
   const [datasetsLoading, setDatasetsLoading] = useState(false)
 
   const [editor, setEditor] = useState<SortieEditorState>(() => defaultEditor())
+  const [mapPicking, setMapPicking] = useState(false)
 
   const [userQuery, setUserQuery] = useState('')
   const [userLoading, setUserLoading] = useState(false)
@@ -177,6 +212,8 @@ export function SortiesDialog({ open, onClose, projectName, initialView = 'index
       setIsClosing(false)
       return
     }
+    setSortiePreviewGeometry(null)
+    setMapPicking(false)
     const t = setTimeout(() => {
       setQuery('')
       setLoading(false)
@@ -199,7 +236,7 @@ export function SortiesDialog({ open, onClose, projectName, initialView = 'index
       dockHeightRef.current = 45
     }, 200)
     return () => clearTimeout(t)
-  }, [open])
+  }, [open, setSortiePreviewGeometry])
 
   // Allow parent to open directly into the create workflow or the index.
   useEffect(() => {
@@ -211,6 +248,16 @@ export function SortiesDialog({ open, onClose, projectName, initialView = 'index
       setView('index')
     }
   }, [initialView, open])
+
+  // Keep the Sortie "where" geometry preview in sync with the MapLibre overlay.
+  useEffect(() => {
+    if (!open || view !== 'editor') {
+      setSortiePreviewGeometry(null)
+      return
+    }
+    if (mapPicking) return
+    setSortiePreviewGeometry(editor.geometryWgs84)
+  }, [editor.geometryWgs84, mapPicking, open, setSortiePreviewGeometry, view])
 
   const handleClose = useCallback(() => {
     setIsClosing(true)
@@ -562,14 +609,19 @@ export function SortiesDialog({ open, onClose, projectName, initialView = 'index
   const handlePickGeometry = useCallback(
     async (kind: 'point' | 'polygon') => {
       setEditor((prev) => ({ ...prev, error: null }))
+      setMapPicking(true)
+      setSortiePreviewGeometry(null)
       try {
         const geom = await operator.captureGeometry(kind)
         setEditor((prev) => ({ ...prev, geometryWgs84: geom }))
+        setSortiePreviewGeometry(geom)
       } catch (err) {
         setEditor((prev) => ({ ...prev, error: err instanceof Error ? err.message : 'Failed to capture geometry.' }))
+      } finally {
+        setMapPicking(false)
       }
     },
-    [operator]
+    [operator, setSortiePreviewGeometry]
   )
 
   const toggleDataset = useCallback((ref: CreatorDatasetRef) => {
@@ -1377,9 +1429,8 @@ export function SortiesDialog({ open, onClose, projectName, initialView = 'index
                   }
                   try {
                     const parsed = JSON.parse(text)
-                    if (parsed && typeof parsed === 'object' && typeof parsed.type === 'string') {
-                      setEditor((prev) => ({ ...prev, geometryWgs84: parsed as GeoJSON.Geometry }))
-                    }
+                    const geom = coerceGeoJsonGeometry(parsed)
+                    if (geom) setEditor((prev) => ({ ...prev, geometryWgs84: geom }))
                   } catch {
                     // keep current value; user may be mid-edit
                   }

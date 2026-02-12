@@ -99,7 +99,11 @@ export default function ContactPage() {
                key="email-container"
                initial={false}
                animate={
-                 step === 'message' ? { y: -50 } : { y: 0 }
+                 step === 'thank_you' 
+                   ? { opacity: 0, scale: 0.95 } // Fade away on submit
+                   : step === 'message' 
+                     ? { y: -50 } 
+                     : { y: 0 }
                }
                exit={{ opacity: 0, scale: 0.95 }}
                transition={{ duration: 0.5, ease: 'easeInOut' }}

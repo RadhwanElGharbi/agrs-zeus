@@ -213,7 +213,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
           {
             target: '[data-tour="aoi-map"]',
             title: 'Complete Your Polygon',
-            content: 'Draw your pipeline corridor by clicking points on the map.\n\n• Click to add vertices\n• Double-click to complete the polygon\n• Maximum area: 300 km²\n\nThe tour will continue once you\'ve drawn a valid polygon.',
+            content: 'Draw your pipeline corridor by clicking points on the map.\n\n• Click to add vertices\n• Double-click to complete the polygon\n\nThe tour will continue once you\'ve drawn a valid polygon.',
             placement: 'left',
             spotlightClicks: true,
             waitForElement: true,

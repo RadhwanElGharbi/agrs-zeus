@@ -1299,9 +1299,6 @@ interface AOIDrawOverlayProps {
   onSave: (payload: { geojson: any; startPoint?: { lat: number; lon: number }; endPoint?: { lat: number; lon: number } }) => void
 }
 
-// Maximum AOI area limit in square kilometers
-const MAX_AOI_AREA_KM2 = 300
-
 // Calculate area of a GeoJSON polygon in square kilometers using spherical geometry
 function calculatePolygonAreaKm2(geojson: any): number {
   if (!geojson?.features?.length) return 0
@@ -1386,7 +1383,7 @@ function AOIDrawOverlay({ open, onClose, onSave }: AOIDrawOverlayProps) {
   const endMarkerRef = useRef<maplibregl.Marker | null>(null)
   const selectModeRef = useRef<'start' | 'end' | null>(null)
   const [selectMode, setSelectMode] = useState<'start' | 'end' | null>(null)
-  const [statusMessage, setStatusMessage] = useState('Draw polygon to define AOI (max 300 km²).')
+  const [statusMessage, setStatusMessage] = useState('Draw polygon to define AOI.')
   const [currentArea, setCurrentArea] = useState<number>(0)
   const [areaExceeded, setAreaExceeded] = useState(false)
   const [isDrawing, setIsDrawing] = useState(false)
@@ -1465,12 +1462,16 @@ function AOIDrawOverlay({ open, onClose, onSave }: AOIDrawOverlayProps) {
             type: 'raster',
             tiles: ['https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
             tileSize: 256,
+            // Avoid Esri "Map Data not available" placeholder tiles by overzooming the last
+            // available imagery tiles when users zoom in further.
+            maxzoom: 17,
             attribution: 'Esri, Maxar, Earthstar Geographics',
           },
           esriLabels: {
             type: 'raster',
             tiles: ['https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}'],
             tileSize: 256,
+            maxzoom: 17,
             attribution: 'Esri',
           },
         },
@@ -1636,21 +1637,17 @@ function AOIDrawOverlay({ open, onClose, onSave }: AOIDrawOverlayProps) {
         const coords = getPolygonCoords(data)
         setCurrentArea(area)
         setPolygonCoords(coords)
-        const validAOI = area > 0 && area <= MAX_AOI_AREA_KM2 && coords !== null && coords.length >= 4
+        const validAOI = area > 0 && coords !== null && coords.length >= 4
         setHasValidAOI(validAOI)
         // Report polygon drawn for tour when valid AOI is created
         if (validAOI) {
           reportAction('aoi-polygon-drawn')
         }
-        if (area > MAX_AOI_AREA_KM2) {
-          setAreaExceeded(true)
-          setStatusMessage(`Area ${area.toFixed(1)} km² exceeds ${MAX_AOI_AREA_KM2} km² limit`)
-        } else if (area > 0) {
-          setAreaExceeded(false)
-          setStatusMessage(`Area: ${area.toFixed(1)} km² (max ${MAX_AOI_AREA_KM2} km²)`)
+        setAreaExceeded(false)
+        if (area > 0) {
+          setStatusMessage(`Area: ${area.toFixed(1)} km²`)
         } else {
-          setAreaExceeded(false)
-          setStatusMessage('Draw polygon to define AOI (max 300 km²).')
+          setStatusMessage('Draw polygon to define AOI.')
         }
       }
 
@@ -1697,7 +1694,7 @@ function AOIDrawOverlay({ open, onClose, onSave }: AOIDrawOverlayProps) {
 
           const previewArea = calculateAreaFromCoords(previewCoords)
           setLivePreviewArea(previewArea)
-          setLivePreviewExceeded(previewArea > MAX_AOI_AREA_KM2)
+          setLivePreviewExceeded(false)
         } else if (currentVertices.length === 1) {
           // Only one vertex - show 0 area
           setLivePreviewArea(0)
@@ -1736,7 +1733,7 @@ function AOIDrawOverlay({ open, onClose, onSave }: AOIDrawOverlayProps) {
       setPolygonCoords(null)
       setLivePreviewArea(null)
       setLivePreviewExceeded(false)
-      setStatusMessage('Draw polygon to define AOI (max 300 km²).')
+      setStatusMessage('Draw polygon to define AOI.')
     }
   }, [open])
 
@@ -1748,13 +1745,6 @@ function AOIDrawOverlay({ open, onClose, onSave }: AOIDrawOverlayProps) {
     const data = draw.getAll()
     if (!data.features.length) {
       setStatusMessage('Please draw the AOI polygon before saving.')
-      return
-    }
-
-    // Validate area limit
-    const area = calculatePolygonAreaKm2(data)
-    if (area > MAX_AOI_AREA_KM2) {
-      setStatusMessage(`⚠️ Cannot save: Area ${area.toFixed(1)} km² exceeds ${MAX_AOI_AREA_KM2} km² limit. Please draw a smaller area.`)
       return
     }
 
@@ -1801,7 +1791,7 @@ function AOIDrawOverlay({ open, onClose, onSave }: AOIDrawOverlayProps) {
       setVertexInputs([{ lat: '', lng: '' }, { lat: '', lng: '' }, { lat: '', lng: '' }])
       setStartPointInput({ lat: '', lng: '' })
       setEndPointInput({ lat: '', lng: '' })
-      setStatusMessage('Draw polygon to define AOI (max 300 km²).')
+      setStatusMessage('Draw polygon to define AOI.')
     }
   }
 
@@ -1986,16 +1976,14 @@ function AOIDrawOverlay({ open, onClose, onSave }: AOIDrawOverlayProps) {
     const coords = getPolygonCoords(data)
     setCurrentArea(area)
     setPolygonCoords(coords)
-    const isValid = area > 0 && area <= MAX_AOI_AREA_KM2 && coords !== null && coords.length >= 4
+    const isValid = area > 0 && coords !== null && coords.length >= 4
     setHasValidAOI(isValid)
-
-    if (area > MAX_AOI_AREA_KM2) {
-      setAreaExceeded(true)
-      setStatusMessage(`Area ${area.toFixed(1)} km² exceeds ${MAX_AOI_AREA_KM2} km² limit`)
-    } else {
-      setAreaExceeded(false)
-      setStatusMessage(`Polygon created: ${area.toFixed(1)} km²`)
+    if (isValid) {
+      reportAction('aoi-polygon-drawn')
     }
+
+    setAreaExceeded(false)
+    setStatusMessage(`Polygon created: ${area.toFixed(1)} km²`)
   }
 
   // Apply start point from coordinate input
@@ -2116,7 +2104,6 @@ function AOIDrawOverlay({ open, onClose, onSave }: AOIDrawOverlayProps) {
                 <>
                   <span className="text-white/50">~</span>
                   {livePreviewArea.toFixed(1)} km²
-                  {livePreviewExceeded && <span className="text-xs">(exceeds limit!)</span>}
                 </>
               ) : (
                 <>{currentArea.toFixed(1)} km²</>

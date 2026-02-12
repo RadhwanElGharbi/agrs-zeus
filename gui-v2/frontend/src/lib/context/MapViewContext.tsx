@@ -10,6 +10,8 @@ type OperatorActions = {
   startTool: (tool: Exclude<OperatorTool, 'none'>) => void
   cancel: () => void
   captureGeometry: (kind: OperatorGeometryKind) => Promise<GeoJSON.Geometry>
+  zoomToCreatorEntry: (entryId: string) => void
+  zoomToGeoJSON: (geojson: GeoJSON.Geometry | GeoJSON.Feature | GeoJSON.FeatureCollection) => void
 }
 
 type OperatorDialogActions = {
@@ -21,6 +23,7 @@ type OperatorDialogActions = {
 type GisActions = {
   openFetchDatasets: () => void
   openDatasetIndex: () => void
+  openDatasetDigitalTwin: () => void
 }
 
 type PirlActions = {
@@ -46,6 +49,8 @@ export type MapViewContextValue = {
   registerPirlActions: (actions: Partial<PirlActions>) => void
   registerRoutingActions: (actions: Partial<RoutingActions>) => void
   setOperatorUiState: (state: OperatorUiState) => void
+  sortiePreviewGeometry: GeoJSON.Geometry | null
+  setSortiePreviewGeometry: (geometry: GeoJSON.Geometry | null) => void
   operatorDialogs: OperatorDialogActions
   gis: GisActions
   pirl: PirlActions
@@ -54,6 +59,8 @@ export type MapViewContextValue = {
     startTool: (tool: Exclude<OperatorTool, 'none'>) => void
     cancel: () => void
     captureGeometry: (kind: OperatorGeometryKind) => Promise<GeoJSON.Geometry>
+    zoomToCreatorEntry: (entryId: string) => void
+    zoomToGeoJSON: (geojson: GeoJSON.Geometry | GeoJSON.Feature | GeoJSON.FeatureCollection) => void
   }
 }
 
@@ -62,13 +69,16 @@ const MapViewContext = createContext<MapViewContextValue | undefined>(undefined)
 export function MapViewProvider({ children }: { children: React.ReactNode }) {
   const [mapMode, setMapMode] = useState<MapMode>('gis')
   const [operatorUiState, setOperatorUiState] = useState<OperatorUiState>({ tool: 'none', geometryEditActive: false })
+  const [sortiePreviewGeometry, setSortiePreviewGeometry] = useState<GeoJSON.Geometry | null>(null)
 
   const operatorActionsRef = useRef<OperatorActions>({
     startTool: () => {},
     cancel: () => {},
     captureGeometry: async () => {
       throw new Error('Geometry capture is not available.')
-    }
+    },
+    zoomToCreatorEntry: () => {},
+    zoomToGeoJSON: () => {}
   })
 
   const operatorDialogActionsRef = useRef<OperatorDialogActions>({
@@ -79,7 +89,8 @@ export function MapViewProvider({ children }: { children: React.ReactNode }) {
 
   const gisActionsRef = useRef<GisActions>({
     openFetchDatasets: () => {},
-    openDatasetIndex: () => {}
+    openDatasetIndex: () => {},
+    openDatasetDigitalTwin: () => {}
   })
 
   const pirlActionsRef = useRef<PirlActions>({
@@ -123,6 +134,14 @@ export function MapViewProvider({ children }: { children: React.ReactNode }) {
     return operatorActionsRef.current.captureGeometry(kind)
   }, [])
 
+  const zoomToCreatorEntry = useCallback((entryId: string) => {
+    operatorActionsRef.current.zoomToCreatorEntry(entryId)
+  }, [])
+
+  const zoomToGeoJSON = useCallback((geojson: GeoJSON.Geometry | GeoJSON.Feature | GeoJSON.FeatureCollection) => {
+    operatorActionsRef.current.zoomToGeoJSON(geojson)
+  }, [])
+
   const openOperatorEntriesIndex = useCallback(() => {
     operatorDialogActionsRef.current.openOperatorEntriesIndex()
   }, [])
@@ -141,6 +160,10 @@ export function MapViewProvider({ children }: { children: React.ReactNode }) {
 
   const openDatasetIndex = useCallback(() => {
     gisActionsRef.current.openDatasetIndex()
+  }, [])
+
+  const openDatasetDigitalTwin = useCallback(() => {
+    gisActionsRef.current.openDatasetDigitalTwin()
   }, [])
 
   const openPirlAi = useCallback(() => {
@@ -165,6 +188,8 @@ export function MapViewProvider({ children }: { children: React.ReactNode }) {
       registerPirlActions,
       registerRoutingActions,
       setOperatorUiState,
+      sortiePreviewGeometry,
+      setSortiePreviewGeometry,
       operatorDialogs: {
         openOperatorEntriesIndex,
         openSortiesIndex,
@@ -172,7 +197,8 @@ export function MapViewProvider({ children }: { children: React.ReactNode }) {
       },
       gis: {
         openFetchDatasets,
-        openDatasetIndex
+        openDatasetIndex,
+        openDatasetDigitalTwin
       },
       pirl: {
         openPirlAi
@@ -185,7 +211,9 @@ export function MapViewProvider({ children }: { children: React.ReactNode }) {
         ...operatorUiState,
         startTool,
         cancel,
-        captureGeometry
+        captureGeometry,
+        zoomToCreatorEntry,
+        zoomToGeoJSON
       }
     }
   }, [
@@ -196,17 +224,21 @@ export function MapViewProvider({ children }: { children: React.ReactNode }) {
     openSortiesCreate,
     openSortiesIndex,
     openDatasetIndex,
+    openDatasetDigitalTwin,
     openFetchDatasets,
     openPirlAi,
     openPirlManager,
     openCrossingsManager,
     operatorUiState,
+    sortiePreviewGeometry,
     registerOperatorDialogActions,
     registerGisActions,
     registerPirlActions,
     registerRoutingActions,
     registerOperatorActions,
-    startTool
+    startTool,
+    zoomToCreatorEntry,
+    zoomToGeoJSON
   ])
 
   return <MapViewContext.Provider value={value}>{children}</MapViewContext.Provider>

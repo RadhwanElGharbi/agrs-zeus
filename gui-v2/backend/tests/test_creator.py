@@ -52,13 +52,44 @@ class TestCreatorMode(unittest.TestCase):
 
         Base.metadata.create_all(bind=get_engine())
 
+        # Create a DB user for audit_event FK + actor attribution
+        from api.db import get_sessionmaker
+        from api.db_models import User
+        from api.security import hash_password
+
+        SessionLocal = get_sessionmaker()
+        with SessionLocal() as db:
+            email = f"creator_test_{uuid4().hex[:8]}@example.com"
+            user = User(
+                email=email,
+                serial_number=f"UT-CREATOR-{uuid4().hex[:8]}",
+                full_name="Creator Test User",
+                role="admin",
+                organization="AGRS Global",
+                password_hash=hash_password("unit-test-password"),
+                is_active=True,
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+            cls._actor_payload = {
+                # FastAPI auth payload shape (subset)
+                "id": str(user.id),
+                "email": user.email,
+                "serial_number": user.serial_number,
+                "username": "admin",
+                "name": "AGRS Admin",
+                "role": "admin",
+                "company": "AGRS Global",
+            }
+
     @classmethod
     def tearDownClass(cls) -> None:
         shutil.rmtree(cls.project_dir, ignore_errors=True)
 
     def _user(self) -> dict:
-        # Direct-call tests (like test_earthworks.py) pass the user explicitly.
-        return {"username": "admin", "name": "AGRS Admin", "role": "admin", "company": "AGRS Global"}
+        # Direct-call tests pass the user explicitly (include DB `id` for audit FK).
+        return dict(getattr(self, "_actor_payload", {}) or {})
 
     def test_creator_crud_with_changelog_and_attachments(self) -> None:
         from fastapi import UploadFile
@@ -208,6 +239,9 @@ class TestCreatorMode(unittest.TestCase):
             self.assertGreaterEqual(len(changelog), 2)
             self.assertEqual(changelog[0].get("action"), "create")
             self.assertEqual(changelog[1].get("action"), "update")
+            self.assertTrue(changelog[0].get("timestamp"))
+            self.assertIsInstance(changelog[0].get("actor"), dict)
+            self.assertIsInstance((changelog[0].get("changes") or {}).get("fields"), list)
             self.assertIsInstance(changelog[0].get("sortie"), dict)
             self.assertEqual((changelog[0].get("sortie") or {}).get("code"), "SRT-001")
             self.assertIsInstance(changelog[1].get("sortie"), dict)
@@ -220,6 +254,19 @@ class TestCreatorMode(unittest.TestCase):
             self.assertEqual((changelog[0].get("dataset_features") or [{}])[0].get("feature", {}).get("id"), "feat-1")
             self.assertIsInstance(changelog[1].get("dataset_features"), list)
             self.assertEqual((changelog[1].get("dataset_features") or [{}])[0].get("feature", {}).get("id"), "feat-2")
+
+            # DB audit events should exist for CRUD
+            from sqlalchemy import select
+            from api.db_models import AuditEvent
+            from api.projects_db import upsert_project_row
+            db_project = upsert_project_row(db, self.project_name)
+            events = db.execute(
+                select(AuditEvent).where(
+                    AuditEvent.project_id == db_project.id,
+                    AuditEvent.event_type.in_(["creator.entry.create", "creator.entry.update", "creator.entry.delete"]),
+                )
+            ).scalars().all()
+            self.assertGreaterEqual(len(events), 2)
 
             # Soft delete
             deleted = asyncio.run(delete_creator_entry(project=self.project_name, entry_id=entry_id, user=self._user(), db=db))
