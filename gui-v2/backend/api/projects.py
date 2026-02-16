@@ -554,26 +554,67 @@ def _write_json(path: Path, payload: Dict[str, Any]) -> None:
         json.dump(payload, fh, indent=4)
 
 
-def _gdalinfo_json(path: Path) -> Optional[Dict[str, Any]]:
+@lru_cache(maxsize=512)
+def _gdalinfo_json_cached(path_str: str, mtime_ns: int, include_stats: bool) -> Optional[Dict[str, Any]]:
     """
-    Probe raster metadata using GDAL.
+    Probe raster metadata with process-level memoization.
 
-    NOTE: This is used to enrich legacy/partial sidecars so the GUI inspector
-    can display key raster properties (dimensions, cell size, pixel type, etc.)
-    even for datasets fetched before newer protocol requirements.
+    Keyed by full path + mtime so repeat requests for unchanged rasters avoid
+    expensive subprocess calls. This significantly reduces latency for
+    /projects/{name}/datasets on large projects.
     """
     try:
+        cmd = ["gdalinfo", "-json"]
+        if include_stats:
+            cmd.append("-stats")
+        cmd.append(path_str)
+
         result = subprocess.run(
-            ["gdalinfo", "-json", "-stats", str(path)],
+            cmd,
             capture_output=True,
             text=True,
-            timeout=30,
+            timeout=30 if include_stats else 12,
         )
         if result.returncode != 0:
             return None
         return json.loads(result.stdout)
     except Exception:
         return None
+
+
+def _gdalinfo_json(path: Path, include_stats: bool = False) -> Optional[Dict[str, Any]]:
+    """
+    Probe raster metadata using GDAL with mtime-aware memoization.
+    """
+    try:
+        mtime_ns = int(path.stat().st_mtime_ns)
+    except Exception:
+        return None
+    return _gdalinfo_json_cached(str(path), mtime_ns, include_stats)
+
+
+def _raster_metadata_needs_probe(metadata: Dict[str, Any]) -> bool:
+    """
+    Return True when metadata is too sparse for map/data consumers.
+    """
+    if not isinstance(metadata, dict) or not metadata:
+        return True
+
+    required_keys = (
+        "dataset_name",
+        "data_type",
+        "format",
+        "probed_crs",
+        "extent",
+        "bbox_wgs84",
+        "pixel_data_type",
+        "dimensions",
+    )
+    for key in required_keys:
+        value = metadata.get(key)
+        if value in (None, "", [], {}):
+            return True
+    return False
 
 
 def _extract_epsg_from_gdalinfo(info: Dict[str, Any]) -> Optional[str]:
@@ -1894,13 +1935,16 @@ async def update_pipeline_specs(
     return _enrich_pipeline_specs_with_mm(updated)
 
 
-def _build_display_name_from_metadata(metadata: dict, fallback_name: str) -> str:
+def _build_display_name_from_metadata(metadata: Optional[Dict[str, Any]], fallback_name: str) -> str:
     """
     Build display name from metadata JSON sidecar.
     Format: {category}_{dataset_name}_{target_crs}_processed
     Where dataset_name has spaces replaced with hyphens.
     target_crs is formatted as EPSGnumber (no colon).
     """
+    if not isinstance(metadata, dict):
+        return fallback_name
+
     category = metadata.get("category", "")
     dataset_name = metadata.get("dataset_name", "")
     target_crs = metadata.get("target_crs", "")
@@ -1971,19 +2015,24 @@ async def list_project_datasets(project_name: str):
                 # Enrich legacy/partial metadata so the Map View Inspector can display
                 # key raster properties (dimensions, cell size, pixel type/depth, compression, etc.).
                 updated = False
-                info = _gdalinfo_json(item)
-                if info:
-                    if not metadata.get("dataset_name"):
-                        metadata["dataset_name"] = fallback_name or raw_name
-                        updated = True
-                    # Ensure semantic data_type remains "Raster" (pixel type lives in pixel_data_type)
-                    if metadata.get("data_type") in {None, "", "Float32", "Float64", "Int16", "Int32", "UInt16", "UInt32", "Byte"}:
-                        metadata["data_type"] = "Raster"
-                        updated = True
-                    if not metadata.get("format"):
-                        metadata["format"] = "GeoTIFF"
-                        updated = True
+                info = None
 
+                if not metadata.get("dataset_name"):
+                    metadata["dataset_name"] = fallback_name or raw_name
+                    updated = True
+                # Ensure semantic data_type remains "Raster" (pixel type lives in pixel_data_type)
+                if metadata.get("data_type") in {None, "", "Float32", "Float64", "Int16", "Int32", "UInt16", "UInt32", "Byte"}:
+                    metadata["data_type"] = "Raster"
+                    updated = True
+                if not metadata.get("format"):
+                    metadata["format"] = "GeoTIFF"
+                    updated = True
+
+                # Probe only when sidecar is sparse. This avoids expensive gdalinfo calls
+                # (especially with large rasters) on every datasets request.
+                if _raster_metadata_needs_probe(metadata):
+                    info = _gdalinfo_json(item, include_stats=False)
+                if info:
                     epsg = _extract_epsg_from_gdalinfo(info)
                     if epsg and metadata.get("probed_crs") != epsg:
                         metadata["probed_crs"] = epsg
@@ -2013,7 +2062,11 @@ async def list_project_datasets(project_name: str):
                         updated = True
 
                 if updated:
-                    _write_json(metadata_file, metadata)
+                    # Sidecar persistence is best-effort; listing datasets must remain read-safe.
+                    try:
+                        _write_json(metadata_file, metadata)
+                    except Exception:
+                        pass
                 
                 display_name = _build_display_name_from_metadata(metadata, fallback_name)
                 
@@ -2035,11 +2088,13 @@ async def list_project_datasets(project_name: str):
             if item.suffix == '.gpkg' and not item.name.endswith('.json'):
                 # Metadata sidecar is next to the file
                 metadata_file = item.with_name(f"{item.name}.json")
-                metadata = {}
+                metadata: Dict[str, Any] = {}
                 
                 # Load metadata if available
                 if metadata_file.exists():
-                    metadata = load_json_file(metadata_file)
+                    loaded = load_json_file(metadata_file)
+                    if isinstance(loaded, dict):
+                        metadata = loaded
                 
                 # Build display name from metadata or fallback to filename
                 import re

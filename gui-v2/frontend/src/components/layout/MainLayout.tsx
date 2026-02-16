@@ -11,7 +11,16 @@ import { WelcomeDialog } from '@/components/shared/WelcomeDialog'
 import { GuidedTour } from '@/components/shared/GuidedTour'
 import { BackgroundJobIndicator } from '@/components/Project/BackgroundJobIndicator'
 import { DatasetFetchProgressDialog } from '@/components/Project/DatasetFetchProgressDialog'
+import { UpdateNotificationBanner } from '@/components/shared/UpdateNotificationBanner'
+import {
+  getStoredResolution,
+  setStoredResolution,
+  computeScaleLayout,
+  type ResolutionOption,
+} from '@/components/shared/SettingsDialog'
 import { useProject } from '@/lib/context/ProjectContext'
+import { useAuth } from '@/lib/context/AuthContext'
+import { fetchUserSettings } from '@/lib/api/dataClient'
 import type { DatasetFetchJob } from '@/lib/api/dataClient'
 
 interface MainLayoutProps {
@@ -20,8 +29,46 @@ interface MainLayoutProps {
 
 export function MainLayout({ children }: MainLayoutProps) {
   const { currentProject, isProjectLoading, refreshProjectData } = useProject()
+  const { isAuthenticated } = useAuth()
   const [devMode, setDevMode] = useState(false)
   const [activeView, setActiveView] = useState<'map' | 'digital-twin' | 'project-management'>('map')
+  const [resolution, setResolution] = useState<ResolutionOption>(() => getStoredResolution())
+  const [scaleLayout, setScaleLayout] = useState<ReturnType<typeof computeScaleLayout>>(null)
+
+  const handleResolutionChange = useCallback((value: ResolutionOption) => {
+    setResolution(value)
+    setStoredResolution(value)
+    setScaleLayout(computeScaleLayout(value))
+  }, [])
+
+  // On login, load persisted settings from the server and apply them.
+  // Falls back to localStorage if the API call fails or returns nothing.
+  useEffect(() => {
+    if (!isAuthenticated) return
+    let cancelled = false
+
+    void fetchUserSettings().then((settings) => {
+      if (cancelled) return
+      const serverRes = settings.resolution as ResolutionOption | undefined
+      if (serverRes && serverRes !== resolution) {
+        setResolution(serverRes)
+        setStoredResolution(serverRes)
+        setScaleLayout(computeScaleLayout(serverRes))
+      }
+    })
+
+    return () => { cancelled = true }
+    // Only run when auth state changes, not on every resolution change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated])
+
+  // Recompute scale on mount and window resize
+  useEffect(() => {
+    const update = () => setScaleLayout(computeScaleLayout(resolution))
+    update()
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
+  }, [resolution])
   const [showSupplierSearch, setShowSupplierSearch] = useState(false)
   const [suppliersUpdated, setSuppliersUpdated] = useState(0)
   const [showLoadingDialog, setShowLoadingDialog] = useState(false)
@@ -83,13 +130,28 @@ export function MainLayout({ children }: MainLayoutProps) {
   }, [])
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-background">
+    <div className="h-screen w-screen overflow-hidden bg-black">
+    <div
+      className="flex overflow-hidden bg-background"
+      style={
+        scaleLayout
+          ? {
+              width: `${scaleLayout.width}px`,
+              height: `${scaleLayout.height}px`,
+              transform: `scale(${scaleLayout.scale})`,
+              transformOrigin: '0 0',
+            }
+          : { width: '100vw', height: '100vh' }
+      }
+    >
       {/* Sidebar */}
       <Sidebar
         devMode={devMode}
         activeView={activeView}
         onViewChange={setActiveView}
         onDatasetRunInBackground={handleRunInBackground}
+        resolution={resolution}
+        onResolutionChange={handleResolutionChange}
       />
 
       {/* Main Content Area */}
@@ -140,6 +202,9 @@ export function MainLayout({ children }: MainLayoutProps) {
       <WelcomeDialog />
       <GuidedTour />
 
+      {/* App Update Notification */}
+      <UpdateNotificationBanner />
+
       {/* Background Job Indicator */}
       {backgroundJobId && !showExpandedJobDialog && (
         <BackgroundJobIndicator
@@ -157,6 +222,7 @@ export function MainLayout({ children }: MainLayoutProps) {
         onJobFinished={handleBackgroundJobFinished}
         onRunInBackground={() => setShowExpandedJobDialog(false)}
       />
+    </div>
     </div>
   )
 }

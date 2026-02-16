@@ -183,3 +183,34 @@ class Sortie(Base):
     created_by: Mapped[Optional["User"]] = relationship("User", lazy="joined")
 
 
+class UserSetting(Base):
+    """
+    Persistent settings for a user, optionally scoped to a specific device.
+
+    - device_id = '_global'   → settings that apply everywhere for this user
+    - device_id = '<hash>'    → device-specific overrides (e.g. resolution)
+
+    The `settings` JSONB column stores arbitrary key-value pairs.
+    """
+
+    __tablename__ = "user_settings"
+    __table_args__ = (
+        UniqueConstraint("user_id", "device_id", name="uq_user_settings_user_device"),
+    )
+    id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    device_id: Mapped[str] = mapped_column(String(128), nullable=False, default="_global")
+    settings: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
+
+    user: Mapped["User"] = relationship("User", lazy="joined")

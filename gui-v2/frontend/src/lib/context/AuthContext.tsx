@@ -46,7 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Check for existing session on mount
   useEffect(() => {
-    const storedToken = localStorage.getItem('agrs_token')
+    const storedToken = sessionStorage.getItem('agrs_token')
     if (storedToken) {
       verifyToken(storedToken)
     } else {
@@ -67,13 +67,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(data.user)
         setToken(tokenToVerify)
       } else {
-        localStorage.removeItem('agrs_token')
+        sessionStorage.removeItem('agrs_token')
         setUser(null)
         setToken(null)
       }
     } catch (error) {
       console.error('Token verification failed:', error)
-      localStorage.removeItem('agrs_token')
+      sessionStorage.removeItem('agrs_token')
       setUser(null)
       setToken(null)
     } finally {
@@ -96,7 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (response.ok && data.success) {
         setUser(data.user)
         setToken(data.token)
-        localStorage.setItem('agrs_token', data.token)
+        sessionStorage.setItem('agrs_token', data.token)
         return { success: true, message: data.message }
       } else {
         return { success: false, message: data.detail || 'Login failed' }
@@ -122,12 +122,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setUser(null)
       setToken(null)
-      localStorage.removeItem('agrs_token')
+      sessionStorage.removeItem('agrs_token')
     }
   }, [token])
 
   const refresh = useCallback(async () => {
-    const stored = localStorage.getItem('agrs_token')
+    const stored = sessionStorage.getItem('agrs_token')
     if (!stored) {
       setUser(null)
       setToken(null)

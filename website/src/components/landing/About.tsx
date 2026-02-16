@@ -46,19 +46,19 @@ export const About = () => {
              </div>
              
              <h2 className="text-3xl md:text-5xl lg:text-6xl font-serif text-white mb-10 leading-tight">
-               Systematic automation & optimization of <br />
-               <span className="text-white/50">physical infrastructure.</span>
+              We build the operating system for <br />
+              <span className="text-white/50">infrastructure development.</span>
              </h2>
              
              <p className="text-lg text-gray-400 max-w-2xl leading-relaxed">
-              We are a Canadian AI research lab. We build end‑to‑end AI systems that optimize critical infrastructure projects, powering EPCs with faster, decision‑grade engineering from feasibility through execution.
+             AGRS builds ZEUS. AI route optimization, engineering analysis, and project delivery for pipeline and network teams.
              </p>
            </motion.div>
 
            <div className="mt-16">
              <Link href="/contact" className="group inline-flex items-center gap-4">
                <span className="text-sm font-mono uppercase tracking-widest text-white group-hover:text-primary transition-colors">
-                 Partner with Artemis
+                 Talk to us
                </span>
                <div className="h-px w-12 bg-white/20 group-hover:bg-primary transition-colors" />
              </Link>

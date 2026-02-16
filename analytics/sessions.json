@@ -2204,5 +2204,929 @@
         "x_forwarded_for": "162.212.233.34"
       }
     }
+  },
+  "MFzYmjoVbt3hlji1dz9a03LWStsrOJuhUy3pbt91lM4": {
+    "id": "b2a2ca2e-546e-4f8c-8fd4-bc7944a9adb4",
+    "email": "radwan@agrsglobal.com",
+    "serial_number": "rad_admin",
+    "username": "radwan@agrsglobal.com",
+    "name": "Radwan",
+    "role": "superadmin",
+    "company": "Artemis Global Research Solutions Inc.",
+    "created_at": "2026-02-12T07:03:32.197184",
+    "expires_at": "2026-02-13T07:03:32.194780",
+    "client_info": {
+      "ip": "162.212.233.34",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) agrs-zeus-gui-v2/2.1.0 Chrome/120.0.6099.291 Electron/28.3.3 Safari/537.36",
+      "referer": "https://zeus.agrsglobal.com/",
+      "origin": "https://zeus.agrsglobal.com",
+      "proxy_ip": "10.0.0.1",
+      "forwarding_headers": {
+        "x_real_ip": "162.212.233.34",
+        "x_forwarded_for": "162.212.233.34"
+      }
+    }
+  },
+  "_Dlo28Iw0OkHW_-dNMkb2PsnloNhPLJc9RFaJNUvnLQ": {
+    "id": "b2a2ca2e-546e-4f8c-8fd4-bc7944a9adb4",
+    "email": "radwan@agrsglobal.com",
+    "serial_number": "rad_admin",
+    "username": "radwan@agrsglobal.com",
+    "name": "Radwan",
+    "role": "superadmin",
+    "company": "Artemis Global Research Solutions Inc.",
+    "created_at": "2026-02-12T07:59:02.225562",
+    "expires_at": "2026-02-13T07:59:02.225535",
+    "client_info": {
+      "ip": "162.212.233.34",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) agrs-zeus-gui-v2/2.1.0 Chrome/120.0.6099.291 Electron/28.3.3 Safari/537.36",
+      "referer": "https://zeus.agrsglobal.com/",
+      "origin": "https://zeus.agrsglobal.com",
+      "proxy_ip": "10.0.0.1",
+      "forwarding_headers": {
+        "x_real_ip": "162.212.233.34",
+        "x_forwarded_for": "162.212.233.34"
+      }
+    }
+  },
+  "L3OtN0dGKXAi4y071XUCJkFH9pObMm4basUX9ZTOfmY": {
+    "id": "b2a2ca2e-546e-4f8c-8fd4-bc7944a9adb4",
+    "email": "radwan@agrsglobal.com",
+    "serial_number": "rad_admin",
+    "username": "radwan@agrsglobal.com",
+    "name": "Radwan",
+    "role": "superadmin",
+    "company": "Artemis Global Research Solutions Inc.",
+    "created_at": "2026-02-12T19:13:39.611738",
+    "expires_at": "2026-02-13T19:13:39.611717",
+    "client_info": {
+      "ip": "162.212.233.34",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) agrs-zeus-gui-v2/2.1.0 Chrome/120.0.6099.291 Electron/28.3.3 Safari/537.36",
+      "referer": "https://zeus.agrsglobal.com/",
+      "origin": "https://zeus.agrsglobal.com",
+      "proxy_ip": "10.0.0.1",
+      "forwarding_headers": {
+        "x_real_ip": "162.212.233.34",
+        "x_forwarded_for": "162.212.233.34"
+      }
+    }
+  },
+  "thfrchWwghSAxiMOGrc5Y3pvRccAOlsP8xOPVE5783E": {
+    "id": "b2a2ca2e-546e-4f8c-8fd4-bc7944a9adb4",
+    "email": "radwan@agrsglobal.com",
+    "serial_number": "rad_admin",
+    "username": "radwan@agrsglobal.com",
+    "name": "Radwan",
+    "role": "superadmin",
+    "company": "Artemis Global Research Solutions Inc.",
+    "created_at": "2026-02-13T21:15:18.220634",
+    "expires_at": "2026-02-14T21:15:18.220571",
+    "client_info": {
+      "ip": "162.212.233.34",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+      "referer": "https://zeus.agrsglobal.com/",
+      "origin": "https://zeus.agrsglobal.com",
+      "proxy_ip": "10.0.0.1",
+      "forwarding_headers": {
+        "x_real_ip": "162.212.233.34",
+        "x_forwarded_for": "162.212.233.34"
+      }
+    }
+  },
+  "w88A4nu2vhuvyRiTZM-I9eUYB_w3vLNABY0LqBxuTS4": {
+    "id": "b2a2ca2e-546e-4f8c-8fd4-bc7944a9adb4",
+    "email": "radwan@agrsglobal.com",
+    "serial_number": "rad_admin",
+    "username": "radwan@agrsglobal.com",
+    "name": "Radwan",
+    "role": "superadmin",
+    "company": "Artemis Global Research Solutions Inc.",
+    "created_at": "2026-02-13T22:08:31.310325",
+    "expires_at": "2026-02-14T22:08:31.310283",
+    "client_info": {
+      "ip": "162.212.233.34",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+      "referer": "https://zeus.agrsglobal.com/",
+      "origin": "https://zeus.agrsglobal.com",
+      "proxy_ip": "10.0.0.1",
+      "forwarding_headers": {
+        "x_real_ip": "162.212.233.34",
+        "x_forwarded_for": "162.212.233.34"
+      }
+    }
+  },
+  "5ohlma1LXM6CNcPNhTdXGaCOwmnkH9KY3jZeRlOLAXU": {
+    "id": "b2a2ca2e-546e-4f8c-8fd4-bc7944a9adb4",
+    "email": "radwan@agrsglobal.com",
+    "serial_number": "rad_admin",
+    "username": "radwan@agrsglobal.com",
+    "name": "Radwan",
+    "role": "superadmin",
+    "company": "Artemis Global Research Solutions Inc.",
+    "created_at": "2026-02-14T22:25:02.347531",
+    "expires_at": "2026-02-15T22:25:02.346169",
+    "client_info": {
+      "ip": "162.212.233.34",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) agrs-zeus-gui-v2/2.1.0 Chrome/120.0.6099.291 Electron/28.3.3 Safari/537.36",
+      "referer": "https://zeus.agrsglobal.com/",
+      "origin": "https://zeus.agrsglobal.com",
+      "proxy_ip": "10.0.0.1",
+      "forwarding_headers": {
+        "x_real_ip": "162.212.233.34",
+        "x_forwarded_for": "162.212.233.34"
+      }
+    }
+  },
+  "OAjfaDzyehcX7sT5yuXeEyxOAxRwugFv4-LbTnA3Rgc": {
+    "id": "b2a2ca2e-546e-4f8c-8fd4-bc7944a9adb4",
+    "email": "radwan@agrsglobal.com",
+    "serial_number": "rad_admin",
+    "username": "radwan@agrsglobal.com",
+    "name": "Radwan",
+    "role": "superadmin",
+    "company": "Artemis Global Research Solutions Inc.",
+    "created_at": "2026-02-14T22:35:43.198008",
+    "expires_at": "2026-02-15T22:35:43.197986",
+    "client_info": {
+      "ip": "162.212.233.34",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) agrs-zeus-gui-v2/2.1.0 Chrome/120.0.6099.291 Electron/28.3.3 Safari/537.36",
+      "referer": "https://zeus.agrsglobal.com/",
+      "origin": "https://zeus.agrsglobal.com",
+      "proxy_ip": "10.0.0.1",
+      "forwarding_headers": {
+        "x_real_ip": "162.212.233.34",
+        "x_forwarded_for": "162.212.233.34"
+      }
+    }
+  },
+  "1mT-9gYXzMeYAzjgCKyqCNzd9OTg6OEIwDb_x0PTg-A": {
+    "id": "b2a2ca2e-546e-4f8c-8fd4-bc7944a9adb4",
+    "email": "radwan@agrsglobal.com",
+    "serial_number": "rad_admin",
+    "username": "radwan@agrsglobal.com",
+    "name": "Radwan",
+    "role": "superadmin",
+    "company": "Artemis Global Research Solutions Inc.",
+    "created_at": "2026-02-14T23:09:29.355100",
+    "expires_at": "2026-02-15T23:09:29.355080",
+    "client_info": {
+      "ip": "162.212.233.34",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) agrs-zeus-gui-v2/2.1.0 Chrome/120.0.6099.291 Electron/28.3.3 Safari/537.36",
+      "referer": "https://zeus.agrsglobal.com/",
+      "origin": "https://zeus.agrsglobal.com",
+      "proxy_ip": "10.0.0.1",
+      "forwarding_headers": {
+        "x_real_ip": "162.212.233.34",
+        "x_forwarded_for": "162.212.233.34"
+      }
+    }
+  },
+  "JuBAulo2haH6HmqTBbiEgcqOU-xuybT1GezCfJ00AKw": {
+    "id": "b2a2ca2e-546e-4f8c-8fd4-bc7944a9adb4",
+    "email": "radwan@agrsglobal.com",
+    "serial_number": "rad_admin",
+    "username": "radwan@agrsglobal.com",
+    "name": "Radwan",
+    "role": "superadmin",
+    "company": "Artemis Global Research Solutions Inc.",
+    "created_at": "2026-02-14T23:19:15.068521",
+    "expires_at": "2026-02-15T23:19:15.068496",
+    "client_info": {
+      "ip": "162.212.233.34",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) agrs-zeus-gui-v2/2.1.0 Chrome/120.0.6099.291 Electron/28.3.3 Safari/537.36",
+      "referer": "https://zeus.agrsglobal.com/",
+      "origin": "https://zeus.agrsglobal.com",
+      "proxy_ip": "10.0.0.1",
+      "forwarding_headers": {
+        "x_real_ip": "162.212.233.34",
+        "x_forwarded_for": "162.212.233.34"
+      }
+    }
+  },
+  "8PpADugeRHMbPKsc6E-ECxvOS0AAsVo5ipF5-jF3Iqo": {
+    "id": "b2a2ca2e-546e-4f8c-8fd4-bc7944a9adb4",
+    "email": "radwan@agrsglobal.com",
+    "serial_number": "rad_admin",
+    "username": "radwan@agrsglobal.com",
+    "name": "Radwan",
+    "role": "superadmin",
+    "company": "Artemis Global Research Solutions Inc.",
+    "created_at": "2026-02-14T23:53:31.592950",
+    "expires_at": "2026-02-15T23:53:31.592926",
+    "client_info": {
+      "ip": "162.212.233.34",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) agrs-zeus-gui-v2/2.1.0 Chrome/120.0.6099.291 Electron/28.3.3 Safari/537.36",
+      "referer": "https://zeus.agrsglobal.com/",
+      "origin": "https://zeus.agrsglobal.com",
+      "proxy_ip": "10.0.0.1",
+      "forwarding_headers": {
+        "x_real_ip": "162.212.233.34",
+        "x_forwarded_for": "162.212.233.34"
+      }
+    }
+  },
+  "i3caR6JVg9hxGJ0VCcbwubQnfnFjE7BiDwgQagXEpHs": {
+    "id": "b2a2ca2e-546e-4f8c-8fd4-bc7944a9adb4",
+    "email": "radwan@agrsglobal.com",
+    "serial_number": "rad_admin",
+    "username": "radwan@agrsglobal.com",
+    "name": "Radwan",
+    "role": "superadmin",
+    "company": "Artemis Global Research Solutions Inc.",
+    "created_at": "2026-02-15T00:08:42.580116",
+    "expires_at": "2026-02-16T00:08:42.580095",
+    "client_info": {
+      "ip": "162.212.233.34",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) agrs-zeus-gui-v2/2.1.0 Chrome/120.0.6099.291 Electron/28.3.3 Safari/537.36",
+      "referer": "https://zeus.agrsglobal.com/",
+      "origin": "https://zeus.agrsglobal.com",
+      "proxy_ip": "10.0.0.1",
+      "forwarding_headers": {
+        "x_real_ip": "162.212.233.34",
+        "x_forwarded_for": "162.212.233.34"
+      }
+    }
+  },
+  "EEos7PA5LIRoY6nMaHtRFYcKCU6HHeWkiVF6bjCq2m4": {
+    "id": "b2a2ca2e-546e-4f8c-8fd4-bc7944a9adb4",
+    "email": "radwan@agrsglobal.com",
+    "serial_number": "rad_admin",
+    "username": "radwan@agrsglobal.com",
+    "name": "Radwan",
+    "role": "superadmin",
+    "company": "Artemis Global Research Solutions Inc.",
+    "created_at": "2026-02-15T00:11:46.913974",
+    "expires_at": "2026-02-16T00:11:46.913950",
+    "client_info": {
+      "ip": "162.212.233.34",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) agrs-zeus-gui-v2/2.1.0 Chrome/120.0.6099.291 Electron/28.3.3 Safari/537.36",
+      "referer": "https://zeus.agrsglobal.com/",
+      "origin": "https://zeus.agrsglobal.com",
+      "proxy_ip": "10.0.0.1",
+      "forwarding_headers": {
+        "x_real_ip": "162.212.233.34",
+        "x_forwarded_for": "162.212.233.34"
+      }
+    }
+  },
+  "egmZAutIYOdsYW8uavYgWi2h-tJmPBjs97HlggvdrD4": {
+    "id": "b2a2ca2e-546e-4f8c-8fd4-bc7944a9adb4",
+    "email": "radwan@agrsglobal.com",
+    "serial_number": "rad_admin",
+    "username": "radwan@agrsglobal.com",
+    "name": "Radwan",
+    "role": "superadmin",
+    "company": "Artemis Global Research Solutions Inc.",
+    "created_at": "2026-02-15T00:24:32.261332",
+    "expires_at": "2026-02-16T00:24:32.261311",
+    "client_info": {
+      "ip": "162.212.233.34",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) agrs-zeus-gui-v2/2.1.0 Chrome/120.0.6099.291 Electron/28.3.3 Safari/537.36",
+      "referer": "https://zeus.agrsglobal.com/",
+      "origin": "https://zeus.agrsglobal.com",
+      "proxy_ip": "10.0.0.1",
+      "forwarding_headers": {
+        "x_real_ip": "162.212.233.34",
+        "x_forwarded_for": "162.212.233.34"
+      }
+    }
+  },
+  "r1vpojPYf6lf0YKCERq2Pae4LcCzmreUg47drTyXqVg": {
+    "id": "b2a2ca2e-546e-4f8c-8fd4-bc7944a9adb4",
+    "email": "radwan@agrsglobal.com",
+    "serial_number": "rad_admin",
+    "username": "radwan@agrsglobal.com",
+    "name": "Radwan",
+    "role": "superadmin",
+    "company": "Artemis Global Research Solutions Inc.",
+    "created_at": "2026-02-15T00:33:57.081052",
+    "expires_at": "2026-02-16T00:33:57.081029",
+    "client_info": {
+      "ip": "162.212.233.34",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) agrs-zeus-gui-v2/2.1.0 Chrome/120.0.6099.291 Electron/28.3.3 Safari/537.36",
+      "referer": "https://zeus.agrsglobal.com/",
+      "origin": "https://zeus.agrsglobal.com",
+      "proxy_ip": "10.0.0.1",
+      "forwarding_headers": {
+        "x_real_ip": "162.212.233.34",
+        "x_forwarded_for": "162.212.233.34"
+      }
+    }
+  },
+  "jN-li1J5Ld2U2NgHaVjIlM3lQ67CAawPoQuXCXtAg4o": {
+    "id": "b2a2ca2e-546e-4f8c-8fd4-bc7944a9adb4",
+    "email": "radwan@agrsglobal.com",
+    "serial_number": "rad_admin",
+    "username": "radwan@agrsglobal.com",
+    "name": "Radwan",
+    "role": "superadmin",
+    "company": "Artemis Global Research Solutions Inc.",
+    "created_at": "2026-02-15T00:41:10.672398",
+    "expires_at": "2026-02-16T00:41:10.672376",
+    "client_info": {
+      "ip": "162.212.233.34",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) agrs-zeus-gui-v2/2.1.0 Chrome/120.0.6099.291 Electron/28.3.3 Safari/537.36",
+      "referer": "https://zeus.agrsglobal.com/",
+      "origin": "https://zeus.agrsglobal.com",
+      "proxy_ip": "10.0.0.1",
+      "forwarding_headers": {
+        "x_real_ip": "162.212.233.34",
+        "x_forwarded_for": "162.212.233.34"
+      }
+    }
+  },
+  "xegsnrKizEqZavHrt6eILxCAZw_1ot2-MoQFRzg4A-Q": {
+    "id": "b2a2ca2e-546e-4f8c-8fd4-bc7944a9adb4",
+    "email": "radwan@agrsglobal.com",
+    "serial_number": "rad_admin",
+    "username": "radwan@agrsglobal.com",
+    "name": "Radwan",
+    "role": "superadmin",
+    "company": "Artemis Global Research Solutions Inc.",
+    "created_at": "2026-02-15T00:51:14.746277",
+    "expires_at": "2026-02-16T00:51:14.746259",
+    "client_info": {
+      "ip": "162.212.233.34",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) agrs-zeus-gui-v2/2.1.0 Chrome/120.0.6099.291 Electron/28.3.3 Safari/537.36",
+      "referer": "https://zeus.agrsglobal.com/",
+      "origin": "https://zeus.agrsglobal.com",
+      "proxy_ip": "10.0.0.1",
+      "forwarding_headers": {
+        "x_real_ip": "162.212.233.34",
+        "x_forwarded_for": "162.212.233.34"
+      }
+    }
+  },
+  "V2NcyA7DuBPGbSYf8OBTzFJWXikTBL_QQ_AcGJdFwP0": {
+    "id": "b2a2ca2e-546e-4f8c-8fd4-bc7944a9adb4",
+    "email": "radwan@agrsglobal.com",
+    "serial_number": "rad_admin",
+    "username": "radwan@agrsglobal.com",
+    "name": "Radwan",
+    "role": "superadmin",
+    "company": "Artemis Global Research Solutions Inc.",
+    "created_at": "2026-02-15T01:38:00.177214",
+    "expires_at": "2026-02-16T01:38:00.177193",
+    "client_info": {
+      "ip": "162.212.233.34",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) agrs-zeus-gui-v2/2.1.0 Chrome/120.0.6099.291 Electron/28.3.3 Safari/537.36",
+      "referer": "https://zeus.agrsglobal.com/",
+      "origin": "https://zeus.agrsglobal.com",
+      "proxy_ip": "10.0.0.1",
+      "forwarding_headers": {
+        "x_real_ip": "162.212.233.34",
+        "x_forwarded_for": "162.212.233.34"
+      }
+    }
+  },
+  "ZSA1QKauj_NCkOjUz9O0WLhBI7u1S3Bpc2z-pNRnbIc": {
+    "id": "b2a2ca2e-546e-4f8c-8fd4-bc7944a9adb4",
+    "email": "radwan@agrsglobal.com",
+    "serial_number": "rad_admin",
+    "username": "radwan@agrsglobal.com",
+    "name": "Radwan",
+    "role": "superadmin",
+    "company": "Artemis Global Research Solutions Inc.",
+    "created_at": "2026-02-15T03:52:05.895894",
+    "expires_at": "2026-02-16T03:52:05.895870",
+    "client_info": {
+      "ip": "162.212.233.34",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) agrs-zeus-gui-v2/2.1.0 Chrome/120.0.6099.291 Electron/28.3.3 Safari/537.36",
+      "referer": "https://zeus.agrsglobal.com/",
+      "origin": "https://zeus.agrsglobal.com",
+      "proxy_ip": "10.0.0.1",
+      "forwarding_headers": {
+        "x_real_ip": "162.212.233.34",
+        "x_forwarded_for": "162.212.233.34"
+      }
+    }
+  },
+  "t9EAHii-7FU1cvf7rJZx5R2ST8mz4ZGj2sAgKbFz8Lc": {
+    "id": "b2a2ca2e-546e-4f8c-8fd4-bc7944a9adb4",
+    "email": "radwan@agrsglobal.com",
+    "serial_number": "rad_admin",
+    "username": "radwan@agrsglobal.com",
+    "name": "Radwan",
+    "role": "superadmin",
+    "company": "Artemis Global Research Solutions Inc.",
+    "created_at": "2026-02-15T05:38:15.813034",
+    "expires_at": "2026-02-16T05:38:15.813014",
+    "client_info": {
+      "ip": "162.212.233.34",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) agrs-zeus-gui-v2/2.1.0 Chrome/120.0.6099.291 Electron/28.3.3 Safari/537.36",
+      "referer": "https://zeus.agrsglobal.com/",
+      "origin": "https://zeus.agrsglobal.com",
+      "proxy_ip": "10.0.0.1",
+      "forwarding_headers": {
+        "x_real_ip": "162.212.233.34",
+        "x_forwarded_for": "162.212.233.34"
+      }
+    }
+  },
+  "IdRSXz25QKMu9Q6hl2MDIuscYYwRyr1N6LWgId41zbg": {
+    "id": "b2a2ca2e-546e-4f8c-8fd4-bc7944a9adb4",
+    "email": "radwan@agrsglobal.com",
+    "serial_number": "rad_admin",
+    "username": "radwan@agrsglobal.com",
+    "name": "Radwan",
+    "role": "superadmin",
+    "company": "Artemis Global Research Solutions Inc.",
+    "created_at": "2026-02-15T07:37:26.993555",
+    "expires_at": "2026-02-16T07:37:26.993530",
+    "client_info": {
+      "ip": "162.212.233.34",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) agrs-zeus-gui-v2/2.1.0 Chrome/120.0.6099.291 Electron/28.3.3 Safari/537.36",
+      "referer": "https://zeus.agrsglobal.com/",
+      "origin": "https://zeus.agrsglobal.com",
+      "proxy_ip": "10.0.0.1",
+      "forwarding_headers": {
+        "x_real_ip": "162.212.233.34",
+        "x_forwarded_for": "162.212.233.34"
+      }
+    }
+  },
+  "qRibguEsSlZglryyE7lfuqaAU54Rfzy5Rsohl6oDy3M": {
+    "id": "b2a2ca2e-546e-4f8c-8fd4-bc7944a9adb4",
+    "email": "radwan@agrsglobal.com",
+    "serial_number": "rad_admin",
+    "username": "radwan@agrsglobal.com",
+    "name": "Radwan",
+    "role": "superadmin",
+    "company": "Artemis Global Research Solutions Inc.",
+    "created_at": "2026-02-15T08:00:35.325494",
+    "expires_at": "2026-02-16T08:00:35.325474",
+    "client_info": {
+      "ip": "162.212.233.34",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) agrs-zeus-gui-v2/2.1.0 Chrome/120.0.6099.291 Electron/28.3.3 Safari/537.36",
+      "referer": "https://zeus.agrsglobal.com/",
+      "origin": "https://zeus.agrsglobal.com",
+      "proxy_ip": "10.0.0.1",
+      "forwarding_headers": {
+        "x_real_ip": "162.212.233.34",
+        "x_forwarded_for": "162.212.233.34"
+      }
+    }
+  },
+  "mRGLTz5xVRqQgYfeWRQT1pUizWkFyDjM5PtPNMtPBtg": {
+    "id": "b2a2ca2e-546e-4f8c-8fd4-bc7944a9adb4",
+    "email": "radwan@agrsglobal.com",
+    "serial_number": "rad_admin",
+    "username": "radwan@agrsglobal.com",
+    "name": "Radwan",
+    "role": "superadmin",
+    "company": "Artemis Global Research Solutions Inc.",
+    "created_at": "2026-02-15T08:01:31.024741",
+    "expires_at": "2026-02-16T08:01:31.024707",
+    "client_info": {
+      "ip": "162.212.233.34",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) agrs-zeus-gui-v2/2.1.0 Chrome/120.0.6099.291 Electron/28.3.3 Safari/537.36",
+      "referer": "https://zeus.agrsglobal.com/",
+      "origin": "https://zeus.agrsglobal.com",
+      "proxy_ip": "10.0.0.1",
+      "forwarding_headers": {
+        "x_real_ip": "162.212.233.34",
+        "x_forwarded_for": "162.212.233.34"
+      }
+    }
+  },
+  "ZldSSBID5TC3N7FNqXwNB6gc9YY2eYl6gni9vq13NBM": {
+    "id": "b2a2ca2e-546e-4f8c-8fd4-bc7944a9adb4",
+    "email": "radwan@agrsglobal.com",
+    "serial_number": "rad_admin",
+    "username": "radwan@agrsglobal.com",
+    "name": "Radwan",
+    "role": "superadmin",
+    "company": "Artemis Global Research Solutions Inc.",
+    "created_at": "2026-02-15T20:34:14.202952",
+    "expires_at": "2026-02-16T20:34:14.202927",
+    "client_info": {
+      "ip": "162.212.233.34",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) agrs-zeus-gui-v2/2.1.0 Chrome/120.0.6099.291 Electron/28.3.3 Safari/537.36",
+      "referer": "https://zeus.agrsglobal.com/",
+      "origin": "https://zeus.agrsglobal.com",
+      "proxy_ip": "10.0.0.1",
+      "forwarding_headers": {
+        "x_real_ip": "162.212.233.34",
+        "x_forwarded_for": "162.212.233.34"
+      }
+    }
+  },
+  "SpQ7A48d7TYRKrTFIIFaq3FlR8AYr40h4epqzxMx2J4": {
+    "id": "b2a2ca2e-546e-4f8c-8fd4-bc7944a9adb4",
+    "email": "radwan@agrsglobal.com",
+    "serial_number": "rad_admin",
+    "username": "radwan@agrsglobal.com",
+    "name": "Radwan",
+    "role": "superadmin",
+    "company": "Artemis Global Research Solutions Inc.",
+    "created_at": "2026-02-15T20:48:07.249507",
+    "expires_at": "2026-02-16T20:48:07.249488",
+    "client_info": {
+      "ip": "162.212.233.34",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) agrs-zeus-gui-v2/2.1.0 Chrome/120.0.6099.291 Electron/28.3.3 Safari/537.36",
+      "referer": "https://zeus.agrsglobal.com/",
+      "origin": "https://zeus.agrsglobal.com",
+      "proxy_ip": "10.0.0.1",
+      "forwarding_headers": {
+        "x_real_ip": "162.212.233.34",
+        "x_forwarded_for": "162.212.233.34"
+      }
+    }
+  },
+  "oLgacv2kb3Wlzeei57xisVgYJBOxUJdgMnhvckgkacg": {
+    "id": "b2a2ca2e-546e-4f8c-8fd4-bc7944a9adb4",
+    "email": "radwan@agrsglobal.com",
+    "serial_number": "rad_admin",
+    "username": "radwan@agrsglobal.com",
+    "name": "Radwan",
+    "role": "superadmin",
+    "company": "Artemis Global Research Solutions Inc.",
+    "created_at": "2026-02-15T20:58:22.462922",
+    "expires_at": "2026-02-16T20:58:22.462900",
+    "client_info": {
+      "ip": "162.212.233.34",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) agrs-zeus-gui-v2/2.1.0 Chrome/120.0.6099.291 Electron/28.3.3 Safari/537.36",
+      "referer": "https://zeus.agrsglobal.com/",
+      "origin": "https://zeus.agrsglobal.com",
+      "proxy_ip": "10.0.0.1",
+      "forwarding_headers": {
+        "x_real_ip": "162.212.233.34",
+        "x_forwarded_for": "162.212.233.34"
+      }
+    }
+  },
+  "saFF6OmUKHMssa-9A4BrSz3L8XL3OVCNBfP11FP5l_M": {
+    "id": "b2a2ca2e-546e-4f8c-8fd4-bc7944a9adb4",
+    "email": "radwan@agrsglobal.com",
+    "serial_number": "rad_admin",
+    "username": "radwan@agrsglobal.com",
+    "name": "Radwan",
+    "role": "superadmin",
+    "company": "Artemis Global Research Solutions Inc.",
+    "created_at": "2026-02-15T21:33:03.170028",
+    "expires_at": "2026-02-16T21:33:03.170005",
+    "client_info": {
+      "ip": "162.212.233.34",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) agrs-zeus-gui-v2/2.1.0 Chrome/120.0.6099.291 Electron/28.3.3 Safari/537.36",
+      "referer": "https://zeus.agrsglobal.com/",
+      "origin": "https://zeus.agrsglobal.com",
+      "proxy_ip": "10.0.0.1",
+      "forwarding_headers": {
+        "x_real_ip": "162.212.233.34",
+        "x_forwarded_for": "162.212.233.34"
+      }
+    }
+  },
+  "wfw_NlzEm6wxsuTA7Og6s6IbjhvkzZChVMF4Mn78sss": {
+    "id": "b2a2ca2e-546e-4f8c-8fd4-bc7944a9adb4",
+    "email": "radwan@agrsglobal.com",
+    "serial_number": "rad_admin",
+    "username": "radwan@agrsglobal.com",
+    "name": "Radwan",
+    "role": "superadmin",
+    "company": "Artemis Global Research Solutions Inc.",
+    "created_at": "2026-02-15T21:42:07.055419",
+    "expires_at": "2026-02-16T21:42:07.055388",
+    "client_info": {
+      "ip": "162.212.233.34",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) agrs-zeus-gui-v2/2.1.0 Chrome/120.0.6099.291 Electron/28.3.3 Safari/537.36",
+      "referer": "https://zeus.agrsglobal.com/",
+      "origin": "https://zeus.agrsglobal.com",
+      "proxy_ip": "10.0.0.1",
+      "forwarding_headers": {
+        "x_real_ip": "162.212.233.34",
+        "x_forwarded_for": "162.212.233.34"
+      }
+    }
+  },
+  "UIVCl5hXMBsFOh7oZKOlC5U8-CyncWUyTLBzNko4Ue0": {
+    "id": "b2a2ca2e-546e-4f8c-8fd4-bc7944a9adb4",
+    "email": "radwan@agrsglobal.com",
+    "serial_number": "rad_admin",
+    "username": "radwan@agrsglobal.com",
+    "name": "Radwan",
+    "role": "superadmin",
+    "company": "Artemis Global Research Solutions Inc.",
+    "created_at": "2026-02-15T21:48:26.380534",
+    "expires_at": "2026-02-16T21:48:26.380505",
+    "client_info": {
+      "ip": "162.212.233.34",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) agrs-zeus-gui-v2/2.1.0 Chrome/120.0.6099.291 Electron/28.3.3 Safari/537.36",
+      "referer": "https://zeus.agrsglobal.com/",
+      "origin": "https://zeus.agrsglobal.com",
+      "proxy_ip": "10.0.0.1",
+      "forwarding_headers": {
+        "x_real_ip": "162.212.233.34",
+        "x_forwarded_for": "162.212.233.34"
+      }
+    }
+  },
+  "8L2CGffOftVVOEwBVxOlWOxOEbnat6QGI2Db7opumy0": {
+    "id": "b2a2ca2e-546e-4f8c-8fd4-bc7944a9adb4",
+    "email": "radwan@agrsglobal.com",
+    "serial_number": "rad_admin",
+    "username": "radwan@agrsglobal.com",
+    "name": "Radwan",
+    "role": "superadmin",
+    "company": "Artemis Global Research Solutions Inc.",
+    "created_at": "2026-02-15T22:23:21.973576",
+    "expires_at": "2026-02-16T22:23:21.973556",
+    "client_info": {
+      "ip": "162.212.233.34",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) agrs-zeus-gui-v2/2.1.0 Chrome/120.0.6099.291 Electron/28.3.3 Safari/537.36",
+      "referer": "https://zeus.agrsglobal.com/",
+      "origin": "https://zeus.agrsglobal.com",
+      "proxy_ip": "10.0.0.1",
+      "forwarding_headers": {
+        "x_real_ip": "162.212.233.34",
+        "x_forwarded_for": "162.212.233.34"
+      }
+    }
+  },
+  "1GlkdqQPo8ooiVV7lv2Tv7cL7RH9k44jH31h0jrBf50": {
+    "id": "b2a2ca2e-546e-4f8c-8fd4-bc7944a9adb4",
+    "email": "radwan@agrsglobal.com",
+    "serial_number": "rad_admin",
+    "username": "radwan@agrsglobal.com",
+    "name": "Radwan",
+    "role": "superadmin",
+    "company": "Artemis Global Research Solutions Inc.",
+    "created_at": "2026-02-15T23:25:31.063028",
+    "expires_at": "2026-02-16T23:25:31.063005",
+    "client_info": {
+      "ip": "162.212.233.34",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) agrs-zeus-gui-v2/2.2.0 Chrome/120.0.6099.291 Electron/28.3.3 Safari/537.36",
+      "referer": "https://zeus.agrsglobal.com/",
+      "origin": "https://zeus.agrsglobal.com",
+      "proxy_ip": "10.0.0.1",
+      "forwarding_headers": {
+        "x_real_ip": "162.212.233.34",
+        "x_forwarded_for": "162.212.233.34"
+      }
+    }
+  },
+  "hLp4o-2z1V2nOnldUe5g-sBWSI8zPOpGTIYS8vnAipw": {
+    "id": "b2a2ca2e-546e-4f8c-8fd4-bc7944a9adb4",
+    "email": "radwan@agrsglobal.com",
+    "serial_number": "rad_admin",
+    "username": "radwan@agrsglobal.com",
+    "name": "Radwan",
+    "role": "superadmin",
+    "company": "Artemis Global Research Solutions Inc.",
+    "created_at": "2026-02-16T00:33:20.000734",
+    "expires_at": "2026-02-17T00:33:20.000714",
+    "client_info": {
+      "ip": "162.212.233.34",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) agrs-zeus-gui-v2/2.3.0 Chrome/120.0.6099.291 Electron/28.3.3 Safari/537.36",
+      "referer": "https://zeus.agrsglobal.com/",
+      "origin": "https://zeus.agrsglobal.com",
+      "proxy_ip": "10.0.0.1",
+      "forwarding_headers": {
+        "x_real_ip": "162.212.233.34",
+        "x_forwarded_for": "162.212.233.34"
+      }
+    }
+  },
+  "E2d6t_FCc3PC2oH50I43nv8uXhZsVXhCaganTTQ7G_M": {
+    "id": "b2a2ca2e-546e-4f8c-8fd4-bc7944a9adb4",
+    "email": "radwan@agrsglobal.com",
+    "serial_number": "rad_admin",
+    "username": "radwan@agrsglobal.com",
+    "name": "Radwan",
+    "role": "superadmin",
+    "company": "Artemis Global Research Solutions Inc.",
+    "created_at": "2026-02-16T00:48:58.689818",
+    "expires_at": "2026-02-17T00:48:58.689792",
+    "client_info": {
+      "ip": "162.212.233.34",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) agrs-zeus-gui-v2/2.3.0 Chrome/120.0.6099.291 Electron/28.3.3 Safari/537.36",
+      "referer": "https://zeus.agrsglobal.com/",
+      "origin": "https://zeus.agrsglobal.com",
+      "proxy_ip": "10.0.0.1",
+      "forwarding_headers": {
+        "x_real_ip": "162.212.233.34",
+        "x_forwarded_for": "162.212.233.34"
+      }
+    }
+  },
+  "DxX7MYGymovnP2sG3giHkmVe649BMccJ-Z8gq20daRI": {
+    "id": "b2a2ca2e-546e-4f8c-8fd4-bc7944a9adb4",
+    "email": "radwan@agrsglobal.com",
+    "serial_number": "rad_admin",
+    "username": "radwan@agrsglobal.com",
+    "name": "Radwan",
+    "role": "superadmin",
+    "company": "Artemis Global Research Solutions Inc.",
+    "created_at": "2026-02-16T02:13:51.134082",
+    "expires_at": "2026-02-17T02:13:51.134060",
+    "client_info": {
+      "ip": "162.212.233.34",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) agrs-zeus-gui-v2/2.3.0 Chrome/120.0.6099.291 Electron/28.3.3 Safari/537.36",
+      "referer": "https://zeus.agrsglobal.com/",
+      "origin": "https://zeus.agrsglobal.com",
+      "proxy_ip": "10.0.0.1",
+      "forwarding_headers": {
+        "x_real_ip": "162.212.233.34",
+        "x_forwarded_for": "162.212.233.34"
+      }
+    }
+  },
+  "nf91goUz7AGRi66IwoS28184zTcT6-Lxv0Z3T04GX38": {
+    "id": "b2a2ca2e-546e-4f8c-8fd4-bc7944a9adb4",
+    "email": "radwan@agrsglobal.com",
+    "serial_number": "rad_admin",
+    "username": "radwan@agrsglobal.com",
+    "name": "Radwan",
+    "role": "superadmin",
+    "company": "Artemis Global Research Solutions Inc.",
+    "created_at": "2026-02-16T03:58:14.477788",
+    "expires_at": "2026-02-17T03:58:14.477760",
+    "client_info": {
+      "ip": "162.212.233.34",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) agrs-zeus-gui-v2/2.3.0 Chrome/120.0.6099.291 Electron/28.3.3 Safari/537.36",
+      "referer": "https://zeus.agrsglobal.com/",
+      "origin": "https://zeus.agrsglobal.com",
+      "proxy_ip": "10.0.0.1",
+      "forwarding_headers": {
+        "x_real_ip": "162.212.233.34",
+        "x_forwarded_for": "162.212.233.34"
+      }
+    }
+  },
+  "a-8d35WetO6rsOHrAPyFjaorlezkL6B33Xk2xWhPtBU": {
+    "id": "b2a2ca2e-546e-4f8c-8fd4-bc7944a9adb4",
+    "email": "radwan@agrsglobal.com",
+    "serial_number": "rad_admin",
+    "username": "radwan@agrsglobal.com",
+    "name": "Radwan",
+    "role": "superadmin",
+    "company": "Artemis Global Research Solutions Inc.",
+    "created_at": "2026-02-16T04:30:54.537449",
+    "expires_at": "2026-02-17T04:30:54.537420",
+    "client_info": {
+      "ip": "162.212.233.34",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) agrs-zeus-gui-v2/2.3.0 Chrome/120.0.6099.291 Electron/28.3.3 Safari/537.36",
+      "referer": "https://zeus.agrsglobal.com/",
+      "origin": "https://zeus.agrsglobal.com",
+      "proxy_ip": "10.0.0.1",
+      "forwarding_headers": {
+        "x_real_ip": "162.212.233.34",
+        "x_forwarded_for": "162.212.233.34"
+      }
+    }
+  },
+  "VCrDUiz8kPPA9QE8u1HSZnFuftG05u2YkYui8hiNHm8": {
+    "id": "b2a2ca2e-546e-4f8c-8fd4-bc7944a9adb4",
+    "email": "radwan@agrsglobal.com",
+    "serial_number": "rad_admin",
+    "username": "radwan@agrsglobal.com",
+    "name": "Radwan",
+    "role": "superadmin",
+    "company": "Artemis Global Research Solutions Inc.",
+    "created_at": "2026-02-16T05:59:08.077963",
+    "expires_at": "2026-02-17T05:59:08.077941",
+    "client_info": {
+      "ip": "162.212.233.34",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) agrs-zeus-gui-v2/2.3.0 Chrome/120.0.6099.291 Electron/28.3.3 Safari/537.36",
+      "referer": "https://zeus.agrsglobal.com/",
+      "origin": "https://zeus.agrsglobal.com",
+      "proxy_ip": "10.0.0.1",
+      "forwarding_headers": {
+        "x_real_ip": "162.212.233.34",
+        "x_forwarded_for": "162.212.233.34"
+      }
+    }
+  },
+  "W8TVF0Kc53RjGCCb70kxEU7cvy2YagqSbtn8kh0_HqU": {
+    "id": "b2a2ca2e-546e-4f8c-8fd4-bc7944a9adb4",
+    "email": "radwan@agrsglobal.com",
+    "serial_number": "rad_admin",
+    "username": "radwan@agrsglobal.com",
+    "name": "Radwan",
+    "role": "superadmin",
+    "company": "Artemis Global Research Solutions Inc.",
+    "created_at": "2026-02-16T06:13:30.082894",
+    "expires_at": "2026-02-17T06:13:30.082869",
+    "client_info": {
+      "ip": "162.212.233.34",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) agrs-zeus-gui-v2/2.3.0 Chrome/120.0.6099.291 Electron/28.3.3 Safari/537.36",
+      "referer": "https://zeus.agrsglobal.com/",
+      "origin": "https://zeus.agrsglobal.com",
+      "proxy_ip": "10.0.0.1",
+      "forwarding_headers": {
+        "x_real_ip": "162.212.233.34",
+        "x_forwarded_for": "162.212.233.34"
+      }
+    }
+  },
+  "avSaiT_D4vRnUxhU9dhtv_Bz50XQcrJf8oa187w_6kg": {
+    "id": "b2a2ca2e-546e-4f8c-8fd4-bc7944a9adb4",
+    "email": "radwan@agrsglobal.com",
+    "serial_number": "rad_admin",
+    "username": "radwan@agrsglobal.com",
+    "name": "Radwan",
+    "role": "superadmin",
+    "company": "Artemis Global Research Solutions Inc.",
+    "created_at": "2026-02-16T06:37:13.136806",
+    "expires_at": "2026-02-17T06:37:13.136786",
+    "client_info": {
+      "ip": "162.212.233.34",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) agrs-zeus-gui-v2/2.3.0 Chrome/120.0.6099.291 Electron/28.3.3 Safari/537.36",
+      "referer": "https://zeus.agrsglobal.com/",
+      "origin": "https://zeus.agrsglobal.com",
+      "proxy_ip": "10.0.0.1",
+      "forwarding_headers": {
+        "x_real_ip": "162.212.233.34",
+        "x_forwarded_for": "162.212.233.34"
+      }
+    }
+  },
+  "Cym8wpSUqi0DlWha86gXY5ECDsus02--9MXgQ8GjnEM": {
+    "id": "b2a2ca2e-546e-4f8c-8fd4-bc7944a9adb4",
+    "email": "radwan@agrsglobal.com",
+    "serial_number": "rad_admin",
+    "username": "radwan@agrsglobal.com",
+    "name": "Radwan",
+    "role": "superadmin",
+    "company": "Artemis Global Research Solutions Inc.",
+    "created_at": "2026-02-16T06:59:37.045514",
+    "expires_at": "2026-02-17T06:59:37.045485",
+    "client_info": {
+      "ip": "162.212.233.34",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) agrs-zeus-gui-v2/2.3.0 Chrome/120.0.6099.291 Electron/28.3.3 Safari/537.36",
+      "referer": "https://zeus.agrsglobal.com/",
+      "origin": "https://zeus.agrsglobal.com",
+      "proxy_ip": "10.0.0.1",
+      "forwarding_headers": {
+        "x_real_ip": "162.212.233.34",
+        "x_forwarded_for": "162.212.233.34"
+      }
+    }
+  },
+  "HREXUWmT-slZs8pVIbTtZ42KuB99gUSdO37ejWISeh4": {
+    "id": "b2a2ca2e-546e-4f8c-8fd4-bc7944a9adb4",
+    "email": "radwan@agrsglobal.com",
+    "serial_number": "rad_admin",
+    "username": "radwan@agrsglobal.com",
+    "name": "Radwan",
+    "role": "superadmin",
+    "company": "Artemis Global Research Solutions Inc.",
+    "created_at": "2026-02-16T07:15:13.772610",
+    "expires_at": "2026-02-17T07:15:13.772589",
+    "client_info": {
+      "ip": "162.212.233.34",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) agrs-zeus-gui-v2/2.3.0 Chrome/120.0.6099.291 Electron/28.3.3 Safari/537.36",
+      "referer": "https://zeus.agrsglobal.com/",
+      "origin": "https://zeus.agrsglobal.com",
+      "proxy_ip": "10.0.0.1",
+      "forwarding_headers": {
+        "x_real_ip": "162.212.233.34",
+        "x_forwarded_for": "162.212.233.34"
+      }
+    }
+  },
+  "m5d8cpdqQfdHCwboziqXRkv9ZTD3YS71mynAWx6ybAI": {
+    "id": "b2a2ca2e-546e-4f8c-8fd4-bc7944a9adb4",
+    "email": "radwan@agrsglobal.com",
+    "serial_number": "rad_admin",
+    "username": "radwan@agrsglobal.com",
+    "name": "Radwan",
+    "role": "superadmin",
+    "company": "Artemis Global Research Solutions Inc.",
+    "created_at": "2026-02-16T07:23:00.071824",
+    "expires_at": "2026-02-17T07:23:00.071791",
+    "client_info": {
+      "ip": "162.212.233.34",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) agrs-zeus-gui-v2/2.3.0 Chrome/120.0.6099.291 Electron/28.3.3 Safari/537.36",
+      "referer": "https://zeus.agrsglobal.com/",
+      "origin": "https://zeus.agrsglobal.com",
+      "proxy_ip": "10.0.0.1",
+      "forwarding_headers": {
+        "x_real_ip": "162.212.233.34",
+        "x_forwarded_for": "162.212.233.34"
+      }
+    }
+  },
+  "29p4R9slLr9GBK09VPcLv8rpuVJgWsEMVdE-SEHY4mM": {
+    "id": "b2a2ca2e-546e-4f8c-8fd4-bc7944a9adb4",
+    "email": "radwan@agrsglobal.com",
+    "serial_number": "rad_admin",
+    "username": "radwan@agrsglobal.com",
+    "name": "Radwan",
+    "role": "superadmin",
+    "company": "Artemis Global Research Solutions Inc.",
+    "created_at": "2026-02-16T07:31:44.562547",
+    "expires_at": "2026-02-17T07:31:44.562523",
+    "client_info": {
+      "ip": "162.212.233.34",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) agrs-zeus-gui-v2/2.3.0 Chrome/120.0.6099.291 Electron/28.3.3 Safari/537.36",
+      "referer": "https://zeus.agrsglobal.com/",
+      "origin": "https://zeus.agrsglobal.com",
+      "proxy_ip": "10.0.0.1",
+      "forwarding_headers": {
+        "x_real_ip": "162.212.233.34",
+        "x_forwarded_for": "162.212.233.34"
+      }
+    }
   }
 }

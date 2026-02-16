@@ -2,6 +2,30 @@
 
 import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react'
 
+// ---------------------------------------------------------------------------
+// Session persistence helpers
+// ---------------------------------------------------------------------------
+const STORAGE_PREFIX = 'zeus_session_'
+
+export function readSession<T>(key: string, fallback: T): T {
+  if (typeof window === 'undefined') return fallback
+  try {
+    const raw = localStorage.getItem(`${STORAGE_PREFIX}${key}`)
+    if (raw === null) return fallback
+    return JSON.parse(raw) as T
+  } catch {
+    return fallback
+  }
+}
+
+export function writeSession<T>(key: string, value: T): void {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.setItem(`${STORAGE_PREFIX}${key}`, JSON.stringify(value))
+  } catch { /* quota exceeded – non-critical */ }
+}
+
+export type MapProjection = 'mercator' | 'globe'
 export type MapMode = 'gis' | 'operator' | 'routing'
 export type OperatorTool = 'none' | 'create_poi' | 'create_aoi'
 export type OperatorGeometryKind = 'point' | 'polygon'
@@ -24,6 +48,7 @@ type GisActions = {
   openFetchDatasets: () => void
   openDatasetIndex: () => void
   openDatasetDigitalTwin: () => void
+  openMeasureTool: (tool: 'distance' | 'area' | 'elevation') => void
 }
 
 type PirlActions = {
@@ -43,6 +68,8 @@ type OperatorUiState = {
 export type MapViewContextValue = {
   mapMode: MapMode
   setMapMode: (mode: MapMode) => void
+  mapProjection: MapProjection
+  setMapProjection: (projection: MapProjection) => void
   registerOperatorActions: (actions: OperatorActions) => void
   registerOperatorDialogActions: (actions: Partial<OperatorDialogActions>) => void
   registerGisActions: (actions: Partial<GisActions>) => void
@@ -67,7 +94,28 @@ export type MapViewContextValue = {
 const MapViewContext = createContext<MapViewContextValue | undefined>(undefined)
 
 export function MapViewProvider({ children }: { children: React.ReactNode }) {
-  const [mapMode, setMapMode] = useState<MapMode>('gis')
+  const [mapMode, _setMapMode] = useState<MapMode>(() => {
+    const stored = readSession<string>('map_mode', 'gis')
+    return (['gis', 'operator', 'routing'] as MapMode[]).includes(stored as MapMode)
+      ? (stored as MapMode)
+      : 'gis'
+  })
+
+  const setMapMode = useCallback((mode: MapMode) => {
+    _setMapMode(mode)
+    writeSession('map_mode', mode)
+  }, [])
+
+  const [mapProjection, _setMapProjection] = useState<MapProjection>(() => {
+    const stored = readSession<string>('map_projection', 'mercator')
+    return stored === 'globe' ? 'globe' : 'mercator'
+  })
+
+  const setMapProjection = useCallback((projection: MapProjection) => {
+    _setMapProjection(projection)
+    writeSession('map_projection', projection)
+  }, [])
+
   const [operatorUiState, setOperatorUiState] = useState<OperatorUiState>({ tool: 'none', geometryEditActive: false })
   const [sortiePreviewGeometry, setSortiePreviewGeometry] = useState<GeoJSON.Geometry | null>(null)
 
@@ -90,7 +138,8 @@ export function MapViewProvider({ children }: { children: React.ReactNode }) {
   const gisActionsRef = useRef<GisActions>({
     openFetchDatasets: () => {},
     openDatasetIndex: () => {},
-    openDatasetDigitalTwin: () => {}
+    openDatasetDigitalTwin: () => {},
+    openMeasureTool: () => {}
   })
 
   const pirlActionsRef = useRef<PirlActions>({
@@ -166,6 +215,10 @@ export function MapViewProvider({ children }: { children: React.ReactNode }) {
     gisActionsRef.current.openDatasetDigitalTwin()
   }, [])
 
+  const openMeasureTool = useCallback((tool: 'distance' | 'area' | 'elevation') => {
+    gisActionsRef.current.openMeasureTool(tool)
+  }, [])
+
   const openPirlAi = useCallback(() => {
     pirlActionsRef.current.openPirlAi()
   }, [])
@@ -182,6 +235,8 @@ export function MapViewProvider({ children }: { children: React.ReactNode }) {
     return {
       mapMode,
       setMapMode,
+      mapProjection,
+      setMapProjection,
       registerOperatorActions,
       registerOperatorDialogActions,
       registerGisActions,
@@ -198,7 +253,8 @@ export function MapViewProvider({ children }: { children: React.ReactNode }) {
       gis: {
         openFetchDatasets,
         openDatasetIndex,
-        openDatasetDigitalTwin
+        openDatasetDigitalTwin,
+        openMeasureTool
       },
       pirl: {
         openPirlAi
@@ -220,12 +276,15 @@ export function MapViewProvider({ children }: { children: React.ReactNode }) {
     cancel,
     captureGeometry,
     mapMode,
+    mapProjection,
+    setMapProjection,
     openOperatorEntriesIndex,
     openSortiesCreate,
     openSortiesIndex,
     openDatasetIndex,
     openDatasetDigitalTwin,
     openFetchDatasets,
+    openMeasureTool,
     openPirlAi,
     openPirlManager,
     openCrossingsManager,

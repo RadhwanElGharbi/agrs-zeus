@@ -497,9 +497,11 @@ export function ProjectManagementView({ onSupplierSearch, suppliersUpdated }: Pr
           maxPitch: 85,
           fieldOfView: (85 * Math.PI) / 180,
           attributionControl: false,
-          failIfMajorPerformanceCaveat: false,
-          preserveDrawingBuffer: true,
-          antialias: true
+          canvasContextAttributes: {
+            failIfMajorPerformanceCaveat: false,
+            preserveDrawingBuffer: true,
+            antialias: true
+          }
         }
 
         const mapInstance = new maplibreModule.Map(mapOptions as MapOptions)

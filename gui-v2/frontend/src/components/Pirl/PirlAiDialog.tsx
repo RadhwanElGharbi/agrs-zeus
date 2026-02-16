@@ -381,8 +381,8 @@ export function PirlAiDialog({ open, onClose }: PirlAiDialogProps) {
               // Legacy/detailed format (Ravenna-Chieti style)
               outerDiameter = specs.diameter_mm
               wallThickness = specs.wall_thickness_mm ?? specs.thickness_mm ?? wallThickness
-              if (wallThickness === defaultHydraulics.mechanical.wallThickness && specs.inner_diameter_mm !== undefined) {
-                wallThickness = (specs.diameter_mm - specs.inner_diameter_mm) / 2
+              if (wallThickness === defaultHydraulics.mechanical.wallThickness && specs.inner_diameter !== undefined) {
+                wallThickness = (specs.diameter_mm - specs.inner_diameter) / 2
               }
             } else if (specs.outer_diameter !== undefined) {
               // New project format: base units depend on measurement_system (SI=m, Imperial=in)
@@ -526,7 +526,7 @@ export function PirlAiDialog({ open, onClose }: PirlAiDialogProps) {
       }
 
       const apiBase = getApiBase()
-      const token = localStorage.getItem('agrs_token')
+      const token = sessionStorage.getItem('agrs_token')
       const headers: HeadersInit = { 'Content-Type': 'application/json' }
       if (token) headers['Authorization'] = `Bearer ${token}`
       const response = await fetch(`${apiBase}/pirl/${currentProject}/requests`, {

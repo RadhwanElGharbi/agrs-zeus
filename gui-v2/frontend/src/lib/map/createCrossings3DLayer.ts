@@ -1,4 +1,4 @@
-import type { CustomLayerInterface, Map as MapLibreMap } from 'maplibre-gl'
+import type { CustomLayerInterface, CustomRenderMethodInput, Map as MapLibreMap } from 'maplibre-gl'
 import { TerrainSampler } from '@/lib/terrainSampler'
 
 type GeoJsonPointFeature = {
@@ -238,24 +238,25 @@ export function createCrossings3DLayer(options?: {
   // Default: terrain-aware when MapLibre 3D terrain is enabled (queryTerrainElevation),
   // otherwise treat ground as flat (0). If queryTerrainElevation is unavailable, optionally fall
   // back to a configured DEM template (TerrainSampler).
+  // MapLibre v5: queryTerrainElevation returns meters above sea level (absolute altitude),
+  // and custom layer matrices are non-translated (z=0 = sea level). Both changes are consistent.
   const internalGroundElevationProvider: GroundElevationProvider = (lng: number, lat: number) => {
     if (!map) return 0
 
-    // MapLibre returns elevation offset relative to the map center elevation.
+    // MapLibre v5 returns absolute elevation in meters above sea level.
     const qte = (map as any).queryTerrainElevation
     if (typeof qte === 'function') {
       const v = qte.call(map, [lng, lat])
       return isFiniteNumber(v) ? v : 0
     }
 
-    // Fallback: if a DEM sampler is configured AND terrain is enabled, approximate the same offset:
-    // offset = absElevation(point) - absElevation(center).
+    // Fallback: if a DEM sampler is configured AND terrain is enabled, use absolute elevation
+    // from the DEM tile (meters above sea level, consistent with v5 custom layer coordinate space).
     const terrain = typeof (map as any).getTerrain === 'function' ? (map as any).getTerrain() : null
     if (!terrain || !demSampler) return 0
 
     const abs = requestAbsElevation(lng, lat)
-    const centerAbs = isFiniteNumber((map as any)?.transform?.elevation) ? Number((map as any).transform.elevation) : 0
-    return isFiniteNumber(abs) ? Number(abs) - centerAbs : 0
+    return isFiniteNumber(abs) ? Number(abs) : 0
   }
 
   let getGroundElevation: GroundElevationProvider = internalGroundElevationProvider
@@ -408,7 +409,7 @@ export function createCrossings3DLayer(options?: {
         // ignore
       }
     },
-    render(gl: WebGLRenderingContext, matrix: number[]) {
+    render(gl: WebGLRenderingContext | WebGL2RenderingContext, options: CustomRenderMethodInput) {
       if (!map || !renderer || !scene || !camera || !THREE) return
 
       if (needsSync) {
@@ -420,7 +421,7 @@ export function createCrossings3DLayer(options?: {
       }
 
       try {
-        const m = new THREE.Matrix4().fromArray(matrix as any)
+        const m = new THREE.Matrix4().fromArray(options.modelViewProjectionMatrix as any)
         camera.projectionMatrix = m
 
         renderer.resetState()

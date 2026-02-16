@@ -12,7 +12,7 @@ const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mon
 
 export const metadata: Metadata = {
   title: 'AGRS - AI Infrastructure Intelligence',
-  description: 'Artemis Global Research Solutions - AI-powered infrastructure optimization',
+  description: 'ZEUS by AGRS. AI route optimization for pipeline and network infrastructure.',
 }
 
 export default function RootLayout({

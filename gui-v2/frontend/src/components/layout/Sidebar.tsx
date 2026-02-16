@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import Image from 'next/image'
+import { readSession, writeSession } from '@/lib/context/MapViewContext'
 import {
   Map,
   Layers,
@@ -14,8 +15,7 @@ import {
   Target,
   MonitorPlay,
   LayoutDashboard,
-  Brain,
-  ClipboardList
+  Brain
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useProject } from '@/lib/context/ProjectContext'
@@ -27,7 +27,9 @@ import { DatasetCoverageDialog } from '@/components/Project/DatasetCoverageDialo
 import { PirlAiDialog } from '@/components/Pirl/PirlAiDialog'
 import { ZeusLoadingDialog } from '@/components/shared/ZeusLoadingDialog'
 import { fetchActiveDatasetJobs, subscribeToDatasetJob, type DatasetCategory, type DatasetFetchJob } from '@/lib/api/dataClient'
-import { ProjectAuditDialog } from '@/components/Project/ProjectAuditDialog'
+import { ProjectControlsDialog } from '@/components/shared/ProjectControlsDialog'
+import { SettingsDialog, type ResolutionOption } from '@/components/shared/SettingsDialog'
+import { AlertTriangle } from 'lucide-react'
 // removed DigitalTwinView import
 
 interface SidebarProps {
@@ -36,17 +38,40 @@ interface SidebarProps {
   activeView: 'map' | 'digital-twin' | 'project-management'
   onViewChange: (view: 'map' | 'digital-twin' | 'project-management') => void
   onDatasetRunInBackground?: (jobId: string) => void
+  resolution: ResolutionOption
+  onResolutionChange: (value: ResolutionOption) => void
 }
 
-export function Sidebar({ className, devMode = false, activeView, onViewChange, onDatasetRunInBackground }: SidebarProps) {
+export function Sidebar({ className, devMode = false, activeView, onViewChange, onDatasetRunInBackground, resolution, onResolutionChange }: SidebarProps) {
   const { currentProject, isProjectLoading } = useProject()
   const { registerGisActions, registerPirlActions } = useMapView()
   const { reportAction } = useOnboarding()
-  const [collapsed, setCollapsed] = useState(false)
+  const [collapsed, _setCollapsed] = useState(() => readSession<boolean>('sidebar_collapsed', false))
+  const setCollapsed = useCallback((v: boolean) => {
+    _setCollapsed(v)
+    writeSession('sidebar_collapsed', v)
+  }, [])
   const [showDatasets, setShowDatasets] = useState(false)
   const [showProfile, setShowProfile] = useState(false)
   const [showPirlAi, setShowPirlAi] = useState(false)
-  const [showAudit, setShowAudit] = useState(false)
+  const [showProjectControls, setShowProjectControls] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
+  const [localChangesDetected, setLocalChangesDetected] = useState(false)
+  const [driftDiscrepancy, setDriftDiscrepancy] = useState<LocalCacheDiscrepancy | null>(null)
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.electron?.onDriftDetected) return
+    const unsubscribe = window.electron.onDriftDetected((data) => {
+      if (data.direction === 'local-ahead' || data.direction === 'both') {
+        setLocalChangesDetected(true)
+        setDriftDiscrepancy(data.discrepancy)
+      } else {
+        setLocalChangesDetected(false)
+        setDriftDiscrepancy(data.discrepancy)
+      }
+    })
+    return () => { unsubscribe() }
+  }, [])
   const [isZeusAnalyzing, setIsZeusAnalyzing] = useState(false)
 
   // Background activity signals (used to drive the "System Load" UI)
@@ -242,9 +267,9 @@ export function Sidebar({ className, devMode = false, activeView, onViewChange, 
     { icon: LayoutDashboard, label: 'Project Management', active: activeView === 'project-management', onClick: () => currentProject && onViewChange('project-management'), description: 'Resource Planning', disabled: !currentProject, tourId: 'sidebar-project-management', tourAction: 'click-project-management' as TourAction },
     { icon: MonitorPlay, label: 'Digital Twin', active: activeView === 'digital-twin', onClick: () => currentProject && onViewChange('digital-twin'), description: 'Live Visualization', disabled: !currentProject, tourId: 'sidebar-digital-twin', tourAction: 'click-digital-twin' as TourAction },
     { icon: Layers, label: 'Datasets', onClick: () => currentProject && handleDatasetsClick(), description: 'Acquisition & Mgmt', disabled: !currentProject, tourId: 'sidebar-datasets' },
-    { icon: ClipboardList, label: 'Changelog', onClick: () => currentProject && setShowAudit(true), description: 'Audit Timeline', disabled: !currentProject, tourId: 'sidebar-audit' },
+    { icon: ShieldCheck, label: 'Project Controls', onClick: () => currentProject && setShowProjectControls(true), description: 'Sync & Audit', disabled: !currentProject, tourId: 'sidebar-project-controls', tag: localChangesDetected ? 'LOCAL' : undefined },
     { icon: Brain, label: 'PIRL AI', description: 'Model Status', onClick: () => currentProject && setShowPirlAi(true), disabled: !currentProject, tourId: 'sidebar-pirl-ai', tourAction: 'click-pirl-ai' as TourAction },
-    { icon: Settings, label: 'Settings', description: 'System Config', tourId: 'sidebar-settings' },
+    { icon: Settings, label: 'Settings', description: 'System Config', onClick: () => setShowSettings(true), tourId: 'sidebar-settings' },
   ]
 
   return (
@@ -405,8 +430,19 @@ export function Sidebar({ className, devMode = false, activeView, onViewChange, 
                 </div>
                 <span className="text-white/60 font-mono uppercase tracking-widest text-[10px]">Online</span>
               </div>
+              {localChangesDetected && (
+                <button
+                  type="button"
+                  onClick={() => setShowProjectControls(true)}
+                  className="flex items-center gap-1.5 px-1.5 py-0.5 rounded-sm bg-red-500/10 border border-red-500/30 hover:bg-red-500/20 transition-all group"
+                  title="Local changes detected — open Project Controls"
+                >
+                  <AlertTriangle className="w-3 h-3 text-red-500 animate-pulse" />
+                  <span className="text-[8px] font-bold font-mono text-red-500 uppercase tracking-wider">Local Changes</span>
+                </button>
+              )}
               <div className="text-[10px] text-white/30 font-mono">
-                AGRS-ZEUS <span className="text-white/50">v2.0</span>
+                AGRS-ZEUS <span className="text-white/50">v2.3</span>
               </div>
             </div>
           </div>
@@ -431,8 +467,19 @@ export function Sidebar({ className, devMode = false, activeView, onViewChange, 
         onRunInBackground={onDatasetRunInBackground}
       />
       <ProjectProfileDialog open={showProfile} onClose={() => setShowProfile(false)} />
-      <ProjectAuditDialog open={showAudit} onClose={() => setShowAudit(false)} projectName={currentProject} />
+      <ProjectControlsDialog
+        open={showProjectControls}
+        onClose={() => setShowProjectControls(false)}
+        localChangesDetected={localChangesDetected}
+        driftDiscrepancy={driftDiscrepancy}
+      />
       <PirlAiDialog open={showPirlAi} onClose={() => setShowPirlAi(false)} />
+      <SettingsDialog
+        open={showSettings}
+        onClose={() => setShowSettings(false)}
+        resolution={resolution}
+        onResolutionChange={onResolutionChange}
+      />
     </div>
   )
 }

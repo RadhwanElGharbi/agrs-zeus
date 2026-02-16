@@ -7,14 +7,14 @@ import { WireframeBackground } from '@/components/landing/WireframeBackground'
 import { TopNav } from '@/components/landing/TopNav'
 
 const galleryItems = [
-  { id: 1, src: '/images/showcase/zeus-hero-map.png', title: 'GIS Data Visualization', description: 'Interactive geospatial workspace combining satellite basemaps, terrain context, and project layers for corridor planning and engineering review.' },
-  { id: 2, src: '/images/showcase/zeus-suppliers.png', title: 'Supplier & Supply Search Engine', description: 'Integrated supplier discovery and catalog search, organized by service category and project geography to accelerate procurement planning.' },
-  { id: 4, src: '/images/showcase/gallery-1.png', title: 'Regional Dataset Catalog', description: 'AOI-aligned dataset directory curated by country and operational area, enabling rapid sourcing of compliant geospatial and environmental inputs.' },
-  { id: 6, src: '/images/showcase/gallery-3.png', title: 'Hydraulics Modelling & Visualization', description: 'Hydraulics configuration and simulation view for pipeline design parameters, fluid properties, and real-time operational response.' },
-  { id: 8, src: '/images/showcase/gallery-5.png', title: 'PIRL-Generated Machine Learning Routes', description: 'AI-generated corridor candidates displayed over terrain, enabling rapid exploration of feasible routes under engineering constraints.' },
-  { id: 9, src: '/images/showcase/gallery-6.png', title: 'Route Comparison Interface', description: 'Side-by-side comparison of candidate routes with cost summary, segment metrics, and compliance checks for decision-grade selection.' },
-  { id: 14, src: '/images/showcase/gallery-11.png', title: 'Alignment Sheet Generation Tool', description: 'Automated alignment sheet packaging with presets and output specifications, producing construction-ready PDF deliverables from the selected route.' },
-  { id: 17, src: '/images/showcase/gallery-14.png', title: 'Earthworks Estimation Tool', description: 'Automated cut/fill estimation with mass haul and cross-section visualization to quantify earthworks volumes and support civil cost planning.' },
+  { id: 1, src: '/images/showcase/zeus-hero-map.png', title: 'Geospatial Workspace', description: 'Basemaps, terrain, and project layers. One view.' },
+  { id: 2, src: '/images/showcase/zeus-suppliers.png', title: 'Supplier Intelligence', description: 'Find vendors by category, capability, and geography.' },
+  { id: 4, src: '/images/showcase/gallery-1.png', title: 'Data Acquisition', description: 'Pull datasets for your AOI automatically.' },
+  { id: 6, src: '/images/showcase/gallery-3.png', title: 'Engineering Analysis', description: 'Hydraulics and pressure design in context.' },
+  { id: 8, src: '/images/showcase/gallery-5.png', title: 'AI Route Optimization', description: 'Ranked candidates from constraints, terrain, and cost signals.' },
+  { id: 9, src: '/images/showcase/gallery-6.png', title: 'Route Comparison', description: 'Side-by-side metrics for every alternative.' },
+  { id: 14, src: '/images/showcase/gallery-11.png', title: 'Alignment Sheets', description: 'Configurable templates. PDF export.' },
+  { id: 17, src: '/images/showcase/gallery-14.png', title: 'Earthworks Estimation', description: 'Cut/fill signals from route geometry.' },
 ]
 
 export default function ZeusInfoPage() {
@@ -26,8 +26,8 @@ export default function ZeusInfoPage() {
         <div className="container mx-auto px-0 pt-24 pb-12">
           <div className="px-4 md:px-8 mb-16 space-y-6 max-w-4xl mx-auto text-center">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-900/20 border border-red-500/30 text-red-400 text-xs font-mono uppercase tracking-widest mb-4"><Lock size={12} />Confidential - Proprietary Information</motion.div>
-            <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="text-4xl md:text-6xl font-bold font-serif leading-tight">ZEUS <span className="text-primary">Platform Capabilities</span></motion.h1>
-            <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="text-xl text-gray-400 max-w-2xl mx-auto">A closer look at the automated engineering interface. ZEUS integrates geospatial analysis, supply chain logistics, and regulatory compliance into a single autonomous workflow.</motion.p>
+            <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="text-4xl md:text-6xl font-bold font-serif leading-tight">ZEUS <span className="text-primary">Inside the Platform</span></motion.h1>
+            <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="text-xl text-gray-400 max-w-2xl mx-auto">Every capability. One workflow.</motion.p>
           </div>
           <div className="border-t border-white/10">
             {galleryItems.map((item, idx) => (

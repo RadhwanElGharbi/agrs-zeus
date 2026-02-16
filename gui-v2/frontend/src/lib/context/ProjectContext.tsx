@@ -13,7 +13,10 @@ import {
   fetchProjects,
   fetchProjectMetadata,
   fetchProjectDatasets,
-  fetchDatasetFingerprint
+  fetchDatasetFingerprint,
+  getProjectLocalCacheConfig,
+  ensureProjectLocalCacheRuntime,
+  clearProjectLocalCacheRuntime
 } from '@/lib/api/dataClient'
 
 // ============================================================================
@@ -99,6 +102,7 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
     if (currentProject) {
       loadProjectData(currentProject)
     } else {
+      clearProjectLocalCacheRuntime()
       setProjectMetadata(null)
       setDatasets(null)
     }
@@ -146,6 +150,13 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
     setError(null)
 
     try {
+      const localCacheConfig = getProjectLocalCacheConfig(projectName)
+      if (localCacheConfig?.enabled && localCacheConfig.base_directory) {
+        await ensureProjectLocalCacheRuntime(projectName, localCacheConfig)
+      } else {
+        clearProjectLocalCacheRuntime(projectName)
+      }
+
       const [metadata, datasetsData] = await Promise.all([
         fetchProjectMetadata(projectName),
         fetchProjectDatasets(projectName)

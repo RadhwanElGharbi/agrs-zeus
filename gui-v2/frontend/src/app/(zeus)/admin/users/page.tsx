@@ -1,7 +1,8 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { Search, Plus, X, UploadCloud, RefreshCw } from 'lucide-react'
+import Link from 'next/link'
+import { Search, Plus, X, UploadCloud, RefreshCw, ArrowLeft } from 'lucide-react'
 import { SuperAdminGuard } from '@/components/auth/SuperAdminGuard'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -263,6 +264,13 @@ export default function AdminUsersPage() {
                 <Plus className="w-4 h-4" />
                 Create User
               </Button>
+              <Link
+                href="/"
+                className="ml-2 h-9 w-9 flex items-center justify-center rounded-sm border border-white/10 text-white/40 hover:text-white hover:bg-white/10 hover:border-white/25 transition-all"
+                title="Back to ZEUS"
+              >
+                <X className="w-4 h-4" />
+              </Link>
             </div>
           </div>
 

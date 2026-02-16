@@ -59,7 +59,7 @@ class AnalyticsTracker {
 
   private getToken(): string | null {
     if (typeof window === 'undefined') return null
-    return localStorage.getItem('agrs_token')
+    return sessionStorage.getItem('agrs_token')
   }
 
   private handleGlobalClick(e: MouseEvent) {

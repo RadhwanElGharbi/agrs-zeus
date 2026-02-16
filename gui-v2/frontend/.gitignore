@@ -13,6 +13,8 @@
 # Production
 /build
 /dist
+/dist-win
+/dist-linux
 
 # Misc
 .DS_Store

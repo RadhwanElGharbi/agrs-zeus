@@ -15,6 +15,7 @@ import {
   getTerrainTileUrl,
   getAoiFileUrl,
   fetchPIRLRouteCrossings,
+  fetchPIRLRoute,
   fetchCreatorGeoJSON,
   createCreatorEntry,
   updateCreatorEntry,
@@ -43,6 +44,7 @@ import {
 } from '@/lib/api/dataClient'
 import { TerrainSampler } from '@/lib/terrainSampler'
 import { createCrossingMarkerImageData } from '@/lib/map/crossingMarkerImage'
+import { createStarSkyboxLayer, type StarSkyboxLayer } from '@/lib/map/createSkyboxLayer'
 import {
   ManagedLayer,
   VectorDetail,
@@ -69,14 +71,86 @@ import { DatasetDigitalTwinDialog } from './DatasetDigitalTwinDialog'
 import { Compass } from './Compass'
 import { GoToCoordinatesBar } from './GoToCoordinatesBar'
 import { ExplanationPanel, DecisionsPanel } from '@/components/Analysis'
-import { analyzeSegments, getRouteDecisions, getSegmentDecisions, getAssessmentMapColor, type ExplainResponse, type AssessmentLevel, type SegmentDecisions } from '@/lib/api/agenticClient'
-import { useMapView, type OperatorGeometryKind } from '@/lib/context/MapViewContext'
+import { analyzeSegments, getRouteDecisions, getSegmentDecisions, getAssessmentMapColor, getAgenticSegmentsGeometry, type ExplainResponse, type AssessmentLevel, type SegmentDecisions } from '@/lib/api/agenticClient'
+import { useMapView, type OperatorGeometryKind, readSession, writeSession } from '@/lib/context/MapViewContext'
 import { PirlRoutesManagerPanel } from './PirlRoutesManagerPanel'
 import { RouteCrossingsManagerPanel } from './RouteCrossingsManagerPanel'
 import { RoutingCrossingsPanel } from './RoutingCrossingsPanel'
 import { CrossingInfoDialog } from './CrossingInfoDialog'
+import { MeasureToolPanel } from './GeoprocessingToolsPanel'
 
-const BASEMAP_FALLBACK_DEFAULT_OPACITY = 0.75
+const BASEMAP_FALLBACK_DEFAULT_OPACITY = 1
+const BASEMAP_FALLBACK_FAILURE_OPACITY = 1
+const BASEMAP_LOWRES_MAXZOOM = 5
+const BASEMAP_FAILURE_WINDOW_MS = 5000
+const BASEMAP_FAILURE_THRESHOLD = 3
+const BASEMAP_RECOVERY_DEBOUNCE_MS = 1500
+const BASEMAP_STALL_CHECK_MS = 900
+const BASEMAP_STALL_RELOAD_COOLDOWN_MS = 2500
+const CURSOR_UPDATE_THROTTLE_MS = 80
+
+// ---------------------------------------------------------------------------
+// Session persistence for per-project layer visibility / opacity
+// ---------------------------------------------------------------------------
+type LayerSessionState = Record<string, { visible: boolean; opacity: number }>
+
+function layerSessionKey(project: string): string {
+  return `layer_state_${project}`
+}
+
+function saveLayerSession(project: string | null, layers: ManagedLayer[]): void {
+  if (!project) return
+  const state: LayerSessionState = {}
+  for (const l of layers) {
+    state[l.id] = { visible: l.visible, opacity: l.opacity }
+  }
+  writeSession(layerSessionKey(project), state)
+}
+
+function restoreLayerSession(project: string | null): LayerSessionState {
+  if (!project) return {}
+  return readSession<LayerSessionState>(layerSessionKey(project), {})
+}
+
+// ---------------------------------------------------------------------------
+// Session persistence for map viewport
+// ---------------------------------------------------------------------------
+type ViewportState = { center: [number, number]; zoom: number; bearing: number; pitch: number }
+
+const DEFAULT_VIEWPORT: ViewportState = {
+  center: [-80.5449, 43.4723], // University of Waterloo
+  zoom: 14.5,
+  bearing: 0,
+  pitch: 0
+}
+
+function saveViewport(vp: ViewportState): void {
+  writeSession('map_viewport', vp)
+}
+
+function restoreViewport(): ViewportState {
+  return readSession<ViewportState>('map_viewport', DEFAULT_VIEWPORT)
+}
+
+// ---------------------------------------------------------------------------
+// Session persistence for loaded PIRL routes (per project)
+// ---------------------------------------------------------------------------
+type RouteSessionEntry = { routeId: string; visible: boolean }
+
+function routeSessionKey(project: string): string {
+  return `loaded_routes_${project}`
+}
+
+function saveRouteSession(project: string | null, routes: { routeId: string; visible: boolean }[]): void {
+  if (!project) return
+  const entries: RouteSessionEntry[] = routes.map(r => ({ routeId: r.routeId, visible: r.visible }))
+  writeSession(routeSessionKey(project), entries)
+}
+
+function restoreRouteSession(project: string | null): RouteSessionEntry[] {
+  if (!project) return []
+  return readSession<RouteSessionEntry[]>(routeSessionKey(project), [])
+}
 
 // Route crossings (Route ∩ vectors) overlay
 const ROUTE_CROSSINGS_SOURCE_ID = 'route-crossings'
@@ -307,7 +381,7 @@ const CATEGORY_FIELD_DEFS: Record<
 
 export function MapViewer() {
   const { currentProject, datasets, isProjectLoading, hasNewDatasets, refreshProjectData, dismissNewDatasets } = useProject()
-  const { mapMode, setMapMode, registerGisActions, registerOperatorActions, registerRoutingActions, setOperatorUiState, operatorDialogs, sortiePreviewGeometry } =
+  const { mapMode, setMapMode, mapProjection, registerGisActions, registerOperatorActions, registerRoutingActions, setOperatorUiState, operatorDialogs, sortiePreviewGeometry } =
     useMapView()
   const mapContainerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
@@ -375,7 +449,14 @@ export function MapViewer() {
   const [fullTableDocked, setFullTableDocked] = useState(false)
   const [dockHeight, setDockHeight] = useState(45)
   const [sortConfig, setSortConfig] = useState<{ column: string | null; direction: 'asc' | 'desc' }>({ column: null, direction: 'asc' })
-  const [terrainEnabled, setTerrainEnabled] = useState(false)
+  const [terrainEnabled, _setTerrainEnabled] = useState(() => readSession<boolean>('terrain_enabled', false))
+  const setTerrainEnabled = useCallback((v: boolean | ((prev: boolean) => boolean)) => {
+    _setTerrainEnabled(prev => {
+      const next = typeof v === 'function' ? v(prev) : v
+      writeSession('terrain_enabled', next)
+      return next
+    })
+  }, [])
   const [styleLayerId, setStyleLayerId] = useState<string | null>(null)
   const [styleDraft, setStyleDraft] = useState<LayerStyleOptions>({})
   const [styleOverrides, setStyleOverrides] = useState<Record<string, LayerStyleOptions>>({})
@@ -405,7 +486,11 @@ export function MapViewer() {
   const [selectedCreatorEntryId, setSelectedCreatorEntryId] = useState<string | null>(null)
   const [creatorThreadEntryDetails, setCreatorThreadEntryDetails] = useState<CreatorThreadEntryDetailsState>(null)
   const [creatorEntryUi, setCreatorEntryUi] = useState<Record<string, { visible: boolean; opacity: number; order: number }>>({})
-  const [creatorManagerCollapsed, setCreatorManagerCollapsed] = useState(false)
+  const [creatorManagerCollapsed, _setCreatorManagerCollapsed] = useState(() => readSession<boolean>('creator_manager_collapsed', false))
+  const setCreatorManagerCollapsed = useCallback((v: boolean) => {
+    _setCreatorManagerCollapsed(v)
+    writeSession('creator_manager_collapsed', v)
+  }, [])
   const [creatorDatasetQuery, setCreatorDatasetQuery] = useState('')
   const [datasetFeatureDataset, setDatasetFeatureDataset] = useState<string>('')
   const [datasetFeatureCandidates, setDatasetFeatureCandidates] = useState<NearestVectorFeatureCandidate[] | null>(null)
@@ -499,6 +584,10 @@ export function MapViewer() {
   const [pirlTableDocked, setPirlTableDocked] = useState(false)
   const [datasetsDialogOpen, setDatasetsDialogOpen] = useState(false)
   const [datasetDigitalTwinOpen, setDatasetDigitalTwinOpen] = useState(false)
+  const [measureDistanceOpen, setMeasureDistanceOpen] = useState(false)
+  const [measureAreaOpen, setMeasureAreaOpen] = useState(false)
+  const [elevationProfileOpen, setElevationProfileOpen] = useState(false)
+  const [activeMeasureTool, setActiveMeasureTool] = useState<'distance' | 'area' | 'elevation' | null>(null)
   const [datasetsDialogDocked, setDatasetsDialogDocked] = useState(false)
   const [creatorEditorDocked, setCreatorEditorDocked] = useState(false)
 
@@ -508,6 +597,12 @@ export function MapViewer() {
   const highlightLayerIds = useRef<string[]>(['selected-feature-fill', 'selected-feature-line', 'selected-feature-point'])
   const terrainSourceIdRef = useRef<string | null>(null)
   const imageryFailedRef = useRef(false)
+  const basemapFailureTimestampsRef = useRef<number[]>([])
+  const basemapRecoveryTimerRef = useRef<number | null>(null)
+  const basemapStallCheckTimerRef = useRef<number | null>(null)
+  const basemapLastReloadAtRef = useRef(0)
+  const lastCursorUpdateAtRef = useRef(0)
+  const starSkyboxRef = useRef<StarSkyboxLayer | null>(null)
 
   const clearFeatureHighlight = useCallback(() => {
     const map = mapRef.current
@@ -879,10 +974,27 @@ export function MapViewer() {
   const setFallbackOpacity = useCallback((opacity: number) => {
     const map = mapRef.current
     if (!map) return
-    if (map.getLayer('basemap-fallback')) {
-      map.setPaintProperty('basemap-fallback', 'raster-opacity', opacity)
-    }
+    if (!map.getLayer('basemap-fallback')) return
+
+    const normalized = Math.max(0, Math.min(1, opacity))
+    map.setLayoutProperty('basemap-fallback', 'visibility', normalized <= 0.001 ? 'none' : 'visible')
+    map.setPaintProperty('basemap-fallback', 'raster-opacity', normalized)
   }, [])
+
+  const resetBasemapFailureTracking = useCallback(() => {
+    imageryFailedRef.current = false
+    basemapFailureTimestampsRef.current = []
+    basemapLastReloadAtRef.current = 0
+    if (basemapRecoveryTimerRef.current !== null) {
+      window.clearTimeout(basemapRecoveryTimerRef.current)
+      basemapRecoveryTimerRef.current = null
+    }
+    if (basemapStallCheckTimerRef.current !== null) {
+      window.clearTimeout(basemapStallCheckTimerRef.current)
+      basemapStallCheckTimerRef.current = null
+    }
+    setFallbackOpacity(BASEMAP_FALLBACK_DEFAULT_OPACITY)
+  }, [setFallbackOpacity])
 
   const removeBasemapLayers = useCallback((options?: { includeFallback?: boolean }) => {
     const map = mapRef.current
@@ -893,7 +1005,7 @@ export function MapViewer() {
     if (includeFallback) layersToRemove.push('basemap-fallback')
 
     const sourcesToRemove = ['esriImagery', 'esriLabels']
-    if (includeFallback) sourcesToRemove.push('osmFallback')
+    if (includeFallback) sourcesToRemove.push('esriLowRes')
 
     layersToRemove.forEach((layerId) => {
       if (map.getLayer(layerId)) {
@@ -919,6 +1031,39 @@ export function MapViewer() {
   const addBaseLayers = useCallback(() => {
     const map = mapRef.current
     if (!map) return
+
+    const getBasemapInsertBeforeId = () => {
+      const styleLayers = map.getStyle()?.layers ?? []
+      for (const layer of styleLayers) {
+        const id = String((layer as any)?.id ?? '')
+        if (!id) continue
+        if (id === 'background') continue
+        if (id === 'sky-gradient-layer' || id === 'star-skybox') continue
+        if (id === 'basemap-fallback' || id === 'basemap-imagery' || id === 'basemap-reference') continue
+        const layerType = String((layer as any)?.type ?? '')
+        if (layerType === 'background' || layerType === 'sky') continue
+        return id
+      }
+      return undefined
+    }
+
+    const addBasemapLayer = (layerDef: any) => {
+      const beforeId = getBasemapInsertBeforeId()
+      if (beforeId) map.addLayer(layerDef, beforeId)
+      else map.addLayer(layerDef)
+    }
+
+    const moveBasemapLayerUnderContent = (layerId: string) => {
+      if (!map.getLayer(layerId)) return
+      const beforeId = getBasemapInsertBeforeId()
+      if (!beforeId) return
+      try {
+        map.moveLayer(layerId, beforeId)
+      } catch {
+        // ignore best-effort ordering adjustment
+      }
+    }
+
     if (!map.getSource('esriImagery')) {
       map.addSource('esriImagery', {
         type: 'raster',
@@ -943,35 +1088,35 @@ export function MapViewer() {
         attribution: 'Esri'
       })
     }
-    if (!map.getSource('osmFallback')) {
-      map.addSource('osmFallback', {
+    if (!map.getSource('esriLowRes')) {
+      map.addSource('esriLowRes', {
         type: 'raster',
-        tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+        tiles: ['https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
         tileSize: 256,
-        // OSM tile servers are typically limited to z<=19. Set maxzoom so MapLibre overscales
-        // instead of requesting higher zooms that can return error/placeholder tiles.
-        maxzoom: 19,
-        attribution: '© OpenStreetMap contributors'
+        // Always-on low-res substrate for globe rotation. Using a low maxzoom keeps
+        // requests light and fills the globe quickly while high-res tiles stream in.
+        maxzoom: BASEMAP_LOWRES_MAXZOOM,
+        attribution: 'Esri, Maxar, Earthstar Geographics'
       })
     }
 
     if (!map.getLayer('basemap-fallback')) {
-      map.addLayer({
+      addBasemapLayer({
         id: 'basemap-fallback',
         type: 'raster',
-        source: 'osmFallback',
+        source: 'esriLowRes',
         paint: { 'raster-opacity': BASEMAP_FALLBACK_DEFAULT_OPACITY }
       })
     }
     if (!map.getLayer('basemap-imagery')) {
-      map.addLayer({
+      addBasemapLayer({
         id: 'basemap-imagery',
         type: 'raster',
         source: 'esriImagery'
       })
     }
     if (!map.getLayer('basemap-reference')) {
-      map.addLayer({
+      addBasemapLayer({
         id: 'basemap-reference',
         type: 'raster',
         source: 'esriLabels',
@@ -980,23 +1125,95 @@ export function MapViewer() {
         }
       })
     }
+
+    // Keep basemap under project overlays even after recovery re-adds.
+    moveBasemapLayerUnderContent('basemap-fallback')
+    moveBasemapLayerUnderContent('basemap-imagery')
+    moveBasemapLayerUnderContent('basemap-reference')
+
     // Ensure visibility
+    map.setLayoutProperty('basemap-fallback', 'visibility', 'visible')
     map.setLayoutProperty('basemap-imagery', 'visibility', 'visible')
     map.setLayoutProperty('basemap-reference', 'visibility', 'visible')
-    map.setLayoutProperty('basemap-fallback', 'visibility', 'visible')
     map.setPaintProperty('basemap-imagery', 'raster-opacity', 1)
     map.setPaintProperty('basemap-imagery', 'raster-fade-duration', 400)
     map.setPaintProperty('basemap-reference', 'raster-opacity', 0.8)
-    setFallbackOpacity(imageryFailedRef.current ? 1 : BASEMAP_FALLBACK_DEFAULT_OPACITY)
+    setFallbackOpacity(imageryFailedRef.current ? BASEMAP_FALLBACK_FAILURE_OPACITY : BASEMAP_FALLBACK_DEFAULT_OPACITY)
     applySkyBackdrop()
   }, [applySkyBackdrop, setFallbackOpacity])
 
+  const scheduleBasemapRecovery = useCallback(() => {
+    if (basemapRecoveryTimerRef.current !== null) {
+      window.clearTimeout(basemapRecoveryTimerRef.current)
+    }
+
+    basemapRecoveryTimerRef.current = window.setTimeout(() => {
+      basemapRecoveryTimerRef.current = null
+      const map = mapRef.current
+      if (!map) return
+
+      const imageryLoaded = map.isSourceLoaded('esriImagery')
+      const labelsLoaded = map.isSourceLoaded('esriLabels')
+      if (imageryLoaded && labelsLoaded) {
+        imageryFailedRef.current = false
+        basemapFailureTimestampsRef.current = []
+        setFallbackOpacity(BASEMAP_FALLBACK_DEFAULT_OPACITY)
+      }
+    }, BASEMAP_RECOVERY_DEBOUNCE_MS)
+  }, [setFallbackOpacity])
+
+  const refreshBasemapIfStalled = useCallback(() => {
+    const map = mapRef.current
+    if (!map) return
+    if (!imageryFailedRef.current) return
+    if (map.isMoving()) return
+    const imageryLoaded = map.isSourceLoaded('esriImagery')
+    const labelsLoaded = map.isSourceLoaded('esriLabels')
+    if (imageryLoaded && labelsLoaded) return
+
+    const now = Date.now()
+    if (now - basemapLastReloadAtRef.current < BASEMAP_STALL_RELOAD_COOLDOWN_MS) {
+      map.triggerRepaint()
+      return
+    }
+
+    basemapLastReloadAtRef.current = now
+    removeBasemapLayers()
+    addBaseLayers()
+    scheduleBasemapRecovery()
+  }, [addBaseLayers, removeBasemapLayers, scheduleBasemapRecovery])
+
+  const scheduleBasemapStallCheck = useCallback(() => {
+    if (!imageryFailedRef.current) {
+      if (basemapStallCheckTimerRef.current !== null) {
+        window.clearTimeout(basemapStallCheckTimerRef.current)
+        basemapStallCheckTimerRef.current = null
+      }
+      return
+    }
+
+    if (basemapStallCheckTimerRef.current !== null) {
+      window.clearTimeout(basemapStallCheckTimerRef.current)
+    }
+
+    basemapStallCheckTimerRef.current = window.setTimeout(() => {
+      basemapStallCheckTimerRef.current = null
+      refreshBasemapIfStalled()
+    }, BASEMAP_STALL_CHECK_MS)
+  }, [refreshBasemapIfStalled])
+
   const handleBasemapFailure = useCallback(() => {
+    const now = Date.now()
+    const cutoff = now - BASEMAP_FAILURE_WINDOW_MS
+    const recentFailures = basemapFailureTimestampsRef.current.filter((ts) => ts >= cutoff)
+    recentFailures.push(now)
+    basemapFailureTimestampsRef.current = recentFailures
+
+    // Do not flip to fallback on single transient tile failures.
+    if (recentFailures.length < BASEMAP_FAILURE_THRESHOLD) return
+
     imageryFailedRef.current = true
-    setFallbackOpacity(1)
-    // Keep layers installed; the OSM fallback sits below and will show through where imagery fails.
-    // Avoid removing/re-adding sources on transient tile errors (especially at high zoom) which can
-    // cause flicker and expose placeholder/error tiles.
+    setFallbackOpacity(BASEMAP_FALLBACK_FAILURE_OPACITY)
   }, [setFallbackOpacity])
 
   /**
@@ -1014,6 +1231,8 @@ export function MapViewer() {
         const maplibreModule = await import('maplibre-gl')
         if (cancelled) return
 
+        const savedViewport = restoreViewport()
+
         const mapOptions: MapOptions & { fieldOfView?: number } = {
           container: mapContainerRef.current,
           style: {
@@ -1030,17 +1249,30 @@ export function MapViewer() {
             ],
             glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf' // Ensure glyphs are available if needed
           },
-          center: [-80.5449, 43.4723], // University of Waterloo
-          zoom: 14.5,
+          center: savedViewport.center,
+          zoom: savedViewport.zoom,
+          bearing: savedViewport.bearing,
+          pitch: savedViewport.pitch,
           maxPitch: 85,
           fieldOfView: (85 * Math.PI) / 180,
           attributionControl: false,
-          failIfMajorPerformanceCaveat: false,
-          preserveDrawingBuffer: true,
-          antialias: true // Enable antialias for better quality
+          canvasContextAttributes: {
+            failIfMajorPerformanceCaveat: false,
+            preserveDrawingBuffer: false,
+            antialias: true // Enable antialias for better quality
+          }
         }
 
         const mapInstance = new maplibreModule.Map(mapOptions as MapOptions)
+
+        // Workaround: @mapbox/mapbox-gl-draw passes an unsupported 3rd options arg
+        // (e.g. { passive: true }) to map.on() which MapLibre v5 does not accept,
+        // causing crashes on touch devices. Wrap map.on to silently drop the extra arg.
+        const origOn = mapInstance.on.bind(mapInstance) as (...args: any[]) => any
+        ;(mapInstance as any).on = (type: any, layerOrFn: any, fn?: any, opts?: any) => {
+          if (typeof fn === 'function') return origOn(type, layerOrFn, fn)
+          return origOn(type, layerOrFn)
+        }
 
         mapInstance.on('load', () => {
           if (cancelled) return
@@ -1054,12 +1286,47 @@ export function MapViewer() {
         })
 
         mapInstance.on('dataloading', () => setIsBuffering(true))
-        mapInstance.on('idle', () => setIsBuffering(false))
+        mapInstance.on('idle', () => {
+          setIsBuffering(false)
+          scheduleBasemapRecovery()
+        })
+        mapInstance.on('movestart', () => {
+          if (basemapStallCheckTimerRef.current !== null) {
+            window.clearTimeout(basemapStallCheckTimerRef.current)
+            basemapStallCheckTimerRef.current = null
+          }
+        })
+
+        // Persist viewport to localStorage after every pan/zoom/rotate settles
+        mapInstance.on('moveend', () => {
+          const c = mapInstance.getCenter()
+          saveViewport({
+            center: [c.lng, c.lat],
+            zoom: mapInstance.getZoom(),
+            bearing: mapInstance.getBearing(),
+            pitch: mapInstance.getPitch()
+          })
+          scheduleBasemapStallCheck()
+          mapInstance.triggerRepaint()
+        })
 
         mapInstance.on('error', (event) => {
           const e = event as any
           if (e?.sourceId && (e.sourceId === 'esriImagery' || e.sourceId === 'esriLabels')) {
             handleBasemapFailure()
+            scheduleBasemapStallCheck()
+          }
+        })
+
+        mapInstance.on('sourcedata', (event) => {
+          const e = event as any
+          if (!e?.isSourceLoaded) return
+          if (e.sourceId === 'esriImagery' || e.sourceId === 'esriLabels') {
+            if (basemapStallCheckTimerRef.current !== null) {
+              window.clearTimeout(basemapStallCheckTimerRef.current)
+              basemapStallCheckTimerRef.current = null
+            }
+            scheduleBasemapRecovery()
           }
         })
 
@@ -1073,7 +1340,12 @@ export function MapViewer() {
         )
 
         // Ensure expected interactions: left = pan, middle = rotate (custom), right = zoom (custom)
-        mapInstance.dragPan.enable()
+        // Keep a slight inertia so camera motion eases out instead of stopping abruptly.
+        mapInstance.dragPan.enable({
+          linearity: 0.2,
+          maxSpeed: 900,
+          deceleration: 3000
+        } as any)
         mapInstance.dragRotate.disable()
 
         mapRef.current = mapInstance
@@ -1086,12 +1358,20 @@ export function MapViewer() {
 
     return () => {
       cancelled = true
+      if (basemapRecoveryTimerRef.current !== null) {
+        window.clearTimeout(basemapRecoveryTimerRef.current)
+        basemapRecoveryTimerRef.current = null
+      }
+      if (basemapStallCheckTimerRef.current !== null) {
+        window.clearTimeout(basemapStallCheckTimerRef.current)
+        basemapStallCheckTimerRef.current = null
+      }
       if (mapRef.current) {
         mapRef.current.remove()
         mapRef.current = null
       }
     }
-  }, [addBaseLayers, handleBasemapFailure])
+  }, [addBaseLayers, handleBasemapFailure, scheduleBasemapRecovery, scheduleBasemapStallCheck])
 
   /**
    * Handle container resizing to update map dimensions
@@ -2463,7 +2743,15 @@ export function MapViewer() {
   useEffect(() => {
     registerGisActions({
       openDatasetIndex: () => setDatasetsDialogOpen(true),
-      openDatasetDigitalTwin: () => setDatasetDigitalTwinOpen(true)
+      openDatasetDigitalTwin: () => setDatasetDigitalTwinOpen(true),
+      openMeasureTool: (tool: 'distance' | 'area' | 'elevation') => {
+        switch (tool) {
+          case 'distance': setMeasureDistanceOpen(true); break
+          case 'area':     setMeasureAreaOpen(true); break
+          case 'elevation': setElevationProfileOpen(true); break
+        }
+        setActiveMeasureTool(tool)
+      }
     })
   }, [registerGisActions])
 
@@ -2484,6 +2772,11 @@ export function MapViewer() {
   const applyOpacityToMapLayer = useCallback((layer: ManagedLayer, opacity: number) => {
     const map = mapRef.current
     if (!map) return
+
+    // Creator AOI/POI styling is driven by per-entry match expressions in
+    // the creatorEntryUi effect. Re-applying a flat opacity here would
+    // overwrite those expressions and make hidden entries reappear.
+    if (layer.id === CREATOR_MANAGED_LAYER_ID) return
 
     layer.layerIds.forEach((layerId) => {
       const mapLayer = map.getLayer(layerId) as LayerSpecification | undefined
@@ -3251,7 +3544,24 @@ export function MapViewer() {
 
     if (!isActive()) return
     const ordered = nextLayers.map((layer, idx) => ({ ...layer, order: idx }))
-    setManagedLayers(ordered)
+
+    // Restore per-layer visibility / opacity from the user's previous session
+    const savedState = restoreLayerSession(currentProject)
+    const restored = ordered.map(layer => {
+      const saved = savedState[layer.id]
+      if (!saved) return layer
+      return { ...layer, visible: saved.visible, opacity: saved.opacity }
+    })
+    // Apply restored visibility/opacity to the map
+    for (const layer of restored) {
+      const saved = savedState[layer.id]
+      if (saved) {
+        applyVisibilityToMapLayer(layer, saved.visible)
+        applyOpacityToMapLayer(layer, saved.opacity)
+      }
+    }
+
+    setManagedLayers(restored)
     if (focusBounds) {
       mapRef.current?.fitBounds(focusBounds, { padding: 80, duration: 1000 })
     }
@@ -3284,16 +3594,92 @@ export function MapViewer() {
 
   useEffect(() => {
     if (!mapReady) return
-    imageryFailedRef.current = false
+    resetBasemapFailureTracking()
     addBaseLayers()
-    setFallbackOpacity(BASEMAP_FALLBACK_DEFAULT_OPACITY)
-  }, [addBaseLayers, mapReady, setFallbackOpacity, currentProject])
+  }, [addBaseLayers, mapReady, currentProject, resetBasemapFailureTracking])
 
   useEffect(() => {
     if (!mapReady || !mapRef.current) return
     const map = mapRef.current
     map.setTerrain(null)
   }, [mapReady])
+
+  // ---------------------------------------------------------------------------
+  // Map Projection – switch between mercator (2D) and globe (3D) with atmosphere
+  // + star-field skybox that fades in when zoomed out past ~4.5
+  // ---------------------------------------------------------------------------
+  useEffect(() => {
+    if (!mapReady || !mapRef.current) return
+    const map = mapRef.current
+
+    try {
+      if (mapProjection === 'globe') {
+        ;(map as any).setProjection({ type: 'globe' })
+        // Atmospheric haze that fades as you zoom in
+        ;(map as any).setSky({
+          'atmosphere-blend': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            0, 1,
+            5, 1,
+            7, 0
+          ]
+        })
+
+        // ---- Star skybox ----
+        if (!map.getLayer('star-skybox')) {
+          const starLayer = createStarSkyboxLayer()
+          starSkyboxRef.current = starLayer
+          // Insert right above the background layer (below tile layers)
+          const styleLayers = map.getStyle().layers
+          const firstAboveBg = styleLayers.find((l: any) => l.id !== 'background')
+          if (firstAboveBg) {
+            map.addLayer(starLayer as any, firstAboveBg.id)
+          } else {
+            map.addLayer(starLayer as any)
+          }
+        }
+
+        // Compute star opacity and background colour based on zoom.
+        // Transition zone: zoom <=4 → full stars, zoom >=5 → no stars.
+        const SKY_BLUE = { r: 135, g: 206, b: 235 }
+        const DEEP_SPACE = { r: 2, g: 2, b: 8 }
+
+        const updateStarVisibility = () => {
+          const z = map.getZoom()
+          const starOpacity = z <= 4.0 ? 1.0 : z >= 5.0 ? 0.0 : (5.0 - z) / 1.0
+          starSkyboxRef.current?.setOpacity(starOpacity)
+
+          // Smoothly transition background from sky-blue → near-black
+          const t = 1 - starOpacity // 0 = dark, 1 = sky-blue
+          const bgR = Math.round(DEEP_SPACE.r + (SKY_BLUE.r - DEEP_SPACE.r) * t)
+          const bgG = Math.round(DEEP_SPACE.g + (SKY_BLUE.g - DEEP_SPACE.g) * t)
+          const bgB = Math.round(DEEP_SPACE.b + (SKY_BLUE.b - DEEP_SPACE.b) * t)
+          map.setPaintProperty('background', 'background-color', `rgb(${bgR},${bgG},${bgB})`)
+        }
+
+        map.on('zoom', updateStarVisibility)
+        updateStarVisibility() // apply immediately for the current zoom
+
+        return () => {
+          map.off('zoom', updateStarVisibility)
+        }
+      } else {
+        ;(map as any).setProjection({ type: 'mercator' })
+        ;(map as any).setSky({})
+
+        // Remove star skybox and restore background
+        if (map.getLayer('star-skybox')) {
+          try { map.removeLayer('star-skybox') } catch { /* ignore */ }
+          starSkyboxRef.current = null
+        }
+        map.setPaintProperty('background', 'background-color', '#87CEEB')
+      }
+    } catch (err) {
+      console.warn('[MapViewer] Failed to set projection:', err)
+    }
+  }, [mapReady, mapProjection])
 
   const requestElevationSample = useCallback(
     (lng: number, lat: number, zoomLevel: number) => {
@@ -3360,12 +3746,17 @@ export function MapViewer() {
     const map = mapRef.current
 
     const handlePointerMove = (event: MapMouseEvent) => {
+      if (map.isMoving()) return
+      const now = performance.now()
+      if (now - lastCursorUpdateAtRef.current < CURSOR_UPDATE_THROTTLE_MS) return
+      lastCursorUpdateAtRef.current = now
       const { lng, lat } = event.lngLat
       setCursorPosition({ lng, lat })
       requestElevationSample(lng, lat, map.getZoom())
     }
 
     const handleMouseOut = () => {
+      lastCursorUpdateAtRef.current = 0
       setCursorPosition(null)
       setCursorElevation(prev => ({
         value: prev.value,
@@ -3409,7 +3800,21 @@ export function MapViewer() {
     const rotationBearingFactor = 0.25
     const rotationPitchFactor = 0.15
     const zoomFactor = 0.0033
+    const inertiaDurationMs = 170
+    const inertiaScale = 0.45
+    const velocityBlend = 0.35
+    const minVelocityForInertia = 0.06 // px/ms
+    const maxExtraBearing = 5.5
+    const maxExtraPitch = 3.0
+    const maxExtraZoom = 0.45
     const markerId = 'rotation-center-marker'
+
+    let rotateVelocity = { x: 0, y: 0 }
+    let rotateLastSample: { x: number; y: number; t: number } | null = null
+    let zoomVelocityY = 0
+    let zoomLastSample: { y: number; t: number } | null = null
+
+    const easeOutQuad = (t: number) => 1 - (1 - t) * (1 - t)
 
     const toContainerPoint = (event: MouseEvent): [number, number] => {
       const rect = container.getBoundingClientRect()
@@ -3470,9 +3875,12 @@ export function MapViewer() {
     const handleMouseDown = (event: MouseEvent) => {
       if (event.button === 1) {
         event.preventDefault()
+        map.stop()
         const point = toContainerPoint(event)
         const around = toLngLatArray(map.unproject(point))
         isMiddleRotatingRef.current = true
+        rotateVelocity = { x: 0, y: 0 }
+        rotateLastSample = { x: event.clientX, y: event.clientY, t: performance.now() }
         rotationStartRef.current = {
           x: event.clientX,
           y: event.clientY,
@@ -3484,10 +3892,13 @@ export function MapViewer() {
         ensureRotationMarker(around)
       } else if (event.button === 2) {
         event.preventDefault()
+        map.stop()
         const point = toContainerPoint(event)
         const around = toLngLatArray(map.unproject(point))
         isRightZoomingRef.current = true
         hasMovedDuringRightClickRef.current = false
+        zoomVelocityY = 0
+        zoomLastSample = { y: event.clientY, t: performance.now() }
         zoomStartRef.current = {
           y: event.clientY,
           zoom: map.getZoom(),
@@ -3500,6 +3911,16 @@ export function MapViewer() {
 
     const handleMouseMove = (event: MouseEvent) => {
       if (isMiddleRotatingRef.current && rotationStartRef.current) {
+        const now = performance.now()
+        if (rotateLastSample) {
+          const dt = Math.max(1, now - rotateLastSample.t)
+          const instVx = (event.clientX - rotateLastSample.x) / dt
+          const instVy = (event.clientY - rotateLastSample.y) / dt
+          rotateVelocity.x = rotateVelocity.x * (1 - velocityBlend) + instVx * velocityBlend
+          rotateVelocity.y = rotateVelocity.y * (1 - velocityBlend) + instVy * velocityBlend
+        }
+        rotateLastSample = { x: event.clientX, y: event.clientY, t: now }
+
         const dx = event.clientX - rotationStartRef.current.x
         const dy = event.clientY - rotationStartRef.current.y
         const newBearing = rotationStartRef.current.bearing + dx * rotationBearingFactor
@@ -3509,6 +3930,14 @@ export function MapViewer() {
         map.rotateTo(newBearing, { around: rotationStartRef.current.around, animate: false } as any)
         map.setPitch(newPitch)
       } else if (isRightZoomingRef.current && zoomStartRef.current) {
+        const now = performance.now()
+        if (zoomLastSample) {
+          const dt = Math.max(1, now - zoomLastSample.t)
+          const instVy = (event.clientY - zoomLastSample.y) / dt
+          zoomVelocityY = zoomVelocityY * (1 - velocityBlend) + instVy * velocityBlend
+        }
+        zoomLastSample = { y: event.clientY, t: now }
+
         const dy = event.clientY - zoomStartRef.current.y
         if (Math.abs(dy) > 2) {
           hasMovedDuringRightClickRef.current = true
@@ -3520,12 +3949,74 @@ export function MapViewer() {
 
     const handleMouseUp = (event: MouseEvent) => {
       if (event.button === 1) {
+        const start = rotationStartRef.current
+        const around = start?.around
+        const movedEnough = !!start && (
+          Math.abs(event.clientX - start.x) > 2 ||
+          Math.abs(event.clientY - start.y) > 2
+        )
+        const rotateSpeed = Math.hypot(rotateVelocity.x, rotateVelocity.y)
+
+        if (movedEnough && rotateSpeed > minVelocityForInertia) {
+          const extraBearing = Math.max(
+            -maxExtraBearing,
+            Math.min(maxExtraBearing, rotateVelocity.x * rotationBearingFactor * inertiaDurationMs * inertiaScale)
+          )
+          const extraPitch = Math.max(
+            -maxExtraPitch,
+            Math.min(maxExtraPitch, -rotateVelocity.y * rotationPitchFactor * inertiaDurationMs * inertiaScale)
+          )
+          const targetPitch = Math.min(85, Math.max(0, map.getPitch() + extraPitch))
+
+          if (Math.abs(extraBearing) > 0.01 || Math.abs(targetPitch - map.getPitch()) > 0.01) {
+            const easeOptions: any = {
+              bearing: map.getBearing() + extraBearing,
+              pitch: targetPitch,
+              duration: inertiaDurationMs,
+              easing: easeOutQuad
+            }
+            if (around) {
+              easeOptions.around = around
+            }
+            map.easeTo(easeOptions)
+          }
+        }
+
         isMiddleRotatingRef.current = false
         rotationStartRef.current = null
+        rotateVelocity = { x: 0, y: 0 }
+        rotateLastSample = null
         clearRotationMarker()
       } else if (event.button === 2) {
+        const start = zoomStartRef.current
+        const around = start?.around
+        const hasVelocity = Math.abs(zoomVelocityY) > minVelocityForInertia
+        if (hasMovedDuringRightClickRef.current && hasVelocity) {
+          const extraZoom = Math.max(
+            -maxExtraZoom,
+            Math.min(maxExtraZoom, -zoomVelocityY * zoomFactor * inertiaDurationMs * inertiaScale)
+          )
+          const targetZoom = Math.max(
+            map.getMinZoom(),
+            Math.min(map.getMaxZoom(), map.getZoom() + extraZoom)
+          )
+          if (Math.abs(targetZoom - map.getZoom()) > 0.001) {
+            const easeOptions: any = {
+              zoom: targetZoom,
+              duration: inertiaDurationMs,
+              easing: easeOutQuad
+            }
+            if (around) {
+              easeOptions.around = around
+            }
+            map.easeTo(easeOptions)
+          }
+        }
+
         isRightZoomingRef.current = false
         zoomStartRef.current = null
+        zoomVelocityY = 0
+        zoomLastSample = null
         clearRotationMarker()
       }
       container.style.cursor = ''
@@ -3559,8 +4050,12 @@ export function MapViewer() {
       container.style.cursor = ''
       isMiddleRotatingRef.current = false
       rotationStartRef.current = null
+      rotateVelocity = { x: 0, y: 0 }
+      rotateLastSample = null
       isRightZoomingRef.current = false
       zoomStartRef.current = null
+      zoomVelocityY = 0
+      zoomLastSample = null
       clearRotationMarker()
     }
   }, [mapReady])
@@ -3726,8 +4221,7 @@ export function MapViewer() {
   }, [])
 
   const handleRefreshAll = () => {
-    imageryFailedRef.current = false
-    setFallbackOpacity(BASEMAP_FALLBACK_DEFAULT_OPACITY)
+    resetBasemapFailureTracking()
     removeBasemapLayers()
     addBaseLayers()
     loadProjectLayers()
@@ -3738,18 +4232,22 @@ export function MapViewer() {
     if (!layer) return
     const nextVisible = !layer.visible
     applyVisibilityToMapLayer(layer, nextVisible)
-    setManagedLayers(prev =>
-      prev.map(l => (l.id === layerId ? { ...l, visible: nextVisible } : l))
-    )
+    setManagedLayers(prev => {
+      const next = prev.map(l => (l.id === layerId ? { ...l, visible: nextVisible } : l))
+      saveLayerSession(currentProject, next)
+      return next
+    })
   }
 
   const handleOpacityChange = (layerId: string, value: number) => {
     const layer = managedLayers.find(l => l.id === layerId)
     if (!layer) return
     applyOpacityToMapLayer(layer, value)
-    setManagedLayers(prev =>
-      prev.map(l => (l.id === layerId ? { ...l, opacity: value } : l))
-    )
+    setManagedLayers(prev => {
+      const next = prev.map(l => (l.id === layerId ? { ...l, opacity: value } : l))
+      saveLayerSession(currentProject, next)
+      return next
+    })
   }
 
   const handleMoveLayer = (layerId: string, direction: 'up' | 'down') => {
@@ -4571,7 +5069,7 @@ export function MapViewer() {
     setShowDecisionsPanel(true)
 
     // Fetch AI analysis and decisions data in parallel
-    const analysisPromise = analyzeSegments(selectedRouteId, [selectedSegmentId], currentProject || undefined)
+    const analysisPromise = analyzeSegments(selectedRouteId, [selectedSegmentId])
     const decisionsPromise = getSegmentDecisions(selectedRouteId, selectedSegmentId, currentProject || undefined)
 
     // Handle AI analysis
@@ -4754,7 +5252,9 @@ export function MapViewer() {
     setLoadedPirlRoutes(prev => {
       // Don't add if already exists
       if (prev.some(r => r.routeId === routeId)) return prev
-      return [...prev, { routeId, visible: true, segmentCount }]
+      const next = [...prev, { routeId, visible: true, segmentCount }]
+      saveRouteSession(currentProjectRef.current, next)
+      return next
     })
 
     // Compute/fetch crossings for this route (persisted into sidecar on backend)
@@ -4836,23 +5336,27 @@ export function MapViewer() {
     const map = mapRef.current
     if (!map) return
 
-    setLoadedPirlRoutes(prev => prev.map(route => {
-      if (route.routeId !== routeId) return route
+    setLoadedPirlRoutes(prev => {
+      const next = prev.map(route => {
+        if (route.routeId !== routeId) return route
 
-      const newVisible = !route.visible
-      const sourceId = `agentic-route-${routeId}`
-      const lineLayerId = `${sourceId}-line`
-      const pointsLayerId = `${sourceId}-points`
+        const newVisible = !route.visible
+        const sourceId = `agentic-route-${routeId}`
+        const lineLayerId = `${sourceId}-line`
+        const pointsLayerId = `${sourceId}-points`
 
-      if (map.getLayer(lineLayerId)) {
-        map.setLayoutProperty(lineLayerId, 'visibility', newVisible ? 'visible' : 'none')
-      }
-      if (map.getLayer(pointsLayerId)) {
-        map.setLayoutProperty(pointsLayerId, 'visibility', newVisible ? 'visible' : 'none')
-      }
+        if (map.getLayer(lineLayerId)) {
+          map.setLayoutProperty(lineLayerId, 'visibility', newVisible ? 'visible' : 'none')
+        }
+        if (map.getLayer(pointsLayerId)) {
+          map.setLayoutProperty(pointsLayerId, 'visibility', newVisible ? 'visible' : 'none')
+        }
 
-      return { ...route, visible: newVisible }
-    }))
+        return { ...route, visible: newVisible }
+      })
+      saveRouteSession(currentProjectRef.current, next)
+      return next
+    })
   }, [])
 
   // Remove PIRL route from map
@@ -4891,7 +5395,11 @@ export function MapViewer() {
     dynamicLayerIdsRef.current = dynamicLayerIdsRef.current.filter(id => id !== lineLayerId && id !== pointsLayerId)
 
     // Remove from loaded routes state
-    setLoadedPirlRoutes(prev => prev.filter(r => r.routeId !== routeId))
+    setLoadedPirlRoutes(prev => {
+      const next = prev.filter(r => r.routeId !== routeId)
+      saveRouteSession(currentProjectRef.current, next)
+      return next
+    })
 
     // Remove crossings cached for this route
     setRouteCrossingsByRouteId(prev => {
@@ -5276,17 +5784,6 @@ export function MapViewer() {
     })
   }, [])
 
-  useEffect(() => {
-    if (!mapReady) return
-    const interval = setInterval(() => {
-      if (imageryFailedRef.current) {
-        imageryFailedRef.current = false
-        addBaseLayers()
-      }
-    }, 2000)
-    return () => clearInterval(interval)
-  }, [addBaseLayers, mapReady])
-
   const latDisplay = cursorPosition
     ? `${Math.abs(cursorPosition.lat).toFixed(5)}° ${cursorPosition.lat >= 0 ? 'N' : 'S'}`
     : '--'
@@ -5556,7 +6053,6 @@ export function MapViewer() {
               onOpenTable={handleOpenTable}
               onOpenStyle={handleOpenStyle}
               onZoomToLayer={handleZoomToLayer}
-              onOpenDatasetIndex={() => setDatasetsDialogOpen(true)}
             />
           )}
 
@@ -5630,6 +6126,43 @@ export function MapViewer() {
           open={datasetDigitalTwinOpen}
           onClose={() => setDatasetDigitalTwinOpen(false)}
           projectName={currentProject}
+        />
+      )}
+
+      {currentProject && mapMode === 'gis' && measureDistanceOpen && (
+        <MeasureToolPanel
+          tool="distance"
+          map={mapRef.current}
+          terrainSampler={terrainSamplerRef.current}
+          demAvailable={!!demLayerName}
+          active={activeMeasureTool === 'distance'}
+          onActivate={() => setActiveMeasureTool('distance')}
+          onClose={() => { setMeasureDistanceOpen(false); if (activeMeasureTool === 'distance') setActiveMeasureTool(null) }}
+          initialPosition={{ x: 80, y: 80 }}
+        />
+      )}
+      {currentProject && mapMode === 'gis' && measureAreaOpen && (
+        <MeasureToolPanel
+          tool="area"
+          map={mapRef.current}
+          terrainSampler={terrainSamplerRef.current}
+          demAvailable={!!demLayerName}
+          active={activeMeasureTool === 'area'}
+          onActivate={() => setActiveMeasureTool('area')}
+          onClose={() => { setMeasureAreaOpen(false); if (activeMeasureTool === 'area') setActiveMeasureTool(null) }}
+          initialPosition={{ x: 120, y: 100 }}
+        />
+      )}
+      {currentProject && mapMode === 'gis' && elevationProfileOpen && (
+        <MeasureToolPanel
+          tool="elevation"
+          map={mapRef.current}
+          terrainSampler={terrainSamplerRef.current}
+          demAvailable={!!demLayerName}
+          active={activeMeasureTool === 'elevation'}
+          onActivate={() => setActiveMeasureTool('elevation')}
+          onClose={() => { setElevationProfileOpen(false); if (activeMeasureTool === 'elevation') setActiveMeasureTool(null) }}
+          initialPosition={{ x: 160, y: 120 }}
         />
       )}
 

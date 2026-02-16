@@ -23,33 +23,33 @@ export const Engineering = () => {
               </span>
             </div>
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-serif text-white mb-8 leading-[0.95] tracking-tight">
-              AI-Powered Hydraulics Calculations
+              Engineering <br />
+              <span className="text-white/50">that ships.</span>
             </h2>
             <p className="text-lg text-gray-400 leading-relaxed max-w-xl mb-10">
-              Routing is only the start. ZEUS validates candidates against engineering constraints and produces
-              defensible deliverables—so every decision remains auditable.
+              Hydraulics, earthworks, and compliance checks built into the route workflow. No tool-switching.
             </p>
 
             <div className="space-y-6 mb-12">
               <div className="flex items-start gap-4">
                 <Waves className="w-5 h-5 text-white/60 mt-1" />
                 <div>
-                  <h4 className="text-white font-bold text-sm">Physics-Based Validation</h4>
-                  <p className="text-gray-500 text-sm mt-1">Verify designs against real-world constraints and operational requirements.</p>
+                  <h4 className="text-white font-bold text-sm">Hydraulics</h4>
+                  <p className="text-gray-500 text-sm mt-1">Fluid and pipeline parameters per route.</p>
                 </div>
               </div>
               <div className="flex items-start gap-4">
                 <Activity className="w-5 h-5 text-white/60 mt-1" />
                 <div>
-                  <h4 className="text-white font-bold text-sm">Continuous Simulation</h4>
-                  <p className="text-gray-500 text-sm mt-1">Test performance across thousands of scenarios in real-time.</p>
+                  <h4 className="text-white font-bold text-sm">Earthworks</h4>
+                  <p className="text-gray-500 text-sm mt-1">Elevation, crossings, and cut/fill signals.</p>
                 </div>
               </div>
               <div className="flex items-start gap-4">
                 <FileCheck className="w-5 h-5 text-white/60 mt-1" />
                 <div>
-                  <h4 className="text-white font-bold text-sm">Automated Compliance</h4>
-                  <p className="text-gray-500 text-sm mt-1">Verify against international standards like ASME, API, ISO, and CSA.</p>
+                  <h4 className="text-white font-bold text-sm">Compliance</h4>
+                  <p className="text-gray-500 text-sm mt-1">Standards-aware checks with traceable outputs.</p>
                 </div>
               </div>
             </div>
@@ -69,8 +69,8 @@ export const Engineering = () => {
             <div className="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent pointer-events-none" />
           </div>
           <div className="p-8 border-t border-white/10 bg-black/30 backdrop-blur-md">
-            <h3 className="text-xl font-serif text-white mb-2">Engineering Validation</h3>
-            <p className="text-sm text-gray-400">Hydraulics configuration, simulation, and CFD-grade visualization.</p>
+            <h3 className="text-xl font-serif text-white mb-2">Engineering Workspace</h3>
+            <p className="text-sm text-gray-400">Hydraulics, earthworks, and scenario comparison in one view.</p>
           </div>
         </div>
       </div>

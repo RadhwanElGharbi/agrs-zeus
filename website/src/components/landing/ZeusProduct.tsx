@@ -24,8 +24,8 @@ export const ZeusProduct = () => {
            </div>
            
            <div className="p-8 border-t border-white/10 bg-black/30 backdrop-blur-md">
-             <h3 className="text-xl font-serif text-white mb-2">Automated Data Acquisition</h3>
-             <p className="text-sm text-gray-400">Instant ingestion of global GIS datasets, satellite imagery, and environmental layers.</p>
+             <h3 className="text-xl font-serif text-white mb-2">Data Acquisition</h3>
+             <p className="text-sm text-gray-400">Terrain, infrastructure, and environmental data for your project area. Automatic.</p>
            </div>
         </div>
 
@@ -45,34 +45,33 @@ export const ZeusProduct = () => {
             </div>
             
             <h2 className="text-4xl md:text-5xl font-serif text-white mb-6 leading-tight">
-              ZEUS <span className="text-white/40">OS</span>
+              ZEUS
             </h2>
             
             <p className="text-lg text-gray-400 leading-relaxed mb-10">
-              The operating system for physical infrastructure. ZEUS unifies geospatial intelligence, 
-              physics-based modeling, and automated routing into a single decision-grade environment.
+              One platform for route planning, engineering analysis, and project delivery. Built for pipeline and network infrastructure.
             </p>
 
             <div className="space-y-6 mb-12">
               <div className="flex items-start gap-4">
                 <Map className="w-5 h-5 text-white/60 mt-1" />
                 <div>
-                  <h4 className="text-white font-bold text-sm">Geospatial Intelligence</h4>
-                  <p className="text-gray-500 text-sm mt-1">Global datasets aligned to your AOI and constraints.</p>
+                  <h4 className="text-white font-bold text-sm">Unified Data</h4>
+                  <p className="text-gray-500 text-sm mt-1">All project datasets in one workspace.</p>
                 </div>
               </div>
               <div className="flex items-start gap-4">
                 <Waves className="w-5 h-5 text-white/60 mt-1" />
                 <div>
-                  <h4 className="text-white font-bold text-sm">Physics-Informed Routing</h4>
-                  <p className="text-gray-500 text-sm mt-1">AI that understands hydraulics, terrain, and cost.</p>
+                  <h4 className="text-white font-bold text-sm">AI Routing</h4>
+                  <p className="text-gray-500 text-sm mt-1">Generate and rank route candidates automatically.</p>
                 </div>
               </div>
               <div className="flex items-start gap-4">
                 <FileText className="w-5 h-5 text-white/60 mt-1" />
                 <div>
-                  <h4 className="text-white font-bold text-sm">Automated Deliverables</h4>
-                  <p className="text-gray-500 text-sm mt-1">Corridor Maps, IFD, and IFC alignment sheets in days.</p>
+                  <h4 className="text-white font-bold text-sm">Ship Deliverables</h4>
+                  <p className="text-gray-500 text-sm mt-1">Alignment sheets, comparisons, and FEED packages.</p>
                 </div>
               </div>
             </div>

@@ -57,6 +57,9 @@ from api.agentic import router as agentic_router
 from api.creator import router as creator_router
 from api.engineering.pressure_design import router as engineering_router
 from api.sorties import router as sorties_router
+from api.settings import router as settings_router
+from api.project_data_sync import router as project_data_sync_router
+from api.app_updates import router as app_updates_router
 from api.users import router as users_router, bootstrap_initial_admin, bootstrap_rad_admin
 from api.db import get_engine, get_sessionmaker
 
@@ -136,6 +139,9 @@ app.include_router(agentic_router, prefix="/api")
 app.include_router(creator_router, prefix="/api")
 app.include_router(engineering_router, prefix="/api")
 app.include_router(sorties_router, prefix="/api")
+app.include_router(settings_router, prefix="/api")
+app.include_router(project_data_sync_router, prefix="/api")
+app.include_router(app_updates_router, prefix="/api")
 
 @app.get("/")
 async def root():

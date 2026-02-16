@@ -1144,8 +1144,8 @@ export function SortiesDialog({ open, onClose, projectName, initialView = 'index
                             <div className="text-[10px] text-white/40 font-mono">
                               {u.email} {u.work_phone ? `· ${u.work_phone}` : ''}
                             </div>
-                            {u.superior?.full_name ? (
-                              <div className="text-[10px] text-white/40 font-mono">Superior: {u.superior.full_name}</div>
+                            {(u as any).superior?.full_name ? (
+                              <div className="text-[10px] text-white/40 font-mono">Superior: {(u as any).superior.full_name}</div>
                             ) : null}
                           </div>
                           <button

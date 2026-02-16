@@ -26,23 +26,21 @@ export const Vision = () => {
               </span>
             </div>
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-serif text-white mb-8 leading-[0.95] tracking-tight">
-              Constructing the <br />
-              <span className="text-white/50">Built World</span>
+              From terrain <br />
+              <span className="text-white/50">to decision.</span>
             </h2>
             <p className="text-lg text-gray-400 leading-relaxed max-w-xl mb-12">
-              Infrastructure development is broken and fragmented by manual workflows, disconnected data, and regulatory bottlenecks.
-              <br /><br />
-              Artemis replaces this with a single autonomous system: precision engineering at the speed of Artificial Intelligence.
+              ZEUS turns geospatial data and engineering constraints into ranked route candidates. One platform. One workflow.
             </p>
             
             <div className="grid grid-cols-2 gap-8 border-t border-white/10 pt-8">
               <div>
-                <div className="text-3xl font-serif text-white mb-1">99%</div>
-                <div className="text-[10px] font-mono uppercase tracking-widest text-gray-500">Precision</div>
+                <div className="text-3xl font-serif text-white mb-1">AI-Powered</div>
+                <div className="text-[10px] font-mono uppercase tracking-widest text-gray-500">Route Generation</div>
               </div>
               <div>
-                <div className="text-3xl font-serif text-white mb-1">100x</div>
-                <div className="text-[10px] font-mono uppercase tracking-widest text-gray-500">Velocity</div>
+                <div className="text-3xl font-serif text-white mb-1">End-to-End</div>
+                <div className="text-[10px] font-mono uppercase tracking-widest text-gray-500">One Workflow</div>
               </div>
             </div>
           </motion.div>
@@ -53,7 +51,7 @@ export const Vision = () => {
           <div className="relative w-full aspect-[16/10] bg-black">
             <Image
               src="/images/showcase/gallery-5.png"
-              alt="PIRL Autonomous Routes"
+              alt="PIRL route candidates"
               fill
               className="object-cover object-left"
             />
@@ -61,8 +59,8 @@ export const Vision = () => {
             <div className="absolute inset-0 bg-gradient-to-t from-black/25 to-transparent pointer-events-none" />
           </div>
           <div className="p-8 border-t border-white/10 bg-black/30 backdrop-blur-md">
-            <h3 className="text-xl font-serif text-white mb-2">Autonomous Routing</h3>
-            <p className="text-sm text-gray-400">PIRL agents generating and ranking compliant corridor candidates.</p>
+            <h3 className="text-xl font-serif text-white mb-2">AI Route Generation</h3>
+            <p className="text-sm text-gray-400">Ranked candidates from terrain, cost, and constraint data.</p>
           </div>
         </div>
       </div>

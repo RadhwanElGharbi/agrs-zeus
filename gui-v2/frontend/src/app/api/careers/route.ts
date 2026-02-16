@@ -3,7 +3,10 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 
 export const runtime = 'nodejs'
-export const dynamic = 'force-dynamic'
+// NOTE: force-dynamic is only valid in non-export mode (dev server).
+// For `next build` with output:'export', this file is skipped because
+// the careers API is served by the website backend, not by the ZEUS desktop app.
+export const dynamic = 'force-static'
 
 const APPLICATIONS_DIR = '/opt/agrs/applications'
 

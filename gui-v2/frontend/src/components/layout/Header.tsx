@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Bell, User, Truck, Cpu, GitCommit, FileText, MapPin, Square, Brain, Layers, Download } from 'lucide-react'
+import { Bell, User, Truck, Cpu, GitCommit, FileText, MapPin, Square, Brain, Layers, Download, Ruler, Pentagon, Mountain } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/lib/context/AuthContext'
@@ -28,6 +28,7 @@ export function Header({ devMode, onDevModeChange, activeView, onSupplierSearch 
   const [isSortiesDialogOpen, setIsSortiesDialogOpen] = useState(false)
   const [sortiesDialogInitialView, setSortiesDialogInitialView] = useState<'index' | 'create'>('index')
   const [isPirlDropdownOpen, setIsPirlDropdownOpen] = useState(false)
+  const [isToolsDropdownOpen, setIsToolsDropdownOpen] = useState(false)
   const [isUserProfileOpen, setIsUserProfileOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
@@ -35,6 +36,8 @@ export function Header({ devMode, onDevModeChange, activeView, onSupplierSearch 
   const datasetsButtonRef = useRef<HTMLButtonElement>(null)
   const pirlDropdownRef = useRef<HTMLDivElement>(null)
   const pirlButtonRef = useRef<HTMLButtonElement>(null)
+  const toolsDropdownRef = useRef<HTMLDivElement>(null)
+  const toolsButtonRef = useRef<HTMLButtonElement>(null)
 
   // Close dropdown if clicked outside
   useEffect(() => {
@@ -93,6 +96,25 @@ export function Header({ devMode, onDevModeChange, activeView, onSupplierSearch 
     }
   }, [isDatasetsDropdownOpen])
 
+  // Close Tools dropdown if clicked outside
+  useEffect(() => {
+    if (!isToolsDropdownOpen) return
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        toolsDropdownRef.current &&
+        !toolsDropdownRef.current.contains(event.target as Node) &&
+        toolsButtonRef.current &&
+        !toolsButtonRef.current.contains(event.target as Node)
+      ) {
+        setIsToolsDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isToolsDropdownOpen])
+
   // Auto-close when leaving Operator context or entering geometry editing
   useEffect(() => {
     if (activeView !== 'map' || mapMode !== 'operator' || !currentProject || operator.geometryEditActive) {
@@ -100,6 +122,7 @@ export function Header({ devMode, onDevModeChange, activeView, onSupplierSearch 
     }
     if (activeView !== 'map' || mapMode !== 'gis' || !currentProject) {
       setIsDatasetsDropdownOpen(false)
+      setIsToolsDropdownOpen(false)
     }
     if (activeView !== 'map' || mapMode !== 'operator' || !currentProject) {
       setIsManageDialogOpen(false)
@@ -350,6 +373,66 @@ export function Header({ devMode, onDevModeChange, activeView, onSupplierSearch 
                   >
                     <Cpu className="w-3.5 h-3.5 text-primary/80" />
                     Digital Twin
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="relative">
+              <Button
+                ref={toolsButtonRef}
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsToolsDropdownOpen((prev) => !prev)}
+                className={cn(
+                  'h-9 px-6 gap-2 text-white/90 hover:text-white hover:bg-white/10 border border-white/20 hover:border-emerald-500/50 transition-all rounded-none bg-white/5',
+                  isToolsDropdownOpen && 'bg-emerald-500/20 border-emerald-500/50 text-white'
+                )}
+                title="Geoprocessing tools"
+              >
+                <span className="text-xs font-bold tracking-widest">TOOLS</span>
+              </Button>
+
+              {isToolsDropdownOpen && (
+                <div
+                  ref={toolsDropdownRef}
+                  className="absolute top-full left-0 mt-2 w-56 bg-black border border-white/10 rounded-sm shadow-xl overflow-hidden"
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsToolsDropdownOpen(false)
+                      gis.openMeasureTool('distance')
+                    }}
+                    className="flex items-center gap-2 w-full px-3 py-2 text-left text-xs font-medium text-white/70 hover:text-white hover:bg-emerald-500/10 border border-transparent border-b border-white/10 transition-all"
+                    title="Measure distance between points on the map"
+                  >
+                    <Ruler className="w-3.5 h-3.5" />
+                    Measure Distance
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsToolsDropdownOpen(false)
+                      gis.openMeasureTool('area')
+                    }}
+                    className="flex items-center gap-2 w-full px-3 py-2 text-left text-xs font-medium text-white/70 hover:text-white hover:bg-emerald-500/10 border border-transparent border-b border-white/10 transition-all"
+                    title="Measure area of a polygon on the map"
+                  >
+                    <Pentagon className="w-3.5 h-3.5" />
+                    Measure Area
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsToolsDropdownOpen(false)
+                      gis.openMeasureTool('elevation')
+                    }}
+                    className="flex items-center gap-2 w-full px-3 py-2 text-left text-xs font-medium text-white/70 hover:text-white hover:bg-emerald-500/10 border border-transparent transition-all"
+                    title="Measure elevation profile along a line (requires DEM)"
+                  >
+                    <Mountain className="w-3.5 h-3.5" />
+                    Elevation Profile
                   </button>
                 </div>
               )}

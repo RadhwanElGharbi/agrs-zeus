@@ -1506,6 +1506,15 @@ function AOIDrawOverlay({ open, onClose, onSave }: AOIDrawOverlayProps) {
 
     mapRef.current = map
 
+    // Workaround: @mapbox/mapbox-gl-draw passes an unsupported 3rd options arg
+    // (e.g. { passive: true }) to map.on() which MapLibre v5 does not accept,
+    // causing crashes on touch devices. Wrap map.on to silently drop the extra arg.
+    const origOn = map.on.bind(map) as (...args: any[]) => any
+    ;(map as any).on = (type: any, layerOrFn: any, fn?: any, opts?: any) => {
+      if (typeof fn === 'function') return origOn(type, layerOrFn, fn)
+      return origOn(type, layerOrFn)
+    }
+
     // Disable all rotation and pitch manipulation immediately
     map.dragRotate.disable()
     map.touchZoomRotate.disableRotation()

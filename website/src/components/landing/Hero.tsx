@@ -82,7 +82,7 @@ export const Hero = () => {
           className="text-center"
         >
           <p className="text-[11px] md:text-xs font-mono uppercase tracking-[0.28em] text-white/55">
-            Artemis Global Research Solutions Inc.
+            AI-Powered Infrastructure Operating System
           </p>
         </motion.div>
 
