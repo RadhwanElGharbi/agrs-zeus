@@ -3,11 +3,11 @@
 Build a single consolidated dataset coverage catalog CSV.
 
 Inputs:
-  - /opt/agrs/docs/Research/COUNTRY_COVERAGE_LONG.csv
-  - /opt/agrs/docs/Research/TIER1_BEST_DATASETS.csv
+  - /opt/agrs/docs/research/COUNTRY_COVERAGE_LONG.csv
+  - /opt/agrs/docs/research/TIER1_BEST_DATASETS.csv
 
 Output:
-  - /opt/agrs/docs/Project Instructions/WORLD_DATASET_CATALOGUE.csv
+  - /opt/agrs/docs/datasets/WORLD_DATASET_CATALOGUE.csv
 
 This script is intentionally self-contained (no FastAPI imports) so it can run
 independently of the backend app.
@@ -21,12 +21,28 @@ from pathlib import Path
 from typing import Dict, Optional, Tuple
 
 
-RESEARCH_ROOT = Path("/opt/agrs/docs/Research")
+DOCS_ROOT = Path("/opt/agrs/docs")
+
+
+def _first_existing_path(*candidates: Path) -> Path:
+    for candidate in candidates:
+        try:
+            if candidate.exists():
+                return candidate
+        except OSError:
+            continue
+    return candidates[0]
+
+
+RESEARCH_ROOT = _first_existing_path(
+    DOCS_ROOT / "research",
+    DOCS_ROOT / "Research",
+)
 ISO_CODES_CSV = RESEARCH_ROOT / "iso_countries.csv"
 COUNTRY_COVERAGE_LONG_CSV = RESEARCH_ROOT / "COUNTRY_COVERAGE_LONG.csv"
 TIER1_BEST_DATASETS_CSV = RESEARCH_ROOT / "TIER1_BEST_DATASETS.csv"
 
-OUTPUT_CSV = Path("/opt/agrs/docs/Project Instructions/WORLD_DATASET_CATALOGUE.csv")
+OUTPUT_CSV = DOCS_ROOT / "datasets" / "WORLD_DATASET_CATALOGUE.csv"
 
 
 OUTPUT_HEADER = [

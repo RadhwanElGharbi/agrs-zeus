@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { Box, Eye, EyeOff, ArrowUp, ArrowDown, Info, Loader2, Minimize2, MapPin } from 'lucide-react'
+import React, { useEffect, useRef, useState } from 'react'
+import { Box, Eye, EyeOff, ArrowUp, ArrowDown, Info, Loader2, MapPin, ChevronDown, Minus, Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export type CreatorManagerEntry = {
@@ -61,9 +61,16 @@ export function CreatorManager({
 
   const [draggedId, setDraggedId] = useState<string | null>(null)
   const [dropTarget, setDropTarget] = useState<{ id: string; position: 'above' | 'below' } | null>(null)
+  const inspectorScrollRef = useRef<HTMLDivElement | null>(null)
 
   const selectedEntry = entries.find((e) => e.id === selectedEntryId) ?? null
   const orderedEntries = [...entries].sort((a, b) => b.order - a.order)
+
+  useEffect(() => {
+    if (!selectedEntry?.id) return
+    if (!inspectorScrollRef.current) return
+    inspectorScrollRef.current.scrollTop = 0
+  }, [selectedEntry?.id])
 
   const handleDragStart = (e: React.DragEvent, id: string) => {
     setDraggedId(id)
@@ -103,31 +110,37 @@ export function CreatorManager({
     setDropTarget(null)
   }
 
+  const clampOpacity = (value: number) => {
+    return Math.min(1, Math.max(0, Math.round(value * 100) / 100))
+  }
+
   if (isCollapsed) {
     return (
-      <div className="relative bg-black/80 backdrop-blur-md border border-white/20 rounded-sm p-2 shadow-[0_0_20px_-5px_rgba(0,0,0,0.5)] group hover:border-amber-500/40 transition-colors">
+      <div className="w-full border-b border-white/[0.06] bg-white/[0.02] group hover:bg-white/[0.04] transition-colors">
         <button
           onClick={() => setIsCollapsed(false)}
-          className="flex items-center justify-center p-1 hover:bg-white/10 rounded-sm transition-colors text-white/70 hover:text-amber-300"
+          className="w-full flex items-center gap-2.5 px-4 py-2.5 text-white/50 hover:text-amber-300 transition-colors"
           title="Expand Operator Manager"
         >
-          <Box className="w-5 h-5 group-hover:animate-pulse" />
+          <Box className="w-4 h-4 shrink-0" />
+          <span className="text-[10px] font-mono font-medium uppercase tracking-wider">Operator Control</span>
+          <ChevronDown className="w-3 h-3 ml-auto" />
         </button>
       </div>
     )
   }
 
   return (
-    <div className="w-[320px] xl:w-[380px] max-h-[calc(100vh-200px)] overflow-hidden font-mono flex flex-col">
+    <div className="w-full h-full min-h-0 font-mono flex flex-col">
       {/* Main List Panel */}
-      <div className="bg-[#0a0a0a]/95 backdrop-blur-xl border border-white/10 rounded-sm shadow-[0_0_30px_-10px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden flex-shrink-0">
+      <div className={cn("bg-transparent flex flex-col min-h-0", selectedEntry ? "h-2/3" : "flex-1")}>
         {/* Header */}
-        <div className="flex items-center justify-between px-3 py-3 border-b border-white/10 bg-white/[0.02]">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
           <div className="flex items-center gap-2">
             <div className="p-1 bg-amber-500/10 rounded-sm">
               <Box className="w-3.5 h-3.5 text-amber-300" />
             </div>
-            <span className="text-xs font-bold text-white uppercase tracking-wider">Operator Control</span>
+            <span className="text-[11px] font-semibold text-white/90 uppercase tracking-wider">Operator Control</span>
           </div>
           <div className="flex items-center gap-2">
             {loadingMessage && (
@@ -138,10 +151,10 @@ export function CreatorManager({
             )}
             <button
               onClick={() => setIsCollapsed(true)}
-              className="p-1 hover:bg-white/10 rounded-sm transition-colors text-white/50 hover:text-white"
+              className="p-1 hover:bg-white/10 rounded-sm transition-colors text-white/40 hover:text-white"
               title="Collapse Operator Manager"
             >
-              <Minimize2 className="w-3.5 h-3.5" />
+              <ChevronDown className="w-3.5 h-3.5 rotate-180" />
             </button>
           </div>
         </div>
@@ -162,7 +175,7 @@ export function CreatorManager({
 
         {/* Entry List */}
         <div
-          className="p-1 space-y-0.5 overflow-y-auto max-h-[200px] xl:max-h-[280px] bg-black/20"
+          className="px-2 py-2 space-y-1 flex-1 min-h-0 overflow-y-auto"
           onMouseLeave={() => setDropTarget(null)}
         >
           {orderedEntries.map((entry) => {
@@ -179,12 +192,12 @@ export function CreatorManager({
                 onDrop={handleDrop}
                 title={entry.title || entry.id}
                 className={cn(
-                  "group relative flex items-center gap-2 p-1.5 border transition-all duration-200 cursor-pointer select-none overflow-visible",
+                  "group relative flex items-start gap-2.5 px-3 py-2.5 border rounded-none transition-all duration-150 cursor-pointer select-none",
                   isSelected
-                    ? "bg-white/[0.08] border-amber-500/40 shadow-[inset_2px_0_0_rgba(245,158,11,1)]"
-                    : "bg-transparent border-transparent hover:bg-white/[0.04] hover:border-white/10",
-                  isDeleted && "bg-destructive/5 border-destructive/20",
-                  isDragged && "opacity-50"
+                    ? "bg-amber-500/[0.08] border-amber-500/25"
+                    : "bg-white/[0.02] border-white/[0.05] hover:bg-white/[0.05] hover:border-white/[0.1]",
+                  isDeleted && "bg-destructive/[0.06] border-destructive/20",
+                  isDragged && "opacity-40 scale-[0.98]"
                 )}
                 onClick={(e) => {
                   onSelectEntry(entry.id)
@@ -201,9 +214,9 @@ export function CreatorManager({
                   />
                 )}
 
-                {/* Scan line overlay for selected item */}
+                {/* Left accent bar for selected */}
                 {isSelected && (
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.02] to-transparent pointer-events-none" />
+                  <div className="absolute left-0 top-1.5 bottom-1.5 w-[2px] bg-amber-400 rounded-full" />
                 )}
 
                 {/* Visibility Toggle */}
@@ -213,64 +226,110 @@ export function CreatorManager({
                     onToggleVisibility(entry.id)
                   }}
                   className={cn(
-                    "p-1 rounded-sm transition-colors shrink-0 z-10",
+                    "mt-0.5 p-1 rounded transition-colors shrink-0 z-10",
                     entry.visible
-                      ? "text-emerald-400 bg-emerald-400/10 hover:bg-emerald-400/20"
-                      : "text-white/20 hover:text-white/40 hover:bg-white/5"
+                      ? "text-emerald-400 bg-emerald-500/10"
+                      : "text-white/20 hover:text-white/40"
                   )}
                 >
                   {entry.visible ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
                 </button>
 
                 {/* Content */}
-                <div className="flex-1 min-w-0 flex flex-col gap-0.5 z-10">
+                <div className="flex-1 min-w-0 flex flex-col gap-1.5 z-10">
                   <div className="flex items-center justify-between gap-2">
                     <span
                       className={cn(
-                        "text-[11px] font-medium truncate tracking-wide",
-                        isDeleted ? "text-destructive" : isSelected ? "text-white" : "text-white/70 group-hover:text-white"
+                        "text-[11px] font-medium truncate leading-tight",
+                        isDeleted ? "text-destructive" : isSelected ? "text-white" : "text-white/80 group-hover:text-white"
                       )}
                     >
                       {entry.title || entry.id}
                     </span>
 
-                    {/* Type/Status */}
-                    <span className="text-[9px] uppercase font-bold px-1 rounded-[2px] bg-white/5 text-white/60 border border-white/10">
+                    {/* Type badge */}
+                    <span className="text-[8px] uppercase font-bold px-1.5 py-0.5 rounded-sm shrink-0 bg-amber-500/10 text-amber-400/70 border border-amber-500/15">
                       {entry.entryType || 'ENTRY'}
                     </span>
                   </div>
 
-                  {/* Opacity Bar */}
-                  <div className="relative h-1 w-full bg-white/5 rounded-full overflow-hidden">
-                    <div
-                      className={cn("absolute top-0 left-0 bottom-0 transition-all duration-300", entry.visible ? "bg-amber-400" : "bg-white/20")}
-                      style={{ width: `${entry.opacity * 100}%` }}
-                    />
-                    <input
-                      type="range"
-                      min={0}
-                      max={1}
-                      step={0.05}
-                      value={entry.opacity}
-                      onChange={(e) => onOpacityChange(entry.id, Number(e.target.value))}
-                      onClick={(e) => e.stopPropagation()}
-                      className="absolute inset-0 w-full opacity-0 cursor-pointer"
-                    />
-                  </div>
+                  {/* Category subtitle */}
+                  {entry.category && (
+                    <span className="text-[9px] text-white/35 truncate leading-none">
+                      {entry.category}{entry.categoryOther ? ` · ${entry.categoryOther}` : ''}
+                    </span>
+                  )}
+
+                  {isSelected && (
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onOpacityChange(entry.id, clampOpacity(entry.opacity - 0.1))
+                        }}
+                        className="p-0.5 rounded-sm text-white/35 hover:text-white/70 hover:bg-white/10 transition-colors shrink-0"
+                        title="Decrease opacity"
+                      >
+                        <Minus className="w-3 h-3" />
+                      </button>
+
+                      <div className="relative h-5 flex-1">
+                        <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-1 rounded-full bg-white/[0.08]" />
+                        <div
+                          className={cn(
+                            "absolute left-0 top-1/2 -translate-y-1/2 h-1 rounded-full transition-all duration-200",
+                            entry.visible ? "bg-amber-400/75" : "bg-white/20"
+                          )}
+                          style={{ width: `${entry.opacity * 100}%` }}
+                        />
+                        <div
+                          className={cn(
+                            "absolute top-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full border shadow-sm transition-colors",
+                            entry.visible
+                              ? "bg-amber-400 border-amber-300 shadow-[0_0_8px_rgba(245,158,11,0.35)]"
+                              : "bg-white/20 border-white/30"
+                          )}
+                          style={{ left: `${entry.opacity * 100}%` }}
+                        />
+                        <input
+                          type="range"
+                          min={0}
+                          max={1}
+                          step={0.05}
+                          value={entry.opacity}
+                          onChange={(e) => onOpacityChange(entry.id, Number(e.target.value))}
+                          onClick={(e) => e.stopPropagation()}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-ew-resize"
+                          title="Entry opacity"
+                        />
+                      </div>
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onOpacityChange(entry.id, clampOpacity(entry.opacity + 0.1))
+                        }}
+                        className="p-0.5 rounded-sm text-white/35 hover:text-white/70 hover:bg-white/10 transition-colors shrink-0"
+                        title="Increase opacity"
+                      >
+                        <Plus className="w-3 h-3" />
+                      </button>
+
+                      <span className="text-[8px] w-7 text-right tabular-nums text-white/35 shrink-0">
+                        {Math.round(entry.opacity * 100)}%
+                      </span>
+                    </div>
+                  )}
                 </div>
 
-                <span className="text-[9px] w-7 text-right tabular-nums text-white/30 shrink-0 z-10">
-                  {Math.round(entry.opacity * 100)}%
-                </span>
-
                 {/* Reorder Controls */}
-                <div className="flex flex-col -space-y-px opacity-0 group-hover:opacity-100 transition-opacity shrink-0 z-10">
+                <div className="flex flex-col -space-y-px opacity-0 group-hover:opacity-100 transition-opacity shrink-0 z-10 mt-0.5">
                   <button
                     onClick={(e) => {
                       e.stopPropagation()
                       onMoveEntry(entry.id, 'up')
                     }}
-                    className="p-0.5 hover:bg-white/10 rounded-t-sm disabled:opacity-20 text-white/50 hover:text-amber-300"
+                    className="p-0.5 hover:bg-white/10 rounded-t-sm disabled:opacity-20 text-white/30 hover:text-amber-300"
                     disabled={orderedEntries[0]?.id === entry.id}
                   >
                     <ArrowUp className="w-2.5 h-2.5" />
@@ -280,7 +339,7 @@ export function CreatorManager({
                       e.stopPropagation()
                       onMoveEntry(entry.id, 'down')
                     }}
-                    className="p-0.5 hover:bg-white/10 rounded-b-sm disabled:opacity-20 text-white/50 hover:text-amber-300"
+                    className="p-0.5 hover:bg-white/10 rounded-b-sm disabled:opacity-20 text-white/30 hover:text-amber-300"
                     disabled={orderedEntries[orderedEntries.length - 1]?.id === entry.id}
                   >
                     <ArrowDown className="w-2.5 h-2.5" />
@@ -292,29 +351,19 @@ export function CreatorManager({
         </div>
       </div>
 
-      {/* Detail Inspector Panel */}
-      <div className="mt-3 bg-[#0a0a0a]/95 backdrop-blur-xl border border-white/10 rounded-sm shadow-xl flex-1 overflow-hidden flex flex-col min-h-0">
-        <div className="flex items-center justify-between px-3 py-2 border-b border-white/10 bg-white/[0.02]">
-          <div className="flex items-center gap-2 text-xs font-bold text-white uppercase tracking-wider">
-            <Info className="w-3.5 h-3.5 text-amber-300" />
-            <span>Inspector</span>
-          </div>
-          {selectedEntry && (
+      {selectedEntry && (
+        <div className="h-1/3 min-h-[180px] border-t border-white/[0.06] bg-transparent flex flex-col">
+          <div className="flex items-center justify-between px-3 py-2 border-b border-white/10 bg-white/[0.02]">
+            <div className="flex items-center gap-2 text-xs font-bold text-white uppercase tracking-wider">
+              <Info className="w-3.5 h-3.5 text-amber-300" />
+              <span>Inspector</span>
+            </div>
             <span className="text-[9px] font-mono text-white/40 uppercase px-1.5 py-0.5 border border-white/10 rounded-sm">
               {selectedEntry.entryType}
             </span>
-          )}
-        </div>
-
-        {!selectedEntry && (
-          <div className="flex-1 flex flex-col items-center justify-center text-white/20 p-6">
-            <Box className="w-8 h-8 mb-2 opacity-20" />
-            <span className="text-[10px] uppercase tracking-widest">Awaiting Selection</span>
           </div>
-        )}
 
-        {selectedEntry && (
-          <div className="flex-1 p-3 bg-black/20 overflow-hidden flex flex-col gap-4 min-h-0">
+          <div ref={inspectorScrollRef} className="flex-1 min-h-0 overflow-y-auto p-3 bg-black/20 flex flex-col gap-4">
             {/* Basic Info */}
             <div className="space-y-2 shrink-0">
               <div className="text-[10px] text-white/30 font-mono uppercase tracking-widest border-b border-white/5 pb-1">Properties</div>
@@ -351,9 +400,9 @@ export function CreatorManager({
 
             {/* Comment */}
             {selectedEntry.comment && (
-              <div className="space-y-2 flex-1 min-h-0 overflow-hidden">
+              <div className="space-y-2">
                 <div className="text-[10px] text-white/30 font-mono uppercase tracking-widest border-b border-white/5 pb-1">Comment</div>
-                <pre className="flex-1 min-h-0 bg-black/40 p-2 rounded-sm border border-white/5 text-[10px] text-white/70 overflow-auto font-mono whitespace-pre-wrap">
+                <pre className="bg-black/40 p-2 rounded-sm border border-white/5 text-[10px] text-white/70 overflow-x-auto font-mono whitespace-pre-wrap">
                   {selectedEntry.comment}
                 </pre>
               </div>
@@ -384,8 +433,8 @@ export function CreatorManager({
               </div>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }

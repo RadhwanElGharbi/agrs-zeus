@@ -157,7 +157,7 @@ def _wait_for_job(base_url: str, job_id: str, timeout: int = 7200) -> Dict[str, 
     while True:
         job = _http_json("GET", f"{base_url}/dataset-jobs/{job_id}")
         status = job["status"]
-        if status in ("succeeded", "failed"):
+        if status in ("succeeded", "failed", "partial"):
             job["duration_sec"] = time.time() - start
             return job
         if time.time() - start > timeout:

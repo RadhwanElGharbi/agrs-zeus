@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import {
   FileText,
@@ -30,6 +30,7 @@ import {
   ExternalLink
 } from 'lucide-react'
 import { useProject } from '@/lib/context/ProjectContext'
+import { trackEvent } from '@/lib/analytics'
 import { cn } from '@/lib/utils'
 import { 
   fetchRecommendedCRS, 
@@ -65,8 +66,9 @@ const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
 ]
 
 export function ProjectProfileDialog({ open, onClose }: ProjectProfileDialogProps) {
-  const { projectMetadata, currentProject, refreshProjectData } = useProject()
+  const { projectMetadata, currentProject, refreshProjectData, datasets } = useProject()
   const [mounted, setMounted] = useState(false)
+  const prevOpenRef = useRef(open)
   const [crsSelectorOpen, setCrsSelectorOpen] = useState(false)
   const [recommendation, setRecommendation] = useState<ProjectCRSRecommendation | null>(null)
   const [isUpdating, setIsUpdating] = useState(false)
@@ -145,6 +147,14 @@ export function ProjectProfileDialog({ open, onClose }: ProjectProfileDialogProp
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, activeTab, currentProject])
+
+  useEffect(() => {
+    if (prevOpenRef.current === open) return
+    trackEvent('dialog', 'ProjectProfileDialog', open ? 'open_project_profile_dialog' : 'close_project_profile_dialog', {
+      project: currentProject
+    })
+    prevOpenRef.current = open
+  }, [currentProject, open])
 
   useEffect(() => {
     if (open) {
@@ -417,10 +427,17 @@ export function ProjectProfileDialog({ open, onClose }: ProjectProfileDialogProp
 
                   <div className="space-y-4">
                     <div>
-                      <div className="text-[10px] text-white/30 font-mono mb-1 uppercase">Primary Location</div>
+                      <div className="text-[10px] text-white/30 font-mono mb-1 uppercase">
+                        {(projectMetadata?.aoi?.countries?.length ?? 0) > 1 ? 'Countries Covered' : 'Country'}
+                      </div>
                       <div className="text-sm font-bold text-white">
                         {projectMetadata?.aoi?.countries?.join(', ') || projectMetadata?.country || projectMetadata?.iso3 || 'Global / Unspecified'}
                       </div>
+                      {(projectMetadata?.iso3_list?.length ?? 0) > 1 && (
+                        <div className="text-[10px] text-white/40 font-mono mt-1">
+                          {projectMetadata!.iso3_list!.join(' · ')} ({projectMetadata!.iso3_list!.length} countries)
+                        </div>
+                      )}
                     </div>
                     
                     <div className="grid grid-cols-2 gap-4">
@@ -525,9 +542,9 @@ export function ProjectProfileDialog({ open, onClose }: ProjectProfileDialogProp
                       <div className="text-xs font-bold uppercase tracking-wider text-white/70">Applicable Regulations (Catalogue)</div>
                       <div className="text-[10px] font-mono text-white/30">
                         {regulations?.countries_iso3?.length ? (
-                          <span>AOI countries: {regulations.countries_iso3.join(', ')}</span>
+                          <span>AOI countries: {projectMetadata?.aoi?.countries?.join(', ') || regulations.countries_iso3.join(', ')} ({regulations.countries_iso3.length})</span>
                         ) : (
-                          <span>AOI countries: (unknown)</span>
+                          <span>AOI countries: {projectMetadata?.aoi?.countries?.join(', ') || '(unknown)'}</span>
                         )}
                       </div>
                     </div>
@@ -732,127 +749,122 @@ export function ProjectProfileDialog({ open, onClose }: ProjectProfileDialogProp
 
             {activeTab === 'geo_scope' && (
               <div className="space-y-8 animate-in fade-in duration-300">
-                {/* Data Sources Section */}
                 <section>
                   <div className="flex items-center gap-2 mb-4 text-white/50">
                     <Database className="w-4 h-4" />
                     <h3 className="text-sm font-bold uppercase tracking-wider">Geospatial Data Sources</h3>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Raster Datasets */}
-                    <div className="p-4 bg-black/40 border border-white/10 rounded-sm">
-                      <div className="flex items-center gap-2 text-xs font-mono uppercase text-white/40 tracking-wider mb-3">
-                        <Layers className="w-3 h-3" />
-                        <span>Raster Datasets</span>
+                  {datasets && (datasets.rasters.length > 0 || datasets.vectors.length > 0) ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="p-4 bg-black/40 border border-white/10 rounded-sm">
+                        <div className="flex items-center justify-between text-xs font-mono uppercase text-white/40 tracking-wider mb-3">
+                          <div className="flex items-center gap-2">
+                            <Layers className="w-3 h-3" />
+                            <span>Raster Datasets</span>
+                          </div>
+                          <span className="text-[9px]">{datasets.rasters.length}</span>
+                        </div>
+                        <div className="space-y-2">
+                          {datasets.rasters.length === 0 ? (
+                            <div className="text-[10px] font-mono text-white/30 italic py-2">No rasters fetched yet.</div>
+                          ) : datasets.rasters.map((ds) => (
+                            <DataSourceItem
+                              key={ds.name}
+                              name={ds.metadata?.dataset_name || ds.name}
+                              source={ds.metadata?.source || ds.metadata?.provider || 'Unknown source'}
+                              resolution={ds.metadata?.resolution_m ? `${ds.metadata.resolution_m}m` : 'Raster'}
+                              url={ds.metadata?.documentation_url || ds.metadata?.provider_url || '#'}
+                            />
+                          ))}
+                        </div>
                       </div>
-                      <div className="space-y-2">
-                        <DataSourceItem
-                          name="Digital Elevation Model"
-                          source="Copernicus DEM GLO-30"
-                          resolution="30m"
-                          url="https://spacedata.copernicus.eu/collections/copernicus-digital-elevation-model"
-                        />
-                        <DataSourceItem
-                          name="Land Cover Classification"
-                          source="ESA WorldCover 2021"
-                          resolution="10m"
-                          url="https://esa-worldcover.org/en"
-                        />
-                        <DataSourceItem
-                          name="Soil Properties"
-                          source="SoilGrids 250m"
-                          resolution="250m"
-                          url="https://soilgrids.org/"
-                        />
-                        <DataSourceItem
-                          name="Geohazard Assessment"
-                          source="ISPRA / ProGeo"
-                          resolution="Derived"
-                          url="https://www.isprambiente.gov.it/it/progetti/cartella-progetti-in-corso/suolo-e-territorio-1/iffi-inventario-dei-fenomeni-franosi-in-italia"
-                        />
-                      </div>
-                    </div>
 
-                    {/* Vector Datasets */}
-                    <div className="p-4 bg-black/40 border border-white/10 rounded-sm">
-                      <div className="flex items-center gap-2 text-xs font-mono uppercase text-white/40 tracking-wider mb-3">
-                        <Route className="w-3 h-3" />
-                        <span>Vector Datasets</span>
-                      </div>
-                      <div className="space-y-2">
-                        <DataSourceItem
-                          name="Road Network"
-                          source="OpenStreetMap"
-                          resolution="Vector"
-                          url="https://www.openstreetmap.org/"
-                        />
-                        <DataSourceItem
-                          name="Railway Network"
-                          source="OpenStreetMap"
-                          resolution="Vector"
-                          url="https://www.openstreetmap.org/"
-                        />
-                        <DataSourceItem
-                          name="Waterways & Rivers"
-                          source="OpenStreetMap"
-                          resolution="Vector"
-                          url="https://www.openstreetmap.org/"
-                        />
-                        <DataSourceItem
-                          name="Power Transmission Lines"
-                          source="OpenStreetMap"
-                          resolution="Vector"
-                          url="https://www.openstreetmap.org/"
-                        />
-                        <DataSourceItem
-                          name="Existing Pipelines"
-                          source="OpenStreetMap / SNAM"
-                          resolution="Vector"
-                          url="https://www.snam.it/en/our-businesses/transportation.html"
-                        />
+                      <div className="p-4 bg-black/40 border border-white/10 rounded-sm">
+                        <div className="flex items-center justify-between text-xs font-mono uppercase text-white/40 tracking-wider mb-3">
+                          <div className="flex items-center gap-2">
+                            <Route className="w-3 h-3" />
+                            <span>Vector Datasets</span>
+                          </div>
+                          <span className="text-[9px]">{datasets.vectors.length}</span>
+                        </div>
+                        <div className="space-y-2">
+                          {datasets.vectors.length === 0 ? (
+                            <div className="text-[10px] font-mono text-white/30 italic py-2">No vectors fetched yet.</div>
+                          ) : datasets.vectors.map((ds) => (
+                            <DataSourceItem
+                              key={ds.name}
+                              name={ds.metadata?.dataset_name || ds.name}
+                              source={ds.metadata?.source || ds.metadata?.provider || 'Unknown source'}
+                              resolution="Vector"
+                              url={ds.metadata?.documentation_url || ds.metadata?.provider_url || '#'}
+                            />
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="p-6 bg-black/40 border border-white/10 rounded-sm text-center">
+                      <Database className="w-6 h-6 text-white/20 mx-auto mb-2" />
+                      <div className="text-xs text-white/40 font-mono uppercase">No datasets fetched yet</div>
+                      <div className="text-[10px] text-white/30 mt-1">Use the Dataset Manager to fetch geospatial data for this project.</div>
+                    </div>
+                  )}
                 </section>
 
-                {/* Terrain Characteristics */}
                 <section>
                   <div className="flex items-center gap-2 mb-4 text-white/50">
                     <Mountain className="w-4 h-4" />
                     <h3 className="text-sm font-bold uppercase tracking-wider">Terrain Characteristics</h3>
                   </div>
 
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <TerrainCard
-                      label="Terrain Type"
-                      value="Apennine Mountains"
-                      subtext="Central Italy"
-                      icon={<Mountain className="w-4 h-4" />}
-                    />
-                    <TerrainCard
-                      label="Seismic Zone"
-                      value="Zone 1-2"
-                      subtext="High hazard (NTC 2018)"
-                      icon={<AlertTriangle className="w-4 h-4" />}
-                      warning
-                    />
-                    <TerrainCard
-                      label="Primary Land Cover"
-                      value="Cropland / Forest"
-                      subtext="58-65% agricultural"
-                      icon={<TreePine className="w-4 h-4" />}
-                    />
-                    <TerrainCard
-                      label="Elevation Range"
-                      value="25m - 450m"
-                      subtext="Coastal to hills"
-                      icon={<Layers className="w-4 h-4" />}
-                    />
-                  </div>
+                  {datasets && datasets.rasters.some(r => r.metadata?.category === 'dem' && r.metadata?.statistics) ? (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {(() => {
+                        const demDs = datasets.rasters.find(r => r.metadata?.category === 'dem')
+                        const stats = demDs?.metadata?.statistics
+                        return (
+                          <>
+                            <TerrainCard
+                              label="Elevation Range"
+                              value={stats?.min != null && stats?.max != null ? `${Math.round(stats.min)}m - ${Math.round(stats.max)}m` : 'N/A'}
+                              subtext={stats?.mean != null ? `Mean: ${Math.round(stats.mean)}m` : ''}
+                              icon={<Layers className="w-4 h-4" />}
+                            />
+                            <TerrainCard
+                              label="DEM Source"
+                              value={demDs?.metadata?.dataset_name || 'Unknown'}
+                              subtext={demDs?.metadata?.resolution_m ? `${demDs.metadata.resolution_m}m resolution` : ''}
+                              icon={<Mountain className="w-4 h-4" />}
+                            />
+                          </>
+                        )
+                      })()}
+                      {datasets.rasters.some(r => r.metadata?.category === 'geohazard') && (
+                        <TerrainCard
+                          label="Seismic Data"
+                          value="Available"
+                          subtext={datasets.rasters.find(r => r.metadata?.category === 'geohazard')?.metadata?.dataset_name || 'GEM/USGS PGA'}
+                          icon={<AlertTriangle className="w-4 h-4" />}
+                          warning
+                        />
+                      )}
+                      {datasets.rasters.some(r => r.metadata?.category === 'landcover') && (
+                        <TerrainCard
+                          label="Land Cover"
+                          value="Available"
+                          subtext={datasets.rasters.find(r => r.metadata?.category === 'landcover')?.metadata?.dataset_name || 'ESA WorldCover'}
+                          icon={<TreePine className="w-4 h-4" />}
+                        />
+                      )}
+                    </div>
+                  ) : (
+                    <div className="p-4 bg-black/20 border border-white/5 rounded-sm">
+                      <div className="text-[10px] text-white/30 font-mono uppercase">Terrain analysis requires a DEM dataset. Fetch datasets to populate this section.</div>
+                    </div>
+                  )}
                 </section>
 
-                {/* Environmental Constraints */}
                 <section>
                   <div className="flex items-center gap-2 mb-4 text-white/50">
                     <AlertTriangle className="w-4 h-4" />
@@ -860,37 +872,20 @@ export function ProjectProfileDialog({ open, onClose }: ProjectProfileDialogProp
                   </div>
 
                   <div className="p-4 bg-amber-500/5 border border-amber-500/20 rounded-sm">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                      <div>
-                        <div className="text-amber-400 font-bold mb-2">Natura 2000 Sites (Potential Intersections)</div>
-                        <ul className="space-y-1 text-white/60">
-                          <li className="flex items-start gap-2">
-                            <span className="text-amber-500 mt-0.5">•</span>
-                            <span>IT5310020 &quot;Monti Martani, Serre, Subasio&quot; (SPA)</span>
-                          </li>
-                          <li className="flex items-start gap-2">
-                            <span className="text-amber-500 mt-0.5">•</span>
-                            <span>Regional protected areas along Apennine corridor</span>
-                          </li>
-                        </ul>
-                      </div>
-                      <div>
-                        <div className="text-amber-400 font-bold mb-2">Geohazard Considerations</div>
-                        <ul className="space-y-1 text-white/60">
-                          <li className="flex items-start gap-2">
-                            <span className="text-amber-500 mt-0.5">•</span>
-                            <span>Landslide-prone areas (IFFI inventory)</span>
-                          </li>
-                          <li className="flex items-start gap-2">
-                            <span className="text-amber-500 mt-0.5">•</span>
-                            <span>Flood risk zones along river valleys</span>
-                          </li>
-                          <li className="flex items-start gap-2">
-                            <span className="text-amber-500 mt-0.5">•</span>
-                            <span>Archaeological sensitivity (Etruscan/Roman remains)</span>
-                          </li>
-                        </ul>
-                      </div>
+                    <div className="text-xs text-white/60">
+                      {datasets && datasets.vectors.some(v => v.metadata?.category === 'protected_areas') ? (
+                        <div>
+                          <div className="text-amber-400 font-bold mb-2">Protected Areas Data Available</div>
+                          <p className="text-white/50">
+                            {datasets.vectors.find(v => v.metadata?.category === 'protected_areas')?.metadata?.dataset_name || 'Protected areas'} loaded.
+                            Review in the map layer manager for intersection analysis.
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="text-white/30 font-mono text-[10px] uppercase">
+                          Environmental constraint data will appear here once protected areas and constraint datasets are fetched for this project.
+                        </div>
+                      )}
                     </div>
                   </div>
                 </section>
@@ -899,46 +894,11 @@ export function ProjectProfileDialog({ open, onClose }: ProjectProfileDialogProp
 
             {activeTab === 'epc_logistics' && (
               <div className="space-y-8 animate-in fade-in duration-300">
-                {/* Regional Cost Factors */}
-                <section>
-                  <div className="flex items-center gap-2 mb-4 text-white/50">
-                    <Truck className="w-4 h-4" />
-                    <h3 className="text-sm font-bold uppercase tracking-wider">Regional Cost Factors (Italy)</h3>
-                  </div>
-
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <CostFactorCard
-                      label="Labor Index"
-                      value="1.0"
-                      benchmark="Baseline"
-                      source="AACE International"
-                    />
-                    <CostFactorCard
-                      label="Material Index"
-                      value="1.0"
-                      benchmark="Baseline"
-                      source="Compass Intl. 2024"
-                    />
-                    <CostFactorCard
-                      label="Regional Multiplier"
-                      value="1.2x"
-                      benchmark="Western Europe"
-                      source="EU Pipeline Benchmarks"
-                    />
-                    <CostFactorCard
-                      label="Base Cost Range"
-                      value="€800K-1.5M"
-                      benchmark="per km"
-                      source="Industry Average"
-                    />
-                  </div>
-                </section>
-
-                {/* Infrastructure Crossing Costs */}
+                {/* Infrastructure Crossing Costs — global reference */}
                 <section>
                   <div className="flex items-center gap-2 mb-4 text-white/50">
                     <Route className="w-4 h-4" />
-                    <h3 className="text-sm font-bold uppercase tracking-wider">Infrastructure Crossing Costs</h3>
+                    <h3 className="text-sm font-bold uppercase tracking-wider">Infrastructure Crossing Cost Reference</h3>
                   </div>
 
                   <div className="overflow-x-auto">
@@ -946,25 +906,26 @@ export function ProjectProfileDialog({ open, onClose }: ProjectProfileDialogProp
                       <thead>
                         <tr className="border-b border-white/10">
                           <th className="text-left py-2 px-3 text-white/40 font-mono uppercase tracking-wider">Crossing Type</th>
-                          <th className="text-right py-2 px-3 text-white/40 font-mono uppercase tracking-wider">Cost per Crossing</th>
+                          <th className="text-right py-2 px-3 text-white/40 font-mono uppercase tracking-wider">Typical Cost</th>
                           <th className="text-left py-2 px-3 text-white/40 font-mono uppercase tracking-wider">Method</th>
-                          <th className="text-left py-2 px-3 text-white/40 font-mono uppercase tracking-wider">Source</th>
+                          <th className="text-left py-2 px-3 text-white/40 font-mono uppercase tracking-wider">Reference</th>
                         </tr>
                       </thead>
                       <tbody className="text-white/70">
-                        <CrossingRow icon={<Route className="w-3 h-3" />} type="Primary Road" cost="€200K-400K" method="HDD Required" source="API RP 1102" />
-                        <CrossingRow icon={<Route className="w-3 h-3" />} type="Secondary Road" cost="€100K-200K" method="HDD Preferred" source="API RP 1102" />
-                        <CrossingRow icon={<Route className="w-3 h-3" />} type="Tertiary/Track" cost="€40K-80K" method="Open Cut/HDD" source="AACE Est." />
-                        <CrossingRow icon={<Train className="w-3 h-3" />} type="Heavy Rail" cost="€1.0M-1.5M" method="Deep HDD" source="RFI Standards" />
-                        <CrossingRow icon={<Droplets className="w-3 h-3" />} type="Major River" cost="€300K-500K" method="HDD Required" source="EN 1594" />
-                        <CrossingRow icon={<Droplets className="w-3 h-3" />} type="Stream/Canal" cost="€80K-150K" method="HDD Preferred" source="Industry Est." />
-                        <CrossingRow icon={<Zap className="w-3 h-3" />} type="HV Powerline" cost="€100K-200K" method="HDD Preferred" source="Terna Guidelines" />
+                        <CrossingRow icon={<Route className="w-3 h-3" />} type="Primary Road (Motorway/Trunk)" cost="$200K-400K" method="HDD Required" source="API RP 1102" />
+                        <CrossingRow icon={<Route className="w-3 h-3" />} type="Secondary Road" cost="$100K-200K" method="HDD Preferred" source="API RP 1102" />
+                        <CrossingRow icon={<Route className="w-3 h-3" />} type="Local Road / Track" cost="$40K-80K" method="Open Cut / HDD" source="AACE Estimate" />
+                        <CrossingRow icon={<Train className="w-3 h-3" />} type="Heavy Rail (Mainline)" cost="$1.0M-1.5M" method="Deep HDD / Bore" source="API RP 1102" />
+                        <CrossingRow icon={<Droplets className="w-3 h-3" />} type="Major River (>50m)" cost="$300K-800K+" method="HDD Required" source="EN 1594 / ASME B31.4" />
+                        <CrossingRow icon={<Droplets className="w-3 h-3" />} type="Stream / Canal (<50m)" cost="$80K-150K" method="HDD Preferred" source="Industry Estimate" />
+                        <CrossingRow icon={<Zap className="w-3 h-3" />} type="HV Powerline" cost="$100K-200K" method="HDD / Depth Clearance" source="IEC / National Grid Codes" />
                       </tbody>
                     </table>
                   </div>
+                  <div className="mt-2 text-[9px] font-mono text-white/20 uppercase">Costs are indicative global averages (USD). Actual costs vary by region, regulation, and site conditions.</div>
                 </section>
 
-                {/* Construction Standards */}
+                {/* Applicable Technical Standards — dynamic from catalogue */}
                 <section>
                   <div className="flex items-center justify-between gap-3 mb-4 text-white/50">
                     <div className="flex items-center gap-2">
@@ -1009,7 +970,7 @@ export function ProjectProfileDialog({ open, onClose }: ProjectProfileDialogProp
                       <ul className="space-y-1.5 text-xs text-white/60">
                         {pipelineDesignStandards.length === 0 ? (
                           <li className="text-[10px] font-mono text-white/30 italic py-1">
-                            {loadingStandards ? 'Loading…' : 'No pipeline design standards available.'}
+                            {loadingStandards ? 'Loading…' : 'No pipeline design standards available. Click SCAN to search catalogue.'}
                           </li>
                         ) : (
                           pipelineDesignStandards.map((entry, idx) => {
@@ -1024,13 +985,9 @@ export function ProjectProfileDialog({ open, onClose }: ProjectProfileDialogProp
                                   </span>
                                 </div>
                                 {entry.url && (
-                                  <a
-                                    href={entry.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
+                                  <a href={entry.url} target="_blank" rel="noopener noreferrer"
                                     className="p-1 text-white/30 hover:text-primary transition-colors opacity-0 group-hover:opacity-100 shrink-0"
-                                    title="Open standard documentation"
-                                  >
+                                    title="Open standard documentation">
                                     <ExternalLink className="w-3 h-3" />
                                   </a>
                                 )}
@@ -1045,7 +1002,7 @@ export function ProjectProfileDialog({ open, onClose }: ProjectProfileDialogProp
                       <ul className="space-y-1.5 text-xs text-white/60">
                         {constructionStandards.length === 0 ? (
                           <li className="text-[10px] font-mono text-white/30 italic py-1">
-                            {loadingStandards ? 'Loading…' : 'No construction standards available.'}
+                            {loadingStandards ? 'Loading…' : 'No construction standards available. Click SCAN to search catalogue.'}
                           </li>
                         ) : (
                           constructionStandards.map((entry, idx) => {
@@ -1060,13 +1017,9 @@ export function ProjectProfileDialog({ open, onClose }: ProjectProfileDialogProp
                                   </span>
                                 </div>
                                 {entry.url && (
-                                  <a
-                                    href={entry.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
+                                  <a href={entry.url} target="_blank" rel="noopener noreferrer"
                                     className="p-1 text-white/30 hover:text-primary transition-colors opacity-0 group-hover:opacity-100 shrink-0"
-                                    title="Open standard documentation"
-                                  >
+                                    title="Open standard documentation">
                                     <ExternalLink className="w-3 h-3" />
                                   </a>
                                 )}
@@ -1075,37 +1028,6 @@ export function ProjectProfileDialog({ open, onClose }: ProjectProfileDialogProp
                           })
                         )}
                       </ul>
-                    </div>
-                  </div>
-                </section>
-
-                {/* EPC Considerations */}
-                <section>
-                  <div className="flex items-center gap-2 mb-4 text-white/50">
-                    <Construction className="w-4 h-4" />
-                    <h3 className="text-sm font-bold uppercase tracking-wider">EPC Considerations</h3>
-                  </div>
-
-                  <div className="p-4 bg-cyan-500/5 border border-cyan-500/20 rounded-sm">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                      <div>
-                        <div className="text-cyan-400 font-bold mb-2">Key Contractors (Italy Market)</div>
-                        <ul className="space-y-1 text-white/60">
-                          <li>• <strong className="text-white/80">SNAM Rete Gas</strong> - TSO, Network Operator</li>
-                          <li>• <strong className="text-white/80">Saipem</strong> - EPC Contractor</li>
-                          <li>• <strong className="text-white/80">Bonatti</strong> - Pipeline Construction</li>
-                          <li>• <strong className="text-white/80">Sicim</strong> - Pipeline Construction</li>
-                        </ul>
-                      </div>
-                      <div>
-                        <div className="text-cyan-400 font-bold mb-2">Typical Timeline (Italy)</div>
-                        <ul className="space-y-1 text-white/60">
-                          <li>• Permitting: <strong className="text-white/80">18-24 months</strong> (fast-track)</li>
-                          <li>• EIA Process: <strong className="text-white/80">12-18 months</strong></li>
-                          <li>• Land Acquisition: <strong className="text-white/80">6-12 months</strong></li>
-                          <li>• Construction: <strong className="text-white/80">12-18 months</strong> (72km)</li>
-                        </ul>
-                      </div>
                     </div>
                   </div>
                 </section>

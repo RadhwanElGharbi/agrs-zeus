@@ -1,19 +1,6 @@
 {
-  "version": "2.3.0",
-  "release_date": "2026-02-15",
-  "release_notes": "Client-side local data cache with bundled GDAL rendering. Project Controls replacing Changelog. Push-to-server with admin approval. Background drift detection. AOI/start-end points sync. Remote fallback for missing GDAL.",
-  "downloads": [
-    {
-      "platform": "windows",
-      "label": "Windows Installer (.exe)",
-      "url": "/api/app/downloads/AGRS-ZEUS-Setup-2.3.0.exe",
-      "filename": "AGRS-ZEUS-Setup-2.3.0.exe"
-    },
-    {
-      "platform": "linux",
-      "label": "Linux AppImage",
-      "url": "/api/app/downloads/AGRS-ZEUS-2.3.0-linux.AppImage",
-      "filename": "AGRS-ZEUS-2.3.0-linux.AppImage"
-    }
-  ]
+  "version": "2.4.0",
+  "release_date": "2026-02-19",
+  "release_notes": "AGRS ZEUS v2.4.0 with client-side local data cache, GDAL bundled for local rendering, Project Controls, and background drift detection.",
+  "downloads": [{"platform":"windows","label":"Windows Installer (.exe)","url":"/api/app/downloads/AGRS-ZEUS-Setup-2.4.0.exe","filename":"AGRS-ZEUS-Setup-2.4.0.exe"},{"platform":"linux","label":"Linux AppImage","url":"/api/app/downloads/AGRS-ZEUS-2.4.0-linux.AppImage","filename":"AGRS-ZEUS-2.4.0-linux.AppImage"}]
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import Image from 'next/image'
 import { readSession, writeSession } from '@/lib/context/MapViewContext'
 import {
@@ -26,7 +27,7 @@ import { ProjectProfileDialog } from '@/components/Project/ProjectProfileDialog'
 import { DatasetCoverageDialog } from '@/components/Project/DatasetCoverageDialog'
 import { PirlAiDialog } from '@/components/Pirl/PirlAiDialog'
 import { ZeusLoadingDialog } from '@/components/shared/ZeusLoadingDialog'
-import { fetchActiveDatasetJobs, subscribeToDatasetJob, type DatasetCategory, type DatasetFetchJob } from '@/lib/api/dataClient'
+import { fetchActiveDatasetJobs, subscribeToDatasetJob, subscribeToProjectEvents, type DatasetCategory, type DatasetFetchJob } from '@/lib/api/dataClient'
 import { ProjectControlsDialog } from '@/components/shared/ProjectControlsDialog'
 import { SettingsDialog, type ResolutionOption } from '@/components/shared/SettingsDialog'
 import { AlertTriangle } from 'lucide-react'
@@ -35,6 +36,7 @@ import { AlertTriangle } from 'lucide-react'
 interface SidebarProps {
   className?: string
   devMode?: boolean
+  isBackendOnline: boolean
   activeView: 'map' | 'digital-twin' | 'project-management'
   onViewChange: (view: 'map' | 'digital-twin' | 'project-management') => void
   onDatasetRunInBackground?: (jobId: string) => void
@@ -42,7 +44,7 @@ interface SidebarProps {
   onResolutionChange: (value: ResolutionOption) => void
 }
 
-export function Sidebar({ className, devMode = false, activeView, onViewChange, onDatasetRunInBackground, resolution, onResolutionChange }: SidebarProps) {
+export function Sidebar({ className, devMode = false, isBackendOnline, activeView, onViewChange, onDatasetRunInBackground, resolution, onResolutionChange }: SidebarProps) {
   const { currentProject, isProjectLoading } = useProject()
   const { registerGisActions, registerPirlActions } = useMapView()
   const { reportAction } = useOnboarding()
@@ -56,6 +58,12 @@ export function Sidebar({ className, devMode = false, activeView, onViewChange, 
   const [showPirlAi, setShowPirlAi] = useState(false)
   const [showProjectControls, setShowProjectControls] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
+  const [collapsedNavTooltip, setCollapsedNavTooltip] = useState<{
+    label: string
+    description: string
+    left: number
+    top: number
+  } | null>(null)
   const [localChangesDetected, setLocalChangesDetected] = useState(false)
   const [driftDiscrepancy, setDriftDiscrepancy] = useState<LocalCacheDiscrepancy | null>(null)
 
@@ -72,7 +80,18 @@ export function Sidebar({ className, devMode = false, activeView, onViewChange, 
     })
     return () => { unsubscribe() }
   }, [])
+  useEffect(() => {
+    if (!collapsed) {
+      setCollapsedNavTooltip(null)
+    }
+  }, [collapsed])
   const [isZeusAnalyzing, setIsZeusAnalyzing] = useState(false)
+
+  useEffect(() => {
+    if (currentProject && !collapsed) {
+      setCollapsed(true)
+    }
+  }, [currentProject]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Background activity signals (used to drive the "System Load" UI)
   const [activeDatasetJobId, setActiveDatasetJobId] = useState<string | null>(null)
@@ -80,8 +99,8 @@ export function Sidebar({ className, devMode = false, activeView, onViewChange, 
   const [activeDatasetJobStatus, setActiveDatasetJobStatus] = useState<DatasetFetchJob['status'] | null>(null)
   const [activeDatasetJobCategory, setActiveDatasetJobCategory] = useState<DatasetCategory | null>(null)
 
-  // Poll for active dataset jobs for the selected project, so the UI reflects
-  // backgrounded / long-running fetches even after navigation or reload.
+  // Subscribe to project-level SSE for real-time job notifications, with an
+  // initial REST check so the UI is correct immediately after navigation/reload.
   useEffect(() => {
     setActiveDatasetJobId(null)
     setActiveDatasetJobProgress(0)
@@ -90,41 +109,37 @@ export function Sidebar({ className, devMode = false, activeView, onViewChange, 
 
     if (!currentProject) return
 
-    let cancelled = false
-
-    const refreshActiveJob = async () => {
+    const initialCheck = async () => {
       try {
         const resp = await fetchActiveDatasetJobs()
-        if (cancelled) return
-
         const active = resp?.active_jobs?.[currentProject]
-        if (!active) {
+        if (active) {
+          setActiveDatasetJobId(active.job_id)
+          setActiveDatasetJobProgress(active.progress ?? 0)
+          setActiveDatasetJobStatus(active.status as DatasetFetchJob['status'])
+          setActiveDatasetJobCategory(active.current_category ?? null)
+        }
+      } catch { /* non-fatal */ }
+    }
+    void initialCheck()
+
+    const unsubscribe = subscribeToProjectEvents(
+      currentProject,
+      (event) => {
+        if (event.type === 'dataset_job_started' && event.job_id) {
+          setActiveDatasetJobId(event.job_id)
+          setActiveDatasetJobProgress(0)
+          setActiveDatasetJobStatus('running')
+        } else if (event.type === 'dataset_job_cancelled' || event.type === 'dataset_job_completed') {
           setActiveDatasetJobId(null)
           setActiveDatasetJobProgress(0)
           setActiveDatasetJobStatus(null)
           setActiveDatasetJobCategory(null)
-          return
         }
-
-        setActiveDatasetJobId(active.job_id)
-        setActiveDatasetJobProgress(active.progress ?? 0)
-        setActiveDatasetJobStatus(active.status as DatasetFetchJob['status'])
-        setActiveDatasetJobCategory(active.current_category ?? null)
-      } catch {
-        // Non-fatal: keep last known state.
       }
-    }
+    )
 
-    void refreshActiveJob()
-
-    const interval = setInterval(() => {
-      void refreshActiveJob()
-    }, 6000)
-
-    return () => {
-      cancelled = true
-      clearInterval(interval)
-    }
+    return () => unsubscribe()
   }, [currentProject])
 
   // Subscribe for live progress updates once we know the active job id.
@@ -254,11 +269,30 @@ export function Sidebar({ className, devMode = false, activeView, onViewChange, 
     })
   }, [currentProject, registerPirlActions])
 
+  const handleCollapsedTooltipOpen = useCallback((target: HTMLButtonElement, label: string, description: string) => {
+    if (!collapsed) return
+    const rect = target.getBoundingClientRect()
+    setCollapsedNavTooltip({
+      label,
+      description,
+      left: rect.right + 12,
+      top: rect.top + rect.height / 2
+    })
+  }, [collapsed])
+
+  const handleCollapsedTooltipClose = useCallback(() => {
+    setCollapsedNavTooltip(null)
+  }, [])
+
   const handleNavClick = (onClick: (() => void) | undefined, tourAction?: TourAction) => {
     if (tourAction) {
       reportAction(tourAction)
     }
+    setCollapsedNavTooltip(null)
     onClick?.()
+    if (!collapsed) {
+      setCollapsed(true)
+    }
   }
 
   const navigationItems = [
@@ -271,6 +305,12 @@ export function Sidebar({ className, devMode = false, activeView, onViewChange, 
     { icon: Brain, label: 'PIRL AI', description: 'Model Status', onClick: () => currentProject && setShowPirlAi(true), disabled: !currentProject, tourId: 'sidebar-pirl-ai', tourAction: 'click-pirl-ai' as TourAction },
     { icon: Settings, label: 'Settings', description: 'System Config', onClick: () => setShowSettings(true), tourId: 'sidebar-settings' },
   ]
+  const backendStatusLabel = isBackendOnline ? 'Online' : 'Offline'
+  const backendStatusDotClass = isBackendOnline
+    ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]'
+    : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]'
+  const backendStatusPulseClass = isBackendOnline ? 'bg-emerald-500' : 'bg-red-500'
+  const backendStatusTooltip = isBackendOnline ? 'System Operational' : 'Backend Offline'
 
   return (
     <div
@@ -352,8 +392,11 @@ export function Sidebar({ className, devMode = false, activeView, onViewChange, 
                   ? "cursor-not-allowed opacity-50"
                   : "hover:bg-white/5 hover:border-white/10 text-muted-foreground hover:text-white"
               )}
-              title={collapsed ? item.label : undefined}
               onClick={() => handleNavClick(item.onClick, item.tourAction)}
+              onMouseEnter={(event) => handleCollapsedTooltipOpen(event.currentTarget, item.label, item.description)}
+              onMouseLeave={handleCollapsedTooltipClose}
+              onFocus={(event) => handleCollapsedTooltipOpen(event.currentTarget, item.label, item.description)}
+              onBlur={handleCollapsedTooltipClose}
               disabled={item.disabled}
               data-tour={item.tourId}
             >
@@ -425,10 +468,10 @@ export function Sidebar({ className, devMode = false, activeView, onViewChange, 
             <div className="flex items-center justify-between text-xs">
               <div className="flex items-center gap-2">
                 <div className="relative">
-                  <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse" />
-                  <div className="absolute inset-0 w-2 h-2 rounded-full bg-emerald-500 opacity-50 animate-ping" />
+                  <div className={cn('w-2 h-2 rounded-full animate-pulse', backendStatusDotClass)} />
+                  <div className={cn('absolute inset-0 w-2 h-2 rounded-full opacity-50 animate-ping', backendStatusPulseClass)} />
                 </div>
-                <span className="text-white/60 font-mono uppercase tracking-widest text-[10px]">Online</span>
+                <span className="text-white/60 font-mono uppercase tracking-widest text-[10px]">{backendStatusLabel}</span>
               </div>
               {localChangesDetected && (
                 <button
@@ -449,9 +492,9 @@ export function Sidebar({ className, devMode = false, activeView, onViewChange, 
         ) : (
           <div className="flex justify-center">
              <div className="relative group cursor-help">
-                <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse" />
+                <div className={cn('w-2 h-2 rounded-full animate-pulse', backendStatusDotClass)} />
                 <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 px-2 py-1 bg-black border border-white/20 text-[10px] text-white opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
-                    System Operational
+                    {backendStatusTooltip}
                 </div>
             </div>
           </div>
@@ -480,6 +523,28 @@ export function Sidebar({ className, devMode = false, activeView, onViewChange, 
         resolution={resolution}
         onResolutionChange={onResolutionChange}
       />
+      {collapsedNavTooltip && typeof document !== 'undefined' && createPortal(
+        <div
+          className="fixed z-[120] pointer-events-none -translate-y-1/2"
+          style={{ left: `${collapsedNavTooltip.left}px`, top: `${collapsedNavTooltip.top}px` }}
+        >
+          <div className="relative">
+            <div className="absolute -left-1 top-1/2 h-2 w-2 -translate-y-1/2 rotate-45 border-l border-b border-primary/40 bg-[#05070a]/95" />
+            <div className="relative overflow-hidden rounded-sm border border-primary/40 bg-[#05070a]/95 px-3 py-2 shadow-[0_0_18px_-6px_rgba(var(--primary),0.8)] backdrop-blur-xl">
+              <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:12px_12px] opacity-30" />
+              <div className="relative flex flex-col items-start">
+                <span className="text-[10px] font-mono uppercase tracking-widest text-white/90 whitespace-nowrap">
+                  {collapsedNavTooltip.label}
+                </span>
+                <span className="text-[9px] font-mono uppercase tracking-wide text-white/50 whitespace-nowrap">
+                  {collapsedNavTooltip.description}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   )
 }

@@ -1,10 +1,11 @@
 'use client'
 
 import React, { useCallback, useEffect, useState } from 'react'
-import { BarChart3, Check, DollarSign, Eye, EyeOff, FileText, GitCompare, Layers, Loader2, Minimize2, Route as RouteIcon, Table, Trash2 } from 'lucide-react'
+import { BarChart3, Check, ChevronDown, DollarSign, Download, Eye, EyeOff, FileText, GitCompare, Layers, Loader2, Route as RouteIcon, Table, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useProject } from '@/lib/context/ProjectContext'
 import { useMapView } from '@/lib/context/MapViewContext'
+import { trackEvent } from '@/lib/analytics'
 import { CompareRoutesDialog } from './CompareRoutesDialog'
 import { CostMatrixDialog } from './CostMatrixDialog'
 import { RouteAnalysisDialog } from './RouteAnalysisDialog'
@@ -27,6 +28,7 @@ interface RoutingRoutesPanelProps {
   onToggleRouteVisibility: (routeId: string) => void
   onRemoveRoute: (routeId: string) => void
   onOpenTable: (routeId: string) => void
+  onExportRoute: (routeId: string) => void | Promise<void>
   // Optional external control for collapsed state
   collapsed?: boolean
   onCollapsedChange?: (collapsed: boolean) => void
@@ -37,6 +39,7 @@ export function RoutingRoutesPanel({
   onToggleRouteVisibility,
   onRemoveRoute,
   onOpenTable,
+  onExportRoute,
   collapsed: externalCollapsed,
   onCollapsedChange
 }: RoutingRoutesPanelProps) {
@@ -54,6 +57,7 @@ export function RoutingRoutesPanel({
   const [compareMode, setCompareMode] = useState(false)
   const [selectedForCompare, setSelectedForCompare] = useState<string[]>([])
   const [showCompareDialog, setShowCompareDialog] = useState(false)
+  const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null)
 
   // Context menu
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; routeId: string } | null>(null)
@@ -84,18 +88,33 @@ export function RoutingRoutesPanel({
 
   const toggleCompareSelection = (routeId: string) => {
     setSelectedForCompare(prev => {
-      if (prev.includes(routeId)) return prev.filter(id => id !== routeId)
-      return [...prev, routeId]
+      const isSelected = prev.includes(routeId)
+      const next = isSelected ? prev.filter(id => id !== routeId) : [...prev, routeId]
+      trackEvent('routing_input', 'RoutingRoutesPanel', 'compare_selection_toggled', {
+        route_id: routeId,
+        selected: !isSelected,
+        compare_count: next.length,
+        project: currentProject
+      })
+      return next
     })
   }
 
   const handleCompare = () => {
     if (selectedForCompare.length >= 2) {
+      trackEvent('dialog', 'RoutingRoutesPanel', 'open_compare_routes_dialog', {
+        route_ids: selectedForCompare,
+        project: currentProject
+      })
       setShowCompareDialog(true)
     }
   }
 
   const exitCompareMode = () => {
+    trackEvent('routing_input', 'RoutingRoutesPanel', 'compare_mode_exited', {
+      compare_count: selectedForCompare.length,
+      project: currentProject
+    })
     setCompareMode(false)
     setSelectedForCompare([])
   }
@@ -112,25 +131,51 @@ export function RoutingRoutesPanel({
     setContextMenu(null)
   }, [contextMenu, onOpenTable])
 
+  const requestRouteExport = useCallback((routeId: string) => {
+    trackEvent('routing_input', 'RoutingRoutesPanel', 'route_export_requested', {
+      route_id: routeId,
+      project: currentProject
+    })
+    void Promise.resolve(onExportRoute(routeId))
+  }, [currentProject, onExportRoute])
+
+  const handleExportRoute = useCallback(() => {
+    if (!contextMenu) return
+    requestRouteExport(contextMenu.routeId)
+    setContextMenu(null)
+  }, [contextMenu, requestRouteExport])
+
   const handleShowCostMatrix = useCallback(() => {
     if (!contextMenu) return
+    trackEvent('dialog', 'RoutingRoutesPanel', 'open_cost_matrix_dialog', {
+      route_id: contextMenu.routeId,
+      project: currentProject
+    })
     setCostMatrixRouteId(contextMenu.routeId)
     setShowCostMatrixDialog(true)
     setContextMenu(null)
-  }, [contextMenu])
+  }, [contextMenu, currentProject])
 
   const handleShowAnalysis = useCallback(() => {
     if (!contextMenu) return
+    trackEvent('dialog', 'RoutingRoutesPanel', 'open_route_analysis_dialog', {
+      route_id: contextMenu.routeId,
+      project: currentProject
+    })
     setAnalysisRouteId(contextMenu.routeId)
     setShowAnalysisDialog(true)
     setContextMenu(null)
-  }, [contextMenu])
+  }, [contextMenu, currentProject])
 
   const handleAlignmentSheets = useCallback(() => {
     if (!contextMenu) return
+    trackEvent('dialog', 'RoutingRoutesPanel', 'open_alignment_sheets_dialog', {
+      route_id: contextMenu.routeId,
+      project: currentProject
+    })
     setAlignmentSheetRoute(contextMenu.routeId)
     setContextMenu(null)
-  }, [contextMenu])
+  }, [contextMenu, currentProject])
 
   // Close context menu on outside click
   useEffect(() => {
@@ -139,6 +184,13 @@ export function RoutingRoutesPanel({
     window.addEventListener('click', handleClick)
     return () => window.removeEventListener('click', handleClick)
   }, [contextMenu])
+
+  useEffect(() => {
+    if (!selectedRouteId) return
+    if (!loadedRoutes.some((route) => route.routeId === selectedRouteId)) {
+      setSelectedRouteId(null)
+    }
+  }, [loadedRoutes, selectedRouteId])
 
   // Preview alignment sheets when route/preset changes
   useEffect(() => {
@@ -171,6 +223,13 @@ export function RoutingRoutesPanel({
   const handleGeneratePDF = async () => {
     if (!alignmentSheetRoute || !currentProject) return
 
+    trackEvent('routing_input', 'RoutingRoutesPanel', 'alignment_pdf_generate_started', {
+      route_id: alignmentSheetRoute,
+      preset: alignmentPreset,
+      template: alignmentTemplate,
+      base_map: alignmentBaseMap,
+      project: currentProject
+    })
     setIsGeneratingPDF(true)
     setAlignmentError(null)
     try {
@@ -184,8 +243,20 @@ export function RoutingRoutesPanel({
           persist: true
         }
       )
+      trackEvent('routing_input', 'RoutingRoutesPanel', 'alignment_pdf_generate_succeeded', {
+        route_id: alignmentSheetRoute,
+        preset: alignmentPreset,
+        template: alignmentTemplate,
+        base_map: alignmentBaseMap,
+        project: currentProject
+      })
       setAlignmentSheetRoute(null)
     } catch (err) {
+      trackEvent('error', 'RoutingRoutesPanel', 'alignment_pdf_generate_failed', {
+        route_id: alignmentSheetRoute,
+        error: err instanceof Error ? err.message : String(err),
+        project: currentProject
+      })
       setAlignmentError(err instanceof Error ? err.message : 'Failed to generate PDF')
     } finally {
       setIsGeneratingPDF(false)
@@ -194,37 +265,42 @@ export function RoutingRoutesPanel({
 
   if (isCollapsed) {
     return (
-      <div className="relative bg-black/80 backdrop-blur-md border border-white/20 rounded-sm p-2 shadow-[0_0_20px_-5px_rgba(0,0,0,0.5)] group hover:border-purple-500/50 transition-colors">
+      <div className="w-full border-b border-white/[0.06] bg-white/[0.02] group hover:bg-white/[0.04] transition-colors">
         <button
           onClick={() => setIsCollapsed(false)}
-          className="flex items-center justify-center p-1 hover:bg-purple-500/10 rounded-sm transition-colors text-purple-400/70 hover:text-purple-400"
+          className="w-full flex items-center gap-2.5 px-4 py-2.5 text-white/50 hover:text-purple-400 transition-colors"
           title="Expand Routes"
         >
-          <RouteIcon className="w-5 h-5 group-hover:animate-pulse" />
+          <RouteIcon className="w-4 h-4 shrink-0" />
+          <span className="text-[10px] font-mono font-medium uppercase tracking-wider">Routes</span>
+          {loadedRoutes.length > 0 && (
+            <span className="text-[9px] font-bold text-purple-400 bg-purple-500/15 px-1.5 py-0.5 rounded-sm">{loadedRoutes.length}</span>
+          )}
+          <ChevronDown className="w-3 h-3 ml-auto" />
         </button>
-        {loadedRoutes.length > 0 && (
-          <div className="absolute -top-1 -right-1 w-4 h-4 bg-purple-500 rounded-full flex items-center justify-center shadow-[0_0_8px_rgba(147,51,234,0.8)]">
-            <span className="text-[9px] font-bold text-white">{loadedRoutes.length}</span>
-          </div>
-        )}
       </div>
     )
   }
 
   return (
-    <div className="w-[320px] xl:w-[380px] font-mono">
-      <div className="bg-[#0a0a0a]/95 backdrop-blur-xl border border-purple-500/20 rounded-sm shadow-[0_0_30px_-10px_rgba(147,51,234,0.3)] flex flex-col overflow-hidden max-h-[calc(100vh-450px)] xl:max-h-[calc(100vh-500px)]">
+    <div className="w-full font-mono">
+      <div className="bg-transparent flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-3 py-3 border-b border-purple-500/20 bg-purple-900/10">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
           <div className="flex items-center gap-2">
             <div className="p-1 bg-purple-500/20 rounded-sm">
               <RouteIcon className="w-3.5 h-3.5 text-purple-400" />
             </div>
-            <span className="text-xs font-bold text-white uppercase tracking-wider">Routes</span>
+            <span className="text-[11px] font-semibold text-white/90 uppercase tracking-wider">Routes</span>
           </div>
           <div className="flex items-center gap-1">
             <button
-              onClick={() => routing.openPirlManager()}
+              onClick={() => {
+                trackEvent('dialog', 'RoutingRoutesPanel', 'open_pirl_routes_manager_dialog', {
+                  project: currentProject
+                })
+                routing.openPirlManager()
+              }}
               className="flex items-center gap-1.5 px-2 py-1 bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/20 hover:border-purple-500/30 rounded text-[9px] font-medium text-purple-300 transition-colors"
               title="Open Routes Manager"
             >
@@ -234,7 +310,13 @@ export function RoutingRoutesPanel({
 
             {!compareMode && loadedRoutes.length >= 2 && (
               <button
-                onClick={() => setCompareMode(true)}
+                onClick={() => {
+                  trackEvent('routing_input', 'RoutingRoutesPanel', 'compare_mode_enabled', {
+                    loaded_route_count: loadedRoutes.length,
+                    project: currentProject
+                  })
+                  setCompareMode(true)
+                }}
                 className="flex items-center gap-1.5 px-2 py-1 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 hover:border-blue-500/30 rounded text-[9px] font-medium text-blue-400 transition-colors"
                 title="Compare routes"
               >
@@ -245,10 +327,10 @@ export function RoutingRoutesPanel({
 
             <button
               onClick={() => setIsCollapsed(true)}
-              className="p-1 hover:bg-white/10 rounded-sm transition-colors text-white/50 hover:text-white"
+              className="p-1 hover:bg-white/10 rounded-sm transition-colors text-white/40 hover:text-white"
               title="Collapse Routes"
             >
-              <Minimize2 className="w-3.5 h-3.5" />
+              <ChevronDown className="w-3.5 h-3.5 rotate-180" />
             </button>
           </div>
         </div>
@@ -282,9 +364,9 @@ export function RoutingRoutesPanel({
         )}
 
         {/* Loaded Routes */}
-        <div className="flex-1 overflow-hidden flex flex-col">
-          <div className="px-3 py-1.5 bg-white/[0.02] border-b border-white/5">
-            <span className="text-[9px] font-bold text-white/40 uppercase tracking-wider">Loaded</span>
+        <div className="flex flex-col">
+          <div className="px-4 py-1.5 border-b border-white/[0.04]">
+            <span className="text-[9px] font-bold text-white/35 uppercase tracking-wider">Loaded</span>
           </div>
 
           {loadedRoutes.length === 0 ? (
@@ -296,18 +378,30 @@ export function RoutingRoutesPanel({
               </p>
             </div>
           ) : (
-            <div className="p-1 space-y-0.5 max-h-[320px] xl:max-h-[380px] overflow-y-auto">
+            <div className="px-2 py-2 space-y-1">
               {loadedRoutes.map((route) => {
                 const isSelectedForCompare = selectedForCompare.includes(route.routeId)
+                const isSelectedRoute = selectedRouteId === route.routeId
                 return (
                   <div
                     key={route.routeId}
                     onContextMenu={(e) => handleContextMenu(e, route.routeId)}
+                    onClick={() => {
+                      if (!compareMode) {
+                        trackEvent('routing_input', 'RoutingRoutesPanel', 'route_selected', {
+                          route_id: route.routeId,
+                          project: currentProject
+                        })
+                        setSelectedRouteId(route.routeId)
+                      }
+                    }}
                     className={cn(
-                      "group flex items-center gap-2 p-2 rounded-sm transition-all duration-200 cursor-context-menu",
+                      "group relative flex items-start gap-2.5 px-3 py-2.5 border rounded-none transition-all duration-150 cursor-context-menu",
                       compareMode && isSelectedForCompare
-                        ? "bg-blue-500/20 border border-blue-500/40"
-                        : "bg-purple-500/5 border border-purple-500/20 hover:border-purple-500/40"
+                        ? "bg-blue-500/[0.1] border-blue-500/30"
+                        : isSelectedRoute
+                          ? "bg-purple-500/[0.08] border-purple-500/30"
+                          : "bg-white/[0.02] border-white/[0.05] hover:bg-white/[0.05] hover:border-white/[0.1]"
                     )}
                     title={route.routeId}
                   >
@@ -316,7 +410,7 @@ export function RoutingRoutesPanel({
                       <button
                         onClick={() => toggleCompareSelection(route.routeId)}
                         className={cn(
-                          "w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors",
+                          "mt-0.5 w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors",
                           isSelectedForCompare
                             ? "bg-blue-500 border-blue-500 text-white"
                             : "border-white/30 hover:border-blue-400"
@@ -328,18 +422,24 @@ export function RoutingRoutesPanel({
                     )}
 
                     {/* Visibility Toggle */}
-                    {!compareMode && (
+                    {!compareMode && isSelectedRoute && (
                       <button
-                        onClick={() => onToggleRouteVisibility(route.routeId)}
+                        onClick={() => {
+                          trackEvent('routing_input', 'RoutingRoutesPanel', 'route_visibility_toggled', {
+                            route_id: route.routeId,
+                            project: currentProject
+                          })
+                          onToggleRouteVisibility(route.routeId)
+                        }}
                         className={cn(
-                          "p-1 rounded-sm transition-colors shrink-0",
+                          "mt-0.5 p-1 rounded transition-colors shrink-0",
                           route.visible
-                            ? "text-purple-400 bg-purple-400/20 hover:bg-purple-400/30"
-                            : "text-white/20 hover:text-white/40 hover:bg-white/5"
+                            ? "text-purple-400 bg-purple-500/10"
+                            : "text-white/20 hover:text-white/40"
                         )}
                         title={route.visible ? 'Hide route' : 'Show route'}
                       >
-                        {route.visible ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+                        {route.visible ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
                       </button>
                     )}
 
@@ -348,41 +448,46 @@ export function RoutingRoutesPanel({
                       className={cn("flex-1 min-w-0", compareMode && "cursor-pointer")}
                       onClick={compareMode ? () => toggleCompareSelection(route.routeId) : undefined}
                     >
-                      <p className="text-[10px] font-medium text-white truncate">
+                      <p className="text-[11px] font-medium text-white/90 truncate leading-tight">
                         {formatRouteName(route.routeId)}
                       </p>
-                      <p className="text-[9px] text-purple-400/60 font-mono">
+                      <p className="text-[9px] text-purple-400/50 font-mono mt-0.5">
                         {route.segmentCount} segments
                       </p>
                     </div>
 
-                    {/* Table */}
-                    {!compareMode && (
-                      <button
-                        onClick={() => onOpenTable(route.routeId)}
-                        className="p-1 opacity-0 group-hover:opacity-100 hover:bg-white/10 rounded-sm transition-all text-white/40 hover:text-white"
-                        title="Inspect layer"
-                      >
-                        <Table className="w-3 h-3" />
-                      </button>
+                    {/* Actions (hover-reveal) */}
+                    {!compareMode && isSelectedRoute && (
+                      <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity mt-0.5">
+                        <button
+                          onClick={() => onOpenTable(route.routeId)}
+                          className="p-1 hover:bg-white/10 rounded transition-colors text-white/30 hover:text-white"
+                          title="Inspect layer"
+                        >
+                          <Table className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={() => requestRouteExport(route.routeId)}
+                          className="p-1 hover:bg-emerald-500/15 rounded transition-colors text-white/30 hover:text-emerald-300"
+                          title="Export route locally"
+                        >
+                          <Download className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={() => onRemoveRoute(route.routeId)}
+                          className="p-1 hover:bg-red-500/15 rounded transition-colors text-white/30 hover:text-red-400"
+                          title="Remove route from map"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
                     )}
 
-                    {/* Remove */}
-                    {!compareMode && (
-                      <button
-                        onClick={() => onRemoveRoute(route.routeId)}
-                        className="p-1 opacity-0 group-hover:opacity-100 hover:bg-red-500/20 rounded-sm transition-all text-white/30 hover:text-red-400"
-                        title="Remove route from map"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </button>
-                    )}
-
-                    {/* Status Indicator */}
-                    {!compareMode && (
+                    {/* Status dot */}
+                    {!compareMode && isSelectedRoute && (
                       <div className={cn(
-                        "w-1.5 h-1.5 rounded-full shrink-0",
-                        route.visible ? "bg-purple-400 shadow-[0_0_6px_rgba(147,51,234,0.8)]" : "bg-white/10"
+                        "w-1.5 h-1.5 rounded-full shrink-0 mt-2",
+                        route.visible ? "bg-purple-400 shadow-[0_0_4px_rgba(147,51,234,0.6)]" : "bg-white/10"
                       )} />
                     )}
                   </div>
@@ -397,6 +502,9 @@ export function RoutingRoutesPanel({
       <CompareRoutesDialog
         isOpen={showCompareDialog}
         onClose={() => {
+          trackEvent('dialog', 'RoutingRoutesPanel', 'close_compare_routes_dialog', {
+            project: currentProject
+          })
           setShowCompareDialog(false)
           exitCompareMode()
         }}
@@ -416,6 +524,13 @@ export function RoutingRoutesPanel({
           >
             <Table className="w-3.5 h-3.5 text-purple-400" />
             <span>Inspect layer</span>
+          </button>
+          <button
+            onClick={handleExportRoute}
+            className="w-full flex items-center gap-2 px-3 py-2 text-left text-[11px] text-white hover:bg-emerald-500/20 transition-colors"
+          >
+            <Download className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Export route locally</span>
           </button>
           <button
             onClick={handleShowCostMatrix}
@@ -446,6 +561,10 @@ export function RoutingRoutesPanel({
         <CostMatrixDialog
           isOpen={showCostMatrixDialog}
           onClose={() => {
+            trackEvent('dialog', 'RoutingRoutesPanel', 'close_cost_matrix_dialog', {
+              route_id: costMatrixRouteId,
+              project: currentProject
+            })
             setShowCostMatrixDialog(false)
             setCostMatrixRouteId(null)
           }}
@@ -459,6 +578,10 @@ export function RoutingRoutesPanel({
         <RouteAnalysisDialog
           isOpen={showAnalysisDialog}
           onClose={() => {
+            trackEvent('dialog', 'RoutingRoutesPanel', 'close_route_analysis_dialog', {
+              route_id: analysisRouteId,
+              project: currentProject
+            })
             setShowAnalysisDialog(false)
             setAnalysisRouteId(null)
           }}
@@ -476,7 +599,16 @@ export function RoutingRoutesPanel({
                 <FileText className="w-4 h-4 text-amber-500" />
                 <h3 className="text-sm font-bold text-white">Generate Alignment Sheets</h3>
               </div>
-              <button onClick={() => setAlignmentSheetRoute(null)} className="text-white/50 hover:text-white">
+              <button
+                onClick={() => {
+                  trackEvent('dialog', 'RoutingRoutesPanel', 'close_alignment_sheets_dialog', {
+                    route_id: alignmentSheetRoute,
+                    project: currentProject
+                  })
+                  setAlignmentSheetRoute(null)
+                }}
+                className="text-white/50 hover:text-white"
+              >
                 ✕
               </button>
             </div>
@@ -495,7 +627,14 @@ export function RoutingRoutesPanel({
                   {(['detail', 'standard', 'overview'] as AlignmentSheetPreset[]).map((preset) => (
                     <button
                       key={preset}
-                      onClick={() => setAlignmentPreset(preset)}
+                      onClick={() => {
+                        trackEvent('routing_input', 'RoutingRoutesPanel', 'alignment_preset_changed', {
+                          route_id: alignmentSheetRoute,
+                          preset,
+                          project: currentProject
+                        })
+                        setAlignmentPreset(preset)
+                      }}
                       className={cn(
                         "px-3 py-2 rounded border text-[10px] font-bold uppercase tracking-wider transition-colors",
                         alignmentPreset === preset
@@ -530,7 +669,14 @@ export function RoutingRoutesPanel({
                         ] as const).map((t) => (
                           <button
                             key={t.key}
-                            onClick={() => setAlignmentTemplate(t.key)}
+                            onClick={() => {
+                              trackEvent('routing_input', 'RoutingRoutesPanel', 'alignment_template_changed', {
+                                route_id: alignmentSheetRoute,
+                                template: t.key,
+                                project: currentProject
+                              })
+                              setAlignmentTemplate(t.key)
+                            }}
                             className={cn(
                               "px-3 py-2 rounded border text-[10px] font-bold uppercase tracking-wider transition-colors",
                               alignmentTemplate === t.key
@@ -554,7 +700,14 @@ export function RoutingRoutesPanel({
                         ] as const).map((m) => (
                           <button
                             key={m.key}
-                            onClick={() => setAlignmentBaseMap(m.key as any)}
+                            onClick={() => {
+                              trackEvent('routing_input', 'RoutingRoutesPanel', 'alignment_base_map_changed', {
+                                route_id: alignmentSheetRoute,
+                                base_map: m.key,
+                                project: currentProject
+                              })
+                              setAlignmentBaseMap(m.key as any)
+                            }}
                             className={cn(
                               "px-3 py-2 rounded border text-[10px] font-bold uppercase tracking-wider transition-colors",
                               alignmentBaseMap === m.key
@@ -627,7 +780,13 @@ export function RoutingRoutesPanel({
 
               <div className="flex gap-2">
                 <button
-                  onClick={() => setAlignmentSheetRoute(null)}
+                  onClick={() => {
+                    trackEvent('dialog', 'RoutingRoutesPanel', 'close_alignment_sheets_dialog', {
+                      route_id: alignmentSheetRoute,
+                      project: currentProject
+                    })
+                    setAlignmentSheetRoute(null)
+                  }}
                   className="flex-1 px-3 py-2 bg-white/5 border border-white/10 hover:bg-white/10 rounded text-[10px] font-bold uppercase tracking-wider text-white/60 hover:text-white transition-colors"
                 >
                   Cancel

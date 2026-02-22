@@ -13,12 +13,32 @@ import { UserProfileDialog } from '@/components/auth/UserProfileDialog'
 
 interface HeaderProps {
   devMode: boolean
+  isBackendOnline: boolean
   onDevModeChange: (value: boolean) => void
   activeView: 'map' | 'digital-twin' | 'project-management'
   onSupplierSearch?: () => void
+  className?: string
 }
 
-export function Header({ devMode, onDevModeChange, activeView, onSupplierSearch }: HeaderProps) {
+interface TopbarNotification {
+  id: string
+  title: string
+  message: string
+  createdAt: number
+  unread: boolean
+  level: 'warning' | 'success'
+}
+
+function formatNotificationAge(createdAt: number): string {
+  const elapsedMs = Date.now() - createdAt
+  if (elapsedMs < 60_000) return 'just now'
+  const minutes = Math.floor(elapsedMs / 60_000)
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.floor(minutes / 60)
+  return `${hours}h ago`
+}
+
+export function Header({ devMode, isBackendOnline, onDevModeChange, activeView, onSupplierSearch, className }: HeaderProps) {
   const { user } = useAuth()
   const { currentProject } = useProject()
   const { mapMode, operator, gis, pirl, routing, registerOperatorDialogActions } = useMapView()
@@ -38,6 +58,11 @@ export function Header({ devMode, onDevModeChange, activeView, onSupplierSearch 
   const pirlButtonRef = useRef<HTMLButtonElement>(null)
   const toolsDropdownRef = useRef<HTMLDivElement>(null)
   const toolsButtonRef = useRef<HTMLButtonElement>(null)
+  const notificationsDropdownRef = useRef<HTMLDivElement>(null)
+  const notificationsButtonRef = useRef<HTMLButtonElement>(null)
+  const previousBackendOnlineRef = useRef(isBackendOnline)
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
+  const [notifications, setNotifications] = useState<TopbarNotification[]>([])
 
   // Close dropdown if clicked outside
   useEffect(() => {
@@ -115,6 +140,33 @@ export function Header({ devMode, onDevModeChange, activeView, onSupplierSearch 
     }
   }, [isToolsDropdownOpen])
 
+  // Close Notifications dropdown if clicked outside
+  useEffect(() => {
+    if (!isNotificationsOpen) return
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        notificationsDropdownRef.current &&
+        !notificationsDropdownRef.current.contains(event.target as Node) &&
+        notificationsButtonRef.current &&
+        !notificationsButtonRef.current.contains(event.target as Node)
+      ) {
+        setIsNotificationsOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isNotificationsOpen])
+
+  // Mark notifications as read whenever the menu is visible.
+  useEffect(() => {
+    if (!isNotificationsOpen) return
+    setNotifications((current) => current.map((item) => (
+      item.unread ? { ...item, unread: false } : item
+    )))
+  }, [isNotificationsOpen])
+
   // Auto-close when leaving Operator context or entering geometry editing
   useEffect(() => {
     if (activeView !== 'map' || mapMode !== 'operator' || !currentProject || operator.geometryEditActive) {
@@ -158,12 +210,43 @@ export function Header({ devMode, onDevModeChange, activeView, onSupplierSearch 
     })
   }, [registerOperatorDialogActions])
 
+  // Push an alert when backend connectivity state changes.
+  useEffect(() => {
+    const wasOnline = previousBackendOnlineRef.current
+    previousBackendOnlineRef.current = isBackendOnline
+
+    if (wasOnline === isBackendOnline) return
+
+    const createdAt = Date.now()
+    const wentOffline = !isBackendOnline
+    const statusNotification: TopbarNotification = {
+      id: `backend-${wentOffline ? 'offline' : 'online'}-${createdAt}`,
+      title: wentOffline ? 'ZEUS Backend Offline' : 'ZEUS Backend Online',
+      message: wentOffline
+        ? 'Connection to the backend was lost. Features may be unavailable until service is restored.'
+        : 'Connection to the backend has been restored. Services are available again.',
+      createdAt,
+      unread: true,
+      level: wentOffline ? 'warning' : 'success'
+    }
+
+    setNotifications((current) => ([statusNotification, ...current]).slice(0, 8))
+    setIsNotificationsOpen(true)
+
+    const timeout = setTimeout(() => {
+      setIsNotificationsOpen(false)
+    }, 5000)
+
+    return () => clearTimeout(timeout)
+  }, [isBackendOnline])
+
   // Show Dev Mode toggle only for admin role users
   const showDevMode = user?.role === 'admin' || user?.role === 'superadmin'
   const showDevOnlyActions = !!showDevMode && devMode
+  const unreadNotificationCount = notifications.reduce((count, item) => count + (item.unread ? 1 : 0), 0)
   return (
     <>
-      <header className="relative h-14 border-b border-white/10 bg-[#0a0a0a]/95 backdrop-blur-xl px-6 flex items-center justify-between z-50 shadow-md">
+      <header className={cn("relative h-14 border-b border-white/10 bg-[#0a0a0a]/95 backdrop-blur-xl px-6 flex items-center justify-between z-50 shadow-md", className)}>
         {/* Technical Background Grid */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff03_1px,transparent_1px),linear-gradient(to_bottom,#ffffff03_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none" />
 
@@ -369,7 +452,7 @@ export function Header({ devMode, onDevModeChange, activeView, onSupplierSearch 
                       gis.openDatasetDigitalTwin()
                     }}
                     className="flex items-center gap-2 w-full px-3 py-2 text-left text-xs font-medium text-white/70 hover:text-white hover:bg-primary/10 border border-transparent border-t border-white/10 transition-all"
-                    title="Experimental: Dataset Digital Twin (stacked layer model)"
+                    title="Dataset Digital Twin: Visual layer stack for infrastructure planning datasets"
                   >
                     <Cpu className="w-3.5 h-3.5 text-primary/80" />
                     Digital Twin
@@ -542,9 +625,77 @@ export function Header({ devMode, onDevModeChange, activeView, onSupplierSearch 
           </>
         )}
 
-        <Button variant="ghost" size="icon" className="text-white/60 hover:text-white hover:bg-white/10">
-          <Bell className="w-4 h-4" />
-        </Button>
+        <div className="relative">
+          <Button
+            ref={notificationsButtonRef}
+            variant="ghost"
+            size="icon"
+            className="text-white/60 hover:text-white hover:bg-white/10 relative"
+            onClick={() => setIsNotificationsOpen((prev) => !prev)}
+            title="Notifications"
+          >
+            <Bell className="w-4 h-4" />
+            {unreadNotificationCount > 0 && (
+              <span className="absolute -right-0.5 -top-0.5 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-mono leading-4 text-center border border-black">
+                {unreadNotificationCount > 9 ? '9+' : unreadNotificationCount}
+              </span>
+            )}
+          </Button>
+
+          {isNotificationsOpen && (
+            <div
+              ref={notificationsDropdownRef}
+              className="absolute right-0 top-full mt-2 w-80 bg-black/95 border border-white/10 rounded-sm shadow-xl overflow-hidden"
+            >
+              <div className="flex items-center justify-between px-3 py-2 border-b border-white/10 bg-white/[0.03]">
+                <span className="text-[10px] uppercase tracking-widest text-white/50 font-mono">Notifications</span>
+                {notifications.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setNotifications([])}
+                    className="text-[10px] text-white/40 hover:text-white transition-colors uppercase tracking-wider font-mono"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+
+              {notifications.length === 0 ? (
+                <div className="px-3 py-4 text-xs text-white/40">No notifications.</div>
+              ) : (
+                <div className="max-h-72 overflow-y-auto">
+                  {notifications.map((item) => (
+                    <div
+                      key={item.id}
+                      className={cn(
+                        'px-3 py-2 border-b border-white/5 last:border-b-0',
+                        item.level === 'warning' ? 'bg-red-500/5' : 'bg-white/[0.01]'
+                      )}
+                    >
+                      <div className="flex items-start gap-2">
+                        <div
+                          className={cn(
+                            'mt-1.5 h-2 w-2 rounded-full flex-shrink-0',
+                            item.level === 'warning'
+                              ? 'bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.75)]'
+                              : 'bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.75)]'
+                          )}
+                        />
+                        <div className="min-w-0">
+                          <div className="text-[11px] font-semibold text-white/90">{item.title}</div>
+                          <div className="text-[10px] text-white/60 leading-snug mt-0.5">{item.message}</div>
+                          <div className="text-[9px] text-white/35 uppercase tracking-wider font-mono mt-1">
+                            {formatNotificationAge(item.createdAt)}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
         <Button
           variant="ghost"
           size="icon"

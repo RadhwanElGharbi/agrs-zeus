@@ -39,6 +39,7 @@ import { MarkdownRenderer } from '@/components/shared/MarkdownRenderer'
 import { Button } from '@/components/ui/button'
 import { DatasetFetchProgressDialog } from './DatasetFetchProgressDialog'
 import { cn } from '@/lib/utils'
+import { trackEvent } from '@/lib/analytics'
 
 type DatasetCoverageDialogProps = {
   open: boolean
@@ -119,7 +120,7 @@ const CATEGORY_KEYWORDS: Record<DatasetCategory, string[]> = {
   ]
 }
 
-const FALLBACK_PROTOCOL = '/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md'
+const FALLBACK_PROTOCOL = '/opt/agrs/docs/datasets/DATASET_FETCHING_PROTOCOLS.md'
 
 function isAuxiliaryCategory(category: DatasetCategory): boolean {
   return !MAIN_DATASET_ORDER.includes(category)
@@ -792,6 +793,7 @@ export function DatasetCoverageDialog({ open, onClose, onRunInBackground }: Data
   const { currentProject, refreshProjectData } = useProject()
   const { reportAction } = useOnboarding()
   const coverageCache = useRef<Record<string, DatasetCoverageResponse>>({})
+  const prevOpenRef = useRef(open)
 
   const [coverageState, setCoverageState] = useState<FetchState>('idle')
   const [coverageError, setCoverageError] = useState<string | null>(null)
@@ -807,6 +809,7 @@ export function DatasetCoverageDialog({ open, onClose, onRunInBackground }: Data
   const [refreshKey, setRefreshKey] = useState(0)
   const [jobId, setJobId] = useState<string | null>(null)
   const [progressDialogOpen, setProgressDialogOpen] = useState(false)
+  const prevProgressDialogRef = useRef(false)
   const [jobBanner, setJobBanner] = useState<JobBanner>(null)
   const [categoryOverrides, setCategoryOverrides] = useState<Partial<Record<DatasetCategory, string | null>>>({})
   const [sourcePickerCategory, setSourcePickerCategory] = useState<DatasetCategory | null>(null)
@@ -819,10 +822,25 @@ export function DatasetCoverageDialog({ open, onClose, onRunInBackground }: Data
   }, [])
 
   useEffect(() => {
+    if (prevOpenRef.current !== open) {
+      trackEvent('dialog', 'DatasetCoverageDialog', open ? 'open_dataset_coverage_dialog' : 'close_dataset_coverage_dialog', {
+        project: currentProject
+      })
+      prevOpenRef.current = open
+    }
     if (open) {
       setIsClosing(false)
     }
-  }, [open])
+  }, [currentProject, open])
+
+  useEffect(() => {
+    if (prevProgressDialogRef.current === progressDialogOpen) return
+    trackEvent('dialog', 'DatasetCoverageDialog', progressDialogOpen ? 'open_dataset_fetch_progress_dialog' : 'close_dataset_fetch_progress_dialog', {
+      project: currentProject,
+      job_id: jobId
+    })
+    prevProgressDialogRef.current = progressDialogOpen
+  }, [currentProject, jobId, progressDialogOpen])
 
   const handleClose = () => {
     setSourcePickerCategory(null)
@@ -953,7 +971,9 @@ export function DatasetCoverageDialog({ open, onClose, onRunInBackground }: Data
     setSelectedCategories((prev) => {
       if (prev.size > 0) return prev
       const missing = datasetStatus.categories
-        .filter((entry) => !entry.present)
+        // Auto-select only required missing categories.
+        // Optional categories remain manual to avoid forcing predictable partial runs.
+        .filter((entry) => entry.required && !entry.present)
         .map((entry) => entry.category as DatasetCategory)
       return new Set<DatasetCategory>(missing)
     })
@@ -1156,6 +1176,11 @@ export function DatasetCoverageDialog({ open, onClose, onRunInBackground }: Data
     if (!result) return
     if (result.status === 'succeeded') {
       setJobBanner({ kind: 'success', message: 'Dataset fetch completed successfully.' })
+    } else if (result.status === 'partial') {
+      setJobBanner({
+        kind: 'error',
+        message: result.error || 'Dataset fetch completed with partial success. Review stage logs for failed categories.'
+      })
     } else if (result.status === 'failed') {
       setJobBanner({ kind: 'error', message: result.error || 'Dataset fetch failed. Check logs for details.' })
     }

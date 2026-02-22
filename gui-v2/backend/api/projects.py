@@ -57,19 +57,61 @@ def require_superadmin(user: Dict[str, Any] = Depends(require_auth)) -> Dict[str
         raise HTTPException(status_code=403, detail="Superadmin access required")
     return user
 
-RESEARCH_ROOT = Path("/opt/agrs/docs/Research")
-ISO_CODES_CSV = RESEARCH_ROOT / "iso_countries.csv"
-COUNTRY_COVERAGE_LONG_CSV = RESEARCH_ROOT / "COUNTRY_COVERAGE_LONG.csv"
-COUNTRY_DATASETS_DIR = RESEARCH_ROOT / "Country Coverage" / "Country Datasets"
-DATASET_FETCH_PROTOCOL = "/opt/agrs/docs/Project Instructions/DATASET_FETCHING_PROTOCOLS.md"
-DATASET_COVERAGE_CATALOG_CSV = Path(
-    "/opt/agrs/docs/Project Instructions/WORLD_DATASET_CATALOGUE.csv"
+DOCS_ROOT = Path("/opt/agrs/docs")
+
+
+def _first_existing_path(*candidates: Path) -> Path:
+    """
+    Return the first existing path from candidates (or the first candidate if none exist).
+
+    This keeps compatibility across legacy doc layouts (`Project Instructions`, `Research`)
+    and the newer normalized layout (`datasets`, `research`, `standards`).
+    """
+    for candidate in candidates:
+        try:
+            if candidate.exists():
+                return candidate
+        except OSError:
+            continue
+    return candidates[0]
+
+
+RESEARCH_ROOT = _first_existing_path(
+    DOCS_ROOT / "research",
+    DOCS_ROOT / "Research",
 )
-PIPELINE_ENGINEERING_STANDARDS_CATALOG_CSV = Path(
-    "/opt/agrs/docs/Project Instructions/WORLD_PIPELINE_ENGINEERING_STANDARDS_CATALOGUE.csv"
+ISO_CODES_CSV = _first_existing_path(
+    RESEARCH_ROOT / "iso_countries.csv",
+    DOCS_ROOT / "research" / "iso_countries.csv",
+    DOCS_ROOT / "Research" / "iso_countries.csv",
 )
-REGULATION_CATALOG_CSV = Path(
-    "/opt/agrs/docs/Project Instructions/WORLD_REGULATION_CATALOGUE.csv"
+COUNTRY_COVERAGE_LONG_CSV = _first_existing_path(
+    RESEARCH_ROOT / "COUNTRY_COVERAGE_LONG.csv",
+    DOCS_ROOT / "research" / "COUNTRY_COVERAGE_LONG.csv",
+    DOCS_ROOT / "Research" / "COUNTRY_COVERAGE_LONG.csv",
+)
+COUNTRY_DATASETS_DIR = _first_existing_path(
+    RESEARCH_ROOT / "Country Coverage" / "Country Datasets",
+    DOCS_ROOT / "research" / "Country Coverage" / "Country Datasets",
+    DOCS_ROOT / "Research" / "Country Coverage" / "Country Datasets",
+)
+DATASET_FETCH_PROTOCOL = str(
+    _first_existing_path(
+        DOCS_ROOT / "datasets" / "DATASET_FETCHING_PROTOCOLS.md",
+        DOCS_ROOT / "Project Instructions" / "DATASET_FETCHING_PROTOCOLS.md",
+    )
+)
+DATASET_COVERAGE_CATALOG_CSV = _first_existing_path(
+    DOCS_ROOT / "datasets" / "WORLD_DATASET_CATALOGUE.csv",
+    DOCS_ROOT / "Project Instructions" / "WORLD_DATASET_CATALOGUE.csv",
+)
+PIPELINE_ENGINEERING_STANDARDS_CATALOG_CSV = _first_existing_path(
+    DOCS_ROOT / "pipeline" / "WORLD_PIPELINE_ENGINEERING_STANDARDS_CATALOGUE.csv",
+    DOCS_ROOT / "Project Instructions" / "WORLD_PIPELINE_ENGINEERING_STANDARDS_CATALOGUE.csv",
+)
+REGULATION_CATALOG_CSV = _first_existing_path(
+    DOCS_ROOT / "standards" / "WORLD_REGULATION_CATALOGUE.csv",
+    DOCS_ROOT / "Project Instructions" / "WORLD_REGULATION_CATALOGUE.csv",
 )
 
 # Boundary cache for AOI→jurisdiction (Admin0/Admin1) intersection
@@ -381,10 +423,17 @@ class ProjectMetadata(BaseModel):
     units: Optional[Dict[str, str]] = None
     country: Optional[str] = None
     iso3: Optional[str] = None
+    iso3_list: Optional[List[str]] = None
+    countries: Optional[List[Dict[str, str]]] = None
     organization: Optional[str] = None
     department: Optional[str] = None
     project_creator: Optional[str] = None
     project_type: Optional[str] = None
+    # Folder / visibility (populated from DB when available)
+    folder_id: Optional[str] = None
+    folder_name: Optional[str] = None
+    folder_color: Optional[str] = None
+    visibility: Optional[str] = "public"
 
 
 class DatasetInfo(BaseModel):
@@ -1431,25 +1480,56 @@ async def preview_point(
 
 
 @router.get("/projects", response_model=List[ProjectMetadata])
-async def list_projects():
+async def list_projects(
+    user: Optional[Dict[str, Any]] = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     """
-    Discover and list all valid projects in /opt/agrs/Projects/
-    
-    A valid project must have a project_metadata.json or pipeline_specs.json file.
+    Discover and list all valid projects in /opt/agrs/Projects/.
+
+    Enriches each project with folder/visibility metadata from the DB.
+    Restricted projects are hidden from non-members unless the caller is a superadmin.
     """
-    projects = []
+    from .project_folders import get_project_org_map, get_user_project_names
+
+    org_map = get_project_org_map(db)
+
+    member_names: set[str] = set()
+    is_superadmin = False
+    if user:
+        is_superadmin = user.get("role") == "superadmin"
+        if not is_superadmin:
+            try:
+                uid = uuid.UUID(str(user.get("id")))
+                member_names = get_user_project_names(db, uid)
+            except Exception:
+                pass
+
+    projects: list[ProjectMetadata] = []
 
     project_dirs = discover_project_paths()
     for _, project_dir in sorted(project_dirs.items()):
+        pname = project_dir.name
+        org = org_map.get(pname, {})
+        vis = org.get("visibility", "public")
+
+        if vis == "restricted" and not is_superadmin and pname not in member_names:
+            continue
+
         metadata_file = project_dir / "project_metadata.json"
         metadata = load_json_file(metadata_file) if metadata_file.exists() else None
 
         if metadata:
             normalized = _normalize_project_metadata(metadata, project_dir)
-            projects.append(ProjectMetadata(**normalized))
+            pm = ProjectMetadata(**normalized)
         else:
-            # Minimal response if metadata is missing
-            projects.append(ProjectMetadata(project_name=project_dir.name))
+            pm = ProjectMetadata(project_name=pname)
+
+        pm.folder_id = org.get("folder_id")
+        pm.folder_name = org.get("folder_name")
+        pm.folder_color = org.get("folder_color")
+        pm.visibility = vis
+        projects.append(pm)
 
     return projects
 
@@ -1492,6 +1572,56 @@ async def list_my_projects(
 class AddProjectMemberRequest(BaseModel):
     email: EmailStr
     membership_role: Optional[str] = None
+
+
+class ProjectMemberInfo(BaseModel):
+    user_id: str
+    email: str
+    full_name: str
+    serial_number: Optional[str] = None
+    role: str
+    membership_role: Optional[str] = None
+    joined_at: Optional[str] = None
+
+
+class ProjectMembersResponse(BaseModel):
+    members: List[ProjectMemberInfo]
+    count: int
+
+
+@router.get("/projects/{project_name}/members", response_model=ProjectMembersResponse)
+async def list_project_members(
+    project_name: str,
+    _: Dict[str, Any] = Depends(require_superadmin),
+    db: Session = Depends(get_db),
+):
+    """
+    List active project members for visibility management.
+    """
+    db_project = upsert_project_row(db, project_name)
+    rows = db.execute(
+        select(ProjectMembership, User)
+        .join(User, User.id == ProjectMembership.user_id)
+        .where(
+            ProjectMembership.project_id == db_project.id,
+            ProjectMembership.left_at.is_(None),
+        )
+        .order_by(User.full_name.asc(), User.email.asc())
+    ).all()
+
+    members = [
+        ProjectMemberInfo(
+            user_id=str(user_row.id),
+            email=user_row.email,
+            full_name=user_row.full_name,
+            serial_number=user_row.serial_number,
+            role=user_row.role,
+            membership_role=membership.membership_role,
+            joined_at=membership.joined_at.isoformat() if membership.joined_at else None,
+        )
+        for membership, user_row in rows
+    ]
+    return ProjectMembersResponse(members=members, count=len(members))
 
 
 @router.post("/projects/{project_name}/members")
@@ -1544,6 +1674,51 @@ async def add_project_member(
             "member_user_id": str(user_row.id),
             "member_email": user_row.email,
             "membership_role": payload.membership_role or None,
+        },
+        required=True,
+    )
+
+    return {"success": True}
+
+
+@router.delete("/projects/{project_name}/members/{user_id}")
+async def remove_project_member(
+    project_name: str,
+    user_id: str,
+    actor: Dict[str, Any] = Depends(require_superadmin),
+    db: Session = Depends(get_db),
+):
+    """
+    Revoke project membership for a user (soft remove via left_at).
+    """
+    db_project = upsert_project_row(db, project_name)
+    try:
+        uid = uuid.UUID(str(user_id))
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail="Invalid user id") from exc
+
+    membership = db.execute(
+        select(ProjectMembership).where(
+            ProjectMembership.user_id == uid,
+            ProjectMembership.project_id == db_project.id,
+            ProjectMembership.left_at.is_(None),
+        )
+    ).scalar_one_or_none()
+    if membership is None:
+        raise HTTPException(status_code=404, detail="Active membership not found")
+
+    membership.left_at = datetime.utcnow()
+    db.commit()
+
+    user_row = db.execute(select(User).where(User.id == uid)).scalar_one_or_none()
+    write_audit_event(
+        db,
+        project_name=project_name,
+        actor=actor,
+        event_type="project.member.remove",
+        payload={
+            "member_user_id": str(uid),
+            "member_email": user_row.email if user_row else None,
         },
         required=True,
     )
@@ -1607,15 +1782,22 @@ def _normalize_project_metadata(raw: Dict[str, Any], project_path: Optional[Path
                                 if area:
                                     aoi_obj['area_km2'] = area
                     
-                    # Extract countries: prefer project_aoi.json, then project metadata
                     if 'countries' not in aoi_obj:
-                        if 'aoi_countries' in aoi_data:
+                        if 'iso3_list' in result and isinstance(result['iso3_list'], list) and result['iso3_list']:
+                            _iso_map, _, _ = _load_iso_mappings()
+                            aoi_obj['countries'] = [_iso_map.get(c, c) for c in result['iso3_list']]
+                        elif 'countries' in result and isinstance(result['countries'], list) and result['countries']:
+                            aoi_obj['countries'] = [
+                                c.get('name', c.get('iso3', '')) if isinstance(c, dict) else str(c)
+                                for c in result['countries']
+                            ]
+                        elif 'aoi_countries' in aoi_data:
                             aoi_obj['countries'] = aoi_data['aoi_countries']
                         elif 'country' in result:
                             aoi_obj['countries'] = [result['country']]
                         elif 'iso3' in result:
-                            iso_to_name, _, _ = _load_iso_mappings()
-                            country_name = iso_to_name.get(result['iso3'])
+                            _iso_map, _, _ = _load_iso_mappings()
+                            country_name = _iso_map.get(result['iso3'])
                             if country_name:
                                 aoi_obj['countries'] = [country_name]
                     
@@ -1687,6 +1869,28 @@ async def get_project_metadata(project_name: str):
         raise HTTPException(status_code=500, detail=f"Failed to load metadata for '{project_name}'")
     
     normalized = _normalize_project_metadata(metadata, project_path)
+
+    if not normalized.get("iso3_list"):
+        try:
+            if NATURAL_EARTH_ADMIN0_SHP.exists():
+                aoi_fc = _load_project_aoi_feature_collection(project_path)
+                if isinstance(aoi_fc, dict):
+                    geom = _collect_geometry(aoi_fc)
+                    detected = _aoi_countries_admin0(geom)
+                    if detected:
+                        iso_map, _, _ = _load_iso_mappings()
+                        names = [iso_map.get(c, c) for c in detected]
+                        normalized["iso3_list"] = detected
+                        normalized["countries"] = [
+                            {"iso3": c, "name": n} for c, n in zip(detected, names)
+                        ]
+                        normalized["country"] = ", ".join(names)
+                        aoi = normalized.get("aoi")
+                        if isinstance(aoi, dict):
+                            aoi["countries"] = names
+        except Exception:
+            pass
+
     return ProjectMetadata(**normalized)
 
 
@@ -2727,13 +2931,19 @@ def _compute_regulations_response(project_name: str, project_path: Path, *, clea
     countries: List[str] = []
     admin1: List[Dict[str, Optional[str]]] = []
     if isinstance(aoi_fc, dict):
-        jurisdictions = compute_aoi_jurisdictions(aoi_fc)
-        countries = jurisdictions.get("countries_iso3") or []
-        admin1 = jurisdictions.get("admin1") or []
+        try:
+            geom = _collect_geometry(aoi_fc)
+            countries = _aoi_countries_admin0(geom)
+        except Exception:
+            pass
+        if countries:
+            for iso3 in countries:
+                try:
+                    admin1.extend(_aoi_admin1_for_country(geom, iso3))
+                except Exception:
+                    pass
 
-    # Fallback: if boundary intersection fails, use inferred ISO3.
     if not countries:
-        # Prefer metadata-provided countries over centroid inference
         countries = _countries_from_project_metadata(project_path) or []
     if not countries:
         inferred = _infer_project_iso3(project_path)
@@ -3004,45 +3214,61 @@ async def get_project_dataset_coverage(project_name: str):
     if not project_path or not project_path.exists():
         raise HTTPException(status_code=404, detail=f"Project '{project_name}' not found.")
 
-    # Prefer AOI-derived country (geometry → representative point → reverse geocode),
-    # so the Dataset Manager matches the AOI even if project metadata is missing/stale.
-    iso3_from_aoi: Optional[str] = None
+    # Detect ALL countries the AOI intersects (cross-country pipelines).
+    # Uses _aoi_countries_admin0 directly (local Natural Earth, no GADM download)
+    # to avoid HTTP errors when GADM admin1 data is unavailable for some countries.
+    iso3_list: List[str] = []
     try:
         aoi_fc = _load_project_aoi_feature_collection(project_path)
-        if isinstance(aoi_fc, dict):
+        if isinstance(aoi_fc, dict) and NATURAL_EARTH_ADMIN0_SHP.exists():
             geom = _collect_geometry(aoi_fc)
-            pt = geom.representative_point()
-            inferred, _ = _infer_country_from_point(float(pt.y), float(pt.x))
-            iso3_from_aoi = _normalize_country_value(inferred)
+            iso3_list = [str(c).strip().upper() for c in _aoi_countries_admin0(geom) if c]
     except Exception:
-        iso3_from_aoi = None
+        pass
 
-    iso3 = (iso3_from_aoi or _infer_project_iso3(project_path) or "WLD").strip().upper()
+    if not iso3_list:
+        try:
+            aoi_fc = _load_project_aoi_feature_collection(project_path)
+            if isinstance(aoi_fc, dict):
+                geom = _collect_geometry(aoi_fc)
+                pt = geom.representative_point()
+                inferred, _ = _infer_country_from_point(float(pt.y), float(pt.x))
+                norm = _normalize_country_value(inferred)
+                if norm:
+                    iso3_list = [norm]
+        except Exception:
+            pass
+
+    if not iso3_list:
+        single = _infer_project_iso3(project_path)
+        if single:
+            iso3_list = [single.strip().upper()]
+
+    primary_iso3 = iso3_list[0] if iso3_list else "WLD"
     iso_to_name, _, _ = _load_iso_mappings()
-    country_name = iso_to_name.get(iso3)
+    country_names = [iso_to_name.get(c, c) for c in iso3_list]
+    country_name = ", ".join(n for n in country_names if n) or iso_to_name.get(primary_iso3)
 
     rows = _load_country_coverage_rows()
     if not rows:
         raise HTTPException(status_code=500, detail="Coverage catalog not available.")
 
-    # Treat WLD as "unknown / global only" (do not surface WLD rows as "local").
+    iso3_set = {c.upper() for c in iso3_list}
+
     local_rows: List[Dict[str, str]] = (
         []
-        if iso3 == "WLD"
-        else [row for row in rows if (row.get("ISO3") or "").strip().upper() == iso3]
+        if not iso3_set or iso3_set == {"WLD"}
+        else [row for row in rows if (row.get("ISO3") or "").strip().upper() in iso3_set]
     )
     local_entries = [_row_to_entry(row, is_global=False) for row in local_rows]
 
     global_rows = [
         row
         for row in rows
-        if (row.get("ISO3") or "").strip().upper() == "WLD" and _global_row_applicable_to_project(row, iso3)
+        if (row.get("ISO3") or "").strip().upper() == "WLD" and _global_row_applicable_to_project(row, primary_iso3)
     ]
     global_entries = [_row_to_entry(row, is_global=True) for row in global_rows]
 
-    # Combine local + global, but keep the list user-facing and non-redundant.
-    # Tier-1 rows frequently repeat global datasets (e.g., Copernicus DEM, OSM),
-    # which otherwise shows as duplicate options in the GUI.
     entries: List[DatasetCoverageEntry] = []
     seen_dataset_names: set[str] = set()
     for entry in (local_entries + global_entries):
@@ -3052,10 +3278,10 @@ async def get_project_dataset_coverage(project_name: str):
         seen_dataset_names.add(key)
         entries.append(entry)
 
-    summary = _load_country_summary(country_name, iso3)
+    summary = _load_country_summary(country_name, primary_iso3)
 
     return DatasetCoverageResponse(
-        iso3=iso3,
+        iso3=primary_iso3,
         country=country_name,
         entries=entries,
         summary=summary,
@@ -3083,16 +3309,31 @@ async def get_project_engineering_standards(project_name: str):
     if not project_path or not project_path.exists():
         raise HTTPException(status_code=404, detail=f"Project '{project_name}' not found.")
 
-    iso3 = _infer_project_iso3(project_path) or "WLD"
+    iso3_list: List[str] = []
+    try:
+        if NATURAL_EARTH_ADMIN0_SHP.exists():
+            aoi_fc = _load_project_aoi_feature_collection(project_path)
+            if isinstance(aoi_fc, dict):
+                geom = _collect_geometry(aoi_fc)
+                iso3_list = _aoi_countries_admin0(geom)
+    except Exception:
+        pass
+    if not iso3_list:
+        single = _infer_project_iso3(project_path)
+        iso3_list = [single] if single else ["WLD"]
+
+    primary_iso3 = iso3_list[0] if iso3_list else "WLD"
     iso_to_name, _, _ = _load_iso_mappings()
-    country_name = iso_to_name.get(iso3)
+    country_names = [iso_to_name.get(c, c) for c in iso3_list]
+    country_name = ", ".join(n for n in country_names if n) or iso_to_name.get(primary_iso3)
 
     rows = _load_engineering_standards_rows()
     if not rows:
         raise HTTPException(status_code=500, detail="Engineering standards catalogue not available.")
 
-    local_rows = [row for row in rows if row.get("ISO3") == iso3]
-    global_rows = [row for row in rows if row.get("ISO3") == "WLD"]
+    iso3_set = {c.upper() for c in iso3_list}
+    local_rows = [row for row in rows if (row.get("ISO3") or "").strip().upper() in iso3_set]
+    global_rows = [row for row in rows if (row.get("ISO3") or "").strip().upper() == "WLD"]
 
     entries: List[EngineeringStandardEntry] = []
     seen: set[str] = set()
@@ -3105,7 +3346,7 @@ async def get_project_engineering_standards(project_name: str):
         entries.append(_row_to_engineering_standard(row, is_global=(row.get("ISO3") == "WLD")))
 
     return EngineeringStandardsResponse(
-        iso3=iso3,
+        iso3=primary_iso3,
         country=country_name,
         entries=entries,
         catalog_reference=str(PIPELINE_ENGINEERING_STANDARDS_CATALOG_CSV),

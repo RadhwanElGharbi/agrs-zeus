@@ -34,7 +34,7 @@ export function BackgroundJobIndicator({ jobId, onExpand, onJobFinished }: Backg
       jobId,
       (payload) => {
         setJob(payload)
-        if (!completionHandled && (payload.status === 'succeeded' || payload.status === 'failed')) {
+        if (!completionHandled && (payload.status === 'succeeded' || payload.status === 'failed' || payload.status === 'partial')) {
           setCompletionHandled(true)
           onJobFinished?.(payload)
         }
@@ -49,8 +49,9 @@ export function BackgroundJobIndicator({ jobId, onExpand, onJobFinished }: Backg
 
   if (!isVisible || !jobId || !job) return null
 
-  const isComplete = job.status === 'succeeded' || job.status === 'failed'
+  const isComplete = job.status === 'succeeded' || job.status === 'failed' || job.status === 'partial'
   const isSuccess = job.status === 'succeeded'
+  const isPartial = job.status === 'partial'
   const progress = Math.round((job.progress ?? 0) * 100)
 
   return (
@@ -62,7 +63,9 @@ export function BackgroundJobIndicator({ jobId, onExpand, onJobFinished }: Backg
           isComplete
             ? isSuccess
               ? "bg-emerald-500/20 border-emerald-500/40 hover:bg-emerald-500/30"
-              : "bg-red-500/20 border-red-500/40 hover:bg-red-500/30"
+              : isPartial
+                ? "bg-amber-500/20 border-amber-500/40 hover:bg-amber-500/30"
+                : "bg-red-500/20 border-red-500/40 hover:bg-red-500/30"
             : "bg-black/80 border-primary/40 hover:bg-black/90 hover:border-primary/60"
         )}
       >
@@ -77,12 +80,16 @@ export function BackgroundJobIndicator({ jobId, onExpand, onJobFinished }: Backg
           isComplete
             ? isSuccess
               ? "bg-emerald-500/20"
-              : "bg-red-500/20"
+              : isPartial
+                ? "bg-amber-500/20"
+                : "bg-red-500/20"
             : "bg-primary/20"
         )}>
           {isComplete ? (
             isSuccess ? (
               <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            ) : isPartial ? (
+              <CheckCircle2 className="w-4 h-4 text-amber-400" />
             ) : (
               <XCircle className="w-4 h-4 text-red-400" />
             )
@@ -106,13 +113,17 @@ export function BackgroundJobIndicator({ jobId, onExpand, onJobFinished }: Backg
               isComplete
                 ? isSuccess
                   ? "text-emerald-400"
-                  : "text-red-400"
+                  : isPartial
+                    ? "text-amber-400"
+                    : "text-red-400"
                 : "text-primary"
             )}>
               {isComplete
                 ? isSuccess
                   ? "COMPLETE"
-                  : "FAILED"
+                  : isPartial
+                    ? "PARTIAL"
+                    : "FAILED"
                 : job.current_category?.toUpperCase() || "PROCESSING"}
             </span>
             {!isComplete && (

@@ -27,19 +27,11 @@ export function AuthGuard({ children }: AuthGuardProps) {
     }
   }, [isLoading])
 
-  // Request fullscreen mode
   const requestFullscreen = useCallback(() => {
-    const elem = document.documentElement
-    if (elem.requestFullscreen) {
-      elem.requestFullscreen().catch((err) => {
+    if (window.electron?.setFullscreen) {
+      window.electron.setFullscreen(true).catch((err) => {
         console.warn('Fullscreen request failed:', err)
       })
-    } else if ((elem as any).webkitRequestFullscreen) {
-      // Safari
-      (elem as any).webkitRequestFullscreen()
-    } else if ((elem as any).msRequestFullscreen) {
-      // IE11
-      (elem as any).msRequestFullscreen()
     }
   }, [])
 

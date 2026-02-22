@@ -1,11 +1,22 @@
 'use client'
 
-import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react'
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { useAuth } from '@/lib/context/AuthContext'
 
 // ---------------------------------------------------------------------------
 // Session persistence helpers
 // ---------------------------------------------------------------------------
 const STORAGE_PREFIX = 'zeus_session_'
+const STARTUP_GLOBE_USERS = new Set(['georges_guerette@tcenergy.com'])
+
+function shouldForceStartupGlobe(user: { email?: string | null; username?: string } | null): boolean {
+  if (!user) return false
+  const identifiers = [user.email, user.username]
+  return identifiers.some((value) => {
+    if (!value) return false
+    return STARTUP_GLOBE_USERS.has(String(value).trim().toLowerCase())
+  })
+}
 
 export function readSession<T>(key: string, fallback: T): T {
   if (typeof window === 'undefined') return fallback
@@ -70,6 +81,8 @@ export type MapViewContextValue = {
   setMapMode: (mode: MapMode) => void
   mapProjection: MapProjection
   setMapProjection: (projection: MapProjection) => void
+  mapUiIdle: boolean
+  setMapUiIdle: (idle: boolean) => void
   registerOperatorActions: (actions: OperatorActions) => void
   registerOperatorDialogActions: (actions: Partial<OperatorDialogActions>) => void
   registerGisActions: (actions: Partial<GisActions>) => void
@@ -94,6 +107,7 @@ export type MapViewContextValue = {
 const MapViewContext = createContext<MapViewContextValue | undefined>(undefined)
 
 export function MapViewProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth()
   const [mapMode, _setMapMode] = useState<MapMode>(() => {
     const stored = readSession<string>('map_mode', 'gis')
     return (['gis', 'operator', 'routing'] as MapMode[]).includes(stored as MapMode)
@@ -107,6 +121,7 @@ export function MapViewProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const [mapProjection, _setMapProjection] = useState<MapProjection>(() => {
+    if (shouldForceStartupGlobe(user)) return 'globe'
     const stored = readSession<string>('map_projection', 'mercator')
     return stored === 'globe' ? 'globe' : 'mercator'
   })
@@ -114,6 +129,16 @@ export function MapViewProvider({ children }: { children: React.ReactNode }) {
   const setMapProjection = useCallback((projection: MapProjection) => {
     _setMapProjection(projection)
     writeSession('map_projection', projection)
+  }, [])
+
+  useEffect(() => {
+    if (!shouldForceStartupGlobe(user)) return
+    setMapProjection('globe')
+  }, [setMapProjection, user])
+
+  const [mapUiIdle, _setMapUiIdle] = useState(false)
+  const setMapUiIdle = useCallback((idle: boolean) => {
+    _setMapUiIdle(idle)
   }, [])
 
   const [operatorUiState, setOperatorUiState] = useState<OperatorUiState>({ tool: 'none', geometryEditActive: false })
@@ -237,6 +262,8 @@ export function MapViewProvider({ children }: { children: React.ReactNode }) {
       setMapMode,
       mapProjection,
       setMapProjection,
+      mapUiIdle,
+      setMapUiIdle,
       registerOperatorActions,
       registerOperatorDialogActions,
       registerGisActions,
@@ -277,7 +304,9 @@ export function MapViewProvider({ children }: { children: React.ReactNode }) {
     captureGeometry,
     mapMode,
     mapProjection,
+    mapUiIdle,
     setMapProjection,
+    setMapUiIdle,
     openOperatorEntriesIndex,
     openSortiesCreate,
     openSortiesIndex,

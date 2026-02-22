@@ -30,7 +30,19 @@ contextBridge.exposeInMainWorld('electron', {
   },
 
   // Push local changes to server
-  pushFilesToServer: (payload) => ipcRenderer.invoke('local-cache-push-files', payload)
+  pushFilesToServer: (payload) => ipcRenderer.invoke('local-cache-push-files', payload),
+
+  // Route export
+  exportRouteBundle: (payload) => ipcRenderer.invoke('route-export-bundle', payload),
+
+  // Native window fullscreen
+  setFullscreen: (isFullscreen) => ipcRenderer.invoke('set-fullscreen', isFullscreen),
+  isFullscreen: () => ipcRenderer.invoke('is-fullscreen'),
+  onFullscreenChange: (callback) => {
+    const handler = (_event, isFullscreen) => callback(isFullscreen);
+    ipcRenderer.on('fullscreen-changed', handler);
+    return () => ipcRenderer.removeListener('fullscreen-changed', handler);
+  }
 });
 
 console.log('Preload script loaded successfully');

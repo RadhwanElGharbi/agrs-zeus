@@ -352,6 +352,13 @@ export interface ProjectMetadata {
   department?: string;
   country?: string;
   iso3?: string;
+  iso3_list?: string[];
+  countries?: { iso3: string; name: string }[];
+  // Folder / visibility (populated from DB)
+  folder_id?: string | null;
+  folder_name?: string | null;
+  folder_color?: string | null;
+  visibility?: string;
 }
 
 export interface DatasetInfo {
@@ -364,6 +371,16 @@ export interface DatasetInfo {
 export interface ProjectDatasets {
   rasters: DatasetInfo[];
   vectors: DatasetInfo[];
+}
+
+export interface ProjectMember {
+  user_id: string;
+  email: string;
+  full_name: string;
+  serial_number?: string | null;
+  role: string;
+  membership_role?: string | null;
+  joined_at?: string | null;
 }
 
 export interface DatasetCoverageEntry {
@@ -528,6 +545,7 @@ export interface DatasetFetchJob {
   categories: Record<string, DatasetFetchJobState>;
   layers: Record<string, LayerDescriptor>;
   logs: string[];
+  total_log_count?: number;
   force: boolean;
   error?: string | null;
   overrides?: Record<string, string>;
@@ -648,7 +666,10 @@ export interface AlignmentSheetsOptions {
  */
 export async function fetchProjects(): Promise<ProjectMetadata[]> {
   const base = await getApiBaseAsync();
-  const response = await fetch(`${base}/projects`);
+  const token = sessionStorage.getItem('agrs_token');
+  const headers: HeadersInit = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const response = await fetch(`${base}/projects`, { headers });
   
   if (!response.ok) {
     throw new Error(`Failed to fetch projects: ${response.statusText}`);
@@ -687,6 +708,53 @@ export async function fetchProjectDatasets(project: string): Promise<ProjectData
   }
 
   return response.json();
+}
+
+export async function listProjectMembers(project: string): Promise<{ members: ProjectMember[]; count: number }> {
+  const base = await getApiBaseAsync();
+  const token = sessionStorage.getItem('agrs_token');
+  const headers: HeadersInit = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const response = await fetch(`${base}/projects/${encodeURIComponent(project)}/members`, { headers });
+  if (!response.ok) {
+    const message = await response.text().catch(() => '');
+    throw new Error(message || `Failed to list members for ${project}: ${response.statusText}`);
+  }
+  return response.json();
+}
+
+export async function addProjectMember(project: string, email: string, membershipRole?: string | null): Promise<void> {
+  const base = await getApiBaseAsync();
+  const token = sessionStorage.getItem('agrs_token');
+  const headers: HeadersInit = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const response = await fetch(`${base}/projects/${encodeURIComponent(project)}/members`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      email,
+      membership_role: membershipRole ?? null,
+    }),
+  });
+  if (!response.ok) {
+    const message = await response.text().catch(() => '');
+    throw new Error(message || `Failed to add project member: ${response.statusText}`);
+  }
+}
+
+export async function removeProjectMember(project: string, userId: string): Promise<void> {
+  const base = await getApiBaseAsync();
+  const token = sessionStorage.getItem('agrs_token');
+  const headers: HeadersInit = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const response = await fetch(`${base}/projects/${encodeURIComponent(project)}/members/${encodeURIComponent(userId)}`, {
+    method: 'DELETE',
+    headers,
+  });
+  if (!response.ok) {
+    const message = await response.text().catch(() => '');
+    throw new Error(message || `Failed to remove project member: ${response.statusText}`);
+  }
 }
 
 /**
@@ -2593,4 +2661,136 @@ export async function patchProjectLocalCacheConfig(
 }
 
 
+/**
+ * Subscribe to project-level events via SSE.
+ * Events include: dataset_job_started, dataset_job_cancelled, dataset_job_completed, datasets_changed
+ */
+export function subscribeToProjectEvents(
+  project: string,
+  onEvent: (event: { type: string; [key: string]: any }) => void,
+  onError?: (error: Error) => void
+): () => void {
+  let stopped = false;
+  const streamUrl = `${getApiBaseSync()}/projects/${project}/events/stream`;
+
+  if (typeof window === 'undefined' || typeof EventSource === 'undefined') {
+    return () => {};
+  }
+
+  const source = new EventSource(streamUrl);
+
+  source.onmessage = (ev) => {
+    if (stopped) return;
+    try {
+      const payload = JSON.parse(ev.data);
+      onEvent(payload);
+    } catch (err) {
+      console.warn('[ProjectEvents] Failed to parse SSE message:', err);
+    }
+  };
+
+  source.onerror = () => {
+    if (stopped) return;
+    source.close();
+    onError?.(new Error('Project event stream disconnected.'));
+  };
+
+  return () => {
+    stopped = true;
+    source.close();
+  };
+}
+
 // Server-side helpers removed -- all local cache operations now go through Electron IPC.
+
+// ============================================================================
+// Project Folders & Visibility
+// ============================================================================
+
+export interface ProjectFolder {
+  id: string;
+  name: string;
+  color?: string | null;
+  position: number;
+  project_count: number;
+}
+
+function _authHeaders(): HeadersInit {
+  const token = sessionStorage.getItem('agrs_token');
+  const h: HeadersInit = {};
+  if (token) h['Authorization'] = `Bearer ${token}`;
+  return h;
+}
+
+export async function fetchProjectFolders(): Promise<ProjectFolder[]> {
+  const base = await getApiBaseAsync();
+  const response = await fetch(`${base}/project-folders`, { headers: _authHeaders() });
+  if (!response.ok) throw new Error(`Failed to fetch folders: ${response.statusText}`);
+  return response.json();
+}
+
+export async function createProjectFolder(payload: { name: string; color?: string; position?: number }): Promise<ProjectFolder> {
+  const base = await getApiBaseAsync();
+  const response = await fetch(`${base}/project-folders`, {
+    method: 'POST',
+    headers: { ..._authHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const msg = await response.text().catch(() => '');
+    throw new Error(msg || 'Failed to create folder');
+  }
+  return response.json();
+}
+
+export async function updateProjectFolder(folderId: string, payload: { name?: string; color?: string; position?: number }): Promise<ProjectFolder> {
+  const base = await getApiBaseAsync();
+  const response = await fetch(`${base}/project-folders/${folderId}`, {
+    method: 'PATCH',
+    headers: { ..._authHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const msg = await response.text().catch(() => '');
+    throw new Error(msg || 'Failed to update folder');
+  }
+  return response.json();
+}
+
+export async function deleteProjectFolder(folderId: string): Promise<void> {
+  const base = await getApiBaseAsync();
+  const response = await fetch(`${base}/project-folders/${folderId}`, {
+    method: 'DELETE',
+    headers: _authHeaders(),
+  });
+  if (!response.ok) {
+    const msg = await response.text().catch(() => '');
+    throw new Error(msg || 'Failed to delete folder');
+  }
+}
+
+export async function assignProjectFolder(projectName: string, folderId: string | null): Promise<void> {
+  const base = await getApiBaseAsync();
+  const response = await fetch(`${base}/projects/${encodeURIComponent(projectName)}/folder`, {
+    method: 'PUT',
+    headers: { ..._authHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ folder_id: folderId }),
+  });
+  if (!response.ok) {
+    const msg = await response.text().catch(() => '');
+    throw new Error(msg || 'Failed to assign folder');
+  }
+}
+
+export async function setProjectVisibility(projectName: string, visibility: 'public' | 'restricted'): Promise<void> {
+  const base = await getApiBaseAsync();
+  const response = await fetch(`${base}/projects/${encodeURIComponent(projectName)}/visibility`, {
+    method: 'PUT',
+    headers: { ..._authHeaders(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ visibility }),
+  });
+  if (!response.ok) {
+    const msg = await response.text().catch(() => '');
+    throw new Error(msg || 'Failed to set visibility');
+  }
+}

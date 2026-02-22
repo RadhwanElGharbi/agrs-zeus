@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { readSession, writeSession, useMapView, type MapProjection } from '@/lib/context/MapViewContext'
+import { trackEvent } from '@/lib/analytics'
 import {
   patchUserSettings,
   getProjectLocalCacheSettings,
@@ -114,6 +115,7 @@ export function SettingsDialog({ open, onClose, resolution, onResolutionChange }
   const [cacheError, setCacheError] = useState<string | null>(null)
   const [cacheBusyAction, setCacheBusyAction] = useState<'choose' | 'check' | 'sync' | null>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const prevOpenRef = useRef(open)
   const { mapProjection, setMapProjection } = useMapView()
   const { currentProject, refreshProjectData } = useProject()
 
@@ -128,15 +130,31 @@ export function SettingsDialog({ open, onClose, resolution, onResolutionChange }
   useEffect(() => { setMounted(true) }, [])
 
   useEffect(() => {
+    if (prevOpenRef.current === open) return
+    trackEvent('dialog', 'SettingsDialog', open ? 'open_settings_dialog' : 'close_settings_dialog', {
+      project: currentProject
+    })
+    prevOpenRef.current = open
+  }, [currentProject, open])
+
+  useEffect(() => {
+    if (window.electron?.onFullscreenChange) {
+      window.electron.isFullscreen?.().then(setIsFullscreen)
+      return window.electron.onFullscreenChange(setIsFullscreen)
+    }
     const handler = () => setIsFullscreen(!!document.fullscreenElement)
     document.addEventListener('fullscreenchange', handler)
     return () => document.removeEventListener('fullscreenchange', handler)
   }, [])
 
   const toggleFullscreen = useCallback(() => {
-    if (document.fullscreenElement) void document.exitFullscreen()
-    else void document.documentElement.requestFullscreen()
-  }, [])
+    if (window.electron?.setFullscreen) {
+      void window.electron.setFullscreen(!isFullscreen)
+    } else {
+      if (document.fullscreenElement) void document.exitFullscreen()
+      else void document.documentElement.requestFullscreen()
+    }
+  }, [isFullscreen])
 
   const handleClose = useCallback(() => {
     setIsClosing(true)

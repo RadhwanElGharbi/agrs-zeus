@@ -9,7 +9,10 @@ The frontend consumes these via `GET /api/projects/{project}/audit`.
 
 from __future__ import annotations
 
+import json
 import uuid
+from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Dict, Optional
 
 from fastapi import HTTPException
@@ -18,6 +21,110 @@ from sqlalchemy.orm import Session
 
 from .db_models import AuditEvent, User
 from .projects_db import upsert_project_row
+
+ANALYTICS_DIR = Path("/opt/agrs/analytics")
+ANALYTICS_DIR.mkdir(parents=True, exist_ok=True)
+
+_SENSITIVE_KEY_PARTS = (
+    "password",
+    "secret",
+    "token",
+    "authorization",
+    "api_key",
+    "apikey",
+    "access_key",
+    "refresh_token",
+    "cookie",
+)
+
+
+def _is_sensitive_key(key: str) -> bool:
+    k = key.strip().lower()
+    return any(part in k for part in _SENSITIVE_KEY_PARTS)
+
+
+def _sanitize_payload(value: Any) -> Any:
+    if isinstance(value, dict):
+        out: Dict[str, Any] = {}
+        for key, child in value.items():
+            k = str(key)
+            if _is_sensitive_key(k):
+                out[k] = "[REDACTED]"
+            else:
+                out[k] = _sanitize_payload(child)
+        return out
+    if isinstance(value, list):
+        return [_sanitize_payload(item) for item in value]
+    if isinstance(value, tuple):
+        return [_sanitize_payload(item) for item in value]
+    if isinstance(value, (str, int, float, bool)) or value is None:
+        return value
+    return str(value)
+
+
+def _coerce_iso_utc(value: Any) -> str:
+    if isinstance(value, datetime):
+        dt = value
+    elif isinstance(value, str) and value.strip():
+        raw = value.strip()
+        if raw.endswith("Z"):
+            raw = raw[:-1] + "+00:00"
+        try:
+            dt = datetime.fromisoformat(raw)
+        except Exception:
+            return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    else:
+        return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    else:
+        dt = dt.astimezone(timezone.utc)
+    return dt.isoformat().replace("+00:00", "Z")
+
+
+def _actor_username(actor: Dict[str, Any]) -> str:
+    return (
+        str(actor.get("email") or actor.get("username") or actor.get("name") or actor.get("id") or "unknown").strip()
+        or "unknown"
+    )
+
+
+def mirror_audit_event_to_operations(
+    *,
+    event_type: str,
+    project_name: str,
+    actor: Dict[str, Any],
+    payload: Optional[Dict[str, Any]] = None,
+    audit_event_id: Optional[Any] = None,
+    actor_user_id: Optional[Any] = None,
+    timestamp: Optional[Any] = None,
+) -> None:
+    """
+    Best-effort mirror of audit events into analytics operations JSONL.
+
+    This powers live operations monitoring in the desktop dashboard without
+    changing the canonical Postgres audit trail.
+    """
+    ts_iso = _coerce_iso_utc(timestamp)
+    date_str = ts_iso[:10]
+    log_file = ANALYTICS_DIR / f"operations_{date_str}.jsonl"
+
+    actor_id = actor_user_id or actor.get("id")
+    record = {
+        "timestamp": ts_iso,
+        "source": "audit_events",
+        "audit_event_id": str(audit_event_id) if audit_event_id is not None else None,
+        "event_type": str(event_type or "").strip(),
+        "project_name": str(project_name or "").strip(),
+        "username": _actor_username(actor),
+        "role": actor.get("role"),
+        "actor_user_id": str(actor_id) if actor_id is not None else None,
+        "payload": _sanitize_payload(payload or {}),
+    }
+
+    with log_file.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(record, default=str) + "\n")
 
 
 def _resolve_actor_user_id(db: Session, actor: Dict[str, Any]) -> uuid.UUID:
@@ -72,6 +179,18 @@ def write_audit_event(
         db.add(row)
         db.commit()
         db.refresh(row)
+        try:
+            mirror_audit_event_to_operations(
+                event_type=row.event_type,
+                project_name=project_name,
+                actor=actor,
+                payload=row.payload if isinstance(row.payload, dict) else (payload or {}),
+                audit_event_id=row.id,
+                actor_user_id=row.actor_user_id,
+                timestamp=row.ts,
+            )
+        except Exception:
+            pass
         return str(row.id)
     except HTTPException:
         if required:

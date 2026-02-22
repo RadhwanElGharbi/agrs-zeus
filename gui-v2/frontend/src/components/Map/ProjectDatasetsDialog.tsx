@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { MouseEvent as ReactMouseEvent, MutableRefObject, RefObject } from 'react'
 import { AlertTriangle, ChevronDown, ChevronRight, Eye, EyeOff, Layers, Loader2, Search, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -29,6 +29,7 @@ interface ProjectDatasetsDialogProps {
   projectName: string | null
   datasets: ProjectDatasets | null | undefined
   loadedLayers: ManagedLayer[]
+  focusDatasetKey?: string | null
 }
 
 const CATEGORY_ORDER = [
@@ -145,13 +146,15 @@ export function ProjectDatasetsDialog({
   dockContainerRef,
   projectName,
   datasets,
-  loadedLayers
+  loadedLayers,
+  focusDatasetKey = null
 }: ProjectDatasetsDialogProps) {
   const [isClosing, setIsClosing] = useState(false)
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState<DatasetFilter>('all')
   const [expandedDatasets, setExpandedDatasets] = useState<Record<string, boolean>>({})
   const [collapsedCategories, setCollapsedCategories] = useState<Record<string, boolean>>({})
+  const datasetRowRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
   const [coverage, setCoverage] = useState<DatasetCoverageResponse | null>(null)
   const [coverageLoading, setCoverageLoading] = useState(false)
@@ -214,6 +217,14 @@ export function ProjectDatasetsDialog({
     }
     return map
   }, [loadedLayers])
+
+  const datasetCategoryByKey = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const dataset of allDatasets) {
+      map.set(datasetKey(dataset), categoryFromDataset(dataset))
+    }
+    return map
+  }, [allDatasets])
 
   const coverageIndex = useMemo(() => {
     const byDataset = new Map<string, DatasetCoverageEntry>()
@@ -314,6 +325,32 @@ export function ProjectDatasetsDialog({
   const toggleCategoryCollapsed = useCallback((category: string) => {
     setCollapsedCategories((prev) => ({ ...prev, [category]: !prev[category] }))
   }, [])
+
+  useEffect(() => {
+    if (!open || !focusDatasetKey) return
+    const targetCategory = datasetCategoryByKey.get(focusDatasetKey)
+    if (!targetCategory) return
+
+    setQuery('')
+    setFilter('all')
+    setCollapsedCategories((prev) => ({ ...prev, [targetCategory]: false }))
+    setExpandedDatasets((prev) => ({ ...prev, [focusDatasetKey]: true }))
+  }, [open, focusDatasetKey, datasetCategoryByKey])
+
+  const focusDatasetExpanded = focusDatasetKey ? Boolean(expandedDatasets[focusDatasetKey]) : false
+  const focusDatasetVisible = useMemo(() => {
+    if (!focusDatasetKey) return false
+    return filteredRows.some((row) => row.key === focusDatasetKey)
+  }, [focusDatasetKey, filteredRows])
+
+  useEffect(() => {
+    if (!open || !focusDatasetKey || !focusDatasetExpanded || !focusDatasetVisible) return
+    const timer = window.setTimeout(() => {
+      const row = datasetRowRefs.current[focusDatasetKey]
+      row?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 0)
+    return () => window.clearTimeout(timer)
+  }, [open, focusDatasetExpanded, focusDatasetKey, focusDatasetVisible])
 
   if (!open) return null
 
@@ -552,6 +589,7 @@ export function ProjectDatasetsDialog({
                         <div className="p-3 space-y-2 border-t border-white/10 bg-black/20">
                           {group.rows.map(({ dataset, key, loadedLayer }) => {
                             const isExpanded = Boolean(expandedDatasets[key])
+                            const isFocusTarget = focusDatasetKey === key
                             const hint = sourceHint(dataset.metadata)
                             const metaRows = formatMetadata(dataset.metadata)
 
@@ -580,7 +618,15 @@ export function ProjectDatasetsDialog({
                             return (
                               <div
                                 key={key}
-                                className="border border-white/10 rounded-sm bg-[#0a0a0a]/70 overflow-hidden"
+                                ref={(node) => {
+                                  datasetRowRefs.current[key] = node
+                                }}
+                                className={cn(
+                                  'border rounded-sm bg-[#0a0a0a]/70 overflow-hidden',
+                                  isFocusTarget
+                                    ? 'border-primary/35 shadow-[0_0_0_1px_rgba(var(--primary),0.25)]'
+                                    : 'border-white/10'
+                                )}
                               >
                                 <button
                                   onClick={() => toggleDatasetExpanded(key)}

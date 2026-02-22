@@ -21,6 +21,7 @@
     "@types/leaflet": "^1.9.21",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
+    "jszip": "^3.10.1",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.316.0",
     "maplibre-gl": "^5.18.0",
@@ -71,7 +72,9 @@
       {
         "from": "electron/gdal/${os}",
         "to": "gdal",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "linux": {

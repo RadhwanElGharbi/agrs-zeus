@@ -15,6 +15,7 @@ import {
 } from '@/lib/api/dataClient'
 import { useProject } from '@/lib/context/ProjectContext'
 import { useOnboarding, TourAction } from '@/lib/context/OnboardingContext'
+import { trackEvent } from '@/lib/analytics'
 import { CRSSelectorDialog } from './CRSSelectorDialog'
 import { cn } from '@/lib/utils'
 import {
@@ -106,18 +107,22 @@ export function CreateProjectWizard({ open, onClose, onCreated }: CreateProjectW
     error: null,
   })
   const [isClosing, setIsClosing] = useState(false)
+  const drawOverlayPrevRef = useRef(false)
+  const crsDialogPrevRef = useRef(false)
 
   useEffect(() => {
     setMounted(true)
   }, [])
 
   const handleClose = () => {
+    trackEvent('dialog', 'CreateProjectWizard', 'close_create_project_wizard')
     setIsClosing(true)
     setTimeout(() => onClose(), 150)
   }
 
   useEffect(() => {
     if (open) {
+      trackEvent('dialog', 'CreateProjectWizard', 'open_create_project_wizard')
       setIsClosing(false)
     } else {
       setTimeout(() => {
@@ -137,6 +142,18 @@ export function CreateProjectWizard({ open, onClose, onCreated }: CreateProjectW
       }, 200)
     }
   }, [open])
+
+  useEffect(() => {
+    if (drawOverlayPrevRef.current === drawOverlayOpen) return
+    trackEvent('dialog', 'CreateProjectWizard', drawOverlayOpen ? 'open_aoi_draw_overlay' : 'close_aoi_draw_overlay')
+    drawOverlayPrevRef.current = drawOverlayOpen
+  }, [drawOverlayOpen])
+
+  useEffect(() => {
+    if (crsDialogPrevRef.current === crsDialogOpen) return
+    trackEvent('dialog', 'CreateProjectWizard', crsDialogOpen ? 'open_crs_selector_dialog' : 'close_crs_selector_dialog')
+    crsDialogPrevRef.current = crsDialogOpen
+  }, [crsDialogOpen])
 
   useEffect(() => {
     const iso = (aoiSummary?.iso3 || 'ISO').toUpperCase()
@@ -302,6 +319,11 @@ export function CreateProjectWizard({ open, onClose, onCreated }: CreateProjectW
       setSubmitState({ loading: false, error: 'AOI summary missing.' })
       return
     }
+    trackEvent('project', 'CreateProjectWizard', 'project_create_attempted', {
+      project_name: sanitizeProjectName(projectName),
+      organization,
+      aoi_mode: aoiMode
+    })
     setSubmitState({ loading: true, error: null })
     try {
       const formData = new FormData()
@@ -360,6 +382,9 @@ export function CreateProjectWizard({ open, onClose, onCreated }: CreateProjectW
       }
 
       const response: CreateProjectResponse = await createProject(formData)
+      trackEvent('project', 'CreateProjectWizard', 'project_create_succeeded', {
+        project_name: response.project_name
+      })
       await refreshProjects()
       setCurrentProject(response.project_name)
 
@@ -368,10 +393,18 @@ export function CreateProjectWizard({ open, onClose, onCreated }: CreateProjectW
 
       setIsClosing(true)
       setTimeout(() => {
+        trackEvent('dialog', 'CreateProjectWizard', 'close_create_project_wizard', {
+          reason: 'project_created',
+          project_name: response.project_name
+        })
         onCreated(response.project_name)
         onClose()
       }, 150)
     } catch (error) {
+      trackEvent('error', 'CreateProjectWizard', 'project_create_failed', {
+        project_name: sanitizeProjectName(projectName),
+        error: error instanceof Error ? error.message : String(error)
+      })
       setSubmitState({
         loading: false,
     error: error instanceof Error ? error.message : 'Failed to create project.'

@@ -2,8 +2,10 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { LayerSpecification, Map as MapLibreMap, MapMouseEvent, MapOptions } from 'maplibre-gl'
-import { Maximize2, Loader2, RefreshCw, Layers, Mountain, Brain, X } from 'lucide-react'
+import { Maximize2, Loader2, RefreshCw, Layers, Mountain, Brain, X, ChevronLeft, ChevronRight } from 'lucide-react'
+import Image from 'next/image'
 import MapboxDraw from '@mapbox/mapbox-gl-draw'
+import JSZip from 'jszip'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useProject } from '@/lib/context/ProjectContext'
@@ -16,6 +18,7 @@ import {
   getAoiFileUrl,
   fetchPIRLRouteCrossings,
   fetchPIRLRoute,
+  fetchPIRLRouteMetadata,
   fetchCreatorGeoJSON,
   createCreatorEntry,
   updateCreatorEntry,
@@ -73,6 +76,7 @@ import { GoToCoordinatesBar } from './GoToCoordinatesBar'
 import { ExplanationPanel, DecisionsPanel } from '@/components/Analysis'
 import { analyzeSegments, getRouteDecisions, getSegmentDecisions, getAssessmentMapColor, getAgenticSegmentsGeometry, type ExplainResponse, type AssessmentLevel, type SegmentDecisions } from '@/lib/api/agenticClient'
 import { useMapView, type OperatorGeometryKind, readSession, writeSession } from '@/lib/context/MapViewContext'
+import { trackEvent } from '@/lib/analytics'
 import { PirlRoutesManagerPanel } from './PirlRoutesManagerPanel'
 import { RouteCrossingsManagerPanel } from './RouteCrossingsManagerPanel'
 import { RoutingCrossingsPanel } from './RoutingCrossingsPanel'
@@ -88,6 +92,59 @@ const BASEMAP_RECOVERY_DEBOUNCE_MS = 1500
 const BASEMAP_STALL_CHECK_MS = 900
 const BASEMAP_STALL_RELOAD_COOLDOWN_MS = 2500
 const CURSOR_UPDATE_THROTTLE_MS = 80
+// Test value per request. Set to 5 * 60 * 1000 for production behavior.
+const MAP_IDLE_TIMEOUT_MS = 3 * 60 * 1000
+const MAP_IDLE_ORBIT_START_DELAY_MS = 1800
+const MAP_IDLE_ORBIT_VIEW = {
+  zoom: 4.1,
+  pitch: 52
+}
+const ISS_ORBIT_INCLINATION_DEGREES = 51.64
+const ISS_ORBITAL_PERIOD_SECONDS = 92.68 * 60
+const ISS_IDLE_SPEED_MULTIPLIER = 5
+const EARTH_SIDEREAL_DAY_SECONDS = 86164.0905
+const EARTH_ROTATION_RATE_RAD_PER_SEC = (2 * Math.PI) / EARTH_SIDEREAL_DAY_SECONDS
+
+function normalizeLongitudeDegrees(lng: number): number {
+  let normalized = ((lng + 180) % 360 + 360) % 360 - 180
+  if (normalized === -180) normalized = 180
+  return normalized
+}
+
+function computeIssGroundTrackLngLat(elapsedSeconds: number, phaseOffsetSeconds: number): [number, number] {
+  const t = elapsedSeconds + phaseOffsetSeconds
+  const inclinationRadians = (ISS_ORBIT_INCLINATION_DEGREES * Math.PI) / 180
+  const orbitalAngularRate = (2 * Math.PI * ISS_IDLE_SPEED_MULTIPLIER) / ISS_ORBITAL_PERIOD_SECONDS
+  const argumentOfLatitude = orbitalAngularRate * t
+
+  // Simplified circular ISS-like orbit in ECI, then rotated into Earth-fixed coordinates.
+  const x = Math.cos(argumentOfLatitude)
+  const y = Math.sin(argumentOfLatitude) * Math.cos(inclinationRadians)
+  const z = Math.sin(argumentOfLatitude) * Math.sin(inclinationRadians)
+
+  const latitudeRadians = Math.asin(Math.max(-1, Math.min(1, z)))
+  const longitudeInertialRadians = Math.atan2(y, x)
+  const longitudeEarthFixedRadians = longitudeInertialRadians - EARTH_ROTATION_RATE_RAD_PER_SEC * t
+
+  return [
+    normalizeLongitudeDegrees((longitudeEarthFixedRadians * 180) / Math.PI),
+    (latitudeRadians * 180) / Math.PI
+  ]
+}
+
+function computeTrackBearingDegrees(from: [number, number], to: [number, number]): number {
+  const [fromLng, fromLat] = from
+  const [toLng, toLat] = to
+  const fromLatRadians = (fromLat * Math.PI) / 180
+  const toLatRadians = (toLat * Math.PI) / 180
+  const deltaLngDegrees = normalizeLongitudeDegrees(toLng - fromLng)
+  const deltaLngRadians = (deltaLngDegrees * Math.PI) / 180
+
+  const y = Math.sin(deltaLngRadians) * Math.cos(toLatRadians)
+  const x = Math.cos(fromLatRadians) * Math.sin(toLatRadians) - Math.sin(fromLatRadians) * Math.cos(toLatRadians) * Math.cos(deltaLngRadians)
+  const bearingDegrees = (Math.atan2(y, x) * 180) / Math.PI
+  return (bearingDegrees + 360) % 360
+}
 
 // ---------------------------------------------------------------------------
 // Session persistence for per-project layer visibility / opacity
@@ -150,6 +207,107 @@ function saveRouteSession(project: string | null, routes: { routeId: string; vis
 function restoreRouteSession(project: string | null): RouteSessionEntry[] {
   if (!project) return []
   return readSession<RouteSessionEntry[]>(routeSessionKey(project), [])
+}
+
+function sanitizeRouteExportPathPart(value: string, fallback = 'item'): string {
+  const cleaned = String(value || '')
+    .replace(/[<>:"/\\|?*\x00-\x1F]/g, '_')
+    .replace(/\s+/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_+|_+$/g, '')
+  return cleaned || fallback
+}
+
+function normalizeRouteExportRelativePath(relativePath: string): string {
+  const normalized = String(relativePath || '').replace(/\\/g, '/').replace(/^\/+/, '')
+  if (!normalized) throw new Error('Export file path is required.')
+  const parts = normalized.split('/')
+  if (parts.some((part) => !part || part === '.' || part === '..')) {
+    throw new Error(`Invalid export file path: ${relativePath}`)
+  }
+  return parts.join('/')
+}
+
+function buildRouteExportArchiveBaseName(projectName: string, routeId: string): string {
+  const routeBase = String(routeId || '')
+    .replace(/\\/g, '/')
+    .split('/')
+    .filter(Boolean)
+    .pop() || 'route'
+  const routeStem = routeBase.replace(/\.geojson$/i, '')
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-')
+  return `${sanitizeRouteExportPathPart(projectName, 'project')}_${sanitizeRouteExportPathPart(routeStem, 'route')}_export_${stamp}`
+}
+
+function buildRouteExportZipFilename(projectName: string, routeId: string): string {
+  return `${buildRouteExportArchiveBaseName(projectName, routeId)}.zip`
+}
+
+type RouteExportBundleFile = {
+  relativePath: string
+  content: string
+  encoding?: 'utf8' | 'base64'
+}
+
+type RouteExportBundlePayload = {
+  projectName: string
+  routeId: string
+  files: RouteExportBundleFile[]
+  manifest?: Record<string, unknown> | null
+}
+
+function triggerRouteExportDownload(blob: Blob, filename: string): void {
+  if (typeof window === 'undefined') {
+    throw new Error('Route export is only available in browser environments.')
+  }
+  const url = window.URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = filename
+  anchor.style.display = 'none'
+  document.body.appendChild(anchor)
+  anchor.click()
+  anchor.remove()
+  window.setTimeout(() => window.URL.revokeObjectURL(url), 1500)
+}
+
+async function downloadRouteBundleAsZip(
+  payload: RouteExportBundlePayload
+): Promise<{ zipName: string; filesWritten: number }> {
+  const zip = new JSZip()
+  let filesWritten = 0
+  for (const file of payload.files) {
+    const normalizedPath = normalizeRouteExportRelativePath(file.relativePath)
+    if (file.encoding === 'base64') {
+      zip.file(normalizedPath, file.content, { base64: true, binary: true })
+    } else {
+      zip.file(normalizedPath, file.content)
+    }
+    filesWritten += 1
+  }
+
+  const manifestPayload = {
+    version: 1,
+    exported_at: new Date().toISOString(),
+    project_name: payload.projectName,
+    route_id: payload.routeId,
+    files: payload.files.map((file) => ({
+      relative_path: normalizeRouteExportRelativePath(file.relativePath),
+      encoding: file.encoding === 'base64' ? 'base64' : 'utf8'
+    })),
+    ...(payload.manifest ?? {})
+  }
+  zip.file('route_export_manifest.json', JSON.stringify(manifestPayload, null, 2))
+  filesWritten += 1
+
+  const zipBlob = await zip.generateAsync({
+    type: 'blob',
+    compression: 'DEFLATE',
+    compressionOptions: { level: 6 }
+  })
+  const zipName = buildRouteExportZipFilename(payload.projectName, payload.routeId)
+  triggerRouteExportDownload(zipBlob, zipName)
+  return { zipName, filesWritten }
 }
 
 // Route crossings (Route ∩ vectors) overlay
@@ -381,7 +539,7 @@ const CATEGORY_FIELD_DEFS: Record<
 
 export function MapViewer() {
   const { currentProject, datasets, isProjectLoading, hasNewDatasets, refreshProjectData, dismissNewDatasets } = useProject()
-  const { mapMode, setMapMode, mapProjection, registerGisActions, registerOperatorActions, registerRoutingActions, setOperatorUiState, operatorDialogs, sortiePreviewGeometry } =
+  const { mapMode, setMapMode, mapProjection, setMapProjection, mapUiIdle, setMapUiIdle, registerGisActions, registerOperatorActions, registerRoutingActions, setOperatorUiState, operatorDialogs, sortiePreviewGeometry, gis } =
     useMapView()
   const mapContainerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
@@ -440,6 +598,7 @@ export function MapViewer() {
   const [isBuffering, setIsBuffering] = useState(false)
   const [zoom, setZoom] = useState(4)
   const [managedLayers, setManagedLayers] = useState<ManagedLayer[]>([])
+  const managedLayersRef = useRef<ManagedLayer[]>(managedLayers)
   const [selectedLayerId, setSelectedLayerId] = useState<string | null>(null)
   const selectedLayerIdRef = useRef<string | null>(null)
   const [vectorDetails, setVectorDetails] = useState<Record<string, VectorDetail>>({})
@@ -468,6 +627,15 @@ export function MapViewer() {
   const [cursorElevation, setCursorElevation] = useState<CursorElevationState>({ value: null, status: 'idle' })
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' } | null>(null)
   const mapModeRef = useRef(mapMode)
+  const mapProjectionRef = useRef(mapProjection)
+  const mapUiIdleRef = useRef(mapUiIdle)
+  const mapIdleTimeoutRef = useRef<number | null>(null)
+  const mapIdleOrbitStartTimeoutRef = useRef<number | null>(null)
+  const mapIdleOrbitRafRef = useRef<number | null>(null)
+  const mapIdleOrbitLastTimestampRef = useRef<number | null>(null)
+  const mapIdleOrbitPhaseOffsetSecondsRef = useRef(0)
+  const mapIdleActiveRef = useRef(false)
+  const mapProjectionBeforeIdleRef = useRef<'mercator' | 'globe' | null>(null)
   const creatorToolRef = useRef<CreatorTool>('none')
   const creatorCursorAppliedRef = useRef(false)
   const currentProjectRef = useRef<string | null>(null)
@@ -490,6 +658,11 @@ export function MapViewer() {
   const setCreatorManagerCollapsed = useCallback((v: boolean) => {
     _setCreatorManagerCollapsed(v)
     writeSession('creator_manager_collapsed', v)
+  }, [])
+  const [rightSidebarCollapsed, _setRightSidebarCollapsed] = useState(() => readSession<boolean>('right_sidebar_collapsed', false))
+  const setRightSidebarCollapsed = useCallback((v: boolean) => {
+    _setRightSidebarCollapsed(v)
+    writeSession('right_sidebar_collapsed', v)
   }, [])
   const [creatorDatasetQuery, setCreatorDatasetQuery] = useState('')
   const [datasetFeatureDataset, setDatasetFeatureDataset] = useState<string>('')
@@ -550,6 +723,10 @@ export function MapViewer() {
   const toggleCrossingCategory = useCallback(
     (category: string) => {
       const key = normalizeCrossingCategory(category)
+      trackEvent('routing_input', 'MapViewer', 'crossing_category_visibility_toggled', {
+        category: key,
+        project: currentProjectRef.current
+      })
       setHiddenCrossingCategories((prev) => {
         const next = { ...prev }
         if (next[key]) delete next[key]
@@ -563,6 +740,11 @@ export function MapViewer() {
   const toggleCrossingMarker = useCallback(
     (routeId: string, crossingId: string) => {
       const key = crossingKey(routeId, crossingId)
+      trackEvent('routing_input', 'MapViewer', 'crossing_marker_visibility_toggled', {
+        route_id: routeId,
+        crossing_id: crossingId,
+        project: currentProjectRef.current
+      })
       setHiddenCrossingKeys((prev) => {
         const next = { ...prev }
         if (next[key]) delete next[key]
@@ -572,6 +754,15 @@ export function MapViewer() {
     },
     [crossingKey]
   )
+
+  useEffect(() => {
+    if (!selectedMapCrossing) return
+    trackEvent('dialog', 'MapViewer', 'open_crossing_info_dialog', {
+      route_id: selectedMapCrossing.routeId,
+      crossing_id: selectedMapCrossing.crossing?.id ?? null,
+      project: currentProjectRef.current
+    })
+  }, [selectedMapCrossing])
 
   // Validated decisions data state
   const [decisionsData, setDecisionsData] = useState<SegmentDecisions | null>(null)
@@ -583,6 +774,7 @@ export function MapViewer() {
   const [pirlTableRouteId, setPirlTableRouteId] = useState<string | null>(null)
   const [pirlTableDocked, setPirlTableDocked] = useState(false)
   const [datasetsDialogOpen, setDatasetsDialogOpen] = useState(false)
+  const [datasetsDialogFocusDatasetKey, setDatasetsDialogFocusDatasetKey] = useState<string | null>(null)
   const [datasetDigitalTwinOpen, setDatasetDigitalTwinOpen] = useState(false)
   const [measureDistanceOpen, setMeasureDistanceOpen] = useState(false)
   const [measureAreaOpen, setMeasureAreaOpen] = useState(false)
@@ -798,6 +990,18 @@ export function MapViewer() {
   }, [mapMode])
 
   useEffect(() => {
+    mapProjectionRef.current = mapProjection
+  }, [mapProjection])
+
+  useEffect(() => {
+    mapUiIdleRef.current = mapUiIdle
+  }, [mapUiIdle])
+
+  useEffect(() => {
+    managedLayersRef.current = managedLayers
+  }, [managedLayers])
+
+  useEffect(() => {
     creatorToolRef.current = creatorTool
   }, [creatorTool])
 
@@ -816,7 +1020,9 @@ export function MapViewer() {
     const canvas = map.getCanvas()
 
     const desiredCursor =
-      mapMode === 'operator' && creatorTool === 'create_poi'
+      mapUiIdle
+        ? 'none'
+        : mapMode === 'operator' && creatorTool === 'create_poi'
         ? CREATOR_CURSOR_POI
         : mapMode === 'operator' && creatorTool === 'create_aoi'
           ? CREATOR_CURSOR_AOI
@@ -832,7 +1038,7 @@ export function MapViewer() {
       canvas.style.cursor = ''
       creatorCursorAppliedRef.current = false
     }
-  }, [creatorTool, mapMode, mapReady])
+  }, [creatorTool, mapMode, mapReady, mapUiIdle])
 
   useEffect(() => {
     currentProjectRef.current = currentProject
@@ -1134,10 +1340,10 @@ export function MapViewer() {
     // Ensure visibility
     map.setLayoutProperty('basemap-fallback', 'visibility', 'visible')
     map.setLayoutProperty('basemap-imagery', 'visibility', 'visible')
-    map.setLayoutProperty('basemap-reference', 'visibility', 'visible')
+    map.setLayoutProperty('basemap-reference', 'visibility', mapUiIdleRef.current ? 'none' : 'visible')
     map.setPaintProperty('basemap-imagery', 'raster-opacity', 1)
     map.setPaintProperty('basemap-imagery', 'raster-fade-duration', 400)
-    map.setPaintProperty('basemap-reference', 'raster-opacity', 0.8)
+    map.setPaintProperty('basemap-reference', 'raster-opacity', mapUiIdleRef.current ? 0 : 0.8)
     setFallbackOpacity(imageryFailedRef.current ? BASEMAP_FALLBACK_FAILURE_OPACITY : BASEMAP_FALLBACK_DEFAULT_OPACITY)
     applySkyBackdrop()
   }, [applySkyBackdrop, setFallbackOpacity])
@@ -1299,6 +1505,7 @@ export function MapViewer() {
 
         // Persist viewport to localStorage after every pan/zoom/rotate settles
         mapInstance.on('moveend', () => {
+          if (mapIdleActiveRef.current) return
           const c = mapInstance.getCenter()
           saveViewport({
             center: [c.lng, c.lat],
@@ -2742,9 +2949,23 @@ export function MapViewer() {
   // Register GIS actions so the global Header can open dataset tooling.
   useEffect(() => {
     registerGisActions({
-      openDatasetIndex: () => setDatasetsDialogOpen(true),
-      openDatasetDigitalTwin: () => setDatasetDigitalTwinOpen(true),
+      openDatasetIndex: () => {
+        trackEvent('dialog', 'MapViewer', 'open_project_datasets_dialog', {
+          project: currentProjectRef.current
+        })
+        setDatasetsDialogFocusDatasetKey(null)
+        setDatasetsDialogOpen(true)
+      },
+      openDatasetDigitalTwin: () => {
+        trackEvent('dialog', 'MapViewer', 'open_dataset_digital_twin_dialog', {
+          project: currentProjectRef.current
+        })
+        setDatasetDigitalTwinOpen(true)
+      },
       openMeasureTool: (tool: 'distance' | 'area' | 'elevation') => {
+        trackEvent('dialog', 'MapViewer', `open_measure_tool_${tool}`, {
+          project: currentProjectRef.current
+        })
         switch (tool) {
           case 'distance': setMeasureDistanceOpen(true); break
           case 'area':     setMeasureAreaOpen(true); break
@@ -2760,10 +2981,16 @@ export function MapViewer() {
     registerRoutingActions({
       openPirlManager: () => {
         if (!currentProjectRef.current) return
+        trackEvent('dialog', 'MapViewer', 'open_pirl_routes_manager_dialog', {
+          project: currentProjectRef.current
+        })
         setShowRoutesDialog(true)
       },
       openCrossingsManager: () => {
         if (!currentProjectRef.current) return
+        trackEvent('dialog', 'MapViewer', 'open_route_crossings_manager_dialog', {
+          project: currentProjectRef.current
+        })
         setCrossingsManagerOpen(true)
       }
     })
@@ -3780,6 +4007,14 @@ export function MapViewer() {
   }, [removeTerrainSource])
 
   useEffect(() => {
+    if (!mapReady || !mapRef.current) return
+    const map = mapRef.current
+    if (!map.getLayer('basemap-reference')) return
+    map.setLayoutProperty('basemap-reference', 'visibility', mapUiIdle ? 'none' : 'visible')
+    map.setPaintProperty('basemap-reference', 'raster-opacity', mapUiIdle ? 0 : 0.8)
+  }, [mapReady, mapUiIdle])
+
+  useEffect(() => {
     const handleGlobalClick = () => {
       setContextMenu(null)
       if (identifyPopup) {
@@ -4069,12 +4304,12 @@ export function MapViewer() {
     applyLayerOrder(managedLayers)
   }, [applyLayerOrder, applyOpacityToMapLayer, applyVisibilityToMapLayer, managedLayers, mapReady])
 
-  const handleResetView = () => {
+  const handleResetView = useCallback(() => {
     const map = mapRef.current
     if (!map) return
 
     // Find AOI layer and zoom to its bounds if available
-    const aoiLayer = managedLayers.find(l => l.isAoi && l.bounds)
+    const aoiLayer = managedLayersRef.current.find(l => l.isAoi && l.bounds)
     if (aoiLayer && aoiLayer.bounds) {
       map.fitBounds(aoiLayer.bounds as any, {
         padding: 80,
@@ -4088,11 +4323,174 @@ export function MapViewer() {
         duration: 1200
       })
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    if (!mapReady || !mapRef.current) return
+    setMapUiIdle(false)
+
+    const clearIdleTimeout = () => {
+      if (mapIdleTimeoutRef.current !== null) {
+        window.clearTimeout(mapIdleTimeoutRef.current)
+        mapIdleTimeoutRef.current = null
+      }
+    }
+
+    const clearOrbitStartTimeout = () => {
+      if (mapIdleOrbitStartTimeoutRef.current !== null) {
+        window.clearTimeout(mapIdleOrbitStartTimeoutRef.current)
+        mapIdleOrbitStartTimeoutRef.current = null
+      }
+    }
+
+    const stopOrbitLoop = () => {
+      clearOrbitStartTimeout()
+      if (mapIdleOrbitRafRef.current !== null) {
+        window.cancelAnimationFrame(mapIdleOrbitRafRef.current)
+        mapIdleOrbitRafRef.current = null
+      }
+      mapIdleOrbitLastTimestampRef.current = null
+    }
+
+    const orbitStep = (timestamp: number) => {
+      if (!mapIdleActiveRef.current) return
+      const map = mapRef.current
+      if (!map) return
+
+      if (mapIdleOrbitLastTimestampRef.current === null) {
+        mapIdleOrbitLastTimestampRef.current = timestamp
+      }
+
+      const elapsedSeconds = Math.max(0, (timestamp - mapIdleOrbitLastTimestampRef.current) / 1000)
+      const center = computeIssGroundTrackLngLat(elapsedSeconds, mapIdleOrbitPhaseOffsetSecondsRef.current)
+      const lookAheadCenter = computeIssGroundTrackLngLat(elapsedSeconds + 2, mapIdleOrbitPhaseOffsetSecondsRef.current)
+      const bearing = computeTrackBearingDegrees(center, lookAheadCenter)
+
+      map.jumpTo({
+        center,
+        zoom: MAP_IDLE_ORBIT_VIEW.zoom,
+        pitch: MAP_IDLE_ORBIT_VIEW.pitch,
+        bearing
+      })
+
+      mapIdleOrbitRafRef.current = window.requestAnimationFrame(orbitStep)
+    }
+
+    const startOrbitLoop = () => {
+      if (!mapIdleActiveRef.current) return
+      if (mapIdleOrbitRafRef.current !== null) return
+      mapIdleOrbitLastTimestampRef.current = null
+      mapIdleOrbitRafRef.current = window.requestAnimationFrame(orbitStep)
+    }
+
+    const restoreProjectionIfNeeded = () => {
+      const projectionBeforeIdle = mapProjectionBeforeIdleRef.current
+      mapProjectionBeforeIdleRef.current = null
+      if (!projectionBeforeIdle) return
+      if (projectionBeforeIdle === mapProjectionRef.current) return
+      mapProjectionRef.current = projectionBeforeIdle
+      setMapProjection(projectionBeforeIdle)
+    }
+
+    const beginIdleAnimation = () => {
+      if (mapIdleActiveRef.current) return
+      const map = mapRef.current
+      if (!map) return
+
+      mapIdleActiveRef.current = true
+      setMapUiIdle(true)
+      mapProjectionBeforeIdleRef.current = mapProjectionRef.current
+      mapIdleOrbitPhaseOffsetSecondsRef.current = Date.now() / 1000
+      if (mapProjectionRef.current !== 'globe') {
+        mapProjectionRef.current = 'globe'
+        setMapProjection('globe')
+      }
+
+      const idleStartCenter = computeIssGroundTrackLngLat(0, mapIdleOrbitPhaseOffsetSecondsRef.current)
+      const idleStartLookAhead = computeIssGroundTrackLngLat(2, mapIdleOrbitPhaseOffsetSecondsRef.current)
+      const idleStartBearing = computeTrackBearingDegrees(idleStartCenter, idleStartLookAhead)
+
+      map.stop()
+      map.easeTo({
+        center: idleStartCenter,
+        zoom: MAP_IDLE_ORBIT_VIEW.zoom,
+        pitch: MAP_IDLE_ORBIT_VIEW.pitch,
+        bearing: idleStartBearing,
+        duration: MAP_IDLE_ORBIT_START_DELAY_MS,
+        essential: true
+      })
+
+      clearOrbitStartTimeout()
+      mapIdleOrbitStartTimeoutRef.current = window.setTimeout(() => {
+        mapIdleOrbitStartTimeoutRef.current = null
+        startOrbitLoop()
+      }, MAP_IDLE_ORBIT_START_DELAY_MS)
+    }
+
+    const scheduleIdleTimeout = () => {
+      clearIdleTimeout()
+      if (mapIdleActiveRef.current) return
+      mapIdleTimeoutRef.current = window.setTimeout(() => {
+        mapIdleTimeoutRef.current = null
+        beginIdleAnimation()
+      }, MAP_IDLE_TIMEOUT_MS)
+    }
+
+    const handleUserActivity = () => {
+      const wasIdle = mapIdleActiveRef.current
+      if (wasIdle) {
+        mapIdleActiveRef.current = false
+        setMapUiIdle(false)
+        stopOrbitLoop()
+        mapRef.current?.stop()
+        restoreProjectionIfNeeded()
+        handleResetView()
+      }
+      scheduleIdleTimeout()
+    }
+
+    const activityEvents: Array<keyof WindowEventMap> = [
+      'pointermove',
+      'pointerdown',
+      'click',
+      'wheel',
+      'keydown',
+      'touchstart',
+      'touchmove'
+    ]
+
+    for (const eventName of activityEvents) {
+      window.addEventListener(eventName, handleUserActivity, true)
+    }
+
+    scheduleIdleTimeout()
+
+    return () => {
+      for (const eventName of activityEvents) {
+        window.removeEventListener(eventName, handleUserActivity, true)
+      }
+      const wasIdle = mapIdleActiveRef.current
+      mapIdleActiveRef.current = false
+      setMapUiIdle(false)
+      clearIdleTimeout()
+      stopOrbitLoop()
+      if (wasIdle) {
+        restoreProjectionIfNeeded()
+      } else {
+        mapProjectionBeforeIdleRef.current = null
+      }
+    }
+  }, [handleResetView, mapReady, setMapProjection, setMapUiIdle])
 
   const handleGoToCoordinates = useCallback((lng: number, lat: number) => {
     const map = mapRef.current
     if (!map) return
+
+    trackEvent('routing_input', 'MapViewer', 'go_to_coordinates', {
+      lng,
+      lat,
+      project: currentProjectRef.current
+    })
 
     const targetZoom = Math.max(map.getZoom(), 16)
 
@@ -4295,16 +4693,11 @@ export function MapViewer() {
     })
   }
 
-  const handleZoomToLayer = (layerId: string) => {
-    const layer = managedLayers.find(l => l.id === layerId)
-    if (!layer || !layer.bounds || !mapRef.current) return
-    
-    mapRef.current.fitBounds(layer.bounds as any, {
-        padding: 80,
-        duration: 900,
-        maxZoom: 16
-    })
-  }
+  const handleOpenDatasetIndexForLayer = useCallback((layerId: string) => {
+    const layer = managedLayers.find((item) => item.id === layerId)
+    setDatasetsDialogFocusDatasetKey(layer ? `${layer.type}:${layer.name}` : null)
+    setDatasetsDialogOpen(true)
+  }, [managedLayers])
 
   const handleZoomToCrossing = useCallback((lng: number, lat: number) => {
     const map = mapRef.current
@@ -4930,6 +5323,11 @@ export function MapViewer() {
 
       // Toggle selection
       if (selectedSegmentId === segmentId && selectedRouteId === routeId) {
+        trackEvent('routing_input', 'MapViewer', 'segment_selection_cleared', {
+          route_id: routeId,
+          segment_id: segmentId,
+          project: currentProjectRef.current
+        })
         setSelectedSegmentId(null)
         setSelectedRouteId(null)
         // Clear highlight
@@ -4938,6 +5336,11 @@ export function MapViewer() {
           source.setData({ type: 'FeatureCollection', features: [] })
         }
       } else {
+        trackEvent('routing_input', 'MapViewer', 'segment_selected', {
+          route_id: routeId,
+          segment_id: segmentId,
+          project: currentProjectRef.current
+        })
         setSelectedSegmentId(segmentId)
         setSelectedRouteId(routeId)
         // Highlight the selected segment
@@ -5144,6 +5547,11 @@ export function MapViewer() {
     const map = mapRef.current
     if (!map) return
 
+    trackEvent('routing_input', 'MapViewer', 'route_loaded', {
+      route_id: routeId,
+      project: currentProjectRef.current
+    })
+
     const sourceId = `agentic-route-${routeId}`
     const lineLayerId = `${sourceId}-line`
     const pointsLayerId = `${sourceId}-points`
@@ -5341,6 +5749,10 @@ export function MapViewer() {
         if (route.routeId !== routeId) return route
 
         const newVisible = !route.visible
+        trackEvent('routing_input', 'MapViewer', newVisible ? 'route_visibility_enabled' : 'route_visibility_disabled', {
+          route_id: routeId,
+          project: currentProjectRef.current
+        })
         const sourceId = `agentic-route-${routeId}`
         const lineLayerId = `${sourceId}-line`
         const pointsLayerId = `${sourceId}-points`
@@ -5363,6 +5775,11 @@ export function MapViewer() {
   const handleRemovePirlRoute = useCallback((routeId: string) => {
     const map = mapRef.current
     if (!map) return
+
+    trackEvent('routing_input', 'MapViewer', 'route_removed', {
+      route_id: routeId,
+      project: currentProjectRef.current
+    })
 
     const sourceId = `agentic-route-${routeId}`
     const lineLayerId = `${sourceId}-line`
@@ -5417,6 +5834,109 @@ export function MapViewer() {
 
     setToast({ message: `Route "${routeId}" removed`, type: 'info' })
   }, [])
+
+  const handleExportPirlRoute = useCallback(async (routeId: string) => {
+    const projectName = currentProjectRef.current
+    if (!projectName) {
+      setToast({ message: 'Select a project before exporting routes', type: 'info' })
+      return
+    }
+
+    const routeGeojson = loadedRouteGeojsonByRouteIdRef.current[routeId]
+    if (!routeGeojson) {
+      setToast({ message: `Load route "${routeId}" before exporting`, type: 'info' })
+      return
+    }
+
+    const normalizedRouteFile = routeId.endsWith('.geojson') ? routeId : `${routeId}.geojson`
+    const routeStem = normalizedRouteFile.replace(/\.geojson$/i, '')
+    const decisionsRouteId = routeId.endsWith('.geojson') ? routeId.slice(0, -'.geojson'.length) : routeId
+    const loadedRoute = loadedPirlRoutes.find((route) => route.routeId === routeId) ?? null
+
+    trackEvent('routing_input', 'MapViewer', 'route_export_started', {
+      route_id: routeId,
+      project: projectName
+    })
+
+    try {
+      const [metadata, crossingsResponse, decisions] = await Promise.all([
+        fetchPIRLRouteMetadata(projectName, routeId).catch(() => null),
+        (async () => {
+          const cachedCrossings = routeCrossingsByRouteId[routeId]
+          if (Array.isArray(cachedCrossings) && cachedCrossings.length > 0) {
+            return {
+              project: projectName,
+              route: routeId,
+              computed: false,
+              crossings_detailed: {
+                version: 1,
+                generated_at: new Date().toISOString(),
+                categories_used: [],
+                datasets_used: [],
+                crossings: cachedCrossings,
+                message: 'Crossings loaded from current map session.'
+              }
+            }
+          }
+          return fetchPIRLRouteCrossings(projectName, routeId, false).catch(() => null)
+        })(),
+        getRouteDecisions(decisionsRouteId, projectName)
+      ])
+
+      const files: RouteExportBundleFile[] = [
+        { relativePath: normalizedRouteFile, content: JSON.stringify(routeGeojson, null, 2) }
+      ]
+      if (metadata) {
+        files.push({
+          relativePath: `${routeStem}.metadata.json`,
+          content: JSON.stringify(metadata, null, 2)
+        })
+      }
+      if (crossingsResponse) {
+        files.push({
+          relativePath: `${routeStem}.crossings.json`,
+          content: JSON.stringify(crossingsResponse, null, 2)
+        })
+      }
+      if (decisions) {
+        files.push({
+          relativePath: `${routeStem}.decisions.json`,
+          content: JSON.stringify(decisions, null, 2)
+        })
+      }
+
+      const exportPayload: RouteExportBundlePayload = {
+        projectName,
+        routeId,
+        files,
+        manifest: {
+          source: 'map_view_routing_route_manager',
+          route_summary: loadedRoute
+            ? {
+                segment_count: loadedRoute.segmentCount,
+                visible: loadedRoute.visible
+              }
+            : null
+        }
+      }
+
+      const result = await downloadRouteBundleAsZip(exportPayload)
+
+      trackEvent('routing_input', 'MapViewer', 'route_export_succeeded', {
+        route_id: routeId,
+        project: projectName,
+        files_written: result.filesWritten
+      })
+      setToast({ message: `Route ZIP downloaded (${result.zipName})`, type: 'success' })
+    } catch (error) {
+      trackEvent('error', 'MapViewer', 'route_export_failed', {
+        route_id: routeId,
+        project: projectName,
+        error: error instanceof Error ? error.message : String(error)
+      })
+      setToast({ message: error instanceof Error ? error.message : 'Failed to export route', type: 'info' })
+    }
+  }, [loadedPirlRoutes, routeCrossingsByRouteId])
 
   // Route Crossings overlay (floating markers): show crossings for loaded + visible routes in all modes
   // (GIS, Operator, Routing). Interaction (click-to-open details) can still be mode-gated elsewhere.
@@ -5810,13 +6330,17 @@ export function MapViewer() {
 
   const elevationLoading = cursorElevation.status === 'loading'
   const demDisplay = demLayerName ?? 'None'
+  const overlayChromeClassName = cn(
+    "transition-opacity duration-700 ease-out",
+    mapUiIdle ? "opacity-0 pointer-events-none" : "opacity-100"
+  )
 
   return (
+    <div className="flex w-full h-full">
     <div 
-      className="relative w-full h-full" 
+      className="relative flex-1 h-full min-w-0" 
       style={{ 
         minHeight: '100%', 
-        width: '100%', 
         height: '100%', 
         position: 'relative', 
         background: 'linear-gradient(to bottom, #154360 0%, #1F618D 20%, #2980B9 40%, #3498DB 60%, #5DADE2 80%, #87CEEB 100%)'
@@ -5854,6 +6378,29 @@ export function MapViewer() {
         </div>
       )}
 
+      <div
+        className={cn(
+          "pointer-events-none absolute top-7 left-1/2 -translate-x-1/2 z-[55]",
+          mapUiIdle ? "opacity-95 translate-y-0" : "opacity-0 -translate-y-2"
+        )}
+        style={{
+          transitionProperty: 'opacity, transform',
+          transitionTimingFunction: 'ease-out',
+          transitionDelay: mapUiIdle ? '2000ms' : '0ms',
+          transitionDuration: mapUiIdle ? '6000ms' : '250ms'
+        }}
+        aria-hidden="true"
+      >
+        <Image
+          src="/artemis-logo.svg"
+          alt="Artemis Global Research"
+          width={660}
+          height={156}
+          className="h-32 w-auto xl:h-36 drop-shadow-[0_0_18px_rgba(0,0,0,0.75)]"
+        />
+      </div>
+
+      <div className={overlayChromeClassName}>
       <Compass map={mapRef.current} className="bottom-16 left-4" />
 
       <button
@@ -6034,82 +6581,18 @@ export function MapViewer() {
         </div>
       </div>
 
-      {/* Right Side Panel Container - per-mode managers (only when a project is selected) */}
-      {currentProject && (
-        <div className="absolute top-4 right-4 z-10 flex flex-col gap-3 items-end overflow-x-visible">
-          {mapMode === 'gis' && (
-            <LayerManager
-              // Operator annotations are managed via Operator Mode (not GIS Layer Manager).
-              layers={managedLayers.filter((layer) => layer.id !== CREATOR_MANAGED_LAYER_ID)}
-              selectedLayerId={selectedLayerId}
-              loadingMessage={loadingMessage}
-              currentProject={currentProject}
-              vectorDetails={vectorDetails}
-              onSelectLayer={setSelectedLayerId}
-              onToggleVisibility={handleToggleVisibility}
-              onOpacityChange={handleOpacityChange}
-              onMoveLayer={handleMoveLayer}
-              onReorderLayers={handleReorderLayers}
-              onOpenTable={handleOpenTable}
-              onOpenStyle={handleOpenStyle}
-              onZoomToLayer={handleZoomToLayer}
-            />
-          )}
-
-          {mapMode === 'operator' && (
-            <>
-              <CreatorManager
-                entries={creatorManagerEntries}
-                selectedEntryId={selectedCreatorEntryId}
-                loadingMessage={null}
-                currentProject={currentProject}
-                onSelectEntry={setSelectedCreatorEntryId}
-                onToggleVisibility={handleToggleCreatorEntryVisibility}
-                onOpacityChange={handleCreatorEntryOpacityChange}
-                onMoveEntry={handleMoveCreatorEntry}
-                onReorderEntries={handleReorderCreatorEntries}
-                onOpenEntry={handleOpenCreatorEntryFromManager}
-                onZoomToEntry={handleZoomToCreatorEntry}
-                collapsed={creatorManagerCollapsed}
-                onCollapsedChange={setCreatorManagerCollapsed}
-              />
-
-              {loadedPirlRoutes.length > 0 && (
-                <RoutingCrossingsPanel
-                  loadedRoutes={loadedPirlRoutes}
-                  crossingsByRouteId={routeCrossingsByRouteId}
-                  onOpenManager={() => setCrossingsManagerOpen(true)}
-                  hiddenCategories={hiddenCrossingCategories}
-                  onToggleCategory={toggleCrossingCategory}
-                />
-              )}
-            </>
-          )}
-
-          {mapMode === 'routing' && (
-            <>
-              <RoutingRoutesPanel
-                loadedRoutes={loadedPirlRoutes}
-                onToggleRouteVisibility={handleTogglePirlRouteVisibility}
-                onRemoveRoute={handleRemovePirlRoute}
-                onOpenTable={(routeId) => setPirlTableRouteId(routeId)}
-              />
-              <RoutingCrossingsPanel
-                loadedRoutes={loadedPirlRoutes}
-                crossingsByRouteId={routeCrossingsByRouteId}
-                onOpenManager={() => setCrossingsManagerOpen(true)}
-                hiddenCategories={hiddenCrossingCategories}
-                onToggleCategory={toggleCrossingCategory}
-              />
-            </>
-          )}
-        </div>
-      )}
+      {/* Mode panels moved to right sidebar below */}
 
       {currentProject && mapMode === 'gis' && (
         <ProjectDatasetsDialog
           open={datasetsDialogOpen}
-          onClose={() => setDatasetsDialogOpen(false)}
+          onClose={() => {
+            trackEvent('dialog', 'MapViewer', 'close_project_datasets_dialog', {
+              project: currentProjectRef.current
+            })
+            setDatasetsDialogOpen(false)
+            setDatasetsDialogFocusDatasetKey(null)
+          }}
           onToggleDock={handleToggleDatasetsDock}
           isDocked={datasetsDialogDocked}
           dockHeight={dockHeight}
@@ -6118,13 +6601,19 @@ export function MapViewer() {
           projectName={currentProject}
           datasets={datasets}
           loadedLayers={managedLayers}
+          focusDatasetKey={datasetsDialogFocusDatasetKey}
         />
       )}
 
       {currentProject && mapMode === 'gis' && (
         <DatasetDigitalTwinDialog
           open={datasetDigitalTwinOpen}
-          onClose={() => setDatasetDigitalTwinOpen(false)}
+          onClose={() => {
+            trackEvent('dialog', 'MapViewer', 'close_dataset_digital_twin_dialog', {
+              project: currentProjectRef.current
+            })
+            setDatasetDigitalTwinOpen(false)
+          }}
           projectName={currentProject}
         />
       )}
@@ -6137,7 +6626,13 @@ export function MapViewer() {
           demAvailable={!!demLayerName}
           active={activeMeasureTool === 'distance'}
           onActivate={() => setActiveMeasureTool('distance')}
-          onClose={() => { setMeasureDistanceOpen(false); if (activeMeasureTool === 'distance') setActiveMeasureTool(null) }}
+          onClose={() => {
+            trackEvent('dialog', 'MapViewer', 'close_measure_tool_distance', {
+              project: currentProjectRef.current
+            })
+            setMeasureDistanceOpen(false)
+            if (activeMeasureTool === 'distance') setActiveMeasureTool(null)
+          }}
           initialPosition={{ x: 80, y: 80 }}
         />
       )}
@@ -6149,7 +6644,13 @@ export function MapViewer() {
           demAvailable={!!demLayerName}
           active={activeMeasureTool === 'area'}
           onActivate={() => setActiveMeasureTool('area')}
-          onClose={() => { setMeasureAreaOpen(false); if (activeMeasureTool === 'area') setActiveMeasureTool(null) }}
+          onClose={() => {
+            trackEvent('dialog', 'MapViewer', 'close_measure_tool_area', {
+              project: currentProjectRef.current
+            })
+            setMeasureAreaOpen(false)
+            if (activeMeasureTool === 'area') setActiveMeasureTool(null)
+          }}
           initialPosition={{ x: 120, y: 100 }}
         />
       )}
@@ -6161,7 +6662,13 @@ export function MapViewer() {
           demAvailable={!!demLayerName}
           active={activeMeasureTool === 'elevation'}
           onActivate={() => setActiveMeasureTool('elevation')}
-          onClose={() => { setElevationProfileOpen(false); if (activeMeasureTool === 'elevation') setActiveMeasureTool(null) }}
+          onClose={() => {
+            trackEvent('dialog', 'MapViewer', 'close_measure_tool_elevation', {
+              project: currentProjectRef.current
+            })
+            setElevationProfileOpen(false)
+            if (activeMeasureTool === 'elevation') setActiveMeasureTool(null)
+          }}
           initialPosition={{ x: 160, y: 120 }}
         />
       )}
@@ -6234,40 +6741,23 @@ export function MapViewer() {
         )
       })()}
 
-      {/* AI Analysis Panel */}
-      {currentProject && mapMode === 'routing' && showAnalysisPanel && (
-        <div className="absolute top-4 right-[340px] xl:right-[400px] z-40 w-[320px] xl:w-[400px] max-h-[calc(100vh-120px)] overflow-hidden">
-          <ExplanationPanel
-            result={analysisResult}
-            loading={analysisLoading}
-            error={analysisError}
-            onClose={handleCloseAnalysisPanel}
-            onRetry={handleAnalyze}
-          />
-        </div>
-      )}
-
-      {/* Validated Decisions Panel */}
-      {currentProject && mapMode === 'routing' && showDecisionsPanel && (
-        <div className="absolute top-4 right-[680px] xl:right-[820px] z-40 w-[320px] xl:w-[380px] max-h-[calc(100vh-120px)] overflow-hidden">
-          <DecisionsPanel
-            decisions={decisionsData}
-            loading={decisionsLoading}
-            error={decisionsError}
-            onClose={handleCloseDecisionsPanel}
-          />
-        </div>
-      )}
+      {/* AI Analysis & Decisions panels moved to right sidebar */}
 
       {/* PIRL Routes Manager */}
       {currentProject && mapMode === 'routing' && (
         <PirlRoutesManagerPanel
           open={showRoutesDialog}
-          onClose={() => setShowRoutesDialog(false)}
+          onClose={() => {
+            trackEvent('dialog', 'MapViewer', 'close_pirl_routes_manager_dialog', {
+              project: currentProjectRef.current
+            })
+            setShowRoutesDialog(false)
+          }}
           loadedRoutes={loadedPirlRoutes}
           onLoadRoute={handleLoadAgenticRoute}
           onToggleRouteVisibility={handleTogglePirlRouteVisibility}
           onRemoveRoute={handleRemovePirlRoute}
+          onExportRoute={handleExportPirlRoute}
         />
       )}
 
@@ -6275,7 +6765,12 @@ export function MapViewer() {
       {currentProject && (mapMode === 'routing' || mapMode === 'operator') && (
         <RouteCrossingsManagerPanel
           open={crossingsManagerOpen}
-          onClose={() => setCrossingsManagerOpen(false)}
+          onClose={() => {
+            trackEvent('dialog', 'MapViewer', 'close_route_crossings_manager_dialog', {
+              project: currentProjectRef.current
+            })
+            setCrossingsManagerOpen(false)
+          }}
           loadedRoutes={loadedPirlRoutes}
           crossingsByRouteId={routeCrossingsByRouteId}
           onZoomToCrossing={handleZoomToCrossing}
@@ -6290,10 +6785,20 @@ export function MapViewer() {
       {currentProject && mapMode === 'routing' && selectedMapCrossing && (
         <CrossingInfoDialog
           open={Boolean(selectedMapCrossing)}
-          onClose={() => setSelectedMapCrossing(null)}
+          onClose={() => {
+            trackEvent('dialog', 'MapViewer', 'close_crossing_info_dialog', {
+              project: currentProjectRef.current
+            })
+            setSelectedMapCrossing(null)
+          }}
           routeId={selectedMapCrossing.routeId}
           crossing={selectedMapCrossing.crossing}
-          onOpenManager={() => setCrossingsManagerOpen(true)}
+          onOpenManager={() => {
+            trackEvent('dialog', 'MapViewer', 'open_route_crossings_manager_dialog', {
+              project: currentProjectRef.current
+            })
+            setCrossingsManagerOpen(true)
+          }}
           onZoomToCrossing={handleZoomToCrossing}
         />
       )}
@@ -6344,7 +6849,12 @@ export function MapViewer() {
       <GoToCoordinatesBar
         open={goToCoordinatesOpen}
         seed={goToCoordinatesSeed}
-        onClose={() => setGoToCoordinatesOpen(false)}
+        onClose={() => {
+          trackEvent('dialog', 'MapViewer', 'close_go_to_coordinates_dialog', {
+            project: currentProjectRef.current
+          })
+          setGoToCoordinatesOpen(false)
+        }}
         onGoTo={handleGoToCoordinates}
       />
 
@@ -9062,6 +9572,180 @@ export function MapViewer() {
           </div>
         </div>
       )}
+      </div>
+    </div>
+
+    {/* ─── Right Sidebar ─── */}
+    {currentProject && (
+      <div
+        className={cn(
+          "relative h-full bg-[#07070a] border-l border-white/[0.06] flex flex-col overflow-visible shrink-0 transition-all duration-300",
+          mapUiIdle
+            ? "w-0 opacity-0 border-l-0 pointer-events-none"
+            : rightSidebarCollapsed ? "w-11" : "w-[310px]"
+        )}
+      >
+        {/* Collapse / Expand toggle (outside edge triangle handle) */}
+        <button
+          onClick={() => setRightSidebarCollapsed(!rightSidebarCollapsed)}
+          className="absolute -left-4 top-1/2 -translate-y-1/2 w-4 h-8 p-0 bg-[#0a0a0a] border border-white/10 border-r-0 text-white/40 hover:text-primary hover:border-primary/50 hover:bg-primary/5 transition-all duration-300 shadow-lg z-50 group [clip-path:polygon(0_50%,100%_0,100%_100%)] flex items-center justify-end pr-[2px]"
+          title={rightSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {rightSidebarCollapsed ? (
+            <ChevronLeft className="w-3 h-3 group-hover:-translate-x-0.5 transition-transform" />
+          ) : (
+            <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+          )}
+        </button>
+
+        {/* Mode indicator strip */}
+        <div className={cn(
+          "border-b flex items-center shrink-0 transition-all duration-300",
+          rightSidebarCollapsed ? "px-2 py-3 justify-center" : "px-4 py-3 gap-2.5",
+          mapMode === 'gis' && "border-blue-500/20 bg-blue-500/[0.03]",
+          mapMode === 'operator' && "border-amber-500/20 bg-amber-500/[0.03]",
+          mapMode === 'routing' && "border-purple-500/20 bg-purple-500/[0.03]"
+        )}>
+          <div className={cn(
+            "w-1.5 h-1.5 rounded-full shadow-[0_0_6px] shrink-0",
+            mapMode === 'gis' && "bg-blue-400 shadow-blue-400/60",
+            mapMode === 'operator' && "bg-amber-400 shadow-amber-400/60",
+            mapMode === 'routing' && "bg-purple-400 shadow-purple-400/60"
+          )} />
+          {!rightSidebarCollapsed && (
+            <span className="text-[10px] font-mono font-semibold uppercase tracking-[0.2em] text-white/70">
+              {mapMode === 'gis' && 'GIS Mode'}
+              {mapMode === 'operator' && 'Operator Mode'}
+              {mapMode === 'routing' && 'Routing Mode'}
+            </span>
+          )}
+          {!rightSidebarCollapsed && mapMode === 'gis' && (
+            <button
+              type="button"
+              onClick={() => gis.openDatasetIndex()}
+              className="ml-auto h-6 px-2 border border-blue-500/30 bg-blue-500/10 text-[9px] font-mono font-semibold uppercase tracking-widest text-blue-200 hover:text-white hover:bg-blue-500/20 hover:border-blue-400/50 transition-colors"
+              title="Manage datasets"
+            >
+              Manage
+            </button>
+          )}
+        </div>
+
+        {/* Panel content (hidden when collapsed) */}
+        {!rightSidebarCollapsed && (
+          <div
+            className={cn(
+              "flex-1 overflow-x-hidden scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent",
+              mapMode === 'gis' || mapMode === 'operator' ? "overflow-hidden" : "overflow-y-auto"
+            )}
+          >
+            {mapMode === 'gis' && (
+              <LayerManager
+                layers={managedLayers.filter((layer) => layer.id !== CREATOR_MANAGED_LAYER_ID)}
+                selectedLayerId={selectedLayerId}
+                loadingMessage={loadingMessage}
+                currentProject={currentProject}
+                vectorDetails={vectorDetails}
+                onSelectLayer={setSelectedLayerId}
+                onToggleVisibility={handleToggleVisibility}
+                onOpacityChange={handleOpacityChange}
+                onMoveLayer={handleMoveLayer}
+                onReorderLayers={handleReorderLayers}
+                onOpenTable={handleOpenTable}
+                onOpenStyle={handleOpenStyle}
+                onOpenDatasetIndexForLayer={handleOpenDatasetIndexForLayer}
+              />
+            )}
+
+            {mapMode === 'operator' && (
+              <div className="h-full min-h-0 flex flex-col divide-y divide-white/[0.04]">
+                <div className={cn("min-h-0", loadedPirlRoutes.length > 0 ? "flex-[2]" : "flex-1")}>
+                  <CreatorManager
+                    entries={creatorManagerEntries}
+                    selectedEntryId={selectedCreatorEntryId}
+                    loadingMessage={null}
+                    currentProject={currentProject}
+                    onSelectEntry={setSelectedCreatorEntryId}
+                    onToggleVisibility={handleToggleCreatorEntryVisibility}
+                    onOpacityChange={handleCreatorEntryOpacityChange}
+                    onMoveEntry={handleMoveCreatorEntry}
+                    onReorderEntries={handleReorderCreatorEntries}
+                    onOpenEntry={handleOpenCreatorEntryFromManager}
+                    onZoomToEntry={handleZoomToCreatorEntry}
+                    collapsed={creatorManagerCollapsed}
+                    onCollapsedChange={setCreatorManagerCollapsed}
+                  />
+                </div>
+
+                {loadedPirlRoutes.length > 0 && (
+                  <div className="min-h-0 flex-1 overflow-y-auto">
+                    <RoutingCrossingsPanel
+                      loadedRoutes={loadedPirlRoutes}
+                      crossingsByRouteId={routeCrossingsByRouteId}
+                      onOpenManager={() => {
+                        trackEvent('dialog', 'MapViewer', 'open_route_crossings_manager_dialog', {
+                          project: currentProjectRef.current
+                        })
+                        setCrossingsManagerOpen(true)
+                      }}
+                      hiddenCategories={hiddenCrossingCategories}
+                      onToggleCategory={toggleCrossingCategory}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {mapMode === 'routing' && (
+              <div className="flex flex-col divide-y divide-white/[0.04]">
+                <RoutingRoutesPanel
+                  loadedRoutes={loadedPirlRoutes}
+                  onToggleRouteVisibility={handleTogglePirlRouteVisibility}
+                  onRemoveRoute={handleRemovePirlRoute}
+                  onOpenTable={(routeId) => setPirlTableRouteId(routeId)}
+                  onExportRoute={handleExportPirlRoute}
+                />
+                <RoutingCrossingsPanel
+                  loadedRoutes={loadedPirlRoutes}
+                  crossingsByRouteId={routeCrossingsByRouteId}
+                  onOpenManager={() => {
+                    trackEvent('dialog', 'MapViewer', 'open_route_crossings_manager_dialog', {
+                      project: currentProjectRef.current
+                    })
+                    setCrossingsManagerOpen(true)
+                  }}
+                  hiddenCategories={hiddenCrossingCategories}
+                  onToggleCategory={toggleCrossingCategory}
+                />
+
+                {showAnalysisPanel && (
+                  <div className="border-t border-purple-500/10">
+                    <ExplanationPanel
+                      result={analysisResult}
+                      loading={analysisLoading}
+                      error={analysisError}
+                      onClose={handleCloseAnalysisPanel}
+                      onRetry={handleAnalyze}
+                    />
+                  </div>
+                )}
+
+                {showDecisionsPanel && (
+                  <div className="border-t border-purple-500/10">
+                    <DecisionsPanel
+                      decisions={decisionsData}
+                      loading={decisionsLoading}
+                      error={decisionsError}
+                      onClose={handleCloseDecisionsPanel}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    )}
     </div>
   )
 }

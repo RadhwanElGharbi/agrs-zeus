@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Brain, CheckCircle2, Eye, EyeOff, Loader2, Route, Search, Trash2, X } from 'lucide-react'
+import { Brain, CheckCircle2, Download, Eye, EyeOff, Loader2, Route, Search, Trash2, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useProject } from '@/lib/context/ProjectContext'
 import {
@@ -28,6 +28,7 @@ interface PirlRoutesManagerPanelProps {
   onLoadRoute: (routeId: string, geojson: GeoJSON.FeatureCollection) => void
   onToggleRouteVisibility: (routeId: string) => void
   onRemoveRoute: (routeId: string) => void
+  onExportRoute: (routeId: string) => void | Promise<void>
 }
 
 type RouteInspectorState =
@@ -42,7 +43,8 @@ export function PirlRoutesManagerPanel({
   loadedRoutes,
   onLoadRoute,
   onToggleRouteVisibility,
-  onRemoveRoute
+  onRemoveRoute,
+  onExportRoute
 }: PirlRoutesManagerPanelProps) {
   const { currentProject } = useProject()
   const currentProjectRef = useRef<string | null>(null)
@@ -420,6 +422,20 @@ export function PirlRoutesManagerPanel({
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation()
+                              void Promise.resolve(onExportRoute(r.route_id))
+                            }}
+                            className="p-1 rounded-sm transition-colors text-white/30 hover:text-emerald-300 hover:bg-emerald-500/15"
+                            title="Export route locally"
+                          >
+                            <Download className="w-3 h-3" />
+                          </button>
+                        )}
+
+                        {loaded && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
                               onRemoveRoute(r.route_id)
                             }}
                             className="p-1 rounded-sm transition-colors text-white/30 hover:text-red-400 hover:bg-red-500/15"
@@ -498,6 +514,20 @@ export function PirlRoutesManagerPanel({
                             title="Load to map"
                           >
                             {isLoadingRow ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Load'}
+                          </button>
+                        )}
+
+                        {loaded && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              void Promise.resolve(onExportRoute(r.route_id))
+                            }}
+                            className="p-1 rounded-sm transition-colors text-white/30 hover:text-emerald-300 hover:bg-emerald-500/15"
+                            title="Export route locally"
+                          >
+                            <Download className="w-3 h-3" />
                           </button>
                         )}
 

@@ -48,7 +48,7 @@ from api.routes import router
 from api.projects import router as projects_router
 from api.pirl import router as pirl_router
 from api.data import router as data_router
-from api.dataset_fetch import router as dataset_router
+from api.dataset_fetch import router as dataset_router, recover_orphaned_jobs, cleanup_orphaned_staging
 from api.alignment_sheets.router import router as alignment_sheets_router
 from api.suppliers import router as suppliers_router
 from api.auth import router as auth_router
@@ -60,6 +60,7 @@ from api.sorties import router as sorties_router
 from api.settings import router as settings_router
 from api.project_data_sync import router as project_data_sync_router
 from api.app_updates import router as app_updates_router
+from api.project_folders import router as project_folders_router
 from api.users import router as users_router, bootstrap_initial_admin, bootstrap_rad_admin
 from api.db import get_engine, get_sessionmaker
 
@@ -106,6 +107,15 @@ def _startup_db_healthcheck() -> None:
         bootstrap_initial_admin(db)
         bootstrap_rad_admin(db)
 
+    recovered = recover_orphaned_jobs()
+    if recovered:
+        print(f"[Startup] Recovered {len(recovered)} orphaned dataset fetch job(s): {recovered}")
+
+    from api.project_utils import get_projects_root
+    cleaned = cleanup_orphaned_staging(get_projects_root())
+    if cleaned:
+        print(f"[Startup] Cleaned {len(cleaned)} orphaned staging dir(s): {cleaned}")
+
 # Configure CORS for Electron app and external access
 app.add_middleware(
     CORSMiddleware,
@@ -140,6 +150,7 @@ app.include_router(creator_router, prefix="/api")
 app.include_router(engineering_router, prefix="/api")
 app.include_router(sorties_router, prefix="/api")
 app.include_router(settings_router, prefix="/api")
+app.include_router(project_folders_router, prefix="/api")
 app.include_router(project_data_sync_router, prefix="/api")
 app.include_router(app_updates_router, prefix="/api")
 

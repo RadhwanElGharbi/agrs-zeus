@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AlertTriangle, ChevronDown, ChevronRight, Loader2, Search, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useMapView } from '@/lib/context/MapViewContext'
+import { trackEvent } from '@/lib/analytics'
 import {
   archiveProjectSortie,
   createProjectSortie,
@@ -206,8 +207,16 @@ export function SortiesDialog({ open, onClose, projectName, initialView = 'index
   const [userLoading, setUserLoading] = useState(false)
   const [userError, setUserError] = useState<string | null>(null)
   const [userOptions, setUserOptions] = useState<UserProfile[]>([])
+  const prevOpenRef = useRef(open)
 
   useEffect(() => {
+    if (prevOpenRef.current !== open) {
+      trackEvent('dialog', 'SortiesDialog', open ? 'open_sorties_dialog' : 'close_sorties_dialog', {
+        project: projectName,
+        initial_view: initialView
+      })
+      prevOpenRef.current = open
+    }
     if (open) {
       setIsClosing(false)
       return
@@ -236,18 +245,22 @@ export function SortiesDialog({ open, onClose, projectName, initialView = 'index
       dockHeightRef.current = 45
     }, 200)
     return () => clearTimeout(t)
-  }, [open, setSortiePreviewGeometry])
+  }, [initialView, open, projectName, setSortiePreviewGeometry])
 
   // Allow parent to open directly into the create workflow or the index.
   useEffect(() => {
     if (!open) return
     if (initialView === 'create') {
+      trackEvent('dialog', 'SortiesDialog', 'open_sortie_editor', {
+        project: projectName,
+        mode: 'create'
+      })
       setEditor(defaultEditor())
       setView('editor')
     } else if (initialView === 'index') {
       setView('index')
     }
-  }, [initialView, open])
+  }, [initialView, open, projectName])
 
   // Keep the Sortie "where" geometry preview in sync with the MapLibre overlay.
   useEffect(() => {

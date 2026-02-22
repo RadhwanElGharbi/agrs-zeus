@@ -89,6 +89,26 @@ declare global {
     }>
   }
 
+  interface RouteExportFile {
+    relativePath: string
+    content: string
+    encoding?: 'utf8' | 'base64'
+  }
+
+  interface RouteExportPayload {
+    projectName: string
+    routeId: string
+    files: RouteExportFile[]
+    manifest?: Record<string, unknown> | null
+  }
+
+  interface RouteExportResult {
+    cancelled: boolean
+    directory?: string
+    folder?: string
+    files_written?: number
+  }
+
   interface Window {
     electron?: {
       getAppVersion: () => Promise<string>
@@ -106,6 +126,10 @@ declare global {
       stopPolling: () => Promise<{ polling: boolean }>
       onDriftDetected: (callback: (data: DriftEvent) => void) => () => void
       pushFilesToServer: (payload: PushPayload) => Promise<PushResult>
+      exportRouteBundle: (payload: RouteExportPayload) => Promise<RouteExportResult>
+      setFullscreen: (isFullscreen: boolean) => Promise<boolean>
+      isFullscreen: () => Promise<boolean>
+      onFullscreenChange: (callback: (isFullscreen: boolean) => void) => () => void
     }
   }
 }

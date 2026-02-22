@@ -65,12 +65,6 @@ if [ -d "dist/win-unpacked" ]; then
     fi
 fi
 
-if [ "$BUILD_TARGET" = "all" ] || [ "$BUILD_TARGET" = "linux" ]; then
-    echo "Building Linux AppImage..."
-    npx electron-builder --linux --x64
-    echo ""
-fi
-
 if [ "$BUILD_TARGET" = "all" ] || [ "$BUILD_TARGET" = "win" ]; then
     echo "Building Windows installer..."
     if command -v wine >/dev/null 2>&1 || command -v wine64 >/dev/null 2>&1; then
@@ -87,6 +81,12 @@ if [ "$BUILD_TARGET" = "all" ] || [ "$BUILD_TARGET" = "win" ]; then
             echo "  3. Use the app.asar update method instead"
         }
     fi
+    echo ""
+fi
+
+if [ "$BUILD_TARGET" = "all" ] || [ "$BUILD_TARGET" = "linux" ]; then
+    echo "Building Linux AppImage..."
+    npx electron-builder --linux --x64
     echo ""
 fi
 

@@ -24,7 +24,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from .auth import require_auth
-from .audit import build_audit_event
+from .audit import build_audit_event, mirror_audit_event_to_operations
 from .db import get_db
 from .db_models import Sortie
 from .project_utils import load_json_file, resolve_project_path
@@ -400,15 +400,14 @@ def create_sortie(
     _write_json_atomic(entry_path, doc)
 
     # Audit event should commit atomically with DB writes.
-    db.add(
-        build_audit_event(
-            db,
-            project_name=project,
-            actor=actor,
-            event_type="sortie.create",
-            payload={"sortie_id": str(sortie.id), "code": code},
-        )
+    audit_row = build_audit_event(
+        db,
+        project_name=project,
+        actor=actor,
+        event_type="sortie.create",
+        payload={"sortie_id": str(sortie.id), "code": code},
     )
+    db.add(audit_row)
 
     try:
         db.commit()
@@ -422,6 +421,18 @@ def create_sortie(
         raise HTTPException(status_code=500, detail="Failed to create sortie.") from exc
 
     db.refresh(sortie)
+    try:
+        mirror_audit_event_to_operations(
+            event_type=audit_row.event_type,
+            project_name=project,
+            actor=actor,
+            payload=audit_row.payload if isinstance(audit_row.payload, dict) else {"sortie_id": str(sortie.id), "code": code},
+            audit_event_id=audit_row.id,
+            actor_user_id=audit_row.actor_user_id,
+            timestamp=audit_row.ts,
+        )
+    except Exception:
+        pass
 
     # Best-effort changelog (do not fail request).
     try:
@@ -525,15 +536,14 @@ def update_sortie(
     _write_json_atomic(entry_path, doc)
 
     # Audit event should commit atomically with DB writes.
-    db.add(
-        build_audit_event(
-            db,
-            project_name=project,
-            actor=actor,
-            event_type="sortie.update",
-            payload={"sortie_id": str(sortie.id), "code": sortie.code},
-        )
+    audit_row = build_audit_event(
+        db,
+        project_name=project,
+        actor=actor,
+        event_type="sortie.update",
+        payload={"sortie_id": str(sortie.id), "code": sortie.code},
     )
+    db.add(audit_row)
 
     try:
         db.commit()
@@ -549,6 +559,18 @@ def update_sortie(
         raise HTTPException(status_code=500, detail="Failed to update sortie.") from exc
 
     db.refresh(sortie)
+    try:
+        mirror_audit_event_to_operations(
+            event_type=audit_row.event_type,
+            project_name=project,
+            actor=actor,
+            payload=audit_row.payload if isinstance(audit_row.payload, dict) else {"sortie_id": str(sortie.id), "code": sortie.code},
+            audit_event_id=audit_row.id,
+            actor_user_id=audit_row.actor_user_id,
+            timestamp=audit_row.ts,
+        )
+    except Exception:
+        pass
     try:
         before_doc = None
         if previous_bytes:
@@ -629,15 +651,14 @@ def archive_sortie(
     _write_json_atomic(entry_path, doc)
 
     # Audit event should commit atomically with DB writes.
-    db.add(
-        build_audit_event(
-            db,
-            project_name=project,
-            actor=actor,
-            event_type="sortie.archive",
-            payload={"sortie_id": str(sortie.id), "code": sortie.code},
-        )
+    audit_row = build_audit_event(
+        db,
+        project_name=project,
+        actor=actor,
+        event_type="sortie.archive",
+        payload={"sortie_id": str(sortie.id), "code": sortie.code},
     )
+    db.add(audit_row)
 
     try:
         db.commit()
@@ -653,6 +674,18 @@ def archive_sortie(
         raise HTTPException(status_code=500, detail="Failed to archive sortie.") from exc
 
     db.refresh(sortie)
+    try:
+        mirror_audit_event_to_operations(
+            event_type=audit_row.event_type,
+            project_name=project,
+            actor=actor,
+            payload=audit_row.payload if isinstance(audit_row.payload, dict) else {"sortie_id": str(sortie.id), "code": sortie.code},
+            audit_event_id=audit_row.id,
+            actor_user_id=audit_row.actor_user_id,
+            timestamp=audit_row.ts,
+        )
+    except Exception:
+        pass
     try:
         before_doc = None
         if previous_bytes:

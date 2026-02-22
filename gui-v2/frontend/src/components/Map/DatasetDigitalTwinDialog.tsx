@@ -1,10 +1,37 @@
 'use client'
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { ChevronDown, ChevronRight, ExternalLink, Loader2, Plus, Search, Trash2, X } from 'lucide-react'
+import {
+  Check,
+  ChevronDown,
+  ChevronRight,
+  Circle,
+  ExternalLink,
+  Layers,
+  Loader2,
+  Plus,
+  Search,
+  ShieldCheck,
+  Trash2,
+  X,
+  XCircle,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { fetchDatasetCoverage, type DatasetCoverageEntry, type DatasetCoverageResponse } from '@/lib/api/dataClient'
+import {
+  fetchDatasetCoverage,
+  fetchProjectDatasets,
+  fetchProjectDatasetStatus,
+  type DatasetCoverageEntry,
+  type DatasetCoverageResponse,
+  type DatasetInfo,
+  type DatasetStatusResponse,
+  type ProjectDatasets,
+} from '@/lib/api/dataClient'
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
 
 type DigitalTwinLayerKey =
   | 'parcels'
@@ -37,237 +64,265 @@ type GroupDef = {
   key: string
   label: string
   subtitle: string
+  color: string
   layers: LayerDef[]
 }
 
-type VisibleItem =
-  | { type: 'group'; key: string; group: GroupDef }
-  | { type: 'layer'; key: DigitalTwinLayerKey; layer: LayerDef; groupKey: string }
-
 type TwinAssignments = Partial<Record<DigitalTwinLayerKey, string>>
 type FetchState = 'idle' | 'loading' | 'ready' | 'error'
-
 type LayerStatus = 'none' | 'good' | 'warn' | 'confirmed'
 
-const STATUS_THEME: Record<
+type PirlQuality = {
+  verdict: 'good' | 'warn'
+  reasons: string[]
+  resolution_m: number | null
+  year: number | null
+}
+
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+
+const STATUS_COLORS: Record<
   LayerStatus,
-  {
-    plateBg: string
-    plateBorder: string
-    plateGlow: string
-    labelText: string
-    control: string
-    line: string
-  }
+  { bg: string; border: string; text: string; dot: string; badge: string }
 > = {
   none: {
-    plateBg: 'bg-gradient-to-br from-white/[0.05] to-white/[0.01]',
-    plateBorder: 'border-white/10',
-    plateGlow: '',
-    labelText: 'text-white/45',
-    control: 'border-white/20 text-white/45 hover:text-white/80 hover:border-white/40',
-    line: 'rgba(255,255,255,0.14)'
+    bg: 'bg-white/[0.02]',
+    border: 'border-white/[0.06]',
+    text: 'text-white/40',
+    dot: 'bg-white/15',
+    badge: 'bg-white/5 text-white/30',
   },
   good: {
-    plateBg: 'bg-gradient-to-br from-emerald-500/[0.18] to-emerald-500/[0.04]',
-    plateBorder: 'border-emerald-500/45',
-    plateGlow: 'shadow-[0_0_55px_rgba(16,185,129,0.18)]',
-    labelText: 'text-emerald-300/90',
-    control: 'border-emerald-500/50 text-emerald-300 hover:bg-emerald-500/10 hover:border-emerald-500/70',
-    line: 'rgba(16,185,129,0.55)'
+    bg: 'bg-emerald-500/[0.06]',
+    border: 'border-emerald-500/25',
+    text: 'text-emerald-300',
+    dot: 'bg-emerald-500',
+    badge: 'bg-emerald-500/15 text-emerald-300',
   },
   warn: {
-    plateBg: 'bg-gradient-to-br from-amber-500/[0.22] to-amber-500/[0.06]',
-    plateBorder: 'border-amber-500/45',
-    plateGlow: 'shadow-[0_0_55px_rgba(245,158,11,0.18)]',
-    labelText: 'text-amber-300/90',
-    control: 'border-amber-500/55 text-amber-300 hover:bg-amber-500/10 hover:border-amber-500/75',
-    line: 'rgba(245,158,11,0.62)'
+    bg: 'bg-amber-500/[0.06]',
+    border: 'border-amber-500/25',
+    text: 'text-amber-300',
+    dot: 'bg-amber-500',
+    badge: 'bg-amber-500/15 text-amber-300',
   },
   confirmed: {
-    plateBg: 'bg-gradient-to-br from-purple-500/[0.24] to-purple-500/[0.06]',
-    plateBorder: 'border-purple-500/55',
-    plateGlow: 'shadow-[0_0_65px_rgba(168,85,247,0.22)]',
-    labelText: 'text-purple-300/90',
-    control: 'border-purple-500/60 text-purple-300 hover:bg-purple-500/10 hover:border-purple-500/80',
-    line: 'rgba(168,85,247,0.7)'
-  }
+    bg: 'bg-purple-500/[0.06]',
+    border: 'border-purple-500/25',
+    text: 'text-purple-300',
+    dot: 'bg-purple-500',
+    badge: 'bg-purple-500/15 text-purple-300',
+  },
 }
 
 const DIGITAL_TWIN_MODEL: GroupDef[] = [
   {
-    key: 'subsurface',
-    label: 'Subsurface',
-    subtitle: 'Geology & Geohazards',
+    key: 'atmosphere',
+    label: 'Atmosphere',
+    subtitle: 'Climate & weather context',
+    color: 'sky',
     layers: [
       {
-        key: 'geohazards',
-        label: 'Seismic / Geohazards',
-        subtitle: 'Deep subsurface risk & seismic zones',
-        required: true,
-        keywords: ['geohazard', 'seismic', 'hazard', 'pga', 'earthquake', 'fault', 'gem', 'usgs']
+        key: 'basemap',
+        label: 'Weather / Climate',
+        subtitle: 'Atmospheric conditions',
+        keywords: ['weather', 'climate', 'era5', 'worldclim', 'precipitation', 'temperature', 'wind'],
       },
-      {
-        key: 'geotechnical',
-        label: 'Geotechnical',
-        subtitle: 'Subsurface soils & engineering properties',
-        required: true,
-        keywords: ['geotechnical', 'geotech', 'soil', 'soilgrids', 'bearing', 'lithology', 'geology', 'subsurface']
-      }
-    ]
-  },
-  {
-    key: 'terrain',
-    label: 'Terrain & Water',
-    subtitle: 'Elevation, Hydrology, Wetlands',
-    layers: [
-      {
-        key: 'dem',
-        label: 'Elevation (DEM)',
-        subtitle: 'Terrain surface model',
-        required: true,
-        keywords: ['dem', 'elevation', 'terrain', 'lidar', 'dtm', 'dsm', 'topography', 'srtm', 'copernicus']
-      },
-      {
-        key: 'landslides',
-        label: 'Landslides',
-        subtitle: 'Slope stability & mass movement',
-        keywords: ['landslide', 'landslides', 'mass movement', 'susceptibility', 'inventory', 'slope stability']
-      },
-      {
-        key: 'hydrology',
-        label: 'Hydrology',
-        subtitle: 'Rivers, basins, floodplains',
-        required: true,
-        keywords: ['hydrology', 'river', 'stream', 'basin', 'watershed', 'drainage', 'flood']
-      },
-      {
-        key: 'wetlands',
-        label: 'Wetlands',
-        subtitle: 'Sensitive aquatic habitats',
-        keywords: ['wetland', 'wetlands', 'peat', 'marsh', 'mangrove', 'hydric', 'swamp']
-      }
-    ]
-  },
-  {
-    key: 'nature',
-    label: 'Nature & Imagery',
-    subtitle: 'Land cover + satellite context',
-    layers: [
-      {
-        key: 'landcover',
-        label: 'Land Cover',
-        subtitle: 'Vegetation & surface material',
-        required: true,
-        keywords: ['landcover', 'land cover', 'lulc', 'worldcover', 'corine', 'vegetation']
-      },
-      {
-        key: 'imagery',
-        label: 'Satellite Imagery',
-        subtitle: 'Visual context & orthophotos',
-        keywords: ['imagery', 'satellite', 'aerial', 'orthophoto', 'sentinel', 'landsat', 'planet', 'maxar']
-      }
-    ]
-  },
-  {
-    key: 'built',
-    label: 'Built Environment',
-    subtitle: 'Parcels, zoning, constraints',
-    layers: [
-      {
-        key: 'parcels',
-        label: 'Parcels',
-        subtitle: 'Cadastral boundaries & ownership',
-        keywords: ['parcel', 'parcels', 'cadastral', 'cadastre', 'property', 'registry', 'land parcel']
-      },
-      {
-        key: 'zoning',
-        label: 'Zoning',
-        subtitle: 'Land use regulation',
-        keywords: ['zoning', 'land use', 'planning', 'landuse', 'development plan']
-      },
-      {
-        key: 'protected_areas',
-        label: 'Protected Areas',
-        subtitle: 'Conservation & restricted zones',
-        keywords: ['protected', 'reserve', 'park', 'natura', 'heritage', 'conservation']
-      },
-      {
-        key: 'population',
-        label: 'Population',
-        subtitle: 'Human settlement density',
-        keywords: ['population', 'demographic', 'worldpop', 'ghsl', 'settlement', 'density', 'census']
-      }
-    ]
+    ],
   },
   {
     key: 'infrastructure',
     label: 'Infrastructure',
     subtitle: 'Transport + utilities',
+    color: 'orange',
     layers: [
       {
         key: 'roads',
         label: 'Roads',
         subtitle: 'Transportation network',
         required: true,
-        keywords: ['road', 'roads', 'highway', 'motorway', 'street', 'transport', 'osm road']
+        keywords: ['road', 'roads', 'highway', 'motorway', 'street', 'transport', 'osm road'],
       },
       {
         key: 'railways',
         label: 'Railways',
         subtitle: 'Rail corridors',
-        keywords: ['rail', 'railway', 'train', 'rail corridor']
+        keywords: ['rail', 'railway', 'train', 'rail corridor'],
       },
       {
         key: 'powerlines',
         label: 'Power Lines',
         subtitle: 'Transmission & distribution',
-        keywords: ['power', 'powerline', 'power lines', 'transmission', 'grid', 'electric']
+        keywords: ['power', 'powerline', 'power lines', 'transmission', 'grid', 'electric'],
       },
       {
         key: 'pipelines',
         label: 'Pipelines',
         subtitle: 'Existing energy infrastructure',
         required: true,
-        keywords: ['pipeline', 'pipelines', 'oil pipeline', 'gas pipeline', 'midstream']
-      }
-    ]
+        keywords: ['pipeline', 'pipelines', 'oil pipeline', 'gas pipeline', 'midstream'],
+      },
+    ],
   },
   {
-    key: 'atmosphere',
-    label: 'Atmosphere',
-    subtitle: 'Climate & weather context',
+    key: 'built',
+    label: 'Built Environment',
+    subtitle: 'Parcels, zoning, constraints',
+    color: 'violet',
     layers: [
       {
-        key: 'basemap',
-        label: 'Weather / Climate',
-        subtitle: 'Atmospheric conditions',
-        keywords: ['weather', 'climate', 'era5', 'worldclim', 'precipitation', 'temperature', 'wind']
-      }
-    ]
-  }
+        key: 'parcels',
+        label: 'Parcels',
+        subtitle: 'Cadastral boundaries & ownership',
+        keywords: ['parcel', 'parcels', 'cadastral', 'cadastre', 'property', 'registry', 'land parcel'],
+      },
+      {
+        key: 'zoning',
+        label: 'Zoning',
+        subtitle: 'Land use regulation',
+        keywords: ['zoning', 'land use', 'planning', 'landuse', 'development plan'],
+      },
+      {
+        key: 'protected_areas',
+        label: 'Protected Areas',
+        subtitle: 'Conservation & restricted zones',
+        keywords: ['protected', 'reserve', 'park', 'natura', 'heritage', 'conservation'],
+      },
+      {
+        key: 'population',
+        label: 'Population',
+        subtitle: 'Human settlement density',
+        keywords: ['population', 'demographic', 'worldpop', 'ghsl', 'settlement', 'density', 'census'],
+      },
+    ],
+  },
+  {
+    key: 'nature',
+    label: 'Nature & Imagery',
+    subtitle: 'Land cover + satellite context',
+    color: 'green',
+    layers: [
+      {
+        key: 'landcover',
+        label: 'Land Cover',
+        subtitle: 'Vegetation & surface material',
+        required: true,
+        keywords: ['landcover', 'land cover', 'lulc', 'worldcover', 'corine', 'vegetation'],
+      },
+      {
+        key: 'imagery',
+        label: 'Satellite Imagery',
+        subtitle: 'Visual context & orthophotos',
+        keywords: ['imagery', 'satellite', 'aerial', 'orthophoto', 'sentinel', 'landsat', 'planet', 'maxar'],
+      },
+    ],
+  },
+  {
+    key: 'terrain',
+    label: 'Terrain & Water',
+    subtitle: 'Elevation, Hydrology, Wetlands',
+    color: 'cyan',
+    layers: [
+      {
+        key: 'dem',
+        label: 'Elevation (DEM)',
+        subtitle: 'Terrain surface model',
+        required: true,
+        keywords: ['dem', 'elevation', 'terrain', 'lidar', 'dtm', 'dsm', 'topography', 'srtm', 'copernicus'],
+      },
+      {
+        key: 'landslides',
+        label: 'Landslides',
+        subtitle: 'Slope stability & mass movement',
+        keywords: ['landslide', 'landslides', 'mass movement', 'susceptibility', 'inventory', 'slope stability'],
+      },
+      {
+        key: 'hydrology',
+        label: 'Hydrology',
+        subtitle: 'Rivers, basins, floodplains',
+        required: true,
+        keywords: ['hydrology', 'river', 'stream', 'basin', 'watershed', 'drainage', 'flood'],
+      },
+      {
+        key: 'wetlands',
+        label: 'Wetlands',
+        subtitle: 'Sensitive aquatic habitats',
+        keywords: ['wetland', 'wetlands', 'peat', 'marsh', 'mangrove', 'hydric', 'swamp'],
+      },
+    ],
+  },
+  {
+    key: 'subsurface',
+    label: 'Subsurface',
+    subtitle: 'Geology & Geohazards',
+    color: 'rose',
+    layers: [
+      {
+        key: 'geohazards',
+        label: 'Seismic / Geohazards',
+        subtitle: 'Deep subsurface risk & seismic zones',
+        required: true,
+        keywords: ['geohazard', 'seismic', 'hazard', 'pga', 'earthquake', 'fault', 'gem', 'usgs'],
+      },
+      {
+        key: 'geotechnical',
+        label: 'Geotechnical',
+        subtitle: 'Subsurface soils & engineering properties',
+        required: true,
+        keywords: ['geotechnical', 'geotech', 'soil', 'soilgrids', 'bearing', 'lithology', 'geology', 'subsurface'],
+      },
+    ],
+  },
 ]
-
-const GROUP_ORDER = Object.fromEntries(DIGITAL_TWIN_MODEL.map((g, i) => [g.key, i])) as Record<string, number>
 
 const ALL_LAYERS: LayerDef[] = DIGITAL_TWIN_MODEL.flatMap((g) => g.layers)
 const LAYER_KEYS = new Set<DigitalTwinLayerKey>(ALL_LAYERS.map((l) => l.key))
+
+const BACKEND_CATEGORY_TO_LAYER: Record<string, DigitalTwinLayerKey> = {
+  dem: 'dem',
+  landcover: 'landcover',
+  soil: 'geotechnical',
+  roads: 'roads',
+  railways: 'railways',
+  powerlines: 'powerlines',
+  waterways: 'hydrology',
+  geohazard: 'geohazards',
+  pipelines: 'pipelines',
+  protected_areas: 'protected_areas',
+  indigenous_lands: 'zoning',
+}
+
+const DATASET_NAME_PATTERNS: [RegExp, DigitalTwinLayerKey][] = [
+  [/\bdem\b/i, 'dem'],
+  [/\blandcover\b/i, 'landcover'],
+  [/\bsoil/i, 'geotechnical'],
+  [/\broad/i, 'roads'],
+  [/\brailway/i, 'railways'],
+  [/\bpowerline/i, 'powerlines'],
+  [/\bwaterway/i, 'hydrology'],
+  [/\bgeohazard/i, 'geohazards'],
+  [/\bpipeline/i, 'pipelines'],
+  [/\bprotected/i, 'protected_areas'],
+  [/\bpopulation\b/i, 'population'],
+  [/\bparcel/i, 'parcels'],
+  [/\bwetland/i, 'wetlands'],
+  [/\blandslide/i, 'landslides'],
+  [/\bimagery\b/i, 'imagery'],
+  [/\bweather\b|climate/i, 'basemap'],
+]
 
 function isLayerKey(key: string): key is DigitalTwinLayerKey {
   return LAYER_KEYS.has(key as DigitalTwinLayerKey)
 }
 
+// ---------------------------------------------------------------------------
+// Quality Evaluation
+// ---------------------------------------------------------------------------
+
 function normalizeText(entry: DatasetCoverageEntry): string {
-  return [
-    entry.dataset,
-    entry.source,
-    entry.data_type,
-    entry.access,
-    entry.coverage,
-    entry.temporal_start,
-    entry.temporal_end,
-    entry.frequency
-  ]
+  return [entry.dataset, entry.source, entry.data_type, entry.access, entry.coverage, entry.temporal_start, entry.temporal_end, entry.frequency]
     .filter(Boolean)
     .join(' ')
     .toLowerCase()
@@ -276,30 +331,24 @@ function normalizeText(entry: DatasetCoverageEntry): string {
 function formatTemporalSpan(entry: DatasetCoverageEntry): string {
   const start = (entry.temporal_start || '').trim()
   const end = (entry.temporal_end || '').trim()
-  if (start && end) return start === end ? start : `${start} → ${end}`
-  return start || end || '-'
+  if (start && end) return start === end ? start : `${start} \u2192 ${end}`
+  return start || end || '\u2013'
 }
 
 function extractResolutionMeters(text: string): number | null {
   const lowered = (text || '').toLowerCase()
   if (!lowered) return null
   if (/(sub[-\s]?met(er|re)|sub[-\s]?meter)/.test(lowered)) return 0.5
-
   const cm = lowered.match(/(\d+(?:\.\d+)?)\s*(cm|centimeter|centimetre)\b/)
   if (cm) return parseFloat(cm[1]) / 100
-
   const mm = lowered.match(/(\d+(?:\.\d+)?)\s*(mm|millimeter|millimetre)\b/)
   if (mm) return parseFloat(mm[1]) / 1000
-
   const m = lowered.match(/(\d+(?:\.\d+)?)\s*(m|meter|metre)\b/)
   if (m) return parseFloat(m[1])
-
   const km = lowered.match(/(\d+(?:\.\d+)?)\s*(km|kilometer|kilometre)\b/)
   if (km) return parseFloat(km[1]) * 1000
-
   const arc = lowered.match(/(\d+(?:\.\d+)?)\s*(arc-?second|arcsec)\b/)
   if (arc) return parseFloat(arc[1]) * 30
-
   return null
 }
 
@@ -307,108 +356,54 @@ function extractYear(text: string): number | null {
   const match = (text || '').match(/\b(19\d{2}|20\d{2})\b/)
   if (!match) return null
   const year = parseInt(match[1], 10)
-  if (!Number.isFinite(year)) return null
-  return year
+  return Number.isFinite(year) ? year : null
 }
 
-type PirlQuality = { verdict: 'good' | 'warn'; reasons: string[]; resolution_m: number | null; year: number | null }
-
 function evaluatePirlQuality(layerKey: DigitalTwinLayerKey, entry: DatasetCoverageEntry | null): PirlQuality {
-  if (!entry) {
-    return { verdict: 'warn', reasons: ['Dataset details not found in catalogue'], resolution_m: null, year: null }
-  }
+  if (!entry) return { verdict: 'warn', reasons: ['Dataset details not found in catalogue'], resolution_m: null, year: null }
 
   const blob = `${entry.dataset} ${entry.source || ''} ${entry.data_type || ''} ${entry.coverage || ''} ${entry.access || ''} ${entry.temporal_start || ''} ${entry.temporal_end || ''}`
   const lowered = blob.toLowerCase()
   const resolution_m = extractResolutionMeters(`${entry.coverage || ''} ${entry.dataset || ''}`) ?? extractResolutionMeters(blob)
-
   const isCurrent = /(current|present|ongoing|latest)/i.test(`${entry.temporal_end || ''}`)
   const year = extractYear(entry.temporal_end || '') ?? extractYear(entry.temporal_start || '') ?? extractYear(blob)
-
   const reasons: string[] = []
   let ok = true
 
   const requireRasterResolution = (max_m: number) => {
-    if (resolution_m === null) {
-      ok = false
-      reasons.push('Resolution not specified')
-      return
-    }
-    if (resolution_m > max_m) {
-      ok = false
-      reasons.push(`Resolution ${Math.round(resolution_m)}m exceeds target ${max_m}m`)
-    }
+    if (resolution_m === null) { ok = false; reasons.push('Resolution not specified'); return }
+    if (resolution_m > max_m) { ok = false; reasons.push(`Resolution ${Math.round(resolution_m)}m exceeds target ${max_m}m`) }
   }
-
   const requireRecent = (min_year: number) => {
     if (isCurrent) return
-    if (year === null) {
-      ok = false
-      reasons.push('Temporal coverage not specified')
-      return
-    }
-    if (year < min_year) {
-      ok = false
-      reasons.push(`Temporal end ${year} older than ${min_year}`)
-    }
+    if (year === null) { ok = false; reasons.push('Temporal coverage not specified'); return }
+    if (year < min_year) { ok = false; reasons.push(`Temporal end ${year} older than ${min_year}`) }
   }
 
   switch (layerKey) {
-    case 'dem':
-      requireRasterResolution(30)
-      break
-    case 'landcover':
-      requireRasterResolution(30)
-      break
-    case 'geotechnical':
-      requireRasterResolution(250)
-      break
-    case 'geohazards':
-      requireRasterResolution(1000)
-      break
-    case 'landslides':
-      requireRasterResolution(250)
-      break
-    case 'population':
-      requireRasterResolution(1000)
-      requireRecent(2015)
-      break
-    case 'imagery':
-      requireRasterResolution(2)
-      requireRecent(2018)
-      break
-    case 'wetlands':
-      requireRasterResolution(100)
-      break
+    case 'dem': requireRasterResolution(30); break
+    case 'landcover': requireRasterResolution(30); break
+    case 'geotechnical': requireRasterResolution(250); break
+    case 'geohazards': requireRasterResolution(1000); break
+    case 'landslides': requireRasterResolution(250); break
+    case 'population': requireRasterResolution(1000); requireRecent(2015); break
+    case 'imagery': requireRasterResolution(2); requireRecent(2018); break
+    case 'wetlands': requireRasterResolution(100); break
     case 'pipelines':
-      if (lowered.includes('openstreetmap') || lowered.includes('osm')) {
-        ok = false
-        reasons.push('OSM pipeline completeness varies by region')
-      }
+      if (lowered.includes('openstreetmap') || lowered.includes('osm')) { ok = false; reasons.push('OSM pipeline completeness varies by region') }
       break
     case 'parcels':
     case 'zoning':
-      if (!/(gov|government|official|authority|cadastre|cadastral|registry)/.test(lowered)) {
-        ok = false
-        reasons.push('Not clearly authoritative for parcels/zoning')
-      }
+      if (!/(gov|government|official|authority|cadastre|cadastral|registry)/.test(lowered)) { ok = false; reasons.push('Not clearly authoritative for parcels/zoning') }
       break
-    case 'roads':
-    case 'railways':
-    case 'powerlines':
-    case 'hydrology':
-    case 'protected_areas':
-    case 'basemap':
     default:
-      if (!isCurrent && year !== null && year < 2005) {
-        ok = false
-        reasons.push('Dataset appears very old')
-      }
+      if (!isCurrent && year !== null && year < 2005) { ok = false; reasons.push('Dataset appears very old') }
       break
   }
 
-  if (ok) return { verdict: 'good', reasons: [], resolution_m, year }
-  return { verdict: 'warn', reasons: reasons.length ? reasons : ['Not suitable by heuristic checks'], resolution_m, year }
+  return ok
+    ? { verdict: 'good', reasons: [], resolution_m, year }
+    : { verdict: 'warn', reasons: reasons.length ? reasons : ['Not suitable by heuristic checks'], resolution_m, year }
 }
 
 function findEntryByDataset(entries: DatasetCoverageEntry[], datasetName: string): DatasetCoverageEntry | null {
@@ -438,68 +433,86 @@ function scoreEntry(layer: LayerDef, entry: DatasetCoverageEntry): number {
   return score
 }
 
-function computeGroupStatus(group: GroupDef, statusByLayer: Partial<Record<DigitalTwinLayerKey, LayerStatus>>, assignments: TwinAssignments): LayerStatus {
-  let anyAssigned = false
-  let anyWarn = false
-  let anyGood = false
-  let anyConfirmed = false
-
-  for (const layer of group.layers) {
-    const assigned = !!assignments[layer.key]
-    if (assigned) anyAssigned = true
-    const st = statusByLayer[layer.key] || 'none'
-    if (st === 'confirmed') anyConfirmed = true
-    if (st === 'warn') anyWarn = true
-    if (st === 'good') anyGood = true
+// Match a project dataset to a Digital Twin layer key by filename patterns
+function matchDatasetToLayer(dataset: DatasetInfo): DigitalTwinLayerKey | null {
+  const name = (dataset.name || '').toLowerCase()
+  for (const [pattern, layerKey] of DATASET_NAME_PATTERNS) {
+    if (pattern.test(name)) return layerKey
   }
-
-  if (anyConfirmed) return 'confirmed'
-  if (!anyAssigned) return 'none'
-  if (anyWarn) return 'warn'
-  if (anyGood) return 'good'
-  return 'none'
+  return null
 }
 
-type HoverState = { key: string; source: 'plate' | 'rail' } | null
+// Build auto-assignments from real project datasets
+function buildAutoAssignments(
+  projectDatasets: ProjectDatasets | null,
+  datasetStatus: DatasetStatusResponse | null
+): { assignments: TwinAssignments; presentLayers: Set<DigitalTwinLayerKey>; datasetsByLayer: Partial<Record<DigitalTwinLayerKey, DatasetInfo>> } {
+  const assignments: TwinAssignments = {}
+  const presentLayers = new Set<DigitalTwinLayerKey>()
+  const datasetsByLayer: Partial<Record<DigitalTwinLayerKey, DatasetInfo>> = {}
+
+  if (datasetStatus) {
+    for (const cat of datasetStatus.categories) {
+      if (!cat.present) continue
+      const layerKey = BACKEND_CATEGORY_TO_LAYER[cat.category]
+      if (layerKey) presentLayers.add(layerKey)
+    }
+  }
+
+  if (projectDatasets) {
+    const allDatasets = [...projectDatasets.rasters, ...projectDatasets.vectors]
+    for (const ds of allDatasets) {
+      const layerKey = matchDatasetToLayer(ds)
+      if (!layerKey) continue
+      if (!assignments[layerKey]) {
+        assignments[layerKey] = ds.name
+        datasetsByLayer[layerKey] = ds
+        presentLayers.add(layerKey)
+      }
+    }
+  }
+
+  return { assignments, presentLayers, datasetsByLayer }
+}
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
 
 export function DatasetDigitalTwinDialog({
   open,
   onClose,
-  projectName
+  projectName,
 }: {
   open: boolean
   onClose: () => void
   projectName: string | null
 }) {
   const [mounted, setMounted] = useState(false)
-  // No entry/exit animations; close is immediate.
 
+  // Backend data
   const [coverageState, setCoverageState] = useState<FetchState>('idle')
   const [coverageError, setCoverageError] = useState<string | null>(null)
   const [coverage, setCoverage] = useState<DatasetCoverageResponse | null>(null)
+  const [projectDatasets, setProjectDatasets] = useState<ProjectDatasets | null>(null)
+  const [datasetStatus, setDatasetStatus] = useState<DatasetStatusResponse | null>(null)
+  const [datasetsLoading, setDatasetsLoading] = useState(false)
 
-  const [selectedKey, setSelectedKey] = useState<string | null>(null)
-  const [hovered, setHovered] = useState<HoverState>(null)
-  const [expandedGroupKey, setExpandedGroupKey] = useState<string | null>(null)
+  // UI state
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
+  const [selectedLayerKey, setSelectedLayerKey] = useState<DigitalTwinLayerKey | null>(null)
   const [pickerLayerKey, setPickerLayerKey] = useState<DigitalTwinLayerKey | null>(null)
 
+  // Assignments
   const [assignments, setAssignments] = useState<TwinAssignments>({})
   const [confirmed, setConfirmed] = useState<Partial<Record<DigitalTwinLayerKey, boolean>>>({})
+  const [autoDetected, setAutoDetected] = useState<Set<DigitalTwinLayerKey>>(new Set())
+  const [presentLayers, setPresentLayers] = useState<Set<DigitalTwinLayerKey>>(new Set())
 
+  // Picker state
   const [query, setQuery] = useState('')
   const [showAll, setShowAll] = useState(false)
-
-  const headerRef = useRef<HTMLDivElement | null>(null)
-  const stackRef = useRef<HTMLDivElement | null>(null)
   const listRef = useRef<HTMLDivElement | null>(null)
-  const plateRefs = useRef<Record<string, HTMLDivElement | null>>({})
-  const controlRefs = useRef<Record<string, HTMLButtonElement | null>>({})
-
-  const [plateAnchors, setPlateAnchors] = useState<Record<string, { x: number; y: number }>>({})
-  const [connections, setConnections] = useState<Array<{ key: string; x1: number; y1: number; x2: number; y2: number }>>([])
-
-  const [stackScale, setStackScale] = useState(1.12)
-  const [stackOffsetY, setStackOffsetY] = useState(260)
 
   const storageKey = useMemo(() => {
     const p = (projectName || '').trim()
@@ -508,18 +521,13 @@ export function DatasetDigitalTwinDialog({
 
   const entries = coverage?.entries ?? []
 
+  // Derived status for each layer
   const statusByLayer = useMemo(() => {
     const out: Partial<Record<DigitalTwinLayerKey, LayerStatus>> = {}
     for (const layer of ALL_LAYERS) {
       const name = assignments[layer.key]
-      if (!name) {
-        out[layer.key] = 'none'
-        continue
-      }
-      if (confirmed[layer.key]) {
-        out[layer.key] = 'confirmed'
-        continue
-      }
+      if (!name) { out[layer.key] = 'none'; continue }
+      if (confirmed[layer.key]) { out[layer.key] = 'confirmed'; continue }
       const entry = findEntryByDataset(entries, name)
       const quality = evaluatePirlQuality(layer.key, entry)
       out[layer.key] = quality.verdict === 'good' ? 'good' : 'warn'
@@ -527,59 +535,69 @@ export function DatasetDigitalTwinDialog({
     return out
   }, [assignments, confirmed, entries])
 
-  const visibleItems = useMemo<VisibleItem[]>(() => {
-    const items: VisibleItem[] = []
-    for (const group of DIGITAL_TWIN_MODEL) {
-      // Parent plate is always visible; children appear only when expanded.
-      items.push({ type: 'group', key: group.key, group })
-      if (expandedGroupKey === group.key) {
-        for (const layer of group.layers) {
-          items.push({ type: 'layer', key: layer.key, layer, groupKey: group.key })
-        }
+  // Summary stats
+  const stats = useMemo(() => {
+    let total = ALL_LAYERS.length
+    let assigned = 0
+    let good = 0
+    let warn = 0
+    let requiredTotal = 0
+    let requiredPresent = 0
+    let present = 0
+    for (const layer of ALL_LAYERS) {
+      if (layer.required) requiredTotal++
+      if (assignments[layer.key]) {
+        assigned++
+        const st = statusByLayer[layer.key]
+        if (st === 'good' || st === 'confirmed') good++
+        else if (st === 'warn') warn++
+      }
+      if (presentLayers.has(layer.key)) {
+        present++
+        if (layer.required) requiredPresent++
       }
     }
-    return items
-  }, [expandedGroupKey])
+    return { total, assigned, good, warn, requiredTotal, requiredPresent, present, requiredMissing: requiredTotal - requiredPresent }
+  }, [assignments, statusByLayer, presentLayers])
 
-  const selectedCount = useMemo(() => Object.values(assignments).filter(Boolean).length, [assignments])
-  const requiredMissing = useMemo(() => {
-    let missing = 0
-    for (const layer of ALL_LAYERS) {
-      if (!layer.required) continue
-      if (!assignments[layer.key]) missing += 1
+  // Group summary status
+  const groupStatus = useMemo(() => {
+    const out: Record<string, { assigned: number; total: number; present: number; anyWarn: boolean }> = {}
+    for (const group of DIGITAL_TWIN_MODEL) {
+      let assigned = 0, present = 0, anyWarn = false
+      for (const layer of group.layers) {
+        if (assignments[layer.key]) assigned++
+        if (presentLayers.has(layer.key)) present++
+        if (statusByLayer[layer.key] === 'warn') anyWarn = true
+      }
+      out[group.key] = { assigned, total: group.layers.length, present, anyWarn }
     }
-    return missing
-  }, [assignments])
+    return out
+  }, [assignments, statusByLayer, presentLayers])
 
-  const panelLayerKey: DigitalTwinLayerKey | null = useMemo(() => {
-    if (pickerLayerKey) return pickerLayerKey
-    if (selectedKey && isLayerKey(selectedKey)) return selectedKey
-    return null
-  }, [pickerLayerKey, selectedKey])
+  // Active detail layer
+  const activeLayerKey = pickerLayerKey ?? selectedLayerKey
+  const activeLayer = useMemo(() => {
+    if (!activeLayerKey) return null
+    return ALL_LAYERS.find((l) => l.key === activeLayerKey) ?? null
+  }, [activeLayerKey])
 
-  const panelLayer = useMemo(() => {
-    if (!panelLayerKey) return null
-    return ALL_LAYERS.find((l) => l.key === panelLayerKey) ?? null
-  }, [panelLayerKey])
+  const activeAssignedName = activeLayerKey ? assignments[activeLayerKey] || '' : ''
+  const activeAssignedEntry = useMemo(() => {
+    if (!activeLayerKey || !activeAssignedName) return null
+    return findEntryByDataset(entries, activeAssignedName)
+  }, [entries, activeAssignedName, activeLayerKey])
 
-  const panelAssignedName = panelLayerKey ? assignments[panelLayerKey] || '' : ''
-  const panelAssignedEntry = useMemo(() => {
-    if (!panelLayerKey) return null
-    if (!panelAssignedName) return null
-    return findEntryByDataset(entries, panelAssignedName)
-  }, [entries, panelAssignedName, panelLayerKey])
+  const activeQuality = useMemo(() => {
+    if (!activeLayerKey || !activeAssignedName) return null
+    return evaluatePirlQuality(activeLayerKey, activeAssignedEntry)
+  }, [activeAssignedEntry, activeAssignedName, activeLayerKey])
 
-  const panelQuality = useMemo(() => {
-    if (!panelLayerKey) return null
-    if (!panelAssignedName) return null
-    return evaluatePirlQuality(panelLayerKey, panelAssignedEntry)
-  }, [panelAssignedEntry, panelAssignedName, panelLayerKey])
-
+  // Catalogue candidates for picker
   const candidates = useMemo(() => {
-    if (!panelLayer) return []
-    if (!entries.length) return []
+    if (!activeLayer || !entries.length) return []
     const scored = entries
-      .map((entry) => ({ entry, score: scoreEntry(panelLayer, entry) }))
+      .map((entry) => ({ entry, score: scoreEntry(activeLayer, entry) }))
       .filter((row) => showAll || row.score > 0)
     scored.sort((a, b) => {
       if (b.score !== a.score) return b.score - a.score
@@ -588,124 +606,139 @@ export function DatasetDigitalTwinDialog({
     const q = query.trim().toLowerCase()
     if (!q) return scored
     return scored.filter(({ entry }) => normalizeText(entry).includes(q))
-  }, [entries, panelLayer, query, showAll])
+  }, [entries, activeLayer, query, showAll])
 
+  // Mount
   useEffect(() => setMounted(true), [])
 
+  // Reset on open
   useEffect(() => {
     if (!open) return
-    setSelectedKey(null)
-    setHovered(null)
-    setExpandedGroupKey(null)
+    setSelectedLayerKey(null)
     setPickerLayerKey(null)
     setQuery('')
     setShowAll(false)
-    setStackScale(1.12)
-    setStackOffsetY(260)
+    setExpandedGroups(new Set())
   }, [open])
 
+  // Fetch backend data
   useEffect(() => {
-    if (!open) return
-    if (!projectName) return
+    if (!open || !projectName) return
+    let cancelled = false
 
     setCoverageState('loading')
     setCoverageError(null)
-    fetchDatasetCoverage(projectName)
-      .then((resp) => {
-        setCoverage(resp)
+    setDatasetsLoading(true)
+
+    const fetchAll = async () => {
+      const results = await Promise.allSettled([
+        fetchDatasetCoverage(projectName),
+        fetchProjectDatasets(projectName),
+        fetchProjectDatasetStatus(projectName),
+      ])
+
+      if (cancelled) return
+
+      // Coverage catalogue
+      if (results[0].status === 'fulfilled') {
+        setCoverage(results[0].value)
         setCoverageState('ready')
-      })
-      .catch((err) => {
-        setCoverage(null)
-        setCoverageError(err?.message || 'Failed to load dataset catalogue.')
+      } else {
+        setCoverageError(results[0].reason?.message || 'Failed to load dataset catalogue.')
         setCoverageState('error')
+      }
+
+      // Project datasets
+      const pds = results[1].status === 'fulfilled' ? results[1].value : null
+      setProjectDatasets(pds)
+
+      // Dataset status
+      const ds = results[2].status === 'fulfilled' ? results[2].value : null
+      setDatasetStatus(ds)
+
+      setDatasetsLoading(false)
+
+      // Auto-detect assignments from real project data
+      const auto = buildAutoAssignments(pds, ds)
+      setPresentLayers(auto.presentLayers)
+
+      // Merge auto-detected with saved (saved takes precedence)
+      setAssignments((prev) => {
+        const merged = { ...auto.assignments }
+        for (const [k, v] of Object.entries(prev)) {
+          if (v) merged[k as DigitalTwinLayerKey] = v
+        }
+        return merged
       })
+      setAutoDetected(new Set(Object.keys(auto.assignments) as DigitalTwinLayerKey[]))
+    }
+
+    fetchAll()
+    return () => { cancelled = true }
   }, [open, projectName])
 
+  // Load saved assignments from localStorage
   useEffect(() => {
-    if (!open) return
-    if (!storageKey) return
+    if (!open || !storageKey) return
     try {
       const raw = localStorage.getItem(storageKey)
       if (!raw) return
       const parsed = JSON.parse(raw)
       if (!parsed || typeof parsed !== 'object') return
-      if ('assignments' in (parsed as any) || 'confirmed' in (parsed as any)) {
-        const nextAssignments = (parsed as any).assignments
-        const nextConfirmed = (parsed as any).confirmed
-        if (nextAssignments && typeof nextAssignments === 'object') setAssignments(nextAssignments as TwinAssignments)
-        if (nextConfirmed && typeof nextConfirmed === 'object') setConfirmed(nextConfirmed as Partial<Record<DigitalTwinLayerKey, boolean>>)
+      if ('assignments' in parsed || 'confirmed' in parsed) {
+        if (parsed.assignments && typeof parsed.assignments === 'object') setAssignments((prev) => ({ ...prev, ...parsed.assignments }))
+        if (parsed.confirmed && typeof parsed.confirmed === 'object') setConfirmed(parsed.confirmed as Partial<Record<DigitalTwinLayerKey, boolean>>)
         return
       }
-      setAssignments(parsed as TwinAssignments)
-    } catch (_) {
+      setAssignments((prev) => ({ ...prev, ...(parsed as TwinAssignments) }))
+    } catch {
       // ignore corrupt storage
     }
   }, [open, storageKey])
 
+  // Persist assignments
   useEffect(() => {
-    if (!open) return
-    if (!storageKey) return
+    if (!open || !storageKey) return
     try {
       localStorage.setItem(storageKey, JSON.stringify({ assignments, confirmed }))
-    } catch (_) {}
+    } catch { /* quota exceeded */ }
   }, [assignments, confirmed, open, storageKey])
 
-  const handleClose = () => onClose()
-
-  const closePicker = () => {
-    setHovered(null)
-    setPickerLayerKey(null)
-  }
-
+  // Escape key
   useEffect(() => {
     if (!open) return
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return
-      if (pickerLayerKey) {
-        closePicker()
-        return
-      }
-      handleClose()
+      if (pickerLayerKey) { setPickerLayerKey(null); return }
+      onClose()
     }
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
-  }, [open, pickerLayerKey])
+  }, [open, pickerLayerKey, onClose])
 
-  const scrollToCandidatesTop = () => {
-    listRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+  // Handlers
+  const toggleGroup = (groupKey: string) => {
+    setExpandedGroups((prev) => {
+      const next = new Set(prev)
+      if (next.has(groupKey)) next.delete(groupKey)
+      else next.add(groupKey)
+      return next
+    })
   }
-
-  const toggleGroup = (group: GroupDef) => {
-    const isOpen = expandedGroupKey === group.key
-    setPickerLayerKey(null)
-    setHovered(null)
-    if (isOpen) {
-      setExpandedGroupKey(null)
-      setSelectedKey(group.key)
-      return
-    }
-    setExpandedGroupKey(group.key)
-    // Focus stays on the parent plate; children become accessible after expansion.
-    setSelectedKey(group.key)
-  }
-
-  // No focus zoom animations; expansion should not move the whole model.
 
   const selectLayer = (layerKey: DigitalTwinLayerKey) => {
-    setSelectedKey(layerKey)
-    // If picker open, allow switching focus.
+    setSelectedLayerKey(layerKey)
     if (pickerLayerKey) {
       setPickerLayerKey(layerKey)
-      scrollToCandidatesTop()
+      listRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
     }
   }
 
   const openPickerFor = (layerKey: DigitalTwinLayerKey) => {
-    setSelectedKey(layerKey)
-    setHovered(null)
+    setSelectedLayerKey(layerKey)
     setPickerLayerKey(layerKey)
-    scrollToCandidatesTop()
+    setQuery('')
+    listRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const handleAssign = (layerKey: DigitalTwinLayerKey, datasetName: string) => {
@@ -721,17 +754,8 @@ export function DatasetDigitalTwinDialog({
   }
 
   const handleClear = (layerKey: DigitalTwinLayerKey) => {
-    setAssignments((prev) => {
-      const next = { ...prev }
-      delete next[layerKey]
-      return next
-    })
-    setConfirmed((prev) => {
-      if (!prev[layerKey]) return prev
-      const next = { ...prev }
-      delete next[layerKey]
-      return next
-    })
+    setAssignments((prev) => { const next = { ...prev }; delete next[layerKey]; return next })
+    setConfirmed((prev) => { if (!prev[layerKey]) return prev; const next = { ...prev }; delete next[layerKey]; return next })
   }
 
   const toggleConfirmed = (layerKey: DigitalTwinLayerKey) => {
@@ -739,688 +763,619 @@ export function DatasetDigitalTwinDialog({
     setConfirmed((prev) => ({ ...prev, [layerKey]: !prev[layerKey] }))
   }
 
-  // Responsive fit: keep stack within viewport bounds. (No clipping on small screens.)
-  useLayoutEffect(() => {
-    if (!open) return
-    if (!stackRef.current) return
-    let raf = 0
-    let iterations = 0
-    const fit = () => {
-      iterations += 1
-      const stack = stackRef.current
-      if (!stack) return
-      const headerH = headerRef.current?.getBoundingClientRect().height ?? 0
-      const topLimit = Math.max(16, headerH + 18)
-      const bottomLimit = window.innerHeight - 16
-      const availH = Math.max(120, bottomLimit - topLimit)
-
-      const rect = stack.getBoundingClientRect()
-      let changed = false
-
-      const maxScale = expandedGroupKey ? 1.22 : 1.12
-      if (rect.height > availH + 2) {
-        const factor = availH / rect.height
-        const nextScale = Math.max(0.62, Math.min(maxScale, stackScale * factor * 0.98))
-        if (Math.abs(nextScale - stackScale) > 0.01) {
-          setStackScale(nextScale)
-          changed = true
-        }
-      }
-
-      let dy = 0
-      if (rect.top < topLimit) dy = topLimit - rect.top
-      if (rect.bottom > bottomLimit) dy = Math.min(dy, bottomLimit - rect.bottom) || bottomLimit - rect.bottom
-      if (Math.abs(dy) > 1) {
-        setStackOffsetY((prev) => Math.round(prev + dy))
-        changed = true
-      }
-
-      if (changed && iterations < 10) {
-        raf = requestAnimationFrame(fit)
-      }
-    }
-
-    raf = requestAnimationFrame(fit)
-    const onResize = () => {
-      iterations = 0
-      cancelAnimationFrame(raf)
-      raf = requestAnimationFrame(fit)
-    }
-    window.addEventListener('resize', onResize)
-    return () => {
-      cancelAnimationFrame(raf)
-      window.removeEventListener('resize', onResize)
-    }
-  }, [open, expandedGroupKey, pickerLayerKey, visibleItems.length, stackScale])
-
-  // Measure plate and control positions for connectors + rail alignment.
-  useEffect(() => {
-    if (!open) return
-    if (pickerLayerKey) {
-      setPlateAnchors({})
-      setConnections([])
-      return
-    }
-
-    let raf = 0
-    let ticks = 0
-    const update = () => {
-      ticks += 1
-      const nextAnchors: Record<string, { x: number; y: number }> = {}
-      const nextConnections: Array<{ key: string; x1: number; y1: number; x2: number; y2: number }> = []
-
-      for (const item of visibleItems) {
-        const plate = plateRefs.current[item.key]
-        if (!plate) continue
-        const rect = plate.getBoundingClientRect()
-        nextAnchors[item.key] = { x: rect.right - 12, y: rect.top + rect.height / 2 }
-      }
-
-      for (const item of visibleItems) {
-        const ctrl = controlRefs.current[item.key]
-        const anchor = nextAnchors[item.key]
-        if (!ctrl || !anchor) continue
-        const pr = ctrl.getBoundingClientRect()
-        nextConnections.push({
-          key: item.key,
-          x1: pr.left + pr.width / 2,
-          y1: pr.top + pr.height / 2,
-          x2: anchor.x,
-          y2: anchor.y
-        })
-      }
-
-      setPlateAnchors(nextAnchors)
-      setConnections(nextConnections)
-
-      if (ticks < 10) raf = requestAnimationFrame(update)
-    }
-
-    raf = requestAnimationFrame(update)
-    const onResize = () => {
-      ticks = 0
-      cancelAnimationFrame(raf)
-      raf = requestAnimationFrame(update)
-    }
-    window.addEventListener('resize', onResize)
-    return () => {
-      cancelAnimationFrame(raf)
-      window.removeEventListener('resize', onResize)
-    }
-  }, [open, pickerLayerKey, visibleItems, hovered, selectedKey, stackScale, stackOffsetY])
+  const clearAll = () => { setAssignments({}); setConfirmed({}); setAutoDetected(new Set()) }
 
   if (!open || !mounted) return null
 
-  return createPortal(
-    <>
-      {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[120]" onClick={handleClose}>
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
-      </div>
+  const isLoading = coverageState === 'loading' || datasetsLoading
+  const progressPct = stats.total > 0 ? Math.round((stats.present / stats.total) * 100) : 0
 
-      {/* Dialog */}
-      <div className="fixed inset-0 z-[121] pointer-events-none">
-        <div
-          className="relative w-full h-full bg-[#0a0a0a]/95 flex flex-col pointer-events-auto overflow-hidden"
-          onClick={(e) => e.stopPropagation()}
+  // Render layer row
+  const renderLayerRow = (layer: LayerDef, groupKey: string) => {
+    const status = statusByLayer[layer.key] || 'none'
+    const colors = STATUS_COLORS[status]
+    const isPresent = presentLayers.has(layer.key)
+    const isSelected = selectedLayerKey === layer.key || pickerLayerKey === layer.key
+    const isAuto = autoDetected.has(layer.key)
+    const assignedName = assignments[layer.key]
+
+    return (
+      <div
+        key={layer.key}
+        onClick={() => selectLayer(layer.key)}
+        className={cn(
+          'group flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-all duration-150 border-l-2',
+          isSelected
+            ? 'bg-primary/[0.08] border-l-primary'
+            : `hover:bg-white/[0.03] ${isPresent ? 'border-l-emerald-500/40' : 'border-l-transparent'}`,
+        )}
+      >
+        {/* Presence dot */}
+        <div className={cn('w-2 h-2 rounded-full shrink-0 transition-colors', isPresent ? colors.dot : 'bg-white/10 ring-1 ring-white/10')} />
+
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className={cn('text-[11px] font-medium truncate', isSelected ? 'text-white' : isPresent ? 'text-white/80' : 'text-white/40')}>
+              {layer.label}
+            </span>
+            {layer.required && (
+              <span className="text-[8px] font-bold uppercase tracking-wider text-amber-400/60 shrink-0">REQ</span>
+            )}
+            {isAuto && assignedName && (
+              <span className="text-[8px] font-mono uppercase tracking-wider text-primary/50 shrink-0">AUTO</span>
+            )}
+          </div>
+          {assignedName && (
+            <div className="text-[9px] font-mono text-white/30 truncate mt-0.5">{assignedName}</div>
+          )}
+        </div>
+
+        {/* Status badge */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          {status === 'good' && <Check className="w-3 h-3 text-emerald-400" />}
+          {status === 'warn' && <Circle className="w-3 h-3 text-amber-400" />}
+          {status === 'confirmed' && <ShieldCheck className="w-3 h-3 text-purple-400" />}
+          {status === 'none' && !isPresent && <XCircle className="w-3 h-3 text-white/15" />}
+        </div>
+
+        {/* Picker button */}
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); openPickerFor(layer.key) }}
+          className={cn(
+            'p-1 rounded-sm opacity-0 group-hover:opacity-100 transition-opacity shrink-0',
+            'text-white/30 hover:text-primary hover:bg-primary/10',
+          )}
+          title={`Assign dataset to ${layer.label}`}
         >
+          <Plus className="w-3 h-3" />
+        </button>
+      </div>
+    )
+  }
+
+  return createPortal(
+    <div className="fixed inset-0 z-[120] flex">
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/85 backdrop-blur-lg" onClick={onClose} />
+
+      {/* Dialog container */}
+      <div className="relative z-10 flex w-full h-full" onClick={(e) => e.stopPropagation()}>
+
+        {/* ============================================================= */}
+        {/* LEFT PANEL: Layer Stack                                        */}
+        {/* ============================================================= */}
+        <div className={cn(
+          'flex flex-col h-full transition-all duration-300',
+          pickerLayerKey ? 'w-[55%]' : selectedLayerKey ? 'w-[62%]' : 'w-full',
+        )}>
+
           {/* Header */}
-          <header
-            ref={headerRef}
-            className="px-4 py-4 sm:px-8 sm:py-6 absolute top-0 left-0 right-0 z-30 flex items-start justify-between pointer-events-none"
-          >
-            <div className="pointer-events-auto bg-black/40 backdrop-blur-md px-4 py-3 rounded-lg border border-white/10 max-w-[min(560px,70vw)]">
-              <div className="text-[10px] font-mono text-white/40 uppercase tracking-[0.2em] mb-1">Dataset Digital Twin</div>
-              <div className="text-[11px] text-white/55 font-mono">
-                {projectName ? (
-                  <>
-                    Project: <span className="text-white/80">{projectName}</span> • {selectedCount}/{ALL_LAYERS.length} attached
-                    {requiredMissing > 0 && <span className="ml-2 text-amber-400">• {requiredMissing} required missing</span>}
-                  </>
-                ) : (
-                  'Select a project to use the dataset catalogue.'
-                )}
+          <header className="shrink-0 px-6 py-5 border-b border-white/[0.06] bg-[#0a0a0a]/95">
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <div className="flex items-center gap-3 mb-1.5">
+                  <Layers className="w-5 h-5 text-primary shrink-0" />
+                  <h1 className="text-sm font-bold text-white uppercase tracking-[0.15em]">Dataset Digital Twin</h1>
+                </div>
+                <div className="text-[11px] text-white/50 font-mono">
+                  {projectName ? (
+                    <>
+                      Project: <span className="text-white/80">{projectName}</span>
+                      {isLoading && <span className="ml-2 text-primary/70">(loading...)</span>}
+                    </>
+                  ) : 'Select a project to use the dataset catalogue.'}
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={clearAll}
+                  className="p-2 border border-white/10 text-white/40 hover:text-white hover:border-white/25 hover:bg-white/[0.03] rounded-md"
+                  title="Clear all assignments"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="p-2 border border-white/10 text-white/40 hover:text-white hover:border-white/25 hover:bg-white/[0.03] rounded-md"
+                  title="Close"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
             </div>
 
-            <div className="pointer-events-auto flex gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setAssignments({})
-                  setConfirmed({})
-                }}
-                className="p-3 border border-white/15 text-white/50 hover:text-white hover:border-white/30 hover:bg-white/[0.03] rounded-lg bg-black/40 backdrop-blur-md"
-                title="Clear all attachments"
-              >
-                <Trash2 className="w-5 h-5" />
-              </button>
-              <button
-                type="button"
-                onClick={handleClose}
-                className="p-3 hover:bg-white/10 border border-white/10 hover:border-white/30 rounded-lg text-white shrink-0 bg-black/40 backdrop-blur-md"
-                title="Close"
-              >
-                <X className="w-5 h-5" />
-              </button>
+            {/* Summary strip */}
+            <div className="mt-4 flex items-center gap-4 flex-wrap">
+              {/* Progress ring */}
+              <div className="relative w-10 h-10 shrink-0">
+                <svg className="w-10 h-10 -rotate-90" viewBox="0 0 36 36">
+                  <circle cx="18" cy="18" r="14" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="3" />
+                  <circle
+                    cx="18" cy="18" r="14" fill="none"
+                    stroke={stats.requiredMissing > 0 ? 'rgb(245,158,11)' : 'rgb(16,185,129)'}
+                    strokeWidth="3" strokeDasharray={`${(progressPct / 100) * 88} 88`}
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-white/70">{progressPct}%</div>
+              </div>
+
+              <div className="flex flex-wrap gap-x-5 gap-y-1 text-[10px] font-mono">
+                <span className="text-white/40">
+                  <span className="text-emerald-400 font-bold">{stats.present}</span>/{stats.total} layers present
+                </span>
+                {stats.requiredMissing > 0 && (
+                  <span className="text-amber-400">
+                    {stats.requiredMissing} required missing
+                  </span>
+                )}
+                {stats.good > 0 && <span className="text-emerald-400/70">{stats.good} PIRL-ready</span>}
+                {stats.warn > 0 && <span className="text-amber-400/70">{stats.warn} need review</span>}
+                {datasetStatus && (
+                  <span className="text-white/25">
+                    CRS: EPSG:{datasetStatus.target_epsg}
+                  </span>
+                )}
+              </div>
             </div>
           </header>
 
-          {/* Body */}
-          <div className="flex-1 relative overflow-hidden bg-[#050505]">
-            {/* Background vignette + grid */}
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.05)_0%,rgba(0,0,0,0.9)_65%,rgba(0,0,0,1)_100%)] pointer-events-none" />
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:60px_60px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_50%,black_45%,transparent_100%)] pointer-events-none" />
+          {/* Layer stack */}
+          <div className="flex-1 overflow-y-auto custom-scrollbar">
+            <div className="py-2">
+              {DIGITAL_TWIN_MODEL.map((group) => {
+                const isExpanded = expandedGroups.has(group.key)
+                const gs = groupStatus[group.key]
+                const groupHasPresent = gs && gs.present > 0
+                const groupComplete = gs && gs.present === gs.total
 
-            {/* Main stage */}
-            <div className="absolute inset-0">
-              {/* Stack + rail stage */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                {/* Click-off area (only closes selection; not the whole dialog) */}
-                <div
-                  className="absolute inset-0"
-                  onMouseLeave={() => setHovered(null)}
-                  onClick={(e) => {
-                    if (e.target !== e.currentTarget) return
-                    setSelectedKey(null)
-                    setHovered(null)
-                    closePicker()
-                  }}
-                />
+                return (
+                  <div key={group.key} className="border-b border-white/[0.04] last:border-b-0">
+                    {/* Group header */}
+                    <button
+                      type="button"
+                      onClick={() => toggleGroup(group.key)}
+                      className={cn(
+                        'w-full flex items-center gap-3 px-5 py-3.5 text-left transition-colors',
+                        'hover:bg-white/[0.03]',
+                        isExpanded && 'bg-white/[0.02]',
+                      )}
+                    >
+                      {/* Expand chevron */}
+                      <span className="text-white/30 shrink-0">
+                        {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                      </span>
 
-                {/* 3D stack container */}
-                <div
-                  className="relative flex items-center justify-center"
-                  style={{ perspective: '2200px', perspectiveOrigin: '50% 50%' }}
-                >
-                  <div
-                    ref={stackRef}
-                    className="relative w-[clamp(320px,46vw,560px)] h-[clamp(380px,62vh,680px)]"
-                    style={{
-                      transform: `translateY(${stackOffsetY}px) rotateX(58deg) rotateZ(-25deg) scale(${stackScale})`,
-                      transformStyle: 'preserve-3d'
-                    }}
+                      {/* Group badge - stacked layer icon */}
+                      <div className={cn(
+                        'w-7 h-7 rounded-md flex items-center justify-center shrink-0',
+                        groupComplete ? 'bg-emerald-500/15 text-emerald-400' :
+                        groupHasPresent ? 'bg-amber-500/10 text-amber-400' :
+                        'bg-white/[0.04] text-white/20',
+                      )}>
+                        <Layers className="w-3.5 h-3.5" />
+                      </div>
+
+                      {/* Group label */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className={cn(
+                            'text-[11px] font-bold uppercase tracking-[0.12em]',
+                            groupComplete ? 'text-emerald-300/80' :
+                            groupHasPresent ? 'text-white/70' : 'text-white/35',
+                          )}>
+                            {group.label}
+                          </span>
+                          <span className="text-[9px] font-mono text-white/25">{group.subtitle}</span>
+                        </div>
+                      </div>
+
+                      {/* Group stats */}
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className={cn(
+                          'text-[9px] font-mono',
+                          groupComplete ? 'text-emerald-400/60' :
+                          groupHasPresent ? 'text-white/30' : 'text-white/15',
+                        )}>
+                          {gs?.present ?? 0}/{gs?.total ?? 0}
+                        </span>
+
+                        {/* Mini dots for each layer */}
+                        <div className="flex gap-1">
+                          {group.layers.map((layer) => {
+                            const st = statusByLayer[layer.key] || 'none'
+                            return (
+                              <div
+                                key={layer.key}
+                                className={cn(
+                                  'w-1.5 h-1.5 rounded-full',
+                                  st === 'good' || st === 'confirmed' ? 'bg-emerald-500' :
+                                  st === 'warn' ? 'bg-amber-500' :
+                                  presentLayers.has(layer.key) ? 'bg-white/30' : 'bg-white/10',
+                                )}
+                                title={`${layer.label}: ${st}`}
+                              />
+                            )
+                          })}
+                        </div>
+                      </div>
+                    </button>
+
+                    {/* Expanded layers */}
+                    {isExpanded && (
+                      <div className="pb-1 border-t border-white/[0.03]">
+                        {group.layers.map((layer) => renderLayerRow(layer, group.key))}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Backend status detail */}
+            {datasetStatus && !isLoading && (
+              <div className="mx-5 mb-4 mt-2 p-4 border border-white/[0.06] rounded-md bg-white/[0.015]">
+                <div className="text-[9px] font-mono uppercase tracking-widest text-white/25 mb-2">Backend Dataset Status</div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {datasetStatus.categories.map((cat) => {
+                    const layerKey = BACKEND_CATEGORY_TO_LAYER[cat.category]
+                    return (
+                      <div
+                        key={cat.category}
+                        className={cn(
+                          'flex items-center gap-2 px-2.5 py-1.5 rounded-sm text-[10px] font-mono border',
+                          cat.present
+                            ? 'border-emerald-500/20 bg-emerald-500/[0.04] text-emerald-300/80'
+                            : 'border-white/[0.06] bg-white/[0.01] text-white/30',
+                        )}
+                        onClick={() => { if (layerKey && isLayerKey(layerKey)) selectLayer(layerKey) }}
+                        role="button"
+                        tabIndex={0}
+                      >
+                        <div className={cn('w-1.5 h-1.5 rounded-full shrink-0', cat.present ? 'bg-emerald-500' : 'bg-white/15')} />
+                        <span className="truncate">{cat.label}</span>
+                        {cat.required && <span className="text-[7px] text-amber-400/50 shrink-0">REQ</span>}
+                      </div>
+                    )
+                  })}
+                </div>
+                <div className="mt-2 text-[9px] font-mono text-white/20">
+                  Minimum requirements: {datasetStatus.minimum_requirements_met ? (
+                    <span className="text-emerald-400/60">MET</span>
+                  ) : (
+                    <span className="text-amber-400/60">NOT MET</span>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Loading state */}
+            {isLoading && (
+              <div className="flex items-center justify-center gap-3 py-16 text-white/40 font-mono text-xs uppercase tracking-widest">
+                <Loader2 className="w-5 h-5 text-primary animate-spin" />
+                <span>Loading project datasets...</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ============================================================= */}
+        {/* RIGHT PANEL: Detail / Picker                                   */}
+        {/* ============================================================= */}
+        <div className={cn(
+          'h-full border-l border-white/[0.06] bg-[#080808]/98 flex flex-col transition-all duration-300',
+          pickerLayerKey ? 'w-[45%]' : selectedLayerKey ? 'w-[38%]' : 'w-0 overflow-hidden',
+        )}>
+          {pickerLayerKey && activeLayer && (
+            <div className="h-full flex flex-col">
+              {/* Panel header */}
+              <div className="shrink-0 px-6 py-5 border-b border-white/[0.06]">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="text-[9px] font-mono text-white/30 uppercase tracking-widest mb-1">Assign dataset</div>
+                    <div className="text-lg font-bold text-white uppercase tracking-wide truncate">{activeLayer.label}</div>
+                    <div className="text-[11px] text-white/40 truncate">{activeLayer.subtitle}</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setPickerLayerKey(null)}
+                    className="p-2 rounded-md border border-white/10 text-white/30 hover:text-white hover:border-white/25"
+                    title="Close picker"
                   >
-                    {/* Base platform */}
-                    <div
-                      className="absolute inset-0 bg-white/[0.02] border border-white/5 rounded-2xl shadow-[0_0_150px_rgba(0,0,0,0.9)]"
-                      style={{ transform: 'translateZ(-140px)' }}
-                    />
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
 
-                    {visibleItems.map((item, idx) => {
-                      const key = item.key
-                      const isGroup = item.type === 'group'
-                      const group = item.type === 'group' ? item.group : DIGITAL_TWIN_MODEL.find((g) => g.key === item.groupKey)!
-                      const baseStatus = isGroup ? computeGroupStatus(group, statusByLayer, assignments) : statusByLayer[item.key as DigitalTwinLayerKey] || 'none'
-                      const theme = STATUS_THEME[baseStatus]
-
-                      const isSelected = selectedKey === key
-                      const isHovered = hovered?.key === key
-
-                      // Ordering: lower idx = deeper; higher idx = higher.
-                      const baseY = -idx * 36
-                      const baseZ = idx * 28
-                      const baseScale = isGroup ? 1.0 : 0.84
-                      const yOffset = baseY
-                      const zOffset = baseZ
-                      const scale = baseScale
-
-                      const plateLabel = isGroup ? group.label : (item as any).layer.label
-                      const plateSubtitle = isGroup ? group.subtitle : (item as any).layer.subtitle
-
-                      return (
-                        <div
-                          key={key}
-                          ref={(el) => {
-                            plateRefs.current[key] = el
-                          }}
-                          onMouseEnter={() => setHovered({ key, source: 'plate' })}
-                          onMouseLeave={() => setHovered((prev) => (prev?.key === key ? null : prev))}
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            if (isGroup) {
-                              // Single click selects only. Expand is double-click only.
-                              setSelectedKey(group.key)
-                              return
-                            }
-                            selectLayer(key as DigitalTwinLayerKey)
-                          }}
-                          onDoubleClick={(e) => {
-                            e.stopPropagation()
-                            if (!isGroup) return
-                            toggleGroup(group)
-                          }}
+              {/* Assigned dataset info */}
+              <div className="shrink-0 mx-5 mt-4 p-4 border border-white/[0.06] bg-white/[0.015] rounded-md">
+                <div className="text-[9px] font-mono text-white/30 uppercase tracking-wider mb-2">Currently Assigned</div>
+                {activeAssignedName ? (
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="text-[12px] font-bold text-white truncate">{activeAssignedName}</div>
+                      {activeAssignedEntry?.source && (
+                        <div className="text-[10px] text-white/40 font-mono truncate mt-0.5">{activeAssignedEntry.source}</div>
+                      )}
+                      {presentLayers.has(pickerLayerKey) && (
+                        <div className="mt-1.5 flex items-center gap-1.5">
+                          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                          <span className="text-[9px] font-mono text-emerald-400/70 uppercase">Present in project</span>
+                        </div>
+                      )}
+                      <div className="mt-2 flex items-center gap-2 flex-wrap">
+                        <span className={cn(
+                          'text-[9px] font-mono uppercase tracking-widest',
+                          confirmed[pickerLayerKey]
+                            ? 'text-purple-300'
+                            : (activeQuality?.verdict ?? 'warn') === 'good' ? 'text-emerald-300' : 'text-amber-300',
+                        )}>
+                          {confirmed[pickerLayerKey]
+                            ? 'Confirmed for PIRL'
+                            : (activeQuality?.verdict ?? 'warn') === 'good' ? 'PIRL-ready (heuristic)' : 'Needs review'}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => toggleConfirmed(pickerLayerKey)}
                           className={cn(
-                            'absolute inset-0 rounded-xl border cursor-pointer group',
-                            theme.plateBg,
-                            theme.plateBorder,
-                            theme.plateGlow,
-                            'backdrop-blur-sm',
-                            isSelected && 'border-primary/70 shadow-[0_0_60px_rgba(var(--primary),0.28)]',
-                            isHovered && !isSelected && 'border-white/30 shadow-[0_0_40px_rgba(255,255,255,0.14)]'
+                            'px-2 py-0.5 border rounded-sm text-[9px] font-mono uppercase tracking-wider',
+                            confirmed[pickerLayerKey]
+                              ? 'border-purple-500/40 text-purple-300 hover:bg-purple-500/10'
+                              : 'border-white/15 text-white/40 hover:text-white hover:border-white/25',
                           )}
-                          style={{
-                            transform: `translate3d(0, ${yOffset}px, ${zOffset}px) scale(${scale})`,
-                            transformStyle: 'preserve-3d',
-                            // Maintain plate stacking order at all times.
-                            zIndex: idx
-                          }}
                         >
-                          {/* glass sheen */}
-                          <div className="absolute inset-0 bg-gradient-to-br from-white/6 to-transparent rounded-xl pointer-events-none" />
+                          {confirmed[pickerLayerKey] ? 'Unconfirm' : 'Confirm'}
+                        </button>
+                      </div>
+                      {activeQuality?.reasons?.length ? (
+                        <div className="mt-1.5 text-[9px] text-white/30 font-mono">{activeQuality.reasons.slice(0, 2).join(' \u2022 ')}</div>
+                      ) : null}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleClear(pickerLayerKey)}
+                      className="px-3 py-1.5 border border-white/10 text-white/40 hover:text-white hover:border-white/25 rounded-sm text-[10px] font-mono uppercase"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                ) : (
+                  <div className="text-[10px] font-mono text-white/25 italic">No dataset assigned yet. Select from the catalogue below.</div>
+                )}
+              </div>
 
-                          {/* pins */}
-                          <span className="absolute -left-1 -top-1 h-2.5 w-2.5 bg-white/15 border border-white/20 rotate-45" />
-                          <span className="absolute -right-1 -top-1 h-2.5 w-2.5 bg-white/15 border border-white/20 rotate-45" />
-                          <span className="absolute -left-1 -bottom-1 h-2.5 w-2.5 bg-white/15 border border-white/20 rotate-45" />
-                          <span className="absolute -right-1 -bottom-1 h-2.5 w-2.5 bg-white/15 border border-white/20 rotate-45" />
+              {/* Search */}
+              <div className="shrink-0 mx-5 mt-3 relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/25" />
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search catalogue\u2026"
+                  className="w-full bg-white/[0.03] border border-white/[0.08] rounded-md pl-10 pr-4 py-2.5 text-xs font-mono text-white focus:border-primary/40 focus:ring-0 outline-none"
+                />
+              </div>
 
-                          {/* printed label (bottom right) */}
-                          <div className="absolute right-6 bottom-6 pointer-events-none select-none text-right">
-                            <div
-                              className={cn(
-                                'text-[18px] font-black uppercase tracking-[0.22em]',
-                                baseStatus === 'good'
-                                  ? 'text-emerald-200/22'
-                                  : baseStatus === 'warn'
-                                    ? 'text-amber-200/22'
-                                    : baseStatus === 'confirmed'
-                                      ? 'text-purple-200/25'
-                                      : 'text-white/16',
-                                isSelected && 'text-primary/60'
+              <label className="flex items-center gap-2 mx-5 mt-2 mb-1 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  className="appearance-none w-3 h-3 border border-white/25 rounded-sm checked:bg-primary checked:border-primary"
+                  checked={showAll}
+                  onChange={(e) => setShowAll(e.target.checked)}
+                />
+                <span className="text-[9px] font-mono uppercase tracking-wider text-white/35">Show all datasets</span>
+              </label>
+
+              {/* Catalogue list */}
+              <div ref={listRef} className="flex-1 overflow-y-auto px-5 pb-5 space-y-2 custom-scrollbar">
+                {coverageState === 'loading' ? (
+                  <div className="flex items-center justify-center gap-3 py-16 text-white/40 font-mono text-xs uppercase tracking-widest">
+                    <Loader2 className="w-5 h-5 text-primary animate-spin" />
+                    <span>Loading catalogue...</span>
+                  </div>
+                ) : coverageState === 'error' ? (
+                  <div className="border border-red-500/20 bg-red-500/[0.06] text-red-400 rounded-md p-4 text-xs font-mono">
+                    {coverageError || 'Failed to load dataset catalogue.'}
+                  </div>
+                ) : candidates.length === 0 ? (
+                  <div className="py-12 text-center">
+                    <div className="text-white/15 font-mono text-xs uppercase tracking-widest mb-2">No matching datasets</div>
+                    <p className="text-white/10 text-[10px]">Try enabling &quot;Show all datasets&quot;.</p>
+                  </div>
+                ) : (
+                  candidates.map(({ entry, score }, idx) => {
+                    const isAttached = !!pickerLayerKey &&
+                      (assignments[pickerLayerKey] || '').trim().toLowerCase() === (entry.dataset || '').trim().toLowerCase()
+                    const quality = pickerLayerKey ? evaluatePirlQuality(pickerLayerKey, entry) : null
+
+                    return (
+                      <div
+                        key={`${entry.dataset}-${idx}`}
+                        className={cn(
+                          'group p-3.5 border rounded-md transition-colors',
+                          isAttached
+                            ? 'bg-primary/[0.06] border-primary/30'
+                            : 'bg-white/[0.015] border-white/[0.05] hover:bg-white/[0.03] hover:border-white/[0.12]',
+                        )}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 mb-0.5">
+                              <span className="text-[12px] font-semibold text-white truncate group-hover:text-primary">{entry.dataset}</span>
+                              {score > 15 && (
+                                <span className="px-1.5 py-0.5 bg-primary/15 text-primary text-[8px] font-mono uppercase rounded-sm shrink-0">Rec</span>
                               )}
-                            >
-                              {plateLabel}
                             </div>
-                            <div className="text-[10px] font-mono text-white/25 uppercase tracking-widest mt-1">
-                              {isGroup ? 'Category' : plateSubtitle}
+                            {entry.source && <div className="text-[9px] text-white/35 font-mono truncate">{entry.source}</div>}
+                            <div className="mt-2 flex flex-wrap gap-1.5">
+                              {entry.data_type && (
+                                <span className="px-1.5 py-0.5 bg-white/[0.04] rounded-sm text-[9px] text-white/50 font-mono">{entry.data_type}</span>
+                              )}
+                              {entry.coverage && (
+                                <span className="px-1.5 py-0.5 bg-white/[0.04] rounded-sm text-[9px] text-white/50 font-mono">{entry.coverage}</span>
+                              )}
+                              <span className="px-1.5 py-0.5 bg-white/[0.04] rounded-sm text-[9px] text-white/50 font-mono">{formatTemporalSpan(entry)}</span>
+                              {quality && (
+                                <span className={cn(
+                                  'px-1.5 py-0.5 rounded-sm text-[9px] font-mono uppercase',
+                                  quality.verdict === 'good' ? 'bg-emerald-500/10 text-emerald-300' : 'bg-amber-500/10 text-amber-300',
+                                )}>
+                                  {quality.verdict === 'good' ? 'Good' : 'Warn'}
+                                </span>
+                              )}
                             </div>
                           </div>
 
-                          {/* surface pattern */}
-                          {!isGroup && assignments[key as DigitalTwinLayerKey] ? (
-                            <div
+                          <div className="flex flex-col gap-1.5 shrink-0 items-end">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (!pickerLayerKey) return
+                                if (isAttached) handleClear(pickerLayerKey)
+                                else handleAssign(pickerLayerKey, entry.dataset)
+                              }}
                               className={cn(
-                                'absolute inset-4 rounded-lg border border-dashed opacity-40 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.05)_25%,rgba(255,255,255,0.05)_50%,transparent_50%,transparent_75%,rgba(255,255,255,0.05)_75%,rgba(255,255,255,0.05)_100%)] bg-[size:20px_20px]'
+                                'px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider rounded-sm transition-colors',
+                                isAttached
+                                  ? 'border border-primary/40 text-primary hover:bg-primary/10'
+                                  : 'bg-white/[0.06] text-white/70 hover:bg-white/[0.12] hover:text-white',
                               )}
-                            />
-                          ) : (
-                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100">
-                              <div className="text-[10px] font-mono uppercase tracking-widest text-white/30">
-                                {isGroup ? 'Click to expand' : 'Use + to attach'}
-                              </div>
-                            </div>
-                          )}
+                            >
+                              {isAttached ? 'Remove' : 'Add'}
+                            </button>
+                            {entry.url && (
+                              <a
+                                href={entry.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-1 text-white/15 hover:text-white/50"
+                                title="Open source"
+                              >
+                                <ExternalLink className="w-3 h-3" />
+                              </a>
+                            )}
+                          </div>
                         </div>
-                      )
-                    })}
-                  </div>
+                      </div>
+                    )
+                  })
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Detail view when layer is selected but picker is not open */}
+          {!pickerLayerKey && selectedLayerKey && activeLayer && (() => {
+            const st = statusByLayer[selectedLayerKey] || 'none'
+            const isPresent = presentLayers.has(selectedLayerKey)
+            const assignedName = assignments[selectedLayerKey]
+            const assignedEntry = assignedName ? findEntryByDataset(entries, assignedName) : null
+            const quality = assignedName ? evaluatePirlQuality(selectedLayerKey, assignedEntry) : null
+            const matchedBackendCat = datasetStatus?.categories.find((c) => BACKEND_CATEGORY_TO_LAYER[c.category] === selectedLayerKey)
+
+            return (
+              <div className="h-full flex flex-col">
+                <div className="shrink-0 px-6 py-5 border-b border-white/[0.06]">
+                  <div className="text-[9px] font-mono text-white/30 uppercase tracking-widest mb-1">Layer Detail</div>
+                  <div className="text-lg font-bold text-white uppercase tracking-wide">{activeLayer.label}</div>
+                  <div className="text-[11px] text-white/40">{activeLayer.subtitle}</div>
+                  {activeLayer.required && (
+                    <div className="mt-1.5 text-[9px] font-mono text-amber-400/60 uppercase tracking-wider">Required for PIRL</div>
+                  )}
                 </div>
 
-                {/* Right rail + connectors */}
-                {!pickerLayerKey && (
-                  <>
-                    {/* Connectors */}
-                    <svg className="absolute inset-0 z-20 pointer-events-none" width="100%" height="100%">
-                      {connections.map((c) => {
-                        const item = visibleItems.find((v) => v.key === c.key)
-                        if (!item) return null
-                        const status =
-                          item.type === 'group'
-                            ? computeGroupStatus(item.group, statusByLayer, assignments)
-                            : statusByLayer[item.key] || 'none'
-                        const theme = STATUS_THEME[status]
-                        return (
-                          <line
-                            key={c.key}
-                            x1={c.x1}
-                            y1={c.y1}
-                            x2={c.x2}
-                            y2={c.y2}
-                            stroke={theme.line}
-                            strokeWidth={1}
-                            strokeDasharray="6 8"
-                            opacity={0.55}
-                          />
-                        )
-                      })}
-                    </svg>
-
-                    {/* Rail */}
-                    <div className="absolute inset-0 z-30 pointer-events-none">
-                      {visibleItems.map((item) => {
-                        const anchor = plateAnchors[item.key]
-                        if (!anchor) return null
-
-                        const isGroup = item.type === 'group'
-                        const isSelected = selectedKey === item.key
-                        const isHovered = hovered?.key === item.key
-
-                        const status = isGroup
-                          ? computeGroupStatus(item.group, statusByLayer, assignments)
-                          : statusByLayer[item.key] || 'none'
-                        const theme = STATUS_THEME[status]
-
-                        const label = isGroup ? item.group.label : item.layer.label
-                        const subtitle = isGroup ? item.group.subtitle : item.layer.subtitle
-                        const isExpanded = isGroup ? expandedGroupKey === item.group.key : false
-
-                        return (
-                          <div
-                            key={item.key}
-                            className="absolute right-4 sm:right-10 flex items-center gap-2 sm:gap-3 pointer-events-auto"
-                            style={{ top: anchor.y, transform: 'translateY(-50%)' }}
-                            onMouseEnter={() => setHovered({ key: item.key, source: 'rail' })}
-                            onMouseLeave={() => setHovered((prev) => (prev?.key === item.key ? null : prev))}
-                          >
-                            <button
-                              ref={(el) => {
-                                controlRefs.current[item.key] = el
-                              }}
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                if (isGroup) {
-                                  // Single click selects only. Expand is double-click only.
-                                  setSelectedKey(item.group.key)
-                                  return
-                                }
-                                openPickerFor(item.key)
-                              }}
-                              onDoubleClick={(e) => {
-                                e.stopPropagation()
-                                if (!isGroup) return
-                                toggleGroup(item.group)
-                              }}
-                              className={cn(
-                                'h-8 w-8 sm:h-9 sm:w-9 rounded-full border flex items-center justify-center',
-                                'bg-black/25 backdrop-blur-md',
-                                theme.control,
-                                isSelected && 'border-primary/60 text-primary',
-                                isHovered && !isSelected && 'border-white/35 text-white/80'
-                              )}
-                              title={
-                                isGroup
-                                  ? isExpanded
-                                    ? 'Double-click to collapse'
-                                    : 'Double-click to expand'
-                                  : `Attach dataset to ${label}`
-                              }
-                            >
-                              {isGroup ? (
-                                isExpanded ? (
-                                  <ChevronDown className="w-4 h-4" />
-                                ) : (
-                                  <ChevronRight className="w-4 h-4" />
-                                )
-                              ) : (
-                                <Plus className="w-4 h-4" />
-                              )}
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                if (isGroup) {
-                                  setSelectedKey(item.group.key)
-                                  return
-                                }
-                                selectLayer(item.key)
-                              }}
-                              onDoubleClick={(e) => {
-                                e.stopPropagation()
-                                if (!isGroup) return
-                                toggleGroup(item.group)
-                              }}
-                              className={cn(
-                                'w-[clamp(160px,18vw,240px)] text-right text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.18em] select-none',
-                                theme.labelText,
-                                isSelected && 'text-white',
-                                isHovered && !isSelected && 'text-white/85'
-                              )}
-                              title={subtitle}
-                            >
-                              {label}
-                            </button>
-                          </div>
-                        )
-                      })}
+                <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+                  {/* Presence status */}
+                  <div className="p-4 border border-white/[0.06] bg-white/[0.015] rounded-md">
+                    <div className="text-[9px] font-mono text-white/30 uppercase tracking-wider mb-3">Status</div>
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className={cn('w-3 h-3 rounded-full', isPresent ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]' : 'bg-white/10 ring-1 ring-white/15')} />
+                      <span className={cn('text-[12px] font-semibold', isPresent ? 'text-emerald-300' : 'text-white/35')}>
+                        {isPresent ? 'Dataset Present' : 'Not Available'}
+                      </span>
                     </div>
-                  </>
-                )}
-
-                {/* Dataset picker panel (overlay, responsive width) */}
-                <div
-                  className={cn(
-                    'absolute top-0 right-0 h-full w-[min(520px,100vw)] border-l border-white/10 bg-[#0a0a0a]/95 backdrop-blur-xl',
-                    pickerLayerKey ? 'translate-x-0 pointer-events-auto' : 'translate-x-full pointer-events-none'
-                  )}
-                >
-                  <div className="h-full flex flex-col p-4 sm:p-8">
-                    <div className="flex items-start justify-between gap-3 mb-6">
-                      <div className="min-w-0">
-                        <div className="text-[10px] font-mono text-white/40 uppercase tracking-widest">Attach dataset</div>
-                        <div className="text-2xl font-bold text-white uppercase tracking-wide font-mono truncate">
-                          {panelLayer?.label || 'Layer'}
-                        </div>
-                        <div className="text-sm text-white/50 truncate">{panelLayer?.subtitle || ''}</div>
+                    {matchedBackendCat && (
+                      <div className="text-[10px] text-white/30 font-mono space-y-1 mt-3">
+                        <div>Category: <span className="text-white/50">{matchedBackendCat.label}</span></div>
+                        <div>Type: <span className="text-white/50">{matchedBackendCat.dataset_type}</span></div>
+                        {matchedBackendCat.last_modified && (
+                          <div>Modified: <span className="text-white/50">{new Date(matchedBackendCat.last_modified).toLocaleDateString()}</span></div>
+                        )}
+                        {matchedBackendCat.description && (
+                          <div>Note: <span className="text-white/50">{matchedBackendCat.description}</span></div>
+                        )}
                       </div>
-                      <button
-                        type="button"
-                        onClick={closePicker}
-                        className="p-2 rounded-md border border-white/10 text-white/30 hover:text-white hover:border-white/30 hover:bg-white/[0.03]"
-                        title="Close picker"
-                      >
-                        <X className="w-5 h-5" />
-                      </button>
-                    </div>
+                    )}
+                  </div>
 
-                    {/* Attached */}
-                    <div className="mb-4 p-4 border border-white/10 bg-white/[0.02] rounded-md">
-                      <div className="text-[9px] font-mono text-white/40 uppercase tracking-wider mb-2">Attached</div>
-                      {panelLayerKey && panelAssignedName ? (
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <div className="text-[12px] font-bold text-white truncate">{panelAssignedName}</div>
-                            {panelAssignedEntry?.source && (
-                              <div className="text-[10px] text-white/50 font-mono truncate">{panelAssignedEntry.source}</div>
-                            )}
-                            <div className="mt-2 flex items-center gap-2 flex-wrap">
-                              <span
-                                className={cn(
-                                  'text-[9px] font-mono uppercase tracking-widest',
-                                  confirmed[panelLayerKey]
-                                    ? 'text-purple-300'
-                                    : (panelQuality?.verdict ?? 'warn') === 'good'
-                                      ? 'text-emerald-300'
-                                      : 'text-amber-300'
-                                )}
-                              >
-                                {confirmed[panelLayerKey]
-                                  ? 'Confirmed for PIRL'
-                                  : (panelQuality?.verdict ?? 'warn') === 'good'
-                                    ? 'PIRL-ready (heuristic)'
-                                    : 'Needs review (heuristic)'}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => toggleConfirmed(panelLayerKey)}
-                                className={cn(
-                                  'px-2 py-1 border rounded-sm text-[9px] font-mono uppercase tracking-wider',
-                                  confirmed[panelLayerKey]
-                                    ? 'border-purple-500/40 text-purple-300 hover:bg-purple-500/10'
-                                    : 'border-white/15 text-white/50 hover:text-white hover:border-white/30 hover:bg-white/[0.03]'
-                                )}
-                                title="Manually confirm this dataset is acceptable for PIRL (turns plate purple)"
-                              >
-                                {confirmed[panelLayerKey] ? 'Unconfirm' : 'Confirm'}
-                              </button>
-                            </div>
-                            {panelQuality?.reasons?.length ? (
-                              <div className="mt-2 text-[10px] text-white/35 font-mono">
-                                {panelQuality.reasons.slice(0, 2).join(' • ')}
-                              </div>
-                            ) : null}
-                          </div>
+                  {/* Assignment */}
+                  <div className="p-4 border border-white/[0.06] bg-white/[0.015] rounded-md">
+                    <div className="text-[9px] font-mono text-white/30 uppercase tracking-wider mb-3">Assignment</div>
+                    {assignedName ? (
+                      <>
+                        <div className="text-[12px] font-bold text-white truncate mb-1">{assignedName}</div>
+                        {assignedEntry?.source && (
+                          <div className="text-[10px] text-white/40 font-mono truncate">{assignedEntry.source}</div>
+                        )}
+                        {autoDetected.has(selectedLayerKey) && (
+                          <div className="mt-1.5 text-[9px] font-mono text-primary/50 uppercase">Auto-detected from project</div>
+                        )}
+                        <div className="mt-3 flex items-center gap-2 flex-wrap">
+                          <span className={cn(
+                            'px-2 py-1 rounded-sm text-[9px] font-mono uppercase tracking-wider',
+                            st === 'confirmed' ? 'bg-purple-500/15 text-purple-300' :
+                            st === 'good' ? 'bg-emerald-500/15 text-emerald-300' :
+                            'bg-amber-500/15 text-amber-300',
+                          )}>
+                            {st === 'confirmed' ? 'Confirmed' : quality?.verdict === 'good' ? 'PIRL-ready' : 'Needs review'}
+                          </span>
                           <button
                             type="button"
-                            onClick={() => handleClear(panelLayerKey)}
-                            className="px-3 py-1.5 border border-white/15 text-white/50 hover:text-white hover:border-white/30 hover:bg-white/[0.03] rounded-sm text-[10px] font-mono uppercase tracking-wider"
+                            onClick={() => toggleConfirmed(selectedLayerKey)}
+                            className="px-2 py-1 border border-white/10 rounded-sm text-[9px] font-mono uppercase text-white/35 hover:text-white hover:border-white/25"
                           >
-                            Clear
+                            {confirmed[selectedLayerKey] ? 'Unconfirm' : 'Confirm'}
                           </button>
                         </div>
-                      ) : (
-                        <div className="text-[10px] font-mono text-white/30 italic">No dataset attached yet.</div>
-                      )}
-                    </div>
+                        {quality?.reasons?.length ? (
+                          <div className="mt-2 text-[9px] text-white/25 font-mono">{quality.reasons.join(' \u2022 ')}</div>
+                        ) : null}
+                      </>
+                    ) : (
+                      <div className="text-[10px] font-mono text-white/25 italic">No dataset assigned to this layer.</div>
+                    )}
+                  </div>
 
-                    {/* Search */}
-                    <div className="mb-3 relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
-                      <input
-                        value={query}
-                        onChange={(e) => setQuery(e.target.value)}
-                        placeholder="Search catalogue…"
-                        className="w-full bg-white/5 border border-white/10 rounded-md pl-10 pr-4 py-3 text-xs font-mono text-white focus:border-primary/50 focus:ring-0 outline-none"
-                      />
-                    </div>
-
-                    <label className="flex items-center gap-2 mb-4 cursor-pointer select-none">
-                      <input
-                        type="checkbox"
-                        className="appearance-none w-3.5 h-3.5 border border-white/30 rounded-sm checked:bg-primary checked:border-primary"
-                        checked={showAll}
-                        onChange={(e) => setShowAll(e.target.checked)}
-                      />
-                      <span className="text-[10px] font-mono uppercase tracking-wider text-white/50">
-                        Show all datasets (ignore matching)
-                      </span>
-                    </label>
-
-                    {/* Catalogue */}
-                    <div ref={listRef} className="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
-                      {coverageState === 'loading' ? (
-                        <div className="flex items-center justify-center gap-3 py-16 text-white/40 font-mono text-xs uppercase tracking-widest">
-                          <Loader2 className="w-5 h-5 text-primary" />
-                          <span>Loading catalogue…</span>
-                        </div>
-                      ) : coverageState === 'error' ? (
-                        <div className="border border-red-500/30 bg-red-500/10 text-red-400 rounded-md p-4 text-xs font-mono">
-                          ERROR: {coverageError || 'Failed to load dataset catalogue.'}
-                        </div>
-                      ) : candidates.length === 0 ? (
-                        <div className="py-12 text-center">
-                          <div className="text-white/20 font-mono text-xs uppercase tracking-widest mb-2">No matching datasets</div>
-                          <p className="text-white/10 text-xs">Try enabling “Show all datasets”.</p>
-                        </div>
-                      ) : (
-                        candidates.map(({ entry, score }, idx) => {
-                          const layerKey = panelLayerKey
-                          const isAttached =
-                            !!layerKey &&
-                            (assignments[layerKey] || '').trim().toLowerCase() === (entry.dataset || '').trim().toLowerCase()
-
-                          const quality =
-                            layerKey && isAttached ? evaluatePirlQuality(layerKey, entry) : layerKey ? evaluatePirlQuality(layerKey, entry) : null
-
-                          return (
-                            <div
-                              key={`${entry.dataset}-${idx}`}
-                              className={cn(
-                                'group p-4 border rounded-md',
-                                isAttached
-                                  ? 'bg-primary/[0.08] border-primary/40 shadow-[0_0_20px_rgba(var(--primary),0.1)]'
-                                  : 'bg-white/[0.02] border-white/5 hover:bg-white/[0.04] hover:border-white/20'
-                              )}
-                            >
-                              <div className="flex items-start justify-between gap-4">
-                                <div className="min-w-0 flex-1">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <span className="text-sm font-bold text-white truncate group-hover:text-primary">
-                                      {entry.dataset}
-                                    </span>
-                                    {score > 15 && (
-                                      <span className="px-1.5 py-0.5 bg-primary/20 text-primary text-[9px] font-mono uppercase rounded-sm">
-                                        Rec
-                                      </span>
-                                    )}
-                                  </div>
-                                  {entry.source && <div className="text-[10px] text-white/45 font-mono truncate">{entry.source}</div>}
-
-                                  <div className="mt-3 flex flex-wrap gap-2">
-                                    {entry.data_type && (
-                                      <span className="px-2 py-1 bg-white/5 rounded-sm text-[10px] text-white/60 font-mono">
-                                        {entry.data_type}
-                                      </span>
-                                    )}
-                                    {entry.coverage && (
-                                      <span className="px-2 py-1 bg-white/5 rounded-sm text-[10px] text-white/60 font-mono">
-                                        {entry.coverage}
-                                      </span>
-                                    )}
-                                    <span className="px-2 py-1 bg-white/5 rounded-sm text-[10px] text-white/60 font-mono">
-                                      {formatTemporalSpan(entry)}
-                                    </span>
-                                    {quality && (
-                                      <span
-                                        className={cn(
-                                          'px-2 py-1 rounded-sm text-[10px] font-mono uppercase tracking-wider',
-                                          quality.verdict === 'good' ? 'bg-emerald-500/10 text-emerald-300' : 'bg-amber-500/10 text-amber-300'
-                                        )}
-                                      >
-                                        {quality.verdict === 'good' ? 'Good' : 'Warn'}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-
-                                <div className="flex flex-col gap-2 shrink-0 items-end">
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      if (!panelLayerKey) return
-                                      if (isAttached) handleClear(panelLayerKey)
-                                      else handleAssign(panelLayerKey, entry.dataset)
-                                    }}
-                                    className={cn(
-                                      'px-4 py-2 text-[10px] font-bold uppercase tracking-wider rounded-sm',
-                                      isAttached
-                                        ? 'bg-transparent border border-primary/50 text-primary hover:bg-primary/10'
-                                        : 'bg-white/10 text-white hover:bg-white/20'
-                                    )}
-                                  >
-                                    {isAttached ? 'Remove' : 'Add'}
-                                  </button>
-                                  {entry.url && (
-                                    <a
-                                      href={entry.url}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="flex items-center justify-center p-2 text-white/20 hover:text-white"
-                                      title="Open source"
-                                    >
-                                      <ExternalLink className="w-3 h-3" />
-                                    </a>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          )
-                        })
-                      )}
-                    </div>
+                  {/* Actions */}
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => openPickerFor(selectedLayerKey)}
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-primary/[0.08] border border-primary/25 hover:bg-primary/[0.15] hover:border-primary/40 text-primary rounded-md text-[10px] font-bold uppercase tracking-wider transition-colors"
+                    >
+                      <Search className="w-3.5 h-3.5" />
+                      {assignedName ? 'Change Dataset' : 'Assign Dataset'}
+                    </button>
+                    {assignedName && (
+                      <button
+                        type="button"
+                        onClick={() => handleClear(selectedLayerKey)}
+                        className="px-4 py-3 border border-white/10 text-white/40 hover:text-white hover:border-white/25 rounded-md text-[10px] font-mono uppercase"
+                      >
+                        Clear
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
+            )
+          })()}
         </div>
       </div>
-    </>,
-    document.body
+    </div>,
+    document.body,
   )
 }
-
-

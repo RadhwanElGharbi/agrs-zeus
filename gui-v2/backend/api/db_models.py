@@ -89,6 +89,25 @@ class UserSession(Base):
     user: Mapped["User"] = relationship("User", back_populates="sessions")
 
 
+class ProjectFolder(Base):
+    __tablename__ = "project_folders"
+
+    id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String(128), nullable=False, unique=True)
+    color: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    position: Mapped[int] = mapped_column(nullable=False, default=0)
+
+    created_by_user_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
+
+    created_by: Mapped[Optional["User"]] = relationship("User", lazy="joined")
+    projects: Mapped[list["Project"]] = relationship("Project", back_populates="folder")
+
+
 class Project(Base):
     __tablename__ = "projects"
 
@@ -98,8 +117,17 @@ class Project(Base):
     project_id: Mapped[str] = mapped_column(String(128), nullable=False, unique=True)
     project_name: Mapped[str] = mapped_column(String(256), nullable=False, unique=True)
 
+    folder_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("project_folders.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    visibility: Mapped[str] = mapped_column(String(32), nullable=False, default="public", server_default="public")
+
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=func.now())
 
+    folder: Mapped[Optional["ProjectFolder"]] = relationship("ProjectFolder", back_populates="projects", lazy="joined")
     memberships: Mapped[list["ProjectMembership"]] = relationship("ProjectMembership", back_populates="project")
 
 

@@ -50,7 +50,8 @@ from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QTableWidget, QTableWidgetItem, QHeaderView,
     QTabWidget, QScrollArea, QFrame, QProgressBar, QSplitter,
-    QDialog, QTextEdit, QGridLayout, QGroupBox, QSizePolicy
+    QDialog, QTextEdit, QGridLayout, QGroupBox, QSizePolicy,
+    QComboBox, QLineEdit
 )
 from PyQt6.QtCore import Qt, QTimer, QSize, QThread, pyqtSignal, QObject
 from PyQt6.QtGui import QFont, QColor, QPalette, QIcon, QPainter, QBrush, QPen
@@ -318,6 +319,24 @@ def load_sessions() -> dict:
         with open(sessions_file) as f:
             return json.load(f)
     return {}
+
+
+def load_operations(days: int = 2) -> list:
+    """Load mirrored audit operation events for the past N days."""
+    operations = []
+    for i in range(days):
+        date = (datetime.now(timezone.utc) - timedelta(days=i)).strftime("%Y-%m-%d")
+        op_file = ANALYTICS_DIR / f"operations_{date}.jsonl"
+        if not op_file.exists():
+            continue
+        with open(op_file) as f:
+            for line in f:
+                try:
+                    operations.append(json.loads(line))
+                except:
+                    continue
+    operations.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
+    return operations
 
 
 def get_dashboard_data():
@@ -951,6 +970,7 @@ class AnalyticsDashboard(QMainWindow):
         # Tabs
         tabs = QTabWidget()
         tabs.addTab(self.create_live_activity_tab(), "LIVE ACTIVITY")
+        tabs.addTab(self.create_operations_tab(), "OPERATIONS")
         tabs.addTab(self.create_overview_tab(), "OVERVIEW")
         tabs.addTab(self.create_sessions_tab(), "SESSIONS")
         tabs.addTab(self.create_users_tab(), "USERS")
@@ -1132,6 +1152,301 @@ class AnalyticsDashboard(QMainWindow):
     def update_live_activity(self):
         """Alias for refresh_live_activity for compatibility."""
         self.refresh_live_activity()
+
+    def create_operations_tab(self) -> QWidget:
+        """Create the operations feed tab (audit events)."""
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
+        layout.setSpacing(10)
+
+        # Header with status
+        header = QHBoxLayout()
+        title = QLabel("Audit Operations Feed")
+        title.setStyleSheet("color: #a855f7; font-size: 14px; font-weight: bold;")
+
+        self.operations_status = QLabel("Auto-refreshing every 5s")
+        self.operations_status.setStyleSheet("color: #888; font-size: 11px;")
+
+        header.addWidget(title)
+        header.addStretch()
+        header.addWidget(self.operations_status)
+        layout.addLayout(header)
+
+        # Filters
+        filters = QHBoxLayout()
+        filters.setSpacing(8)
+
+        user_label = QLabel("User")
+        user_label.setStyleSheet("color: #888; font-size: 11px; font-family: Monospace;")
+        self.operations_user_filter = QComboBox()
+        self.operations_user_filter.setMinimumWidth(180)
+        self.operations_user_filter.currentIndexChanged.connect(self._apply_operations_filters)
+
+        project_label = QLabel("Project")
+        project_label.setStyleSheet("color: #888; font-size: 11px; font-family: Monospace;")
+        self.operations_project_filter = QComboBox()
+        self.operations_project_filter.setMinimumWidth(220)
+        self.operations_project_filter.currentIndexChanged.connect(self._apply_operations_filters)
+
+        event_label = QLabel("Event Type")
+        event_label.setStyleSheet("color: #888; font-size: 11px; font-family: Monospace;")
+        self.operations_event_filter = QComboBox()
+        self.operations_event_filter.setMinimumWidth(220)
+        self.operations_event_filter.currentIndexChanged.connect(self._apply_operations_filters)
+
+        search_label = QLabel("Search")
+        search_label.setStyleSheet("color: #888; font-size: 11px; font-family: Monospace;")
+        self.operations_search = QLineEdit()
+        self.operations_search.setPlaceholderText("payload / summary contains...")
+        self.operations_search.textChanged.connect(self._apply_operations_filters)
+
+        refresh_btn = QPushButton("REFRESH")
+        refresh_btn.setStyleSheet("""
+            QPushButton {
+                background-color: transparent;
+                color: #a855f7;
+                border: 1px solid #a855f7;
+                border-radius: 2px;
+                padding: 4px 12px;
+                font-weight: bold;
+                font-family: Monospace;
+                font-size: 10px;
+            }
+            QPushButton:hover {
+                background-color: #a855f7;
+                color: white;
+            }
+        """)
+        refresh_btn.clicked.connect(self.refresh_operations_feed)
+
+        for combo in (self.operations_user_filter, self.operations_project_filter, self.operations_event_filter):
+            combo.setStyleSheet("""
+                QComboBox {
+                    background-color: #0a0a0a;
+                    color: #ddd;
+                    border: 1px solid #2a2a2a;
+                    border-radius: 2px;
+                    padding: 4px 8px;
+                    font-family: Monospace;
+                    font-size: 11px;
+                }
+            """)
+            combo.addItem("All")
+
+        self.operations_search.setStyleSheet("""
+            QLineEdit {
+                background-color: #0a0a0a;
+                color: #ddd;
+                border: 1px solid #2a2a2a;
+                border-radius: 2px;
+                padding: 4px 8px;
+                font-family: Monospace;
+                font-size: 11px;
+            }
+        """)
+
+        filters.addWidget(user_label)
+        filters.addWidget(self.operations_user_filter)
+        filters.addWidget(project_label)
+        filters.addWidget(self.operations_project_filter)
+        filters.addWidget(event_label)
+        filters.addWidget(self.operations_event_filter)
+        filters.addWidget(search_label)
+        filters.addWidget(self.operations_search, 1)
+        filters.addWidget(refresh_btn)
+        layout.addLayout(filters)
+
+        # Operations table
+        self.operations_table = QTableWidget()
+        self.operations_table.setColumnCount(6)
+        self.operations_table.setHorizontalHeaderLabels([
+            "Timestamp", "User", "Project", "Event Type", "Summary", "Payload"
+        ])
+        self.operations_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        self.operations_table.setAlternatingRowColors(True)
+        self.operations_table.setStyleSheet("""
+            QTableWidget {
+                background-color: #0a0a0a;
+                alternate-background-color: #111;
+                color: #ccc;
+                border: 1px solid #222;
+                gridline-color: #222;
+            }
+            QHeaderView::section {
+                background-color: #111;
+                color: #a855f7;
+                padding: 8px;
+                border: none;
+                border-bottom: 1px solid #a855f7;
+                font-weight: bold;
+                text-transform: uppercase;
+                font-size: 10px;
+            }
+        """)
+        header_view = self.operations_table.horizontalHeader()
+        header_view.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+        header_view.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
+        header_view.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
+        header_view.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
+        header_view.setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch)
+        header_view.setSectionResizeMode(5, QHeaderView.ResizeMode.Stretch)
+        layout.addWidget(self.operations_table)
+
+        self._operations_rows = []
+
+        self.operations_timer = QTimer()
+        self.operations_timer.timeout.connect(self.refresh_operations_feed)
+        self.operations_timer.start(5000)
+
+        return widget
+
+    def _refresh_operations_filter_options(self, operations: list):
+        """Refresh operation filter combo values while preserving selections."""
+        users = sorted({str(op.get("username") or "unknown") for op in operations}, key=lambda v: v.lower())
+        projects = sorted({str(op.get("project_name") or "-") for op in operations}, key=lambda v: v.lower())
+        event_types = sorted({str(op.get("event_type") or "-") for op in operations}, key=lambda v: v.lower())
+
+        def refill(combo: QComboBox, values: list):
+            current = combo.currentText()
+            combo.blockSignals(True)
+            combo.clear()
+            combo.addItem("All")
+            for value in values:
+                combo.addItem(value)
+            idx = combo.findText(current)
+            combo.setCurrentIndex(idx if idx >= 0 else 0)
+            combo.blockSignals(False)
+
+        refill(self.operations_user_filter, users)
+        refill(self.operations_project_filter, projects)
+        refill(self.operations_event_filter, event_types)
+
+    def _operation_summary(self, operation: dict) -> str:
+        """Build a short summary from event_type + key payload fields."""
+        event_type = str(operation.get("event_type") or "-")
+        payload = operation.get("payload")
+        if not isinstance(payload, dict) or not payload:
+            return event_type
+
+        focus_keys = [
+            "route_id",
+            "segment_id",
+            "sortie_id",
+            "entry_id",
+            "job_id",
+            "dataset",
+            "code",
+            "visibility",
+            "folder_id",
+        ]
+        parts = []
+        for key in focus_keys:
+            value = payload.get(key)
+            if value in (None, "", [], {}):
+                continue
+            parts.append(f"{key}={value}")
+            if len(parts) >= 2:
+                break
+        if parts:
+            return f"{event_type} | {' | '.join(parts)}"
+        return event_type
+
+    def _operation_payload_preview(self, payload: dict) -> str:
+        if not payload:
+            return "-"
+        try:
+            text = json.dumps(payload, default=str)
+        except Exception:
+            text = str(payload)
+        if len(text) > 220:
+            return text[:217] + "..."
+        return text
+
+    def _apply_operations_filters(self):
+        """Apply selected operation filters to the table."""
+        if not hasattr(self, "operations_table"):
+            return
+        operations = getattr(self, "_operations_rows", [])
+
+        user_filter = self.operations_user_filter.currentText() if hasattr(self, "operations_user_filter") else "All"
+        project_filter = self.operations_project_filter.currentText() if hasattr(self, "operations_project_filter") else "All"
+        event_filter = self.operations_event_filter.currentText() if hasattr(self, "operations_event_filter") else "All"
+        search = (self.operations_search.text().strip().lower() if hasattr(self, "operations_search") else "")
+
+        filtered = []
+        for op in operations:
+            username = str(op.get("username") or "unknown")
+            project_name = str(op.get("project_name") or "-")
+            event_type = str(op.get("event_type") or "-")
+
+            if user_filter != "All" and username != user_filter:
+                continue
+            if project_filter != "All" and project_name != project_filter:
+                continue
+            if event_filter != "All" and event_type != event_filter:
+                continue
+
+            if search:
+                summary = self._operation_summary(op)
+                payload_text = self._operation_payload_preview(op.get("payload") if isinstance(op.get("payload"), dict) else {})
+                haystack = f"{username} {project_name} {event_type} {summary} {payload_text}".lower()
+                if search not in haystack:
+                    continue
+
+            filtered.append(op)
+
+        self.operations_table.setRowCount(len(filtered))
+        for row, op in enumerate(filtered):
+            username = str(op.get("username") or "unknown")
+            project_name = str(op.get("project_name") or "-")
+            event_type = str(op.get("event_type") or "-")
+            summary = self._operation_summary(op)
+            payload = op.get("payload") if isinstance(op.get("payload"), dict) else {}
+            payload_text = self._operation_payload_preview(payload)
+
+            ts_item = QTableWidgetItem(to_est(str(op.get("timestamp") or "")))
+            ts_item.setForeground(QColor("#888"))
+            user_item = QTableWidgetItem(username)
+            user_item.setForeground(QColor("#22c55e"))
+            project_item = QTableWidgetItem(project_name)
+            project_item.setForeground(QColor("#06b6d4"))
+
+            event_item = QTableWidgetItem(event_type)
+            et = event_type.lower()
+            if "create" in et or et.endswith(".start"):
+                event_item.setForeground(QColor("#22c55e"))
+            elif "update" in et or "set" in et:
+                event_item.setForeground(QColor("#eab308"))
+            elif "delete" in et or "archive" in et or "remove" in et:
+                event_item.setForeground(QColor("#ef4444"))
+            else:
+                event_item.setForeground(QColor("#a855f7"))
+
+            summary_item = QTableWidgetItem(summary)
+            summary_item.setForeground(QColor("#ddd"))
+            payload_item = QTableWidgetItem(payload_text)
+            payload_item.setForeground(QColor("#777"))
+
+            self.operations_table.setItem(row, 0, ts_item)
+            self.operations_table.setItem(row, 1, user_item)
+            self.operations_table.setItem(row, 2, project_item)
+            self.operations_table.setItem(row, 3, event_item)
+            self.operations_table.setItem(row, 4, summary_item)
+            self.operations_table.setItem(row, 5, payload_item)
+
+    def refresh_operations_feed(self):
+        """Refresh operations feed from mirrored audit JSONL files."""
+        if not hasattr(self, "operations_table"):
+            return
+        try:
+            operations = load_operations(2)[:600]
+            self._operations_rows = operations
+            self._refresh_operations_filter_options(operations)
+            self._apply_operations_filters()
+            shown = self.operations_table.rowCount()
+            self.operations_status.setText(f"Updated: {now_est()} | {shown}/{len(operations)} ops")
+        except Exception as e:
+            self.operations_status.setText(f"Error: {e}")
 
     def create_overview_tab(self) -> QWidget:
         """Create the overview tab."""
@@ -1324,6 +1639,7 @@ class AnalyticsDashboard(QMainWindow):
 
         # Also refresh live activity
         self.refresh_live_activity()
+        self.refresh_operations_feed()
 
     def _on_data_loaded(self, data):
         """Handle dashboard data loaded from background thread."""

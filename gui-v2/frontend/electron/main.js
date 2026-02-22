@@ -53,6 +53,36 @@ function toPosixRelative(baseDir, absolutePath) {
   return path.relative(baseDir, absolutePath).split(path.sep).join('/');
 }
 
+function sanitizePathComponent(value, fallback = 'item') {
+  const cleaned = String(value || '')
+    .replace(/[<>:"/\\|?*\x00-\x1F]/g, '_')
+    .replace(/\s+/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_+|_+$/g, '');
+  return cleaned || fallback;
+}
+
+function normalizeExportRelativePath(relativePath) {
+  const normalized = String(relativePath || '').replace(/\\/g, '/').replace(/^\/+/, '');
+  if (!normalized) throw new Error('Export file path is required.');
+  const parts = normalized.split('/');
+  if (parts.some((part) => !part || part === '.' || part === '..')) {
+    throw new Error(`Invalid export file path: ${relativePath}`);
+  }
+  return parts.join('/');
+}
+
+function buildRouteExportFolderName(projectName, routeId) {
+  const routeBase = String(routeId || '')
+    .replace(/\\/g, '/')
+    .split('/')
+    .filter(Boolean)
+    .pop() || 'route';
+  const routeStem = routeBase.replace(/\.geojson$/i, '');
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+  return `${sanitizePathComponent(projectName, 'project')}_${sanitizePathComponent(routeStem, 'route')}_export_${stamp}`;
+}
+
 async function sha256File(filePath) {
   return new Promise((resolve, reject) => {
     const hash = crypto.createHash('sha256');
@@ -494,6 +524,17 @@ function createWindow() {
 
   mainWindow.once('ready-to-show', () => mainWindow.show());
   mainWindow.on('closed', () => { mainWindow = null; });
+
+  mainWindow.on('enter-full-screen', () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('fullscreen-changed', true);
+    }
+  });
+  mainWindow.on('leave-full-screen', () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('fullscreen-changed', false);
+    }
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -548,6 +589,80 @@ ipcMain.handle('local-cache-pick-directory', async () => {
   return { cancelled: false, directory: response.filePaths[0] };
 });
 
+ipcMain.handle('route-export-bundle', async (_event, payload) => {
+  const projectName = String(payload?.projectName || '').trim();
+  const routeId = String(payload?.routeId || '').trim();
+  const files = Array.isArray(payload?.files) ? payload.files : [];
+  const manifestFromPayload =
+    payload?.manifest && typeof payload.manifest === 'object' && !Array.isArray(payload.manifest)
+      ? payload.manifest
+      : {};
+
+  if (!projectName) throw new Error('projectName is required.');
+  if (!routeId) throw new Error('routeId is required.');
+  if (!files.length) throw new Error('At least one file is required for route export.');
+
+  const response = await dialog.showOpenDialog(mainWindow, {
+    title: 'Select folder to export route',
+    properties: ['openDirectory', 'createDirectory']
+  });
+  if (response.canceled || !response.filePaths?.length) return { cancelled: true };
+
+  const targetDirectory = path.resolve(response.filePaths[0]);
+  await fsp.mkdir(targetDirectory, { recursive: true });
+
+  const baseFolderName = buildRouteExportFolderName(projectName, routeId);
+  let folderName = baseFolderName;
+  let exportDirectory = safeResolveWithin(targetDirectory, folderName);
+  let suffix = 2;
+  while (fs.existsSync(exportDirectory)) {
+    folderName = `${baseFolderName}_${suffix}`;
+    exportDirectory = safeResolveWithin(targetDirectory, folderName);
+    suffix += 1;
+  }
+
+  await fsp.mkdir(exportDirectory, { recursive: true });
+
+  let writtenFiles = 0;
+  for (const file of files) {
+    const relativePath = normalizeExportRelativePath(file?.relativePath);
+    const targetPath = safeResolveWithin(exportDirectory, relativePath);
+    await fsp.mkdir(path.dirname(targetPath), { recursive: true });
+
+    const encoding = file?.encoding === 'base64' ? 'base64' : 'utf8';
+    const content = typeof file?.content === 'string' ? file.content : JSON.stringify(file?.content ?? null, null, 2);
+    if (encoding === 'base64') {
+      await fsp.writeFile(targetPath, Buffer.from(content, 'base64'));
+    } else {
+      await fsp.writeFile(targetPath, content, 'utf8');
+    }
+    writtenFiles += 1;
+  }
+
+  const manifestPayload = {
+    version: 1,
+    exported_at: new Date().toISOString(),
+    project_name: projectName,
+    route_id: routeId,
+    folder_name: folderName,
+    files: files.map((file) => ({
+      relative_path: normalizeExportRelativePath(file?.relativePath),
+      encoding: file?.encoding === 'base64' ? 'base64' : 'utf8'
+    })),
+    ...manifestFromPayload
+  };
+  const manifestPath = safeResolveWithin(exportDirectory, 'route_export_manifest.json');
+  await fsp.writeFile(manifestPath, JSON.stringify(manifestPayload, null, 2), 'utf8');
+  writtenFiles += 1;
+
+  return {
+    cancelled: false,
+    directory: exportDirectory,
+    folder: folderName,
+    files_written: writtenFiles
+  };
+});
+
 ipcMain.handle('local-cache-check', async (_event, payload) => {
   return checkProjectLocalCache(payload || {});
 });
@@ -583,4 +698,19 @@ ipcMain.handle('local-cache-stop-polling', () => {
 
 ipcMain.handle('local-cache-push-files', async (_event, payload) => {
   return pushFilesToServer(payload || {});
+});
+
+ipcMain.handle('set-fullscreen', (_event, isFullscreen) => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.setFullScreen(!!isFullscreen);
+    return mainWindow.isFullScreen();
+  }
+  return false;
+});
+
+ipcMain.handle('is-fullscreen', () => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    return mainWindow.isFullScreen();
+  }
+  return false;
 });

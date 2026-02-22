@@ -10,6 +10,7 @@ import {
   cancelDatasetJob
 } from '@/lib/api/dataClient'
 import { cn } from '@/lib/utils'
+import { trackEvent } from '@/lib/analytics'
 
 const STAGE_LABELS: Record<string, string> = {
   prefetch_scan: 'INITIAL SCAN',
@@ -48,6 +49,7 @@ export function DatasetFetchProgressDialog({ jobId, open, onClose, onJobFinished
   const [mounted, setMounted] = useState(false)
   const [isClosing, setIsClosing] = useState(false)
   const completionHandled = useRef(false)
+  const prevOpenRef = useRef(open)
 
   const isComplete = job?.status === 'succeeded' || job?.status === 'failed' || job?.status === 'partial'
 
@@ -56,8 +58,14 @@ export function DatasetFetchProgressDialog({ jobId, open, onClose, onJobFinished
   }, [])
 
   useEffect(() => {
+    if (prevOpenRef.current !== open && jobId) {
+      trackEvent('dialog', 'DatasetFetchProgressDialog', open ? 'open_dataset_fetch_progress_dialog' : 'close_dataset_fetch_progress_dialog', {
+        job_id: jobId
+      })
+      prevOpenRef.current = open
+    }
     if (open) setIsClosing(false)
-  }, [open])
+  }, [jobId, open])
 
   useEffect(() => {
     completionHandled.current = false
@@ -90,6 +98,10 @@ export function DatasetFetchProgressDialog({ jobId, open, onClose, onJobFinished
 
   const handleCancel = useCallback(() => {
     if (!jobId) return
+    trackEvent('project', 'DatasetFetchProgressDialog', 'dataset_fetch_cancel_requested', {
+      job_id: jobId,
+      project: job?.project
+    })
     setIsCancelling(true)
     cancelDatasetJob(jobId)
       .then(() => {
@@ -106,19 +118,27 @@ export function DatasetFetchProgressDialog({ jobId, open, onClose, onJobFinished
         setError(err?.message || 'Failed to cancel dataset job.')
         setIsCancelling(false)
       })
-  }, [jobId, onClose])
+  }, [job?.project, jobId, onClose])
 
   const handleRunInBackground = useCallback(() => {
     if (onRunInBackground) {
+      trackEvent('dialog', 'DatasetFetchProgressDialog', 'dataset_fetch_run_in_background', {
+        job_id: jobId,
+        project: job?.project
+      })
       setIsClosing(true)
       setTimeout(() => {
         onRunInBackground()
       }, 150)
     }
-  }, [onRunInBackground])
+  }, [job?.project, jobId, onRunInBackground])
 
   const handleClose = () => {
     if (isComplete) {
+      trackEvent('dialog', 'DatasetFetchProgressDialog', 'close_dataset_fetch_progress_dialog', {
+        job_id: jobId,
+        status: job?.status
+      })
       setIsClosing(true)
       setTimeout(onClose, 150)
     }
@@ -183,8 +203,26 @@ export function DatasetFetchProgressDialog({ jobId, open, onClose, onJobFinished
                 </span>
               </div>
               <div className="flex items-center gap-2 mt-2">
-                <div className={cn("w-1.5 h-1.5 rounded-full", isComplete ? (job?.status === 'succeeded' ? "bg-emerald-500" : "bg-red-500") : "bg-primary animate-pulse")} />
-                <span className={cn("text-xs font-bold uppercase", isComplete ? (job?.status === 'succeeded' ? "text-emerald-500" : "text-red-500") : "text-primary")}>
+                <div className={cn(
+                  "w-1.5 h-1.5 rounded-full",
+                  isComplete
+                    ? job?.status === 'succeeded'
+                      ? "bg-emerald-500"
+                      : job?.status === 'partial'
+                        ? "bg-amber-500"
+                        : "bg-red-500"
+                    : "bg-primary animate-pulse"
+                )} />
+                <span className={cn(
+                  "text-xs font-bold uppercase",
+                  isComplete
+                    ? job?.status === 'succeeded'
+                      ? "text-emerald-500"
+                      : job?.status === 'partial'
+                        ? "text-amber-500"
+                        : "text-red-500"
+                    : "text-primary"
+                )}>
                     STATUS: {job?.status ?? 'PENDING'}
                 </span>
               </div>
@@ -334,6 +372,8 @@ export function DatasetFetchProgressDialog({ jobId, open, onClose, onJobFinished
 function badgeColor(status?: string | null) {
   switch (status) {
     case 'succeeded': return 'bg-emerald-500'
+    case 'partial': return 'bg-amber-500'
+    case 'cancelled': return 'bg-amber-500'
     case 'failed': return 'bg-red-500'
     case 'running': return 'bg-primary animate-pulse'
     default: return 'bg-white/20'
@@ -343,6 +383,8 @@ function badgeColor(status?: string | null) {
 function badgeBorder(status?: string | null) {
   switch (status) {
     case 'succeeded': return 'border-emerald-500/50 text-emerald-500 bg-emerald-500/10'
+    case 'partial': return 'border-amber-500/50 text-amber-400 bg-amber-500/10'
+    case 'cancelled': return 'border-amber-500/50 text-amber-400 bg-amber-500/10'
     case 'failed': return 'border-red-500/50 text-red-500 bg-red-500/10'
     case 'running': return 'border-primary/50 text-primary bg-primary/10'
     default: return 'border-white/10 text-white/30 bg-white/5'
@@ -353,6 +395,8 @@ function stageClass(status: string) {
   switch (status) {
     case 'succeeded':
       return 'border-emerald-500/20 bg-emerald-500/[0.05] text-emerald-400'
+    case 'cancelled':
+      return 'border-amber-500/20 bg-amber-500/[0.05] text-amber-400'
     case 'failed':
       return 'border-red-500/20 bg-red-500/[0.05] text-red-400'
     case 'running':
